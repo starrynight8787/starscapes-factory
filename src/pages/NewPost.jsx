@@ -5,6 +5,7 @@ import { supabase } from '../supabaseClient'
 export default function NewPost({ session }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState('')
   const [file, setFile] = useState(null)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -35,12 +36,18 @@ export default function NewPost({ session }) {
         imageUrl = publicUrlData.publicUrl
       }
 
+      const tagsArray = tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+
       const { error: insertError } = await supabase.from('posts').insert({
         title,
         content,
         image_url: imageUrl,
         author_id: session.user.id,
         published: true,
+        tags: tagsArray,
       })
 
       if (insertError) throw insertError
@@ -71,6 +78,12 @@ export default function NewPost({ session }) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           required
+        />
+        <input
+          type="text"
+          placeholder="Tags (comma separated, e.g. art, travel)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
         />
         <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
         <button type="submit" disabled={saving}>

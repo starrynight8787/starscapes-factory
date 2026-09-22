@@ -7,6 +7,7 @@ export default function EditPost({ session }) {
   const navigate = useNavigate()
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
+  const [tags, setTags] = useState('')
   const [imageUrl, setImageUrl] = useState(null)
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -17,7 +18,7 @@ export default function EditPost({ session }) {
     async function fetchPost() {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, content, image_url, author_id')
+        .select('id, title, content, image_url, author_id, tags')
         .eq('id', id)
         .single()
 
@@ -36,6 +37,7 @@ export default function EditPost({ session }) {
       setTitle(data.title)
       setContent(data.content)
       setImageUrl(data.image_url)
+      setTags((data.tags || []).join(', '))
       setLoading(false)
     }
 
@@ -67,9 +69,14 @@ export default function EditPost({ session }) {
         newImageUrl = publicUrlData.publicUrl
       }
 
+      const tagsArray = tags
+        .split(',')
+        .map((t) => t.trim())
+        .filter((t) => t.length > 0)
+
       const { error: updateError } = await supabase
         .from('posts')
-        .update({ title, content, image_url: newImageUrl })
+        .update({ title, content, image_url: newImageUrl, tags: tagsArray })
         .eq('id', id)
 
       if (updateError) throw updateError
@@ -102,6 +109,12 @@ export default function EditPost({ session }) {
           value={content}
           onChange={(e) => setContent(e.target.value)}
           required
+        />
+        <input
+          type="text"
+          placeholder="Tags (comma separated, e.g. art, travel)"
+          value={tags}
+          onChange={(e) => setTags(e.target.value)}
         />
         {imageUrl && (
           <div style={{ marginBottom: 12 }}>
