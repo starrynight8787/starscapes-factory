@@ -8,6 +8,7 @@ import PostPage from './pages/PostPage'
 import Login from './pages/Login'
 import Signup from './pages/Signup'
 import NewPost from './pages/NewPost'
+import EditPost from './pages/EditPost'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -34,7 +35,7 @@ export default function App() {
       <div className="container">
         <Routes>
           <Route path="/" element={<Home />} />
-          <Route path="/post/:id" element={<PostPage />} />
+          <Route path="/post/:id" element={<PostPage session={session} />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route
@@ -42,6 +43,14 @@ export default function App() {
             element={
               <ProtectedRoute session={session}>
                 <NewPost session={session} />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/edit/:id"
+            element={
+              <ProtectedRoute session={session}>
+                <EditPost session={session} />
               </ProtectedRoute>
             }
           />
