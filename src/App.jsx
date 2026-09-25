@@ -9,6 +9,8 @@ import Login from './pages/Login'
 import Signup from './pages/Signup'
 import NewPost from './pages/NewPost'
 import EditPost from './pages/EditPost'
+import ChannelDirectory from './pages/ChannelDirectory'
+import ChannelPage from './pages/ChannelPage'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -34,10 +36,9 @@ export default function App() {
       <Navbar session={session} />
       <div className="container">
         <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/post/:id" element={<PostPage session={session} />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<Signup />} />
+         <Route path="/" element={<ChannelDirectory />} /> 
+<Route path="/blog" element={<Home />} /> 
+<Route path="/channel/:slug" element={<ChannelPage />} />
           <Route
             path="/new"
             element={
