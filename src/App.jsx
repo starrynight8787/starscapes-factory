@@ -13,6 +13,9 @@ import ChannelDirectory from './pages/ChannelDirectory'
 import ChannelPage from './pages/ChannelPage'
 import StaticPage from './pages/StaticPage'
 import Footer from './components/Footer'
+import ProductGallery from './pages/ProductGallery'
+import ProductPage from './pages/ProductPage'
+import NewProduct from './pages/NewProduct'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -42,6 +45,9 @@ export default function App() {
 <Route path="/blog" element={<Home />} /> 
 <Route path="/channel/:slug" element={<ChannelPage />} />
 <Route path="/page/:slug" element={<StaticPage />} /> 
+<Route path="/products" element={<ProductGallery />} /> 
+<Route path="/products/:id" element={<ProductPage />} /> 
+<Route path="/new-product" element={ <ProtectedRoute session={session}> <NewProduct session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"
             element={
