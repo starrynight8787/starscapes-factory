@@ -11,6 +11,8 @@ import NewPost from './pages/NewPost'
 import EditPost from './pages/EditPost'
 import ChannelDirectory from './pages/ChannelDirectory'
 import ChannelPage from './pages/ChannelPage'
+import StaticPage from './pages/StaticPage'
+import Footer from './components/Footer'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -39,6 +41,7 @@ export default function App() {
          <Route path="/" element={<ChannelDirectory />} /> 
 <Route path="/blog" element={<Home />} /> 
 <Route path="/channel/:slug" element={<ChannelPage />} />
+<Route path="/page/:slug" element={<StaticPage />} /> 
           <Route
             path="/new"
             element={
@@ -57,6 +60,7 @@ export default function App() {
           />
         </Routes>
       </div>
+<Footer /> 
     </>
   )
 }

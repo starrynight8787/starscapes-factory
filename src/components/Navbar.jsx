@@ -14,6 +14,7 @@ export default function Navbar({ session }) {
       <div>
         <Link to="/">Home</Link>
 <Link to="/blog">Blog</Link>
+<Link to="/page/about">About</Link>
         {session && <Link to="/new">New Post</Link>}
       </div>
       <div>
