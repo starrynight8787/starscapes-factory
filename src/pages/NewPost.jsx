@@ -1,11 +1,13 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { channels } from '../data/channels'
 
 export default function NewPost({ session }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
+  const [channel, setChannel] = useState('')
   const [file, setFile] = useState(null)
   const [error, setError] = useState(null)
   const [saving, setSaving] = useState(false)
@@ -48,6 +50,7 @@ export default function NewPost({ session }) {
         author_id: session.user.id,
         published: true,
         tags: tagsArray,
+        channel: channel || null,
       })
 
       if (insertError) throw insertError
@@ -85,6 +88,14 @@ export default function NewPost({ session }) {
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
+        <select value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <option value="">No channel</option>
+          {channels.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.emoji} {c.name}
+            </option>
+          ))}
+        </select>
         <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
         <button type="submit" disabled={saving}>
           {saving ? 'Publishing...' : 'Publish'}

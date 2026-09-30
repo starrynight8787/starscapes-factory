@@ -44,6 +44,7 @@ export default function App() {
          <Route path="/" element={<ChannelDirectory />} /> 
 <Route path="/blog" element={<Home />} /> 
 <Route path="/channel/:slug" element={<ChannelPage />} />
+<Route path="/post/:id" element={<PostPage session={session} />} />
 <Route path="/page/:slug" element={<StaticPage />} /> 
 <Route path="/products" element={<ProductGallery />} /> 
 <Route path="/products/:id" element={<ProductPage />} /> 

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { channels } from '../data/channels'
 
 export default function EditPost({ session }) {
   const { id } = useParams()
@@ -8,6 +9,7 @@ export default function EditPost({ session }) {
   const [title, setTitle] = useState('')
   const [content, setContent] = useState('')
   const [tags, setTags] = useState('')
+  const [channel, setChannel] = useState('')
   const [imageUrl, setImageUrl] = useState(null)
   const [file, setFile] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -18,7 +20,7 @@ export default function EditPost({ session }) {
     async function fetchPost() {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, content, image_url, author_id, tags')
+        .select('id, title, content, image_url, author_id, tags, channel')
         .eq('id', id)
         .single()
 
@@ -38,6 +40,7 @@ export default function EditPost({ session }) {
       setContent(data.content)
       setImageUrl(data.image_url)
       setTags((data.tags || []).join(', '))
+      setChannel(data.channel || '')
       setLoading(false)
     }
 
@@ -76,7 +79,13 @@ export default function EditPost({ session }) {
 
       const { error: updateError } = await supabase
         .from('posts')
-        .update({ title, content, image_url: newImageUrl, tags: tagsArray })
+        .update({
+          title,
+          content,
+          image_url: newImageUrl,
+          tags: tagsArray,
+          channel: channel || null,
+        })
         .eq('id', id)
 
       if (updateError) throw updateError
@@ -116,6 +125,14 @@ export default function EditPost({ session }) {
           value={tags}
           onChange={(e) => setTags(e.target.value)}
         />
+        <select value={channel} onChange={(e) => setChannel(e.target.value)}>
+          <option value="">No channel</option>
+          {channels.map((c) => (
+            <option key={c.slug} value={c.slug}>
+              {c.emoji} {c.name}
+            </option>
+          ))}
+        </select>
         {imageUrl && (
           <div style={{ marginBottom: 12 }}>
             <p className="muted">Current image:</p>
