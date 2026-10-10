@@ -1,25 +1,35 @@
 import { Link } from 'react-router-dom'
+import Logo from './Logo'
+import '../styles/site.css'
+
+const links = [
+  ['About', '/page/about'],
+  ['Contact', '/page/contact'],
+  ['Terms & Conditions', '/page/terms'],
+  ['Privacy Policy', '/page/privacy'],
+  ['AI Policy', '/page/ai-policy'],
+]
 
 export default function Footer() {
   return (
-    <footer
-      style={{
-        borderTop: '1px solid #e5e5e5',
-        marginTop: 60,
-        padding: '24px 20px',
-        textAlign: 'center',
-      }}
-    >
-      <div style={{ marginBottom: 8 }}>
-        <Link to="/page/about" style={{ margin: '0 10px' }}>About</Link>
-        <Link to="/page/contact" style={{ margin: '0 10px' }}>Contact</Link>
-        <Link to="/page/terms" style={{ margin: '0 10px' }}>Terms & Conditions</Link>
-        <Link to="/page/privacy" style={{ margin: '0 10px' }}>Privacy Policy</Link>
-        <Link to="/page/ai-policy" style={{ margin: '0 10px' }}>AI Policy</Link>
+    <footer className="sf-footer">
+      <div className="sf-footer__inner">
+        <div className="sf-footer__top">
+          <Logo dark />
+          <div className="sf-footer__links">
+            {links.map(([label, to]) => (
+              <Link key={to} to={to}>
+                {label}
+              </Link>
+            ))}
+          </div>
+        </div>
+        <hr />
+        <div className="sf-footer__bottom">
+          <span className="sf-footer__copy">© {new Date().getFullYear()} Starscapes Factory</span>
+          <span className="sf-footer__script">You're only limited by your own imagination.</span>
+        </div>
       </div>
-      <p className="muted" style={{ fontSize: 12, margin: 0 }}>
-        © {new Date().getFullYear()} Starscapes Factory
-      </p>
     </footer>
   )
 }
