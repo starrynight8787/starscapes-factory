@@ -15,6 +15,8 @@
   --sf-muted: #5b6585;
   --sf-border: #dde3f0;
   --sf-pink: #ffa6cb;
+  --sf-postit: #dce6ff; /* the floor-plan post-it panel */
+  --sf-hover: #b8ccf5; /* a room lighting up on the floor plan (a step deeper than the panel so it still shows) */
   --sf-head: 'Josefin Sans', 'Trebuchet MS', sans-serif;
   --sf-body: 'Inter', system-ui, sans-serif;
   --sf-script: 'Sacramento', cursive;
@@ -407,7 +409,7 @@ html body h3 {
   margin-top: 6px;
   padding: clamp(16px, 3vw, 40px);
   border-radius: 28px;
-  background: var(--sf-pink);
+  background: var(--sf-postit);
   box-shadow: 0 24px 48px rgba(0, 0, 40, 0.35);
 }
 .sf-plan {
@@ -426,7 +428,7 @@ html body h3 {
 .sf-room:hover .sf-room__shape,
 .sf-room:focus-visible .sf-room__shape,
 .sf-room.is-active .sf-room__shape {
-  fill: var(--sf-star);
+  fill: var(--sf-hover);
 }
 .sf-room__name {
   font-family: var(--sf-hand);

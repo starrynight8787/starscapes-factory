@@ -4,11 +4,11 @@ export const roomImages = {
   'drafting-desk': '/rooms/drafting-desk.png',
   'sarah-jrs-den': '/rooms/sarah-jrs-den.png',
   'art-loft': '/rooms/art-loft.png',
-  'explorers-bay': '/rooms/explorers-bay.svg',
-  'factory-floor': '/rooms/factory-floor.svg',
+  'explorers-bay': '/rooms/explorers-bay.png',
+  'factory-floor': '/rooms/factory-floor.png',
   'leadership-lounge': '/rooms/leadership-lounge.png',
   'idea-hatchery': '/rooms/idea-hatchery.png',
-  'knowledge-nook': '/rooms/knowledge-nook.svg',
+  'knowledge-nook': '/rooms/knowledge-nook.png',
 }
 
 // Not needed now that every picture is cropped to fill its square.
