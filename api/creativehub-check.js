@@ -12,6 +12,7 @@
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
 //   /api/creativehub-check?view=import-sql&email=YOU@EXAMPLE.COM   the SQL that imports your prints into the shop
+//        add &collections=yes to also put each print in its collection and show a check table
 //
 // Creative Hub's address is https://escher-v2.creativehub.io. You can point at another one with the
 // optional setting CREATIVEHUB_API_BASE.
@@ -140,7 +141,40 @@ function variantLabel(v) {
   return `${v.size || `${Math.round(v.print_width_mm / 10)}x${Math.round(v.print_height_mm / 10)}cm`} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`
 }
 
-function buildImportSql(email, products) {
+
+// Puts each print in its collection (matched by name) and then shows a check table.
+// Good looks like: counts per collection, a TOTAL, and NO rows under "no collection yet",
+// "duplicate name" or "blank name".
+const COLLECTIONS_SQL = `-- Put each print in its collection, then check the result.
+with lists(collection, names) as (values
+  ('Dance Like You Just Don''t Care', array['tango','swing dance','tap dancing','salsa','party','jazz dance','murder on the dance floor','ballroom','ballet','contemporary','contempory','spinning']),
+  ('Out of this World', array['tops of jupiter','stargazing','into the nebula','far far away','behind the curtain','heartless heart']),
+  ('Ocean''s View', array['ocean''s breeze','sandy islands','beaches','before the sunset']),
+  ('Calm Series', array['forests','tranquillity','tranquility','the first snow','freshly cut grass','afternoon sun','tartan','rainbows','lucky','festive season','neon lights','floating','sunrise']),
+  ('Unique One of a Kind', array['rain forest','riverbank','retro','scrap materials','quilting','patchwork','mosaic','parkside','golden bridges'])
+)
+update products p
+set collection = l.collection
+from lists l
+where p.fulfilment = 'creativehub'
+  and lower(replace(trim(p.title), '\u2019', '''')) = any (l.names);
+
+select 'collection count' as check, collection as detail, count(*)::text as value
+  from products where fulfilment = 'creativehub' and coalesce(collection, '') <> '' group by collection
+union all
+select 'TOTAL prints', '', count(*)::text from products where fulfilment = 'creativehub'
+union all
+select 'no collection yet', title, creativehub_product_id from products
+  where fulfilment = 'creativehub' and coalesce(collection, '') = ''
+union all
+select 'duplicate name', min(title), count(*)::text from products
+  where fulfilment = 'creativehub' group by lower(trim(title)) having count(*) > 1
+union all
+select 'blank name', coalesce(title, ''), creativehub_product_id from products
+  where fulfilment = 'creativehub' and trim(coalesce(title, '')) = ''
+order by 1, 2;`
+
+function buildImportSql(email, products, withCollections = false) {
   const lines = []
   lines.push('-- Starscapes Factory: import Creative Hub prints into the shop (as drafts).')
   lines.push('-- Paste all of this into Supabase > SQL Editor and click Run.')
@@ -150,6 +184,7 @@ function buildImportSql(email, products) {
   lines.push('  me uuid;')
   lines.push('  pid uuid;')
   lines.push('  n int := 0;')
+  lines.push('  removed int := 0;')
   lines.push('begin')
   lines.push(`  select id into me from auth.users where lower(email) = lower(${sqlText(email)}) limit 1;`)
   lines.push("  if me is null then raise exception 'No Supabase account found for that email. Check the email in the address and try again.'; end if;")
@@ -185,8 +220,21 @@ function buildImportSql(email, products) {
   }
   lines.push('')
   lines.push("  raise notice 'Imported % prints with their sizes and frames.', n;")
+  const idList = `array[${products.map((p) => sqlText(p.id)).join(', ')}]::text[]`
+  lines.push('')
+  lines.push('  -- Prints that are no longer in Creative Hub: drafts are removed, and anything already published is unpublished instead.')
+  lines.push('  if n >= 1 then')
+  lines.push(`    delete from products where fulfilment = 'creativehub' and published = false and creativehub_product_id <> all (${idList});`)
+  lines.push('    get diagnostics removed = row_count;')
+  lines.push(`    update products set published = false where fulfilment = 'creativehub' and published = true and creativehub_product_id <> all (${idList});`)
+  lines.push("    raise notice 'Removed % draft prints that are no longer in Creative Hub.', removed;")
+  lines.push('  end if;')
   lines.push('end')
   lines.push('$sf_import$;')
+  if (withCollections) {
+    lines.push('')
+    lines.push(COLLECTIONS_SQL)
+  }
   return lines.join('\n')
 }
 
@@ -211,7 +259,8 @@ async function importSql(query, base, token) {
   if (failed.length) {
     return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
   }
-  return { __text: buildImportSql(email, withVariants.filter(Boolean)) }
+  const withCollections = String(query.collections || '').toLowerCase() === 'yes'
+  return { __text: buildImportSql(email, withVariants.filter(Boolean), withCollections) }
 }
 
 async function view(mode, query, base, token) {
