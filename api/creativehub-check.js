@@ -10,6 +10,7 @@
 //   /api/creativehub-check?view=catalogue                          your products at Creative Hub
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
+//   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
 //
 // Creative Hub's address is https://escher-v2.creativehub.io. You can point at another one with the
 // optional setting CREATIVEHUB_API_BASE.
@@ -48,6 +49,35 @@ function explain(status, body) {
   return `Creative Hub answered with status ${status}.`
 }
 
+
+// Countries whose cards Stripe charges at its European rate (everything else outside the UK is "international")
+const EEA = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE'])
+
+// Stripe's published UK card rates: 1.5% + 20p (UK cards), 2.5% + 20p (EEA cards), 3.25% + 20p (international cards).
+// This assumes the customer's card is from the country the order is going to.
+function stripeFee(price, country) {
+  const pct = country === 'GB' ? 0.015 : EEA.has(country) ? 0.025 : 0.0325
+  return price * pct + 0.2
+}
+
+const money = (n) => (n === null || n === undefined ? null : Math.round(n * 100) / 100)
+
+async function quoteOne(base, token, variantId, country) {
+  const response = await fetch(`${base}/v1/orders/quote`, {
+    method: 'POST',
+    headers: authHeaders(token, { 'Content-Type': 'application/json' }),
+    body: JSON.stringify({ items: [{ variant_id: variantId, quantity: 1 }], delivery_country_code: country }),
+    signal: AbortSignal.timeout(10000),
+  })
+  let body = null
+  try {
+    body = await response.json()
+  } catch (e) {
+    body = null
+  }
+  return { ok: response.ok, status: response.status, body }
+}
+
 async function view(mode, query, base, token) {
   if (mode === 'catalogue') {
     const r = await getJson(base, token, '/v1/products?limit=200&offset=0')
@@ -63,6 +93,64 @@ async function view(mode, query, base, token) {
     if (!r.ok) return { ok: false, status: r.status, message: explain(r.status, r.body) }
     const variants = ((r.body && r.body.variants) || []).map((v) => pick(v, VARIANT_FIELDS))
     return { ok: true, product_id: product, count: variants.length, variants }
+  }
+
+  if (mode === 'margins') {
+    const country = String(query.country || 'GB').toUpperCase()
+    if (!/^[A-Z]{2}$/.test(country)) return { ok: false, message: 'country must be two letters, like GB.' }
+    let product = String(query.product || '')
+    if (!product) {
+      const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
+      product = list.ok && list.body && list.body.products && list.body.products[0] && list.body.products[0].id
+    }
+    if (!product || !/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'No product found. Add ?product=PRODUCT_ID.' }
+    const vr = await getJson(base, token, `/v1/products/${product}/variants`)
+    if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
+    const variants = ((vr.body && vr.body.variants) || []).slice().sort(
+      (a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed)
+    )
+    const rows = await Promise.all(
+      variants.map(async (v) => {
+        const label = `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`
+        const q = await quoteOne(base, token, v.id, country)
+        if (!q.ok) return { label, price: v.retail_price, error: explain(q.status, q.body) }
+        const c = q.body
+        const price = Number(v.retail_price)
+        const fee = stripeFee(price, country)
+        const costIncl = Number(c.total_incl_vat)
+        const costExcl = Number(c.total_excl_vat)
+        const profitNoVat = price - costIncl - fee
+        const row = {
+          label,
+          your_price: price,
+          creative_hub_cost_incl_vat: money(costIncl),
+          of_which_production: money(c.production_cost),
+          of_which_delivery: money(c.delivery_cost),
+          stripe_fee: money(fee),
+          profit_if_not_vat_registered: money(profitNoVat),
+          margin_if_not_vat_registered: Math.round((profitNoVat / price) * 100) + '%',
+        }
+        if (country === 'GB') {
+          const net = price / 1.2
+          const profitVat = net - costExcl - fee
+          row.profit_if_vat_registered = money(profitVat)
+          row.margin_if_vat_registered = Math.round((profitVat / net) * 100) + '%'
+        }
+        return row
+      })
+    )
+    return {
+      ok: true,
+      country,
+      product_id: product,
+      assumptions: [
+        'your_price is the retail price set in Creative Hub. It is not a price on your own site yet.',
+        'Stripe fee uses its published UK card rates for a card from the same country as the delivery address.',
+        'Profit is before tax, and before any packaging, returns or your own time.',
+        'If you are not VAT-registered, the VAT Creative Hub charges you is a real cost. If you are, you can reclaim it, and your price includes 20% VAT (UK only).',
+      ],
+      rows,
+    }
   }
 
   if (mode === 'quote') {
