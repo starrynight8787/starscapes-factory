@@ -1,173 +1,101 @@
-// Vercel serverless function: checks that the Creative Hub API token works, and (read-only) helps
-// find out what the API offers.
+// Vercel serverless function: checks the Creative Hub connection and, read-only, lets you look at
+// your Creative Hub products and test a price quote.
 //
-// - It only READS. It never places an order and never costs anything.
+// - Nothing here places an order or costs anything. A quote only asks "what would this cost?".
 // - It never shows the token. The token lives in Vercel as CREATIVEHUB_API_KEY (server side only).
-// - Visit /api/creativehub-check to run the basic check.
+// - These pages are for setting up. We remove them once ordering is built.
 //
-// Optional second setting: CREATIVEHUB_API_BASE, to point at a different Creative Hub address
-// (for example a sandbox). If it isn't set, https://api.creativehub.io is used.
+// Pages:
+//   /api/creativehub-check                                         is the connection working?
+//   /api/creativehub-check?view=catalogue                          your products at Creative Hub
+//   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
+//   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //
-// Discovery pages (temporary, we remove them once ordering is built):
-//   ?docs=find    where does Creative Hub keep its API description?
-//   ?docs=paths   list every address the API offers (needs the description to be found)
-//   ?docs=orders  just the ordering parts, with their field lists
-//   ?docs=probe   which likely quote/order/SKU addresses exist (GET only, status codes only)
-//   ?docs=shape   the field NAMES of an order record (no values, so no customer details)
+// Creative Hub's address is https://escher-v2.creativehub.io. You can point at another one with the
+// optional setting CREATIVEHUB_API_BASE.
 
-const WANTED = ['order', 'quote', 'sku', 'delivery', 'shipping', 'price', 'webhook', 'card']
+const DEFAULT_BASE = 'https://escher-v2.creativehub.io'
 
-// Places an API description is commonly kept
-const SPEC_PATHS = [
-  '/openapi.json', '/v1/openapi.json', '/swagger.json', '/v1/swagger.json', '/swagger/v1/swagger.json',
-  '/api-docs', '/api-docs.json', '/docs/openapi.json', '/docs/json', '/openapi', '/v1/docs', '/docs', '/swagger', '/redoc',
+function authHeaders(token, extra = {}) {
+  return { Authorization: `Bearer ${token}`, Accept: 'application/json', ...extra }
+}
+
+async function getJson(base, token, path) {
+  const response = await fetch(`${base}${path}`, { headers: authHeaders(token), signal: AbortSignal.timeout(8000) })
+  let body = null
+  try {
+    body = await response.json()
+  } catch (e) {
+    body = null
+  }
+  return { ok: response.ok, status: response.status, body }
+}
+
+const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj && k in obj).map((k) => [k, obj[k]]))
+
+const VARIANT_FIELDS = [
+  'id', 'sku', 'size', 'print_width_mm', 'print_height_mm', 'is_framed', 'frame_color', 'frame_type',
+  'mount_board_size', 'paper_id', 'retail_price', 'price_currency',
+  'delivery_price_uk', 'delivery_price_eu_na', 'delivery_price_row',
 ]
 
-// Likely addresses for quotes, orders, products and so on. Probed with GET only.
-const PROBE_PATHS = [
-  '/v1/orders', '/v1/orders/quote', '/v1/orders/quotes', '/v1/quote', '/v1/quotes', '/v1/prices', '/v1/products',
-  '/v1/skus', '/v1/catalog', '/v1/delivery-options', '/v1/shipping', '/v1/account', '/v1/me', '/v1/cards',
-  '/v1/saved-card', '/v1/webhooks', '/v1/drops',
-]
-
-function refsIn(value, found) {
-  if (Array.isArray(value)) {
-    value.forEach((v) => refsIn(v, found))
-  } else if (value && typeof value === 'object') {
-    for (const [key, v] of Object.entries(value)) {
-      if (key === '$ref' && typeof v === 'string') found.add(v)
-      else refsIn(v, found)
-    }
-  }
+function explain(status, body) {
+  if (status === 401) return 'Creative Hub did not accept this token. It may be wrong, revoked, or copied with a space.'
+  if (status === 403) return 'The token was read, but API access is not switched on for this account.'
+  if (status === 404) return 'Not found. The id may be wrong, or it is not one of your products.'
+  if (status === 429) return 'Too many requests just now. Try again in a minute.'
+  if (status === 409 && body && body.message) return body.message
+  return `Creative Hub answered with status ${status}.`
 }
 
-function trimSpec(spec) {
-  const paths = {}
-  for (const [path, item] of Object.entries(spec.paths || {})) {
-    if (WANTED.some((word) => path.toLowerCase().includes(word))) paths[path] = item
+async function view(mode, query, base, token) {
+  if (mode === 'catalogue') {
+    const r = await getJson(base, token, '/v1/products?limit=200&offset=0')
+    if (!r.ok) return { ok: false, status: r.status, message: explain(r.status, r.body) }
+    const products = ((r.body && r.body.products) || []).map((p) => pick(p, ['id', 'name', 'variant_count', 'shopify_handle']))
+    return { ok: true, count: products.length, products }
   }
-  const schemas = {}
-  const first = new Set()
-  refsIn(paths, first)
-  const queue = [...first]
-  while (queue.length && Object.keys(schemas).length < 80) {
-    const ref = queue.shift()
-    if (!ref.startsWith('#/components/schemas/')) continue
-    const name = ref.split('/').pop()
-    const schema = spec.components && spec.components.schemas && spec.components.schemas[name]
-    if (!schema || schemas[name]) continue
-    schemas[name] = schema
-    const inner = new Set()
-    refsIn(schema, inner)
-    for (const r of inner) if (!schemas[r.split('/').pop()]) queue.push(r)
+
+  if (mode === 'variants') {
+    const product = String(query.product || '')
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'Add ?product=PRODUCT_ID (from the catalogue page).' }
+    const r = await getJson(base, token, `/v1/products/${product}/variants`)
+    if (!r.ok) return { ok: false, status: r.status, message: explain(r.status, r.body) }
+    const variants = ((r.body && r.body.variants) || []).map((v) => pick(v, VARIANT_FIELDS))
+    return { ok: true, product_id: product, count: variants.length, variants }
   }
-  return { info: spec.info, servers: spec.servers, paths, schemas }
-}
 
-// Field names and types only. Never any values.
-function shapeOf(value, depth = 0) {
-  if (Array.isArray(value)) return value.length ? [shapeOf(value[0], depth + 1)] : []
-  if (value && typeof value === 'object') {
-    if (depth > 4) return '{...}'
-    const out = {}
-    for (const [key, v] of Object.entries(value)) out[key] = shapeOf(v, depth + 1)
-    return out
-  }
-  return value === null ? 'null' : typeof value
-}
-
-function authHeaders(token) {
-  const headers = { Accept: 'application/json' }
-  if (token) headers.Authorization = `Bearer ${token}`
-  return headers
-}
-
-async function findSpec(base, token) {
-  const tried = []
-  for (const path of SPEC_PATHS) {
+  if (mode === 'quote') {
+    const variant = String(query.variant || '')
+    const country = String(query.country || 'GB').toUpperCase()
+    const qty = Number.parseInt(query.qty || '1', 10)
+    if (!/^[A-Za-z0-9_-]{1,100}$/.test(variant)) return { ok: false, message: 'Add ?variant=VARIANT_ID (from the variants page).' }
+    if (!/^[A-Z]{2}$/.test(country)) return { ok: false, message: 'country must be two letters, like GB.' }
+    if (!(qty >= 1 && qty <= 50)) return { ok: false, message: 'qty must be between 1 and 50.' }
+    const response = await fetch(`${base}/v1/orders/quote`, {
+      method: 'POST',
+      headers: authHeaders(token, { 'Content-Type': 'application/json' }),
+      body: JSON.stringify({ items: [{ variant_id: variant, quantity: qty }], delivery_country_code: country }),
+      signal: AbortSignal.timeout(10000),
+    })
+    let body = null
     try {
-      const response = await fetch(`${base}${path}`, { headers: authHeaders(token), signal: AbortSignal.timeout(6000) })
-      const type = (response.headers && response.headers.get && response.headers.get('content-type')) || ''
-      tried.push({ path, status: response.status, type: type.split(';')[0] })
-      if (response.ok && type.includes('json')) {
-        const spec = await response.json()
-        if (spec && spec.paths) return { spec, foundAt: path, tried }
-      }
-    } catch (error) {
-      tried.push({ path, status: 'error' })
+      body = await response.json()
+    } catch (e) {
+      body = null
     }
+    if (!response.ok) return { ok: false, status: response.status, message: explain(response.status, body), detail: body && (body.detail || body.error_code) }
+    return { ok: true, note: 'This is only a quote. Nothing was ordered.', quote: body }
   }
-  return { spec: null, tried }
-}
 
-async function probe(base, token) {
-  const results = []
-  for (const path of PROBE_PATHS) {
-    try {
-      const response = await fetch(`${base}${path}`, { headers: authHeaders(token), signal: AbortSignal.timeout(6000) })
-      const allow = response.headers && response.headers.get && response.headers.get('allow')
-      results.push({ path, status: response.status, ...(allow ? { allow } : {}) })
-    } catch (error) {
-      results.push({ path, status: 'error' })
-    }
-  }
-  return results
+  return { ok: false, message: 'Unknown page.' }
 }
-
-async function runDocs(mode, base, token) {
-  if (mode === 'probe') {
-    return {
-      note: '404 = not there. 405 = there, but it wants a different method (the allow field says which). 200 = there and readable. 401/403 = there but not allowed.',
-      results: await probe(base, token),
-    }
-  }
-  if (mode === 'shape') {
-    const response = await fetch(`${base}/v1/orders`, { headers: authHeaders(token), signal: AbortSignal.timeout(8000) })
-    if (!response.ok) return { status: response.status, message: 'Could not read the orders list.' }
-    const body = await response.json()
-    return { status: response.status, note: 'Field names and types only, no values.', shape: shapeOf(body) }
-  }
-  const { spec, foundAt, tried } = await findSpec(base, token)
-  if (mode === 'find') {
-    return spec
-      ? { docs: true, foundAt, endpointCount: Object.keys(spec.paths).length, tried }
-      : { docs: false, message: 'No API description found at the usual places.', tried }
-  }
-  if (!spec) return { docs: false, message: 'No API description found at the usual places. Try ?docs=find and ?docs=probe.', tried }
-  if (mode === 'paths') {
-    const lines = []
-    for (const [path, item] of Object.entries(spec.paths || {})) {
-      for (const [method, op] of Object.entries(item)) {
-        if (['get', 'post', 'put', 'patch', 'delete'].includes(method)) {
-          lines.push(`${method.toUpperCase()} ${path}${op && op.summary ? ' - ' + op.summary : ''}`)
-        }
-      }
-    }
-    return { docs: true, foundAt, count: lines.length, endpoints: lines }
-  }
-  return { docs: true, foundAt, ...trimSpec(spec) }
-}
-
-// Harmless "list" addresses to try for the basic check, in order.
-const CHECKS = ['/v1/orders', '/v1/drops']
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
 
   const token = process.env.CREATIVEHUB_API_KEY || process.env.CREATIVEHUB_API_TOKEN
-  const base = (process.env.CREATIVEHUB_API_BASE || 'https://api.creativehub.io').replace(/\/+$/, '')
-
-  const docsMode = req && req.query && req.query.docs
-  if (['find', 'paths', 'orders', 'probe', 'shape'].includes(docsMode)) {
-    if (!token) {
-      return res.status(200).json({ connected: false, reason: 'no_token', message: 'CREATIVEHUB_API_KEY is not set on this deployment.' })
-    }
-    try {
-      return res.status(200).json(await runDocs(docsMode, base, token))
-    } catch (error) {
-      return res.status(200).json({ docs: false, message: 'Could not read from Creative Hub. ' + (error && error.name === 'TimeoutError' ? 'It took too long.' : '') })
-    }
-  }
+  const base = (process.env.CREATIVEHUB_API_BASE || DEFAULT_BASE).replace(/\/+$/, '')
 
   if (!token) {
     return res.status(200).json({
@@ -177,49 +105,22 @@ export default async function handler(req, res) {
     })
   }
 
-  const tried = []
-  try {
-    for (const path of CHECKS) {
-      const response = await fetch(`${base}${path}`, {
-        headers: { Authorization: `Bearer ${token}`, Accept: 'application/json' },
-        signal: AbortSignal.timeout(8000),
-      })
-      tried.push({ path, status: response.status })
-
-      if (response.ok) {
-        return res.status(200).json({ connected: true, tried, message: `Creative Hub accepted the token (${path}).` })
-      }
-      if (response.status === 401) {
-        return res.status(200).json({
-          connected: false, reason: 'invalid_token', tried,
-          message: 'Creative Hub did not accept this token. It may be wrong, revoked, or copied with a space.',
-        })
-      }
-      if (response.status === 403) {
-        return res.status(200).json({
-          connected: false, reason: 'api_access_disabled', tried,
-          message: 'The token was read, but API access is not switched on for this account.',
-        })
-      }
-      if (response.status === 429) {
-        return res.status(200).json({
-          connected: false, reason: 'rate_limited', tried,
-          message: 'Too many requests just now. Try again in a minute.',
-        })
-      }
+  const query = (req && req.query) || {}
+  if (query.view) {
+    try {
+      return res.status(200).json(await view(String(query.view), query, base, token))
+    } catch (error) {
+      return res.status(200).json({ ok: false, message: 'Could not reach Creative Hub. ' + (error && error.name === 'TimeoutError' ? 'It took too long.' : '') })
     }
-    return res.status(200).json({
-      connected: false,
-      reason: 'addresses_not_recognised',
-      tried,
-      message: 'Creative Hub did not recognise the addresses this check uses. The token may still be fine.',
-    })
+  }
+
+  // The basic check: can we read your orders list?
+  try {
+    const r = await getJson(base, token, '/v1/orders?limit=1&offset=0')
+    if (r.ok) return res.status(200).json({ connected: true, status: r.status, message: 'Creative Hub accepted the token.' })
+    const reasons = { 401: 'invalid_token', 403: 'api_access_disabled', 429: 'rate_limited' }
+    return res.status(200).json({ connected: false, status: r.status, reason: reasons[r.status] || 'unexpected_status', message: explain(r.status, r.body) })
   } catch (error) {
-    return res.status(200).json({
-      connected: false,
-      reason: 'network_error',
-      tried,
-      message: 'Could not reach Creative Hub. ' + (error && error.name === 'TimeoutError' ? 'It took too long to answer.' : ''),
-    })
+    return res.status(200).json({ connected: false, reason: 'network_error', message: 'Could not reach Creative Hub. ' + (error && error.name === 'TimeoutError' ? 'It took too long to answer.' : '') })
   }
 }
