@@ -23,6 +23,13 @@
   --sf-hand: 'Caveat', cursive;
 }
 
+/* Homepage background shimmer: change these three numbers to make it calmer or livelier */
+:root {
+  --sf-sheen-strength: 0.07; /* brightness of the slow band of light (0 = off, 0.15 = strong) */
+  --sf-sheen-seconds: 20s; /* how long the band takes to cross the page */
+  --sf-twinkle-seconds: 8s; /* how slowly the little stars brighten and fade */
+}
+
 html body {
   font-family: var(--sf-body);
   background: var(--sf-page);
@@ -375,7 +382,97 @@ html body h3 {
   gap: 20px;
   padding: 72px 24px 88px;
   text-align: center;
-  background: linear-gradient(135deg, #070b26 0%, #14306a 50%, #2e8fd0 100%);
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  background:
+    linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, var(--sf-sheen-strength)) 50%, transparent 58%),
+    linear-gradient(135deg, #070b26 0%, #14306a 50%, #2e8fd0 100%);
+  background-size: 260% 100%, 100% 100%;
+  background-repeat: no-repeat;
+  animation: sf-sheen var(--sf-sheen-seconds) ease-in-out infinite;
+}
+
+/* Two layers of tiny stars that twinkle out of step with each other */
+.sf-hero::before,
+.sf-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-repeat: no-repeat;
+  animation: sf-twinkle var(--sf-twinkle-seconds) ease-in-out infinite;
+}
+.sf-hero::before {
+  background-image:
+    radial-gradient(circle 1.6px at 6% 14%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 14% 38%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 9% 62%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 4% 84%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 22% 8%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 31% 17%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 44% 6%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.8px at 58% 11%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 71% 7%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 83% 15%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 93% 9%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 96% 33%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 91% 58%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 95% 82%, #fff 0, #fff 55%, transparent 100%);
+}
+.sf-hero::after {
+  animation-duration: calc(var(--sf-twinkle-seconds) * 1.45);
+  animation-delay: calc(var(--sf-twinkle-seconds) * -0.5);
+  background-image:
+    radial-gradient(circle 1.2px at 11% 24%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 3% 48%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 16% 74%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 8% 93%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 27% 3%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 38% 12%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 51% 4%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 64% 15%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 77% 5%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 88% 22%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 97% 18%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.2px at 92% 42%, #dce6ff 0, #dce6ff 55%, transparent 100%),
+    radial-gradient(circle 1.4px at 86% 71%, #fff 0, #fff 55%, transparent 100%),
+    radial-gradient(circle 1.6px at 94% 92%, #fff 0, #fff 55%, transparent 100%);
+}
+/* everything real on the hero sits above the shimmer */
+.sf-hero > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes sf-sheen {
+  from {
+    background-position: 0% 0, 0 0;
+  }
+  to {
+    background-position: 100% 0, 0 0;
+  }
+}
+@keyframes sf-twinkle {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  50% {
+    opacity: 0.95;
+  }
+}
+/* people who ask their device for less motion get a still sky */
+@media (prefers-reduced-motion: reduce) {
+  .sf-hero,
+  .sf-hero::before,
+  .sf-hero::after {
+    animation: none;
+  }
+  .sf-hero::before,
+  .sf-hero::after {
+    opacity: 0.6;
+  }
 }
 .sf-eyebrow {
   margin: 0;
