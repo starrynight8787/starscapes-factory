@@ -6,6 +6,7 @@ import { roomPath } from '../data/roomImages'
 import Logo from './Logo'
 import RoomTile from './RoomTile'
 import '../styles/site.css'
+import CartNavLink from '../cart/CartNavLink'
 
 const iconProps = {
   width: 24,
@@ -121,9 +122,7 @@ export default function Navbar({ session }) {
                 </div>
               )}
             </div>
-            <Link to="/products" className="sf-link">
-              Shop
-            </Link>
+            <CartNavLink className="sf-link" />
             <Link to="/page/about" className="sf-link">
               About
             </Link>
@@ -186,9 +185,7 @@ export default function Navbar({ session }) {
                 {c.name}
               </Link>
             ))}
-            <Link to="/products" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-              Shop
-            </Link>
+            <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
             <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
               About
             </Link>

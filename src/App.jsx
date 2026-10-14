@@ -20,6 +20,7 @@ import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import FactoryFloorRoutes from './factoryfloor/FactoryFloorRoutes'
+import CartPage from './cart/CartPage'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -75,6 +76,7 @@ export default function App() {
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/factory-floor/*" element={<FactoryFloorRoutes />} />
+          <Route path="/cart" element={<CartPage />} />
         </Routes>
       </div>
 <Footer /> 
