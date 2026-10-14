@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import BackToPosts from '../components/BackToPosts'
 
 export default function PostPage({ session }) {
   const { id } = useParams()
@@ -54,7 +55,7 @@ export default function PostPage({ session }) {
   return (
     <div className="post-detail">
       <p>
-        <Link to="/">&larr; Back to all posts</Link>
+        <BackToPosts />
       </p>
       <h1>{post.title}</h1>
       <p className="muted">{new Date(post.created_at).toLocaleDateString()}</p>

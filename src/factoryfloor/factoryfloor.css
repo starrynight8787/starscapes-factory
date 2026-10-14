@@ -1,0 +1,324 @@
+/* =========================================================
+   The Factory Floor: post-it notes stuck on the blueprint.
+   Uses the brand colours and fonts defined in styles/site.css.
+   ========================================================= */
+
+/* The page runs edge to edge over the blueprint */
+.container:has(> .ff) {
+  max-width: none;
+  padding: 0;
+  margin: 0;
+}
+
+.ff {
+  min-height: 100vh;
+  padding: 56px 24px 96px;
+  box-sizing: border-box;
+  color: #fff;
+  background:
+    linear-gradient(rgba(7, 11, 38, 0.3), rgba(7, 11, 38, 0.3)),
+    #14306a url('/scenes/factory-floor-bg.jpg') center top / cover no-repeat;
+  font-family: var(--sf-body, system-ui, sans-serif);
+}
+.ff-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.ff a {
+  color: inherit;
+}
+.ff h1 {
+  margin: 0;
+  font-family: var(--sf-head, sans-serif);
+  font-size: clamp(32px, 5vw, 56px);
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 12px rgba(7, 11, 38, 0.5);
+}
+.ff-head {
+  text-align: center;
+}
+.ff-tagline {
+  margin: 6px 0 0;
+  font-family: var(--sf-script, cursive);
+  font-size: clamp(26px, 3.2vw, 38px);
+  line-height: 1.1;
+  color: var(--sf-star, #dce6ff);
+  text-shadow: 0 2px 10px rgba(7, 11, 38, 0.5);
+}
+.ff-back {
+  margin: 0 0 12px;
+}
+.ff-back a {
+  color: var(--sf-star, #dce6ff);
+  font-weight: 500;
+}
+.ff-msg {
+  text-align: center;
+  font-size: 1.05rem;
+  text-shadow: 0 1px 6px rgba(7, 11, 38, 0.6);
+}
+
+/* ---------- A post-it note ---------- */
+.ff-note {
+  --note: #ffe27a;
+  --tilt: 0deg;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-sizing: border-box;
+  padding: 26px 20px 16px;
+  background: var(--note);
+  color: var(--sf-navy-700, #14306a);
+  font-family: var(--sf-hand, cursive);
+  text-decoration: none;
+  border-radius: 3px;
+  box-shadow: 0 12px 20px rgba(7, 11, 38, 0.38), 0 2px 4px rgba(7, 11, 38, 0.25);
+  transform: rotate(var(--tilt));
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.ff .ff-note {
+  color: var(--sf-navy-700, #14306a);
+}
+/* the tape holding it up */
+.ff-note::before {
+  content: '';
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  width: 88px;
+  height: 26px;
+  transform: translateX(-50%) rotate(-2deg);
+  background: rgba(255, 255, 255, 0.55);
+  box-shadow: 0 1px 2px rgba(7, 11, 38, 0.2);
+}
+.ff-note:hover,
+.ff-note:focus-visible {
+  transform: rotate(0deg) translateY(-6px) scale(1.03);
+  box-shadow: 0 20px 30px rgba(7, 11, 38, 0.45), 0 2px 4px rgba(7, 11, 38, 0.25);
+  z-index: 3;
+}
+.ff-note:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 5px;
+}
+.ff-note--c0 { --note: #c9f29b; } /* green */
+.ff-note--c1 { --note: #ffc78f; } /* orange */
+.ff-note--c2 { --note: #cde4ff; } /* pale blue */
+.ff-note--c3 { --note: #ffb3d1; } /* pink */
+.ff-note--c4 { --note: #dccdff; } /* pale purple */
+.ff-note--c5 { --note: #ffe27a; } /* yellow */
+
+.ff-note__kind {
+  font-size: 1.05rem;
+  letter-spacing: 0.04em;
+  opacity: 0.75;
+}
+.ff-note__title {
+  font-size: clamp(24px, 2.4vw, 30px);
+  font-weight: 700;
+  line-height: 1.08;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.ff-note__date {
+  margin-top: auto;
+  font-size: 1.1rem;
+  opacity: 0.8;
+}
+.ff-new {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  padding: 1px 10px;
+  border-radius: 999px;
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+  font-family: var(--sf-body, sans-serif);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- The two big notes ---------- */
+.ff-big {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 40px;
+  max-width: 920px;
+  margin: 48px auto 64px;
+}
+.ff-note--big {
+  aspect-ratio: 3 / 2;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px 34px;
+}
+.ff-note--story { --note: #ffe27a; --tilt: -1.5deg; }
+.ff-note--blueprint { --note: #ffb3d1; --tilt: 1.5deg; }
+.ff-note--big .ff-note__title {
+  font-size: clamp(34px, 4vw, 50px);
+  -webkit-line-clamp: 3;
+}
+.ff-note__blurb {
+  font-size: clamp(22px, 2.2vw, 28px);
+  line-height: 1.15;
+}
+.ff-note__go {
+  margin-top: 6px;
+  font-size: 1.3rem;
+  font-weight: 700;
+}
+
+/* ---------- The filter above a list of posts ---------- */
+.ff-filter {
+  max-width: 1100px;
+  margin: 28px auto 36px;
+  padding: 18px 22px 12px;
+  background: rgba(7, 11, 38, 0.55);
+  border: 1px solid rgba(220, 230, 255, 0.35);
+  border-radius: 14px;
+}
+.ff-filter__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.ff-filter__field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1 1 280px;
+  font-size: 0.82rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--sf-star, #dce6ff);
+}
+.ff-filter__field--sort {
+  flex: 0 1 200px;
+}
+.ff-filter input,
+.ff-filter select {
+  min-height: 44px;
+  padding: 8px 12px;
+  box-sizing: border-box;
+  border: 2px solid transparent;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  font: inherit;
+  font-size: 1rem;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.ff-filter input:focus-visible,
+.ff-filter select:focus-visible,
+.ff-filter__tags button:focus-visible,
+.ff-filter__count button:focus-visible {
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+}
+.ff-filter__tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 14px;
+}
+.ff-filter__tags button {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid rgba(220, 230, 255, 0.55);
+  border-radius: 999px;
+  background: transparent;
+  color: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.ff-filter__tags button small {
+  opacity: 0.75;
+}
+.ff-filter__tags button:hover {
+  background: rgba(220, 230, 255, 0.18);
+}
+.ff-filter__tags button.is-on {
+  background: #ffe27a;
+  border-color: #ffe27a;
+  color: var(--sf-navy-700, #14306a);
+  font-weight: 600;
+}
+.ff-filter__count {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 14px;
+  margin: 14px 0 0;
+  color: var(--sf-star, #dce6ff);
+  font-size: 0.95rem;
+}
+.ff-filter__count button {
+  border: 0;
+  background: none;
+  color: #fff;
+  font: inherit;
+  text-decoration: underline;
+  cursor: pointer;
+  min-height: 32px;
+}
+
+/* ---------- The latest posts ---------- */
+.ff-latest__title {
+  margin: 0 0 28px;
+  text-align: center;
+  font-family: var(--sf-hand, cursive);
+  font-size: clamp(30px, 3.4vw, 42px);
+  font-weight: 700;
+  text-shadow: 0 2px 10px rgba(7, 11, 38, 0.5);
+}
+.ff-latest {
+  list-style: none;
+  max-width: 940px;
+  margin: 0 auto;
+  padding: 0 8px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 42px 34px;
+}
+/* the full lists of posts have room for more notes in a row */
+.ff-latest--all {
+  max-width: 1100px;
+  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+  gap: 38px 30px;
+}
+.ff-latest .ff-note {
+  aspect-ratio: 1 / 1;
+}
+
+@media (max-width: 720px) {
+  .ff {
+    padding: 36px 16px 72px;
+  }
+  .ff-big {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 34px;
+    margin: 36px auto 48px;
+  }
+  .ff-latest {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 30px 18px;
+    padding: 0;
+  }
+  .ff-note {
+    padding: 22px 14px 12px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ff-note {
+    transition: none;
+  }
+  .ff-note:hover,
+  .ff-note:focus-visible {
+    transform: rotate(var(--tilt));
+  }
+}

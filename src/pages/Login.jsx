@@ -44,6 +44,9 @@ export default function Login() {
         <button type="submit">Log in</button>
       </form>
       <p className="muted">
+        <Link to="/forgot-password">Forgot your password?</Link>
+      </p>
+      <p className="muted">
         Don't have an account? <Link to="/signup">Sign up</Link>
       </p>
     </div>

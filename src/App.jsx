@@ -17,6 +17,9 @@ import ProductGallery from './pages/ProductGallery'
 import ProductPage from './pages/ProductPage'
 import NewProduct from './pages/NewProduct'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
+import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
+import FactoryFloorRoutes from './factoryfloor/FactoryFloorRoutes'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -69,6 +72,9 @@ export default function App() {
           <Route path="/art-loft/*" element={<ArtLoftRoutes />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
+          <Route path="/forgot-password" element={<ForgotPassword />} />
+          <Route path="/reset-password" element={<ResetPassword />} />
+          <Route path="/factory-floor/*" element={<FactoryFloorRoutes />} />
         </Routes>
       </div>
 <Footer /> 

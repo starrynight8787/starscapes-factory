@@ -469,13 +469,37 @@ a.al-object:focus-visible {
   width: 100%;
   min-height: 52px;
   padding: 14px;
-  border: 2px dashed var(--sf-border, #dde3f0);
+  border: 2px solid var(--sf-navy-700, #14306a);
   border-radius: 999px;
-  background: #eef2fa;
-  color: var(--sf-muted, #5b6585);
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
   font: inherit;
   font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+.al-buy:hover:not(:disabled) {
+  background: var(--sf-blue, #1f6fa8);
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-buy:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 3px;
+}
+.al-buy:disabled {
+  border: 2px dashed var(--sf-border, #dde3f0);
+  background: #eef2fa;
+  color: var(--sf-muted, #5b6585);
   cursor: not-allowed;
+}
+.al-added {
+  min-height: 1.5em;
+  margin: 10px 0 0;
+  color: var(--sf-navy-700, #14306a);
+  font-weight: 500;
+}
+.al-added a {
+  color: var(--sf-blue, #1f6fa8);
 }
 .al-facts {
   list-style: none;

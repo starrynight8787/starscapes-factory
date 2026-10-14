@@ -3,6 +3,8 @@ import { Link, useParams } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
 import { fetchPrint } from './artLoftApi'
+import { addItem } from '../cart/cartStore'
+import useCart from '../cart/useCart'
 import { collectionBySlug, COLLECTIONS, firstImage, formatPrice, formatSize } from './artLoftData'
 
 export default function PrintPage() {
@@ -42,6 +44,27 @@ export default function PrintPage() {
   const finish = selected && selected.framed ? 'framed' : 'unframed'
   const sizes = variants.filter((v) => (finish === 'framed') === Boolean(v.framed))
   const collection = print ? COLLECTIONS.find((c) => c.name === print.collection) || null : null
+
+  const { count: inCart } = useCart()
+  const [note, setNote] = useState(null) // what to tell the shopper after pressing Add to cart
+
+  function handleAdd() {
+    if (!selected || !print) return
+    const finishText = selected.framed ? `${selected.frame_colour || 'framed'} frame` : 'unframed'
+    const result = addItem({
+      key: `print:${selected.id}`,
+      type: 'print',
+      id: selected.id,
+      productId: print.id,
+      title: print.title,
+      detail: `${formatSize(selected.size_label)}, ${finishText}`,
+      price: Number(selected.price),
+      image: firstImage(print) || '',
+      href: `/art-loft/prints/${print.id}`,
+    })
+    if (!result.ok) setNote({ kind: 'full' })
+    else setNote({ kind: result.capped ? 'max' : 'added' })
+  }
 
   // keep the same size when the finish changes, if that size exists in the other finish
   function chooseFinish(key) {
@@ -89,7 +112,7 @@ export default function PrintPage() {
                 <span className="al-field__label" id="finish-label">Finish</span>
                 <div className="al-choice" role="radiogroup" aria-labelledby="finish-label">
                   {finishes.map((f) => (
-                    <button key={f.key} type="button" role="radio" aria-checked={finish === f.key} className={finish === f.key ? 'is-on' : ''} onClick={() => chooseFinish(f.key)}>
+                    <button key={f.key} type="button" role="radio" aria-checked={finish === f.key} className={finish === f.key ? 'is-on' : ''} onClick={() => { setNote(null); chooseFinish(f.key) }}>
                       {f.label}
                     </button>
                   ))}
@@ -100,7 +123,7 @@ export default function PrintPage() {
                 <span className="al-field__label" id="size-label">Size</span>
                 <div className="al-choice" role="radiogroup" aria-labelledby="size-label">
                   {sizes.map((v) => (
-                    <button key={v.id} type="button" role="radio" aria-checked={pick === v.id} className={pick === v.id ? 'is-on' : ''} onClick={() => setPick(v.id)}>
+                    <button key={v.id} type="button" role="radio" aria-checked={pick === v.id} className={pick === v.id ? 'is-on' : ''} onClick={() => { setNote(null); setPick(v.id) }}>
                       {formatSize(v.size_label)}
                       <small>{formatPrice(v.price)}</small>
                     </button>
@@ -115,7 +138,12 @@ export default function PrintPage() {
             </>
           )}
 
-          <button type="button" className="al-buy" disabled>Buy: coming soon</button>
+          <button type="button" className="al-buy" disabled={!selected} onClick={handleAdd}>Add to cart</button>
+          <p className="al-added" role="status">
+            {note && note.kind === 'added' && <>Added to your cart. <Link to="/cart">View cart ({inCart})</Link></>}
+            {note && note.kind === 'max' && <>You already have the most of this print we can send in one order. <Link to="/cart">View cart ({inCart})</Link></>}
+            {note && note.kind === 'full' && <>Your cart is full. Remove something to add another. <Link to="/cart">View cart</Link></>}
+          </p>
           <ul className="al-facts">
             <li>Made to order and posted directly from the print studio.</li>
             <li>Delivery cost is shown at checkout, which opens soon.</li>

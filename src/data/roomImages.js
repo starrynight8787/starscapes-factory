@@ -14,7 +14,8 @@ export const roomImages = {
 // Not needed now that every picture is cropped to fill its square.
 export const roomImagesSmall = {}
 
-// The page each room opens. The Art Loft opens its own scene.
+// The page each room opens. The Art Loft and the Factory Floor have their own scenes; every other room uses the general room page for now.
+const OWN_PAGE = { 'art-loft': '/art-loft', 'factory-floor': '/factory-floor' }
 export function roomPath(slug) {
-  return slug === 'art-loft' ? '/art-loft' : `/channel/${slug}`
+  return OWN_PAGE[slug] || `/channel/${slug}`
 }
