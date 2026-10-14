@@ -14,7 +14,7 @@ export const roomImages = {
 // Not needed now that every picture is cropped to fill its square.
 export const roomImagesSmall = {}
 
-// The page each room opens. The Art Loft opens the shop.
+// The page each room opens. The Art Loft opens its own scene.
 export function roomPath(slug) {
-  return slug === 'art-loft' ? '/products' : `/channel/${slug}`
+  return slug === 'art-loft' ? '/art-loft' : `/channel/${slug}`
 }

@@ -16,6 +16,7 @@ import Footer from './components/Footer'
 import ProductGallery from './pages/ProductGallery'
 import ProductPage from './pages/ProductPage'
 import NewProduct from './pages/NewProduct'
+import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -65,6 +66,9 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+          <Route path="/art-loft/*" element={<ArtLoftRoutes />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<Signup />} />
         </Routes>
       </div>
 <Footer /> 

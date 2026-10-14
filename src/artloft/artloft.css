@@ -1,0 +1,603 @@
+/* =========================================================
+   The Art Loft: the scene, the shop pages and the publish page.
+   Uses the brand colours and fonts defined in styles/site.css.
+   ========================================================= */
+
+/* The Art Loft pages are a little wider than the normal page width */
+.container:has(> .al) {
+  max-width: 1280px;
+  padding-left: 24px;
+  padding-right: 24px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.al {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 0 72px;
+  font-family: var(--sf-body, system-ui, sans-serif);
+  color: var(--sf-ink, #0e1530);
+}
+.al h1 {
+  font-family: var(--sf-head, sans-serif);
+  font-size: clamp(30px, 4vw, 44px);
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.al h2 {
+  font-family: var(--sf-head, sans-serif);
+}
+.al-back {
+  margin: 0 0 12px;
+}
+.al-back a,
+.al-print__collection a {
+  color: var(--sf-blue, #1f6fa8);
+  text-decoration: none;
+  font-weight: 500;
+}
+.al-back a:hover,
+.al-print__collection a:hover {
+  text-decoration: underline;
+}
+
+.al-head {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.al-head--left {
+  text-align: left;
+}
+.al-tagline {
+  font-family: var(--sf-script, cursive);
+  font-size: clamp(26px, 3vw, 36px);
+  line-height: 1;
+  margin: 0 0 8px;
+  color: var(--sf-navy-700, #14306a);
+}
+.al-blurb {
+  max-width: 640px;
+  margin: 0 auto 16px;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.55;
+}
+.al-head--left .al-blurb {
+  margin-left: 0;
+}
+.al-note {
+  color: var(--sf-muted, #5b6585);
+  min-height: 1.4em;
+}
+
+/* ---------- The scene ---------- */
+.al-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 8px auto 0;
+  aspect-ratio: 1200 / 840;
+}
+.al-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+.al-spot {
+  position: absolute;
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.al-canvas {
+  background: #fff;
+  overflow: hidden;
+  transform: rotate(var(--rot, 0deg));
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  box-shadow: 0 2px 6px rgba(20, 48, 106, 0.18);
+}
+.al-canvas img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+a.al-canvas:hover,
+a.al-canvas:focus-visible {
+  transform: rotate(var(--rot, 0deg)) translateY(-6px) scale(1.03);
+  box-shadow: 0 14px 28px rgba(20, 48, 106, 0.28);
+  z-index: 5;
+}
+.al-canvas.is-soon {
+  background: transparent;
+  box-shadow: none;
+}
+.al-spot:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 6px;
+}
+.al-plaque {
+  position: absolute;
+  display: flex;
+  flex-direction: column;
+  padding: 0.12em 0.7em 0.18em;
+  background: #fff;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 8px;
+  font-family: var(--sf-hand, cursive);
+  font-size: clamp(12px, 1.7vw, 20px);
+  line-height: 1.1;
+  color: var(--sf-navy-700, #14306a);
+  pointer-events: none;
+  box-shadow: 0 2px 4px rgba(20, 48, 106, 0.12);
+}
+.al-plaque small {
+  font-size: 0.8em;
+  color: var(--sf-muted, #5b6585);
+}
+.al-object {
+  border-radius: 14px;
+  transition: background 0.2s ease;
+}
+a.al-object:hover,
+a.al-object:focus-visible {
+  background: rgba(184, 204, 245, 0.28);
+}
+.al-object.is-soon {
+  cursor: default;
+}
+.al-tip {
+  position: absolute;
+  left: 50%;
+  bottom: 100%;
+  transform: translate(-50%, -4px);
+  min-width: 150px;
+  max-width: 230px;
+  padding: 0.3em 0.8em 0.4em;
+  background: #fff;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 8px;
+  font-family: var(--sf-hand, cursive);
+  font-size: clamp(13px, 1.7vw, 20px);
+  line-height: 1.15;
+  text-align: center;
+  color: var(--sf-navy-700, #14306a);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+  z-index: 6;
+}
+.al-tip small {
+  display: block;
+  font-size: 0.8em;
+  color: var(--sf-muted, #5b6585);
+}
+.al-object:hover .al-tip,
+.al-object:focus-visible .al-tip {
+  opacity: 1;
+}
+
+/* names that are always showing under the objects on the floor */
+.al-plaque--floor {
+  transform: translateX(-50%);
+  align-items: center;
+  text-align: center;
+  white-space: nowrap;
+  padding: 0.12em 0.9em 0.18em;
+}
+.al-plaque--floor.is-soon small {
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+/* the under-construction sign on an unfinished object */
+.al-sign {
+  position: absolute;
+  left: 50%;
+  top: 22%;
+  transform: translate(-50%, -50%) rotate(-4deg);
+  display: block;
+  padding: 18px 0.7em 0.2em;
+  background:
+    repeating-linear-gradient(45deg, var(--sf-navy-700, #14306a) 0 9px, #fff 9px 18px) top / 100% 11px no-repeat,
+    #fff;
+  border: 3px solid var(--sf-navy-700, #14306a);
+  border-radius: 6px;
+  font-family: var(--sf-hand, cursive);
+  font-size: clamp(14px, 1.9vw, 24px);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+  white-space: nowrap;
+  color: var(--sf-navy-700, #14306a);
+  box-shadow: 0 3px 8px rgba(20, 48, 106, 0.22);
+  pointer-events: none;
+}
+.al-object.is-soon:focus-visible .al-sign {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 4px;
+}
+
+/* ---------- The list (phones, and a plain way in) ---------- */
+.al-list {
+  display: none;
+  margin-top: 8px;
+}
+.al-list h2 {
+  font-size: 1.15rem;
+  margin: 24px 0 10px;
+}
+.al-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.al-list a,
+.al-list .is-soon {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 44px;
+}
+.al-list a:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-list .is-soon {
+  opacity: 0.6;
+}
+.al-list strong {
+  display: block;
+}
+.al-list small {
+  display: block;
+  color: var(--sf-muted, #5b6585);
+}
+.al-list__thumb {
+  flex: none;
+  width: 64px;
+  height: 64px;
+  border-radius: 8px;
+  background: var(--sf-page, #f6f8fc);
+  border: 1px solid var(--sf-border, #dde3f0);
+  overflow: hidden;
+}
+.al-list__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+@media (max-width: 820px) {
+  .al-stage {
+    display: none;
+  }
+  .al-list {
+    display: block;
+  }
+}
+
+/* ---------- Grids and cards ---------- */
+.al-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 8px 0 24px;
+}
+.al-chips a {
+  padding: 8px 14px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+  text-decoration: none;
+  font-size: 0.95rem;
+  min-height: 20px;
+}
+.al-chips a:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-chips a.is-on {
+  background: var(--sf-navy-700, #14306a);
+  border-color: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.al-grid {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 28px 22px;
+}
+.al-card {
+  display: block;
+  color: inherit;
+  text-decoration: none;
+}
+.al-card__frame {
+  position: relative;
+  display: block;
+  aspect-ratio: 1 / 1;
+  padding: 10px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+  overflow: hidden;
+  transition: transform 0.2s ease, border-color 0.2s ease;
+  box-sizing: border-box;
+}
+.al-card:hover .al-card__frame,
+.al-card:focus-visible .al-card__frame {
+  transform: translateY(-3px);
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-card:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 4px;
+}
+.al-card__frame img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.al-card__blank {
+  display: block;
+  width: 100%;
+  height: 100%;
+  min-height: 160px;
+  background: var(--sf-page, #f6f8fc);
+}
+.al-card__title {
+  display: block;
+  margin-top: 10px;
+  font-family: var(--sf-head, sans-serif);
+  font-weight: 600;
+}
+.al-card__price {
+  display: block;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.al-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  padding: 2px 10px;
+  border-radius: 999px;
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+/* ---------- A single print ---------- */
+.al-print {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr);
+  gap: 44px;
+  align-items: start;
+}
+.al-print__image {
+  position: relative;
+  padding: 20px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 14px;
+}
+.al-print__image img {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 72vh;
+  object-fit: contain;
+}
+.al-print__collection {
+  margin: 0 0 14px;
+}
+.al-print__desc {
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.55;
+}
+.al-field {
+  margin: 20px 0;
+}
+.al-field__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sf-muted, #5b6585);
+}
+.al-choice {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.al-choice button {
+  min-height: 44px;
+  padding: 8px 16px;
+  background: #fff;
+  border: 2px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: center;
+}
+.al-choice button small {
+  display: block;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.8rem;
+}
+.al-choice button:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-choice button.is-on {
+  border-color: var(--sf-navy-700, #14306a);
+  background: var(--sf-star, #dce6ff);
+}
+.al-choice button:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
+}
+.al-price {
+  margin: 18px 0;
+  font-family: var(--sf-head, sans-serif);
+  font-size: 2.1rem;
+  font-weight: 600;
+}
+.al-price__what {
+  font-family: var(--sf-body, sans-serif);
+  font-size: 1rem;
+  font-weight: 400;
+  color: var(--sf-muted, #5b6585);
+}
+.al-buy {
+  width: 100%;
+  min-height: 52px;
+  padding: 14px;
+  border: 2px dashed var(--sf-border, #dde3f0);
+  border-radius: 999px;
+  background: #eef2fa;
+  color: var(--sf-muted, #5b6585);
+  font: inherit;
+  font-weight: 600;
+  cursor: not-allowed;
+}
+.al-facts {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+@media (max-width: 820px) {
+  .al-print {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 24px;
+  }
+}
+
+/* ---------- The publish page (only you see this) ---------- */
+.al-admin__group {
+  margin: 28px 0;
+}
+.al-admin__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  border-bottom: 2px solid var(--sf-navy-700, #14306a);
+  padding-bottom: 6px;
+}
+.al-admin__head h2 {
+  margin: 0;
+  font-size: 1.2rem;
+}
+.al-admin__head h2 small {
+  color: var(--sf-muted, #5b6585);
+  font-weight: 400;
+}
+.al-admin__bulk {
+  display: flex;
+  gap: 8px;
+}
+.al-admin__bulk button {
+  min-height: 40px;
+  padding: 6px 14px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  cursor: pointer;
+}
+.al-admin__bulk button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+.al-admin__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.al-admin__list li {
+  display: grid;
+  grid-template-columns: 1fr auto minmax(180px, 240px) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 10px 4px;
+  border-bottom: 1px solid var(--sf-border, #dde3f0);
+}
+.al-admin__list a {
+  color: inherit;
+  text-decoration: none;
+  font-weight: 500;
+}
+.al-admin__list a:hover {
+  text-decoration: underline;
+}
+.al-admin__price {
+  color: var(--sf-muted, #5b6585);
+}
+.al-admin__select {
+  min-height: 40px;
+  padding: 6px 10px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  background: #fff;
+  font: inherit;
+  color: inherit;
+}
+.al-admin__select:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  .al-admin__list li {
+    grid-template-columns: 1fr auto;
+  }
+  .al-admin__select {
+    grid-column: 1 / -1;
+  }
+}
+.al-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 90px;
+  cursor: pointer;
+}
+.al-switch input {
+  width: 22px;
+  height: 22px;
+  cursor: pointer;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .al-canvas,
+  .al-object,
+  .al-card__frame,
+  .al-tip {
+    transition: none;
+  }
+  a.al-canvas:hover,
+  a.al-canvas:focus-visible,
+  .al-card:hover .al-card__frame {
+    transform: rotate(var(--rot, 0deg));
+  }
+}
