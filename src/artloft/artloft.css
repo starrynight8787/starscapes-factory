@@ -625,3 +625,14 @@ a.al-object:focus-visible {
     transform: rotate(var(--rot, 0deg));
   }
 }
+
+/* The original site-wide button and text box styles (padding, margins, fading on hover) must not leak into these pages */
+.al button:hover {
+  opacity: 1;
+}
+.al-switch input {
+  display: inline-block;
+  width: 22px;
+  padding: 0;
+  margin: 0;
+}

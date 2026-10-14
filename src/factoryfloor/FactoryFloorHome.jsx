@@ -31,7 +31,7 @@ export default function FactoryFloorHome() {
           <p className="ff-tagline">{FACTORY.tagline}</p>
         </header>
 
-        <nav className="ff-big" aria-label="Sections of the Factory Floor">
+        <div className="ff-big" role="navigation" aria-label="Sections of the Factory Floor">
           {[SECTIONS.story, SECTIONS.blueprint].map((s) => (
             <Link key={s.key} className={`ff-note ff-note--big ff-note--${s.key}`} to={s.to}>
               <span className="ff-note__title">{s.name}</span>
@@ -39,7 +39,7 @@ export default function FactoryFloorHome() {
               <span className="ff-note__go" aria-hidden="true">Read on →</span>
             </Link>
           ))}
-        </nav>
+        </div>
 
         <section aria-labelledby="ff-latest-title">
           <h2 id="ff-latest-title" className="ff-latest__title">Latest posts</h2>

@@ -131,7 +131,7 @@ export default function ArtLoftScene() {
       </div>
 
       {/* The same doors as a plain list: this is what phones see, and it is always there for screen readers */}
-      <nav className="al-list" aria-label="Ways to browse the Art Loft">
+      <div className="al-list" role="navigation" aria-label="Ways to browse the Art Loft">
         <h2>Browse by collection</h2>
         <ul>
           {canvases.map((c) => (
@@ -187,7 +187,7 @@ export default function ArtLoftScene() {
             </li>
           ))}
         </ul>
-      </nav>
+      </div>
     </main>
   )
 }

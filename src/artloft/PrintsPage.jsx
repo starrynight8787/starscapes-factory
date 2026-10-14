@@ -32,14 +32,14 @@ export default function PrintsPage() {
         <p className="al-blurb">Every print is made to order and posted directly from the print studio.</p>
       </header>
 
-      <nav className="al-chips" aria-label="Filter by collection">
+      <div className="al-chips" role="navigation" aria-label="Filter by collection">
         <Link to="/art-loft/prints" className={!active ? 'is-on' : ''} aria-current={!active ? 'page' : undefined}>All</Link>
         {COLLECTIONS.map((c) => (
           <Link key={c.slug} to={`/art-loft/prints?collection=${c.slug}`} className={active && active.slug === c.slug ? 'is-on' : ''} aria-current={active && active.slug === c.slug ? 'page' : undefined}>
             {c.name}
           </Link>
         ))}
-      </nav>
+      </div>
 
       {status === 'error' && <p className="al-note" role="alert">The prints could not load just now. Please try again in a moment.</p>}
       {status === 'loading' && <p className="al-note">Loading…</p>}

@@ -222,3 +222,14 @@
   font-weight: 600;
   line-height: 1;
 }
+
+/* The original site-wide button and text box styles (padding, fading on hover) must not leak into the cart */
+.cart button:hover {
+  opacity: 1;
+}
+.cart-qty button {
+  padding: 0;
+}
+.cart-summary__clear button {
+  padding: 4px 0;
+}

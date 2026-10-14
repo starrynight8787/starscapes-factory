@@ -322,3 +322,16 @@
     transform: rotate(var(--tilt));
   }
 }
+
+/* The original site-wide button and text box styles (padding, margins, fading on hover) must not leak into these pages */
+.ff button:hover {
+  opacity: 1;
+}
+.ff-filter input {
+  display: block;
+  width: 100%;
+  margin: 0;
+}
+.ff-filter__count button {
+  padding: 4px 0;
+}
