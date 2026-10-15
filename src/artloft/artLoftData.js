@@ -27,7 +27,7 @@ export const COLLECTIONS = [
     slug: 'out-of-this-world',
     name: 'Out of this World',
     blurb: "Planets, stars and far-off places, in colour that doesn't belong on Earth.",
-    cover: 'Far Far Away',
+    cover: 'Behind the Curtain',
     frame: [255, 122, 230, 170, 1.5],
   },
   {
