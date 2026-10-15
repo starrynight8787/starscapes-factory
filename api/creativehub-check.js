@@ -11,6 +11,7 @@
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
+//   /api/creativehub-check?view=catalogue-json                     every print with its sizes and frames as plain data (the publish page's Sync button uses this)
 //   /api/creativehub-check?view=variant-pictures-json              the same pictures as plain data (the publish page's button uses this)
 //   /api/creativehub-check?view=variant-pictures-sql               the SQL that adds Creative Hub's picture of every size and frame to the shop
 //   /api/creativehub-check?view=inspect                            what pictures does Creative Hub give for a print? (add &product=PRODUCT_ID to pick one)
@@ -294,6 +295,35 @@ function collectPictures(withVariants) {
   return { rows, total }
 }
 
+// The whole catalogue as plain data, for the publish page's Sync button. Names, prices, sizes and picture links only.
+async function catalogueJson(base, token) {
+  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
+  if (failed.length) return { ok: false, message: 'Some prints could not be read just now. Wait a minute and try again.', failed, skipped }
+  if (withVariants.length === 0) return { ok: false, message: 'Creative Hub has no prints on this account.' }
+  const round2 = (n) => Math.round(Number(n) * 100) / 100
+  const prints = withVariants.map((p) => ({
+    id: p.id,
+    name: String(p.name || '').trim().slice(0, 200),
+    description: String(p.description || '').slice(0, 5000),
+    image: safePictureUrl(p.artwork_preview_medium_url) || safePictureUrl(p.artwork_url) || safePictureUrl(p.artwork_thumbnail_url) || null,
+    variants: p.variants
+      .filter((v) => Number.isFinite(Number(v.retail_price)))
+      .map((v) => ({
+        id: v.id,
+        sku: String(v.sku || ''),
+        size: String(v.size || ''),
+        width_mm: Number.isFinite(Number(v.print_width_mm)) ? Math.round(Number(v.print_width_mm)) : null,
+        height_mm: Number.isFinite(Number(v.print_height_mm)) ? Math.round(Number(v.print_height_mm)) : null,
+        framed: Boolean(v.is_framed),
+        frame_colour: v.is_framed && v.frame_color ? String(v.frame_color) : null,
+        price: round2(v.retail_price),
+        label: variantLabel(v),
+        picture: safePictureUrl(v.visualised_product_url),
+      })),
+  }))
+  return { ok: true, count: prints.length, skipped, prints }
+}
+
 // The same list as plain data. The publish page uses this to fill in the pictures with a button, no pasting needed.
 async function variantPicturesJson(base, token) {
   const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
@@ -499,6 +529,7 @@ async function view(mode, query, base, token) {
 
   if (mode === 'variant-pictures-sql') return variantPicturesSql(base, token)
   if (mode === 'variant-pictures-json') return variantPicturesJson(base, token)
+  if (mode === 'catalogue-json') return catalogueJson(base, token)
   if (mode === 'inspect') return inspectPictures(query, base, token)
 
   return { ok: false, message: 'Unknown page.' }

@@ -593,6 +593,29 @@ a.al-object:focus-visible {
   outline: 3px solid var(--sf-blue, #1f6fa8);
   outline-offset: 3px;
 }
+.al-sync-plan h3 {
+  margin: 14px 0 4px;
+  font-size: 1rem;
+}
+.al-sync-plan ul {
+  margin: 4px 0 8px;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+.al-sync-plan__note {
+  margin: 0 0 4px !important;
+  font-size: 0.92rem;
+}
+.al-sync-plan__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+.al-sync-plan__buttons .is-quiet {
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+}
 .al-admin__fill {
   margin: 12px 0 0;
   min-height: 1.4em;

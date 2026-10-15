@@ -5,12 +5,13 @@ const COLUMNS = 'id, title, description, price, collection, images, published, a
 
 // Every print the signed-in person is allowed to see.
 // Visitors get only published prints. You, signed in, also get your own drafts.
-export async function fetchPrints() {
-  const { data, error } = await supabase
-    .from('products')
-    .select(COLUMNS)
-    .eq('fulfilment', 'creativehub')
-    .order('title', { ascending: true })
+// Pass { withPictures: true } to also get the little bit of each size and frame that a grid needs to show the framed picture.
+export async function fetchPrints({ withPictures = false } = {}) {
+  const run = (columns) =>
+    supabase.from('products').select(columns).eq('fulfilment', 'creativehub').order('title', { ascending: true })
+  let { data, error } = await run(withPictures ? `${COLUMNS}, product_variants(framed, image_url, position)` : COLUMNS)
+  // If the picture column has not been added to the database yet, still show the grid, with the plain artwork
+  if (error && withPictures && /image_url/i.test(error.message || '')) ({ data, error } = await run(COLUMNS))
   if (error) throw error
   return data || []
 }
@@ -81,4 +82,73 @@ export async function savePicture(variantId, url) {
 export async function currentUser() {
   const { data } = await supabase.auth.getSession()
   return data && data.session ? data.session.user : null
+}
+
+// ---------------------------------------------------------------------------------------------
+// Sync with Creative Hub. The comparing lives in sync.js; this is the part that talks to the live site and the database.
+// ---------------------------------------------------------------------------------------------
+const MISSING_COLUMN =
+  'The picture column is not in the database yet. Run this one line in the Supabase SQL editor, then try again: alter table product_variants add column if not exists image_url text;'
+
+// Creative Hub's whole catalogue, from the live site (that is where the Creative Hub key lives)
+export async function fetchCatalogue() {
+  let res
+  try {
+    res = await fetch('/api/creativehub-check?view=catalogue-json', { cache: 'no-store' })
+  } catch (e) {
+    throw new Error('Could not reach the site to ask Creative Hub. Check your connection and try again.')
+  }
+  let body = null
+  try {
+    body = await res.json()
+  } catch (e) {
+    throw new Error("This only works on the live site, because Creative Hub's key lives there. Open starscapesfactory.com/art-loft/admin and try it there.")
+  }
+  if (!body || body.ok !== true || !Array.isArray(body.prints)) {
+    throw new Error((body && body.message) || 'Creative Hub did not send its prints. Try again in a minute.')
+  }
+  return body
+}
+
+// Your Creative Hub prints as they are in the shop, with their sizes and frames
+export async function fetchShopCatalogue(userId) {
+  const { data, error } = await supabase
+    .from('products')
+    .select(
+      `id, title, description, price, images, published, collection, creativehub_product_id, product_variants(id, label, size_label, width_mm, height_mm, framed, frame_colour, price, creativehub_variant_id, creativehub_sku, position, image_url)`
+    )
+    .eq('fulfilment', 'creativehub')
+    .eq('author_id', userId)
+  if (error) throw new Error(/image_url/i.test(error.message || '') ? MISSING_COLUMN : error.message || 'Could not read your prints.')
+  return data || []
+}
+
+// The database calls that applySync uses
+export const syncRepo = {
+  async insertProduct(row) {
+    const { data, error } = await supabase.from('products').insert(row).select('id').single()
+    if (error) throw error
+    return data.id
+  },
+  async updateProduct(id, patch) {
+    const { error } = await supabase.from('products').update(patch).eq('id', id)
+    if (error) throw error
+  },
+  async deleteProduct(id) {
+    const { error } = await supabase.from('products').delete().eq('id', id)
+    if (error) throw error
+  },
+  // Rows with a picture and rows without are saved separately, so a size with no picture never wipes one it already has
+  async upsertVariants(rows) {
+    for (const group of [rows.filter((r) => r.image_url), rows.filter((r) => !r.image_url)]) {
+      if (!group.length) continue
+      const { error } = await supabase.from('product_variants').upsert(group, { onConflict: 'creativehub_variant_id' })
+      if (error) throw new Error(/image_url/i.test(error.message || '') ? MISSING_COLUMN : error.message)
+    }
+  },
+  async deleteVariants(ids) {
+    if (!ids.length) return
+    const { error } = await supabase.from('product_variants').delete().in('id', ids)
+    if (error) throw error
+  },
 }

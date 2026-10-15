@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
-import { fetchPrints, setPublished, setCollection, currentUser, fetchPictureList, savePicture } from './artLoftApi'
+import { fetchPrints, setPublished, setCollection, currentUser, fetchPictureList, savePicture, fetchCatalogue, fetchShopCatalogue, syncRepo } from './artLoftApi'
+import { planSync, applySync } from './sync'
+import SyncPlan from './SyncPlan'
 import { COLLECTIONS, formatPrice } from './artLoftData'
 
 // Only you will find this page, at /art-loft/admin. Anyone else sees nothing to manage.
@@ -71,6 +73,39 @@ export default function AdminPrints() {
     }
   }
 
+  // Sync with Creative Hub: compare first, then apply only if the plan looks right
+  const [sync, setSync] = useState({ phase: 'idle', plan: null, text: '' }) // idle | comparing | plan | applying | done | error
+  async function compareWithHub() {
+    setSync({ phase: 'comparing', plan: null, text: 'Asking Creative Hub, and looking at your shop…' })
+    try {
+      const [catalogue, shop] = await Promise.all([fetchCatalogue(), fetchShopCatalogue(user.id)])
+      setSync({ phase: 'plan', plan: planSync(catalogue.prints, shop), text: '' })
+    } catch (e) {
+      setSync({ phase: 'error', plan: null, text: e.message })
+    }
+  }
+  async function applyChanges() {
+    const plan = sync.plan
+    setSync({ phase: 'applying', plan, text: 'Syncing…' })
+    const r = await applySync(plan, syncRepo, user.id, (done, total) => setSync((s) => ({ ...s, text: `Syncing… ${done} of ${total}` })))
+    try {
+      const all = await fetchPrints()
+      setPrints(all.filter((p) => p.author_id === user.id))
+    } catch (e) {
+      /* the list will refresh next time the page opens */
+    }
+    const did = [
+      r.added && `${r.added} added`,
+      r.refreshed && `${r.refreshed} refreshed`,
+      r.replaced && `${r.replaced} replaced`,
+      r.hidden && `${r.hidden} hidden`,
+      r.removed && `${r.removed} removed`,
+    ].filter(Boolean)
+    const parts = [`Done${did.length ? `: ${did.join(', ')}` : ''}.`]
+    if (r.failures.length) parts.push(`${r.failures.length} could not be finished (${r.failures.map((f) => f.name).join(', ')}). Press Compare again to see what is left. First problem: ${r.failures[0].message}`)
+    setSync({ phase: r.failures.length ? 'error' : 'done', plan: null, text: parts.join(' ') })
+  }
+
   // Fill in the picture of every size and frame from Creative Hub, six at a time, with a running count
   const [fill, setFill] = useState({ phase: 'idle', text: '' }) // idle | working | done | error
   async function fillPictures() {
@@ -135,8 +170,25 @@ export default function AdminPrints() {
       <p className="al-note" role="status">{message}</p>
 
       {prints.length > 0 && (
+        <section className="al-admin__pictures al-admin__sync" aria-labelledby="sync-title">
+          <h2 id="sync-title">Sync with Creative Hub</h2>
+          <p>
+            Names, prices, artwork, sizes, frames and pictures follow Creative Hub, so change them there and then sync here. It only compares first: nothing changes until you press Apply. Your collections and what is live are never changed on a print that is still at Creative Hub.
+          </p>
+          {sync.phase === 'plan' ? (
+            <SyncPlan plan={sync.plan} onApply={applyChanges} onCancel={() => setSync({ phase: 'idle', plan: null, text: '' })} />
+          ) : (
+            <button type="button" disabled={sync.phase === 'comparing' || sync.phase === 'applying'} onClick={compareWithHub}>
+              {sync.phase === 'comparing' ? 'Comparing…' : sync.phase === 'applying' ? 'Syncing…' : 'Compare with Creative Hub'}
+            </button>
+          )}
+          <p className={`al-admin__fill is-${sync.phase}`} role="status">{sync.text}</p>
+        </section>
+      )}
+
+      {prints.length > 0 && (
         <section className="al-admin__pictures" aria-labelledby="pictures-title">
-          <h2 id="pictures-title">Pictures of each size and frame</h2>
+          <h2 id="pictures-title">Pictures only</h2>
           <p>
             Fetches Creative Hub's picture of every size and frame and saves it to your shop, so the print page can show each frame. It is safe to press again whenever you add or change prints. It never changes prices, collections, or what is live.
           </p>
