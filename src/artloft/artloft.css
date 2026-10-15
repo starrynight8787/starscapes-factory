@@ -105,6 +105,16 @@
   pointer-events: none;
   user-select: none;
 }
+.al-frames {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+.al-plaque--wall {
+  transform: translateX(-50%);
+}
 .al-spot {
   position: absolute;
   display: block;
