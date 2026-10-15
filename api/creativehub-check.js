@@ -11,6 +11,7 @@
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
+//   /api/creativehub-check?view=delivery-check                     what free delivery costs you, country by country (cheapest and dearest print, 13 countries)
 //   /api/creativehub-check?view=catalogue-json                     every print with its sizes and frames as plain data (the publish page's Sync button uses this)
 //   /api/creativehub-check?view=variant-pictures-json              the same pictures as plain data (the publish page's button uses this)
 //   /api/creativehub-check?view=variant-pictures-sql               the SQL that adds Creative Hub's picture of every size and frame to the shop
@@ -295,6 +296,89 @@ function collectPictures(withVariants) {
   return { rows, total }
 }
 
+// ---- delivery-check: what free delivery costs you, country by country ------------------------------------------
+// Asks Creative Hub's own quote (free, nothing is ordered) for the cheapest print and the most expensive print to each
+// country, and works out the margin you keep if delivery is free. Read-only. It shows costs, so it is scaffolding for you,
+// not for visitors: it comes down with the other check pages.
+const DELIVERY_CHECK_COUNTRIES = ['GB', 'IE', 'DE', 'FR', 'US', 'CA', 'AU', 'NZ', 'JP', 'SG', 'AE', 'ZA', 'BR']
+
+async function quoteWithRetry(base, token, variantId, country) {
+  let q = await quoteOne(base, token, variantId, country)
+  if (q.status === 429) {
+    await pause(2500)
+    q = await quoteOne(base, token, variantId, country)
+  }
+  return q
+}
+
+async function deliveryCheck(query, base, token) {
+  let product = String(query.product || '')
+  if (!product) {
+    const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
+    product = list.ok && list.body && list.body.products && list.body.products[0] && list.body.products[0].id
+  }
+  if (!product || !/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'No product found. Add ?product=PRODUCT_ID.' }
+  const vr = await getJson(base, token, `/v1/products/${product}/variants`)
+  if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
+  const variants = ((vr.body && vr.body.variants) || [])
+    .filter((v) => v && Number.isFinite(Number(v.retail_price)))
+    .sort((a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed))
+  if (variants.length === 0) return { ok: false, message: 'That print has no sizes with a price.' }
+  const cheapest = variants.find((v) => !v.is_framed) || variants[0]
+  const dearest = [...variants].reverse().find((v) => v.is_framed) || variants[variants.length - 1]
+  const picks = cheapest.id === dearest.id ? [cheapest] : [cheapest, dearest]
+  const labelOf = (v) => `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`
+
+  const jobs = DELIVERY_CHECK_COUNTRIES.flatMap((country) => picks.map((v) => ({ country, v })))
+  const rows = await mapLimit(jobs, 3, async ({ country, v }) => {
+    const price = Number(v.retail_price)
+    const q = await quoteWithRetry(base, token, v.id, country)
+    if (!q.ok) return { country, print: labelOf(v), your_price: price, error: explain(q.status, q.body) }
+    const c = q.body || {}
+    const fee = stripeFee(price, country)
+    const costIncl = Number(c.total_incl_vat)
+    const costExcl = Number(c.total_excl_vat)
+    // UK sales carry 20% VAT, which you pass on, so the margin is worked on the price without it. Overseas, the price is taken as it is.
+    const revenue = country === 'GB' ? price / 1.2 : price
+    const cost = country === 'GB' ? costExcl : costIncl
+    const profit = revenue - cost - fee
+    const margin = Math.round((profit / revenue) * 100)
+    return {
+      country,
+      print: labelOf(v),
+      your_price: price,
+      production: money(c.production_cost),
+      delivery_you_pay: money(c.delivery_cost),
+      stripe_fee: money(fee),
+      profit_if_delivery_is_free: money(profit),
+      margin_percent: margin,
+      flag: profit < 0 ? 'LOSS' : margin < 30 ? 'LOW' : 'ok',
+    }
+  })
+  const good = rows.filter((r) => r.margin_percent !== undefined)
+  const worst = good.slice().sort((a, b) => a.margin_percent - b.margin_percent)[0] || null
+  return {
+    ok: true,
+    note: 'Read-only. Uses Creative Hub quotes (free, nothing ordered). Shows your costs, so it is scaffolding that comes down with the other check pages.',
+    product_id: product,
+    assumptions: [
+      'Delivery is free to the customer, so you pay whatever Creative Hub charges for it.',
+      'UK prices include 20% VAT, which is passed on, so UK margins are worked on the price without VAT.',
+      'Overseas, the price is taken as it is (UK VAT does not normally apply to exports, to be confirmed by your accountant). Import taxes and duties abroad are not included.',
+      'Stripe fee: 1.5% + 20p for UK cards, 2.5% + 20p for European cards, 3.25% + 20p for others.',
+      'Profit is before tax, packaging, returns and your own time.',
+    ],
+    summary: {
+      worst_margin_percent: worst ? worst.margin_percent : null,
+      worst_case: worst ? `${worst.print} to ${worst.country}` : null,
+      losing_money: good.filter((r) => r.flag === 'LOSS').map((r) => `${r.print} to ${r.country}`),
+      low_margin: good.filter((r) => r.flag === 'LOW').map((r) => `${r.print} to ${r.country}`),
+      could_not_check: rows.filter((r) => r.error).map((r) => `${r.print} to ${r.country}`),
+    },
+    rows: rows.slice().sort((a, b) => (a.margin_percent ?? 999) - (b.margin_percent ?? 999)),
+  }
+}
+
 // The whole catalogue as plain data, for the publish page's Sync button. Names, prices, sizes and picture links only.
 async function catalogueJson(base, token) {
   const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
@@ -527,6 +611,7 @@ async function view(mode, query, base, token) {
     return { ok: true, note: 'This is only a quote. Nothing was ordered.', quote: body }
   }
 
+  if (mode === 'delivery-check') return deliveryCheck(query, base, token)
   if (mode === 'variant-pictures-sql') return variantPicturesSql(base, token)
   if (mode === 'variant-pictures-json') return variantPicturesJson(base, token)
   if (mode === 'catalogue-json') return catalogueJson(base, token)
