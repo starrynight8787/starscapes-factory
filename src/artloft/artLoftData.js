@@ -137,9 +137,10 @@ export const TYPES = [
   {
     id: 'originals',
     name: 'Originals',
-    sub: UNDER_CONSTRUCTION,
-    kind: 'soon',
-    blurb: 'Original artworks are on their way.',
+    sub: 'One of a kind',
+    kind: 'link',
+    to: '/art-loft/originals',
+    blurb: 'Original paintings, each one of a kind.',
     box: [62, 462, 232, 254],
   },
   {
