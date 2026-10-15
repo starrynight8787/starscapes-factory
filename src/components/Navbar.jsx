@@ -122,10 +122,10 @@ export default function Navbar({ session }) {
                 </div>
               )}
             </div>
-            <CartNavLink className="sf-link" />
             <Link to="/page/about" className="sf-link">
               About
             </Link>
+            <CartNavLink className="sf-link" />
           </div>
 
           <div className="sf-nav__actions">
@@ -185,10 +185,10 @@ export default function Navbar({ session }) {
                 {c.name}
               </Link>
             ))}
-            <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
             <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
               About
             </Link>
+            <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
             {session && (
               <>
                 <Link to="/new" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
