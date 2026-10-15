@@ -21,6 +21,7 @@ import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import FactoryFloorRoutes from './factoryfloor/FactoryFloorRoutes'
 import CartPage from './cart/CartPage'
+import CheckoutSuccess from './cart/CheckoutSuccess'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -77,6 +78,7 @@ export default function App() {
           <Route path="/reset-password" element={<ResetPassword />} />
           <Route path="/factory-floor/*" element={<FactoryFloorRoutes />} />
           <Route path="/cart" element={<CartPage />} />
+          <Route path="/checkout/success" element={<CheckoutSuccess />} />
         </Routes>
       </div>
 <Footer /> 

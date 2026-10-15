@@ -1,11 +1,35 @@
-import { Link } from 'react-router-dom'
+import { useState } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
 import './cart.css'
 import useCart from './useCart'
+import { startCheckout } from './checkout'
+import { redirectTo } from './redirect'
+import { LAUNCH_COUNTRIES } from './launchCountries'
 import { KINDS, setQty, removeItem, clearCart } from './cartStore'
 import { formatMoney } from './money'
 
+// "United Kingdom, Ireland and Canada"
+function countryList(codes) {
+  const names = new Intl.DisplayNames(['en'], { type: 'region' })
+  const list = codes.map((c) => names.of(c))
+  return list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}` : list.join('')
+}
+
 export default function CartPage() {
   const { items, count, subtotal } = useCart()
+  const [params] = useSearchParams()
+  const [paying, setPaying] = useState({ busy: false, error: '' })
+  const printsOnly = items.every((i) => i.type === 'print')
+
+  async function handleCheckout() {
+    setPaying({ busy: true, error: '' })
+    try {
+      const { url } = await startCheckout(items)
+      redirectTo(url) // off to Stripe's own page
+    } catch (e) {
+      setPaying({ busy: false, error: e.message })
+    }
+  }
 
   if (items.length === 0) {
     return (
@@ -25,6 +49,7 @@ export default function CartPage() {
       <p className="cart-count" role="status">
         {count} {count === 1 ? 'item' : 'items'}
       </p>
+      {params.get('checkout') === 'cancelled' && <p className="cart-notice" role="status">Checkout was cancelled. Nothing was charged, and your cart is still here.</p>}
 
       <ul className="cart-lines">
         {items.map((i) => {
@@ -64,9 +89,13 @@ export default function CartPage() {
           <span>Subtotal</span>
           <strong>{formatMoney(subtotal)}</strong>
         </p>
-        <p className="cart-summary__note">Delivery and any taxes are worked out at checkout.</p>
-        <button type="button" className="cart-checkout" disabled>Checkout: coming soon</button>
-        <p className="cart-summary__note">Checkout opens soon. Your cart is saved on this device until then.</p>
+        <p className="cart-summary__note">Delivery is free to {countryList(LAUNCH_COUNTRIES)}. You'll choose your address on the next page.</p>
+        {!printsOnly && <p className="cart-summary__note" role="status">Checkout only handles prints for now. Please remove anything else to pay.</p>}
+        <button type="button" className="cart-checkout" disabled={paying.busy || !printsOnly} onClick={handleCheckout}>
+          {paying.busy ? 'Taking you to the payment page…' : 'Checkout'}
+        </button>
+        {paying.error && <p className="cart-summary__note cart-summary__error" role="alert">{paying.error}</p>}
+        <p className="cart-summary__note">You pay on Stripe's secure page. Orders sent outside the UK may be charged import taxes or duties by the destination country, which aren't included in the price.</p>
         <p className="cart-summary__clear">
           <button type="button" onClick={clearCart}>Empty cart</button>
         </p>
