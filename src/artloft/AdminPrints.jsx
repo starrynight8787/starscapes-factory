@@ -41,7 +41,8 @@ export default function AdminPrints() {
     const known = COLLECTIONS.map((c) => ({ name: c.name, items: prints.filter((p) => p.collection === c.name) }))
     const names = new Set(COLLECTIONS.map((c) => c.name))
     const other = prints.filter((p) => !names.has(p.collection))
-    return [...known, { name: 'No collection', items: other }].filter((g) => g.items.length)
+    // Prints with no collection come FIRST: they are the ones that need you, and they are easy to miss at the bottom of a long page
+    return [...(other.length ? [{ name: 'No collection', items: other, needsPlacing: true }] : []), ...known.filter((g) => g.items.length)]
   }, [prints])
 
   async function apply(ids, published, doing) {
@@ -207,11 +208,16 @@ export default function AdminPrints() {
           <section key={g.name} className="al-admin__group" aria-labelledby={`g-${g.name}`}>
             <div className="al-admin__head">
               <h2 id={`g-${g.name}`}>{g.name} <small>{g.items.length}</small></h2>
+              {!g.needsPlacing && (
               <div className="al-admin__bulk">
                 <button type="button" disabled={busy || !off.length} onClick={() => apply(off, true, `Switched on in ${g.name}`)}>Switch all on</button>
                 <button type="button" disabled={busy || !on.length} onClick={() => apply(on, false, `Switched off in ${g.name}`)}>Switch all off</button>
               </div>
+              )}
             </div>
+            {g.needsPlacing && (
+              <p className="al-admin__needs">These prints are not in a collection yet, so they do not appear on any canvas. Use the drop-down beside each one to place it.</p>
+            )}
             <ul className="al-admin__list">
               {g.items.map((p) => (
                 <li key={p.id}>

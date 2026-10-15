@@ -665,6 +665,15 @@ a.al-object:focus-visible {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.al-admin__needs {
+  margin: 10px 0 4px;
+  padding: 8px 12px;
+  background: #fff7d6;
+  border-left: 4px solid #e3a857;
+  border-radius: 4px;
+  color: var(--sf-ink, #0e1530);
+  line-height: 1.45;
+}
 .al-admin__list {
   list-style: none;
   padding: 0;
