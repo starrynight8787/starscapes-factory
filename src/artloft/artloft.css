@@ -396,12 +396,53 @@ a.al-object:focus-visible {
   border: 1px solid var(--sf-border, #dde3f0);
   border-radius: 14px;
 }
-.al-print__image img {
+.al-print__image > img {
   display: block;
   width: 100%;
   height: auto;
   max-height: 72vh;
   object-fit: contain;
+}
+.al-thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 16px;
+}
+.al-thumb {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  width: 104px;
+  padding: 6px 6px 8px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 2px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+  font: inherit;
+  font-size: 0.8rem;
+  line-height: 1.2;
+  color: var(--sf-muted, #5b6585);
+  cursor: pointer;
+}
+.al-thumb img {
+  display: block;
+  width: 100%;
+  height: 72px;
+  object-fit: contain;
+}
+.al-thumb:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-thumb.is-on {
+  border-color: var(--sf-navy-700, #14306a);
+  background: var(--sf-star, #dce6ff);
+  color: var(--sf-navy-700, #14306a);
+}
+.al-thumb:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
 }
 .al-print__collection {
   margin: 0 0 14px;

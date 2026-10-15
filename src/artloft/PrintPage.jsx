@@ -45,6 +45,22 @@ export default function PrintPage() {
   const sizes = variants.filter((v) => (finish === 'framed') === Boolean(v.framed))
   const collection = print ? COLLECTIONS.find((c) => c.name === print.collection) || null : null
 
+  const [look, setLook] = useState('variant') // which picture is showing: this size and frame, or the plain artwork
+
+  // Once the page has settled, fetch the other sizes' pictures quietly so that changing size or frame feels instant
+  useEffect(() => {
+    if (!variants.length) return undefined
+    const timer = setTimeout(() => {
+      variants.forEach((v) => {
+        if (v.image_url) {
+          const picture = new Image()
+          picture.src = v.image_url
+        }
+      })
+    }, 800)
+    return () => clearTimeout(timer)
+  }, [variants])
+
   const { count: inCart } = useCart()
   const [note, setNote] = useState(null) // what to tell the shopper after pressing Add to cart
 
@@ -59,7 +75,7 @@ export default function PrintPage() {
       title: print.title,
       detail: `${formatSize(selected.size_label)}, ${finishText}`,
       price: Number(selected.price),
-      image: firstImage(print) || '',
+      image: selected.image_url || firstImage(print) || '',
       href: `/art-loft/prints/${print.id}`,
     })
     if (!result.ok) setNote({ kind: 'full' })
@@ -87,7 +103,12 @@ export default function PrintPage() {
     )
   }
 
-  const image = firstImage(print)
+  const artwork = firstImage(print)
+  const finishText = selected ? (selected.framed ? `${selected.frame_colour || 'framed'} frame` : 'unframed') : ''
+  const preview = selected && selected.image_url ? selected.image_url : null
+  const showArtwork = look === 'artwork' || !preview
+  const mainSrc = showArtwork ? artwork : preview
+  const mainAlt = showArtwork ? print.title : `${print.title}, ${formatSize(selected.size_label)}, ${finishText}`
   return (
     <main className="al">
       <p className="al-back">
@@ -95,8 +116,20 @@ export default function PrintPage() {
       </p>
       <div className="al-print">
         <div className="al-print__image">
-          {image ? <img src={image} alt={print.title} /> : <div className="al-card__blank" aria-hidden="true" />}
+          {mainSrc ? <img src={mainSrc} alt={mainAlt} /> : <div className="al-card__blank" aria-hidden="true" />}
           {!print.published && <span className="al-badge">Draft: only you can see this</span>}
+          {preview && artwork && (
+            <div className="al-thumbs" role="group" aria-label="Choose a picture">
+              <button type="button" className={`al-thumb${showArtwork ? '' : ' is-on'}`} aria-pressed={!showArtwork} onClick={() => setLook('variant')}>
+                <img src={preview} alt="" />
+                <span>This size and frame</span>
+              </button>
+              <button type="button" className={`al-thumb${showArtwork ? ' is-on' : ''}`} aria-pressed={showArtwork} onClick={() => setLook('artwork')}>
+                <img src={artwork} alt="" />
+                <span>The artwork</span>
+              </button>
+            </div>
+          )}
         </div>
 
         <div className="al-print__info">

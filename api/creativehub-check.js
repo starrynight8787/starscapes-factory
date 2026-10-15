@@ -11,6 +11,7 @@
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
+//   /api/creativehub-check?view=variant-pictures-sql               the SQL that adds Creative Hub's picture of every size and frame to the shop
 //   /api/creativehub-check?view=inspect                            what pictures does Creative Hub give for a print? (add &product=PRODUCT_ID to pick one)
 //   /api/creativehub-check?view=import-sql&email=YOU@EXAMPLE.COM   the SQL that imports your prints into the shop
 //        add &collections=yes to also put each print in its collection and show a check table
@@ -98,6 +99,9 @@ const sqlNum = (value) => {
   const n = Number(value)
   return Number.isFinite(n) ? String(Math.round(n * 100) / 100) : 'null'
 }
+// Creative Hub's picture of one size/frame. Only plain https addresses are accepted, anything else becomes null.
+const sqlPicture = (value) =>
+  typeof value === 'string' && value.length < 500 && /^https:\/\/[^\s'"<>\\$]+$/.test(value) ? sqlText(value) : 'null'
 const sqlInt = (value) => {
   const n = Number(value)
   return Number.isFinite(n) ? String(Math.round(n)) : 'null'
@@ -202,20 +206,21 @@ function buildImportSql(email, products, withCollections = false) {
     )
     lines.push('  on conflict (creativehub_product_id) do update set title = excluded.title, description = excluded.description, price = excluded.price, images = excluded.images')
     lines.push('  returning id into pid;')
-    lines.push('  insert into product_variants (product_id, label, size_label, width_mm, height_mm, framed, frame_colour, price, creativehub_variant_id, creativehub_sku, position) values')
+    lines.push('  insert into product_variants (product_id, label, size_label, width_mm, height_mm, framed, frame_colour, price, creativehub_variant_id, creativehub_sku, position, image_url) values')
     lines.push(
       variants
         .map(
           (v, i) =>
             `    (pid, ${sqlText(variantLabel(v))}, ${sqlText(v.size || '')}, ${sqlInt(v.print_width_mm)}, ${sqlInt(v.print_height_mm)}, ${v.is_framed ? 'true' : 'false'}, ` +
-            `${v.is_framed && v.frame_color ? sqlText(v.frame_color) : 'null'}, ${sqlNum(v.retail_price)}, ${sqlText(v.id)}, ${sqlText(v.sku || '')}, ${i})`
+            `${v.is_framed && v.frame_color ? sqlText(v.frame_color) : 'null'}, ${sqlNum(v.retail_price)}, ${sqlText(v.id)}, ${sqlText(v.sku || '')}, ${i}, ${sqlPicture(v.visualised_product_url)})`
         )
         .join(',\n')
     )
     lines.push(
       '  on conflict (creativehub_variant_id) do update set product_id = excluded.product_id, label = excluded.label, size_label = excluded.size_label, ' +
         'width_mm = excluded.width_mm, height_mm = excluded.height_mm, framed = excluded.framed, frame_colour = excluded.frame_colour, ' +
-        'price = excluded.price, creativehub_sku = excluded.creativehub_sku, position = excluded.position;'
+        'price = excluded.price, creativehub_sku = excluded.creativehub_sku, position = excluded.position, ' +
+        'image_url = coalesce(excluded.image_url, product_variants.image_url);'
     )
     lines.push('  n := n + 1;')
   }
@@ -239,11 +244,8 @@ function buildImportSql(email, products, withCollections = false) {
   return lines.join('\n')
 }
 
-async function importSql(query, base, token) {
-  const email = String(query.email || '').trim()
-  if (!/^[^\s'"\\;<>]+@[^\s'"\\;<>]+\.[^\s'"\\;<>]+$/.test(email)) {
-    return { ok: false, message: 'Add &email=YOUR_LOGIN_EMAIL to the address: the email you sign in to your shop with.' }
-  }
+// Every print in Creative Hub with all of its sizes and frames. Used by the import and by the pictures page.
+async function loadProductsWithVariants(base, token) {
   const list = await listAllProducts(base, token)
   const usable = list.filter((p) => p && UUID_RE.test(String(p.id)))
   const skipped = list.length - usable.length
@@ -257,11 +259,56 @@ async function importSql(query, base, token) {
     }
     return { ...p, variants: variants.sort((a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed)) }
   })
+  return { withVariants: withVariants.filter(Boolean), failed, skipped }
+}
+
+async function importSql(query, base, token) {
+  const email = String(query.email || '').trim()
+  if (!/^[^\s'"\\;<>]+@[^\s'"\\;<>]+\.[^\s'"\\;<>]+$/.test(email)) {
+    return { ok: false, message: 'Add &email=YOUR_LOGIN_EMAIL to the address: the email you sign in to your shop with.' }
+  }
+  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
   if (failed.length) {
     return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
   }
   const withCollections = String(query.collections || '').toLowerCase() === 'yes'
-  return { __text: buildImportSql(email, withVariants.filter(Boolean), withCollections) }
+  return { __text: buildImportSql(email, withVariants, withCollections) }
+}
+
+// Only the pictures: one UPDATE that gives every size and frame already in the shop its Creative Hub picture.
+// It changes nothing else (not prices, collections, or what is published).
+async function variantPicturesSql(base, token) {
+  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
+  if (failed.length) {
+    return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
+  }
+  const rows = []
+  let total = 0
+  for (const p of withVariants) {
+    for (const v of p.variants) {
+      total++
+      const picture = sqlPicture(v.visualised_product_url)
+      if (picture !== 'null') rows.push(`  (${sqlText(v.id)}, ${picture})`)
+    }
+  }
+  if (rows.length === 0) return { ok: false, message: 'Creative Hub did not give a picture for any size or frame.' }
+  const text = [
+    "-- Starscapes Factory: add Creative Hub's picture of each size and frame to the shop.",
+    '-- Paste all of this into Supabase > SQL Editor and click Run. Safe to run more than once.',
+    '-- It only fills in the picture column. Prices, collections and what is published are not touched.',
+    `-- ${withVariants.length} prints, ${total} sizes and frames, ${rows.length} with a picture${total > rows.length ? ` (${total - rows.length} without one are left as they are)` : ''}.`,
+    '',
+    'update product_variants pv set image_url = v.url',
+    'from (values',
+    rows.join(',\n'),
+    ') as v(variant_id, url)',
+    'where pv.creativehub_variant_id = v.variant_id;',
+    '',
+    '-- The result below should show the same number in both columns (a few fewer if some prints are not in the shop yet).',
+    'select count(*) filter (where image_url is not null) as with_pictures, count(*) as sizes_and_frames_in_shop from product_variants;',
+    '',
+  ].join('\n')
+  return { __text: text }
 }
 
 // ---- inspect: find out what pictures Creative Hub gives us ---------------------------------------
@@ -429,6 +476,7 @@ async function view(mode, query, base, token) {
     return { ok: true, note: 'This is only a quote. Nothing was ordered.', quote: body }
   }
 
+  if (mode === 'variant-pictures-sql') return variantPicturesSql(base, token)
   if (mode === 'inspect') return inspectPictures(query, base, token)
 
   return { ok: false, message: 'Unknown page.' }

@@ -15,14 +15,23 @@ export async function fetchPrints() {
   return data || []
 }
 
-// One print with all of its sizes and frames
-export async function fetchPrint(id) {
-  const { data, error } = await supabase
+const VARIANT_COLUMNS = 'id, label, size_label, width_mm, height_mm, framed, frame_colour, price, position'
+
+function selectPrint(id, withPictures) {
+  const variantColumns = withPictures ? `${VARIANT_COLUMNS}, image_url` : VARIANT_COLUMNS
+  return supabase
     .from('products')
-    .select(`${COLUMNS}, product_variants(id, label, size_label, width_mm, height_mm, framed, frame_colour, price, position)`)
+    .select(`${COLUMNS}, product_variants(${variantColumns})`)
     .eq('id', id)
     .eq('fulfilment', 'creativehub')
     .maybeSingle()
+}
+
+// One print with all of its sizes and frames, and Creative Hub's picture of each one
+export async function fetchPrint(id) {
+  let { data, error } = await selectPrint(id, true)
+  // If the picture column has not been added to the database yet, show the print without those pictures rather than failing
+  if (error && /image_url/i.test(error.message || '')) ({ data, error } = await selectPrint(id, false))
   if (error) throw error
   if (!data) return null
   const variants = (data.product_variants || []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0))
