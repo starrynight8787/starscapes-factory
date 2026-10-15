@@ -593,6 +593,58 @@ a.al-object:focus-visible {
   outline: 3px solid var(--sf-blue, #1f6fa8);
   outline-offset: 3px;
 }
+.al-tools__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.al-tools__result {
+  margin: 12px 0 0;
+}
+.al-tools__result ul {
+  margin: 6px 0 0;
+  padding-left: 20px;
+  line-height: 1.5;
+}
+.al-tools__scroll {
+  overflow-x: auto;
+  margin: 8px 0;
+}
+.al-tools__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.92rem;
+  line-height: 1.4;
+}
+.al-tools__table caption {
+  text-align: left;
+  padding: 4px 0 8px;
+  color: var(--sf-muted, #5b6585);
+}
+.al-tools__table th,
+.al-tools__table td {
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--sf-border, #dde3f0);
+  text-align: left;
+  vertical-align: top;
+  color: var(--sf-ink, #0e1530);
+}
+.al-tools__table thead th {
+  border-bottom: 2px solid var(--sf-navy-700, #14306a);
+  font-size: 0.8rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-muted, #5b6585);
+}
+.al-tools__margin {
+  font-weight: 600;
+}
+.al-tools__margin.is-LOW {
+  color: #8a5a00;
+}
+.al-tools__margin.is-LOSS {
+  color: #9a1b1b;
+}
 .al-sync-plan h3 {
   margin: 14px 0 4px;
   font-size: 1rem;

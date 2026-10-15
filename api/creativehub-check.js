@@ -1,26 +1,22 @@
-// Vercel serverless function: checks the Creative Hub connection and, read-only, lets you look at
-// your Creative Hub products and test a price quote.
+// Vercel serverless function: the owner's private Creative Hub tools. Everything here is read-only.
 //
 // - Nothing here places an order or costs anything. A quote only asks "what would this cost?".
-// - It never shows the token. The token lives in Vercel as CREATIVEHUB_API_KEY (server side only).
-// - These pages are for setting up. We remove them once ordering is built.
+// - It never shows the Creative Hub key. The key lives in Vercel as CREATIVEHUB_API_KEY, on the server only.
+// - It shows catalogue and cost information, so it is LOCKED to the shop owner: every request must carry the owner's
+//   sign-in, and the email must match OWNER_EMAIL in Vercel (see lib/ownerGuard.js). Nobody else gets anything.
+// - You use it from the publish page (/art-loft/admin), not by typing addresses.
 //
-// Pages:
-//   /api/creativehub-check                                         is the connection working?
-//   /api/creativehub-check?view=catalogue                          your products at Creative Hub
-//   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
-//   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
-//   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
-//   /api/creativehub-check?view=delivery-check                     what free delivery costs you, country by country (cheapest and dearest print, 13 countries)
-//   /api/creativehub-check?view=catalogue-json                     every print with its sizes and frames as plain data (the publish page's Sync button uses this)
-//   /api/creativehub-check?view=variant-pictures-json              the same pictures as plain data (the publish page's button uses this)
-//   /api/creativehub-check?view=variant-pictures-sql               the SQL that adds Creative Hub's picture of every size and frame to the shop
-//   /api/creativehub-check?view=inspect                            what pictures does Creative Hub give for a print? (add &product=PRODUCT_ID to pick one)
-//   /api/creativehub-check?view=import-sql&email=YOU@EXAMPLE.COM   the SQL that imports your prints into the shop
-//        add &collections=yes to also put each print in its collection and show a check table
+// What it can do:
+//   (no view)                  is the connection working?
+//   view=catalogue-json        every print with its sizes and frames (the Sync button uses this)
+//   view=variant-pictures-json every size and frame's picture (the Pictures only button uses this)
+//   view=delivery-table        delivery cost and margin for every size and frame, by zone
+//   view=delivery-check        the cheapest and dearest print to 13 countries, with the margin if delivery is free
 //
 // Creative Hub's address is https://escher-v2.creativehub.io. You can point at another one with the
 // optional setting CREATIVEHUB_API_BASE.
+
+import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 
 const DEFAULT_BASE = 'https://escher-v2.creativehub.io'
 
@@ -42,14 +38,6 @@ async function getJson(base, token, path) {
   return { ok: response.ok, status: response.status, body }
 }
 
-const pick = (obj, keys) => Object.fromEntries(keys.filter((k) => obj && k in obj).map((k) => [k, obj[k]]))
-
-const VARIANT_FIELDS = [
-  'id', 'sku', 'size', 'print_width_mm', 'print_height_mm', 'is_framed', 'frame_color', 'frame_type',
-  'mount_board_size', 'paper_id', 'retail_price', 'price_currency',
-  'delivery_price_uk', 'delivery_price_eu_na', 'delivery_price_row',
-]
-
 function explain(status, body) {
   if (status === 401) return 'Creative Hub did not accept this token. It may be wrong, revoked, or copied with a space.'
   if (status === 403) return 'The token was read, but API access is not switched on for this account.'
@@ -61,6 +49,7 @@ function explain(status, body) {
 
 
 // Countries whose cards Stripe charges at its European rate (everything else outside the UK is "international")
+
 const EEA = new Set(['AT','BE','BG','HR','CY','CZ','DK','EE','FI','FR','DE','GR','HU','IS','IE','IT','LV','LI','LT','LU','MT','NL','NO','PL','PT','RO','SK','SI','ES','SE'])
 
 // Stripe's published UK card rates: 1.5% + 20p (UK cards), 2.5% + 20p (EEA cards), 3.25% + 20p (international cards).
@@ -94,25 +83,11 @@ async function quoteOne(base, token, variantId, country) {
 // Hub prints to the shop as DRAFTS (not published), with each size/frame as a variant. It is safe to
 // run twice: it updates what it already added and never touches collections or published status.
 // ---------------------------------------------------------------------------------------------
+
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
-// The import block is wrapped in a $sf_import$ ... $sf_import$ quote, so that tag must never appear inside the data
-const sqlText = (value) =>
-  `'${String(value === null || value === undefined ? '' : value).replace(/\u0000/g, '').replace(/\$sf_import\$/g, '').replace(/'/g, "''")}'`
-const sqlNum = (value) => {
-  const n = Number(value)
-  return Number.isFinite(n) ? String(Math.round(n * 100) / 100) : 'null'
-}
-// Creative Hub's picture of one size/frame. Only plain https addresses are accepted, anything else becomes null.
 const safePictureUrl = (value) =>
   typeof value === 'string' && value.length < 500 && /^https:\/\/[^\s'"<>\\$]+$/.test(value) ? value : null
-const sqlPicture = (value) => {
-  const url = safePictureUrl(value)
-  return url ? sqlText(url) : 'null'
-}
-const sqlInt = (value) => {
-  const n = Number(value)
-  return Number.isFinite(n) ? String(Math.round(n)) : 'null'
-}
+
 const pause = (ms) => new Promise((resolve) => setTimeout(resolve, ms))
 
 async function getWithRetry(base, token, path) {
@@ -157,99 +132,6 @@ function variantLabel(v) {
 // Puts each print in its collection (matched by name) and then shows a check table.
 // Good looks like: counts per collection, a TOTAL, and NO rows under "no collection yet",
 // "duplicate name" or "blank name".
-const COLLECTIONS_SQL = `-- Put each print in its collection, then check the result.
-with lists(collection, names) as (values
-  ('Dance Like You Just Don''t Care', array['tango','swing dance','tap dancing','salsa','party','jazz dance','murder on the dance floor','ballroom','ballet','contemporary','contempory','spinning']),
-  ('Out of this World', array['tops of jupiter','stargazing','into the nebula','far far away','behind the curtain','heartless heart']),
-  ('Ocean''s View', array['ocean''s breeze','sandy islands','beaches','before the sunset']),
-  ('Calm Series', array['forests','tranquillity','tranquility','the first snow','freshly cut grass','afternoon sun','tartan','rainbows','lucky','festive season','neon lights','floating','sunrise']),
-  ('Unique One of a Kind', array['rain forest','riverbank','retro','scrap materials','quilting','patchwork','mosaic','parkside','golden bridges'])
-)
-update products p
-set collection = l.collection
-from lists l
-where p.fulfilment = 'creativehub'
-  and lower(replace(trim(p.title), '\u2019', '''')) = any (l.names);
-
-select 'collection count' as check, collection as detail, count(*)::text as value
-  from products where fulfilment = 'creativehub' and coalesce(collection, '') <> '' group by collection
-union all
-select 'TOTAL prints', '', count(*)::text from products where fulfilment = 'creativehub'
-union all
-select 'no collection yet', title, creativehub_product_id from products
-  where fulfilment = 'creativehub' and coalesce(collection, '') = ''
-union all
-select 'duplicate name', min(title), count(*)::text from products
-  where fulfilment = 'creativehub' group by lower(trim(title)) having count(*) > 1
-union all
-select 'blank name', coalesce(title, ''), creativehub_product_id from products
-  where fulfilment = 'creativehub' and trim(coalesce(title, '')) = ''
-order by 1, 2;`
-
-function buildImportSql(email, products, withCollections = false) {
-  const lines = []
-  lines.push('-- Starscapes Factory: import Creative Hub prints into the shop (as drafts).')
-  lines.push('-- Paste all of this into Supabase > SQL Editor and click Run.')
-  lines.push('-- Safe to run again: it updates these prints, and leaves collections and published status alone.')
-  lines.push('do $sf_import$')
-  lines.push('declare')
-  lines.push('  me uuid;')
-  lines.push('  pid uuid;')
-  lines.push('  n int := 0;')
-  lines.push('  removed int := 0;')
-  lines.push('begin')
-  lines.push(`  select id into me from auth.users where lower(email) = lower(${sqlText(email)}) limit 1;`)
-  lines.push("  if me is null then raise exception 'No Supabase account found for that email. Check the email in the address and try again.'; end if;")
-  for (const p of products) {
-    const variants = p.variants
-    const fromPrice = Math.min(...variants.map((v) => Number(v.retail_price)).filter((x) => Number.isFinite(x)))
-    const image = p.artwork_preview_medium_url || p.artwork_url || p.artwork_thumbnail_url
-    lines.push('')
-    lines.push(`  -- ${String(p.name || '').replace(/[\r\n]+/g, ' ').replace(/\$sf_import\$/g, '')}`)
-    lines.push('  insert into products (title, description, price, product_type, collection, author_id, published, images, creativehub_product_id, fulfilment)')
-    lines.push(
-      `  values (${sqlText(p.name)}, ${sqlText(p.description || '')}, ${Number.isFinite(fromPrice) ? sqlNum(fromPrice) : '0'}, 'print', '', me, false, ` +
-        `${image ? `array[${sqlText(image)}]::text[]` : "'{}'::text[]"}, ${sqlText(p.id)}, 'creativehub')`
-    )
-    lines.push('  on conflict (creativehub_product_id) do update set title = excluded.title, description = excluded.description, price = excluded.price, images = excluded.images')
-    lines.push('  returning id into pid;')
-    lines.push('  insert into product_variants (product_id, label, size_label, width_mm, height_mm, framed, frame_colour, price, creativehub_variant_id, creativehub_sku, position, image_url) values')
-    lines.push(
-      variants
-        .map(
-          (v, i) =>
-            `    (pid, ${sqlText(variantLabel(v))}, ${sqlText(v.size || '')}, ${sqlInt(v.print_width_mm)}, ${sqlInt(v.print_height_mm)}, ${v.is_framed ? 'true' : 'false'}, ` +
-            `${v.is_framed && v.frame_color ? sqlText(v.frame_color) : 'null'}, ${sqlNum(v.retail_price)}, ${sqlText(v.id)}, ${sqlText(v.sku || '')}, ${i}, ${sqlPicture(v.visualised_product_url)})`
-        )
-        .join(',\n')
-    )
-    lines.push(
-      '  on conflict (creativehub_variant_id) do update set product_id = excluded.product_id, label = excluded.label, size_label = excluded.size_label, ' +
-        'width_mm = excluded.width_mm, height_mm = excluded.height_mm, framed = excluded.framed, frame_colour = excluded.frame_colour, ' +
-        'price = excluded.price, creativehub_sku = excluded.creativehub_sku, position = excluded.position, ' +
-        'image_url = coalesce(excluded.image_url, product_variants.image_url);'
-    )
-    lines.push('  n := n + 1;')
-  }
-  lines.push('')
-  lines.push("  raise notice 'Imported % prints with their sizes and frames.', n;")
-  const idList = `array[${products.map((p) => sqlText(p.id)).join(', ')}]::text[]`
-  lines.push('')
-  lines.push('  -- Prints that are no longer in Creative Hub: drafts are removed, and anything already published is unpublished instead.')
-  lines.push('  if n >= 1 then')
-  lines.push(`    delete from products where fulfilment = 'creativehub' and published = false and creativehub_product_id <> all (${idList});`)
-  lines.push('    get diagnostics removed = row_count;')
-  lines.push(`    update products set published = false where fulfilment = 'creativehub' and published = true and creativehub_product_id <> all (${idList});`)
-  lines.push("    raise notice 'Removed % draft prints that are no longer in Creative Hub.', removed;")
-  lines.push('  end if;')
-  lines.push('end')
-  lines.push('$sf_import$;')
-  if (withCollections) {
-    lines.push('')
-    lines.push(COLLECTIONS_SQL)
-  }
-  return lines.join('\n')
-}
 
 // Every print in Creative Hub with all of its sizes and frames. Used by the import and by the pictures page.
 async function loadProductsWithVariants(base, token) {
@@ -269,19 +151,6 @@ async function loadProductsWithVariants(base, token) {
   return { withVariants: withVariants.filter(Boolean), failed, skipped }
 }
 
-async function importSql(query, base, token) {
-  const email = String(query.email || '').trim()
-  if (!/^[^\s'"\\;<>]+@[^\s'"\\;<>]+\.[^\s'"\\;<>]+$/.test(email)) {
-    return { ok: false, message: 'Add &email=YOUR_LOGIN_EMAIL to the address: the email you sign in to your shop with.' }
-  }
-  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
-  if (failed.length) {
-    return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
-  }
-  const withCollections = String(query.collections || '').toLowerCase() === 'yes'
-  return { __text: buildImportSql(email, withVariants, withCollections) }
-}
-
 // Every size and frame that has a picture we can trust, as { variant_id, url }
 function collectPictures(withVariants) {
   const rows = []
@@ -294,6 +163,26 @@ function collectPictures(withVariants) {
     }
   }
   return { rows, total }
+}
+
+// What you keep on one order if delivery is free: the same sum everywhere it is shown.
+// UK sales carry 20% VAT, which you pass on, so a UK margin is worked on the price without VAT. Overseas, the price is taken as it is.
+function workOutMargin(country, price, quote) {
+  const fee = stripeFee(price, country)
+  const costIncl = Number(quote.total_incl_vat)
+  const costExcl = Number(quote.total_excl_vat)
+  const revenue = country === 'GB' ? price / 1.2 : price
+  const cost = country === 'GB' ? costExcl : costIncl
+  const profit = revenue - cost - fee
+  const margin = Math.round((profit / revenue) * 100)
+  return {
+    production: money(quote.production_cost),
+    delivery_you_pay: money(quote.delivery_cost),
+    stripe_fee: money(fee),
+    profit_if_delivery_is_free: money(profit),
+    margin_percent: margin,
+    flag: profit < 0 ? 'LOSS' : margin < 30 ? 'LOW' : 'ok',
+  }
 }
 
 // ---- delivery-check: what free delivery costs you, country by country ------------------------------------------
@@ -334,26 +223,7 @@ async function deliveryCheck(query, base, token) {
     const price = Number(v.retail_price)
     const q = await quoteWithRetry(base, token, v.id, country)
     if (!q.ok) return { country, print: labelOf(v), your_price: price, error: explain(q.status, q.body) }
-    const c = q.body || {}
-    const fee = stripeFee(price, country)
-    const costIncl = Number(c.total_incl_vat)
-    const costExcl = Number(c.total_excl_vat)
-    // UK sales carry 20% VAT, which you pass on, so the margin is worked on the price without it. Overseas, the price is taken as it is.
-    const revenue = country === 'GB' ? price / 1.2 : price
-    const cost = country === 'GB' ? costExcl : costIncl
-    const profit = revenue - cost - fee
-    const margin = Math.round((profit / revenue) * 100)
-    return {
-      country,
-      print: labelOf(v),
-      your_price: price,
-      production: money(c.production_cost),
-      delivery_you_pay: money(c.delivery_cost),
-      stripe_fee: money(fee),
-      profit_if_delivery_is_free: money(profit),
-      margin_percent: margin,
-      flag: profit < 0 ? 'LOSS' : margin < 30 ? 'LOW' : 'ok',
-    }
+    return { country, print: labelOf(v), your_price: price, ...workOutMargin(country, price, q.body || {}) }
   })
   const good = rows.filter((r) => r.margin_percent !== undefined)
   const worst = good.slice().sort((a, b) => a.margin_percent - b.margin_percent)[0] || null
@@ -417,211 +287,79 @@ async function variantPicturesJson(base, token) {
   return { ok: true, prints: withVariants.length, sizes_and_frames: total, with_picture: rows.length, pictures: rows }
 }
 
-// Only the pictures: one UPDATE that gives every size and frame already in the shop its Creative Hub picture.
-// It changes nothing else (not prices, collections, or what is published).
-async function variantPicturesSql(base, token) {
-  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
-  if (failed.length) {
-    return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
+// ---- delivery-table: delivery cost and margin for every size and frame, by zone -----------------------------------
+// Creative Hub prices delivery by zone, so one country stands for each zone. The 13-country check confirms the others.
+const ZONES = [
+  { key: 'uk', label: 'UK', country: 'GB' },
+  { key: 'eu_na', label: 'Europe and North America', country: 'US' },
+  { key: 'row', label: 'Rest of the world', country: 'AU' },
+]
+
+async function deliveryTable(query, base, token) {
+  let product = String(query.product || '')
+  if (!product) {
+    const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
+    product = list.ok && list.body && list.body.products && list.body.products[0] && list.body.products[0].id
   }
-  const { rows: found, total } = collectPictures(withVariants)
-  const rows = found.map((r) => `  (${sqlText(r.variant_id)}, ${sqlText(r.url)})`)
-  if (rows.length === 0) return { ok: false, message: 'Creative Hub did not give a picture for any size or frame.' }
-  const text = [
-    "-- Starscapes Factory: add Creative Hub's picture of each size and frame to the shop.",
-    '-- Paste all of this into Supabase > SQL Editor and click Run. Safe to run more than once.',
-    '-- It only fills in the picture column. Prices, collections and what is published are not touched.',
-    `-- ${withVariants.length} prints, ${total} sizes and frames, ${rows.length} with a picture${total > rows.length ? ` (${total - rows.length} without one are left as they are)` : ''}.`,
-    '',
-    'update product_variants pv set image_url = v.url',
-    'from (values',
-    rows.join(',\n'),
-    ') as v(variant_id, url)',
-    'where pv.creativehub_variant_id = v.variant_id;',
-    '',
-    '-- The result below should show the same number in both columns (a few fewer if some prints are not in the shop yet).',
-    'select count(*) filter (where image_url is not null) as with_pictures, count(*) as sizes_and_frames_in_shop from product_variants;',
-    '',
-  ].join('\n')
-  return { __text: text }
-}
-
-// ---- inspect: find out what pictures Creative Hub gives us ---------------------------------------
-// Read-only. It lists FIELD NAMES and picture links only (never prices or costs), because this page is open to anyone.
-const looksLikeUrl = (v) => typeof v === 'string' && /^https?:\/\//i.test(v)
-const PICTURE_KEY = /image|img|mockup|mock_up|preview|thumb|photo|picture|media|render|lifestyle|scene|gallery|url/i
-
-function pictureFields(value, where, depth = 0, found = []) {
-  if (found.length >= 40 || value === null || typeof value !== 'object') return found
-  for (const [key, v] of Object.entries(value)) {
-    const here = Array.isArray(value) ? `${where}[${key}]` : `${where}.${key}`
-    if (looksLikeUrl(v) || (typeof v === 'string' && PICTURE_KEY.test(key))) found.push({ where: here, value: String(v).slice(0, 300) })
-    else if (v && typeof v === 'object' && depth < 4) pictureFields(v, here, depth + 1, found)
-  }
-  return found
-}
-
-async function inspectPictures(query, base, token) {
-  const list = await getJson(base, token, '/v1/products?limit=200&offset=0')
-  if (!list.ok) return { ok: false, status: list.status, message: explain(list.status, list.body) }
-  const products = (list.body && list.body.products) || []
-  if (products.length === 0) return { ok: false, message: 'Creative Hub has no products on this account.' }
-
-  const wanted = String(query.product || '')
-  if (wanted && !/^[A-Za-z0-9_-]{4,80}$/.test(wanted)) return { ok: false, message: 'That product id does not look right. Leave off &product=... to use your first product.' }
-  const product = wanted ? products.find((p) => p && p.id === wanted) : products[0]
-  if (!product) return { ok: false, message: 'Not one of your products. Leave off &product=... to use your first product.' }
-
-  const vr = await getJson(base, token, `/v1/products/${product.id}/variants`)
+  if (!product || !/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'No product found. Add ?product=PRODUCT_ID.' }
+  const vr = await getJson(base, token, `/v1/products/${product}/variants`)
   if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
-  const variants = ((vr.body && vr.body.variants) || []).filter(Boolean)
-  const framed = variants.find((v) => v.is_framed)
-  const unframed = variants.find((v) => !v.is_framed)
+  const variants = ((vr.body && vr.body.variants) || [])
+    .filter((v) => v && Number.isFinite(Number(v.retail_price)))
+    .sort((a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed))
+  if (variants.length === 0) return { ok: false, message: 'That print has no sizes with a price.' }
 
-  // every picture-like field that appears on ANY variant, with one example each
-  const onVariants = new Map()
-  for (const v of variants) {
-    for (const f of pictureFields(v, 'variant')) if (!onVariants.has(f.where)) onVariants.set(f.where, f.value)
-  }
-
-  // a few likely places for more pictures. These are only ever read, and a "not found" is harmless.
-  const guesses = [`/v1/products/${product.id}`, `/v1/products/${product.id}/images`, `/v1/products/${product.id}/mockups`]
-  if (framed) guesses.push(`/v1/products/${product.id}/variants/${framed.id}`, `/v1/variants/${framed.id}`)
-  const otherPlaces = []
-  for (const path of guesses) {
-    const r = await getJson(base, token, path)
-    otherPlaces.push({
-      path: path.replace(framed ? framed.id : '\u0000', 'FRAMED_VARIANT_ID').replace(product.id, 'PRODUCT_ID'),
-      status: r.status,
-      field_names: r.ok && r.body && typeof r.body === 'object' ? Object.keys(r.body).slice(0, 60) : null,
-      picture_fields: r.ok && r.body ? pictureFields(r.body, 'response') : [],
-    })
-  }
-
+  const jobs = variants.flatMap((v) => ZONES.map((zone) => ({ v, zone })))
+  const cells = await mapLimit(jobs, 3, async ({ v, zone }) => {
+    const price = Number(v.retail_price)
+    const q = await quoteWithRetry(base, token, v.id, zone.country)
+    if (!q.ok) return { error: explain(q.status, q.body) }
+    return workOutMargin(zone.country, price, q.body || {})
+  })
+  const rows = variants.map((v, i) => ({
+    label: `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`,
+    your_price: Number(v.retail_price),
+    zones: Object.fromEntries(ZONES.map((zone, j) => [zone.key, cells[i * ZONES.length + j]])),
+  }))
+  const flat = rows.flatMap((r) => ZONES.map((z) => ({ print: r.label, zone: z.label, cell: r.zones[z.key] }))).filter((x) => x.cell.margin_percent !== undefined)
+  const worst = flat.slice().sort((a, b) => a.cell.margin_percent - b.cell.margin_percent)[0] || null
   return {
     ok: true,
-    note: 'Read-only. Field names and picture links only. Send this whole page to Claude.',
-    product: { name: product.name, id: product.id, variant_count: variants.length },
-    product_field_names: Object.keys(product),
-    picture_fields_on_product: pictureFields(product, 'product'),
-    framed_variant_field_names: framed ? Object.keys(framed) : null,
-    unframed_variant_field_names: unframed ? Object.keys(unframed) : null,
-    picture_fields_on_variants: [...onVariants].map(([where, value]) => ({ where, example: value })),
-    other_places_tried: otherPlaces,
+    note: 'Read-only. Uses Creative Hub quotes (free, nothing ordered).',
+    product_id: product,
+    zones: ZONES.map(({ key, label, country }) => ({ key, label, country })),
+    assumptions: [
+      'Delivery is free to the customer, so you pay whatever Creative Hub charges for it.',
+      'UK prices include 20% VAT, which is passed on, so UK margins are worked on the price without VAT.',
+      'Overseas, the price is taken as it is (UK VAT does not normally apply to exports, to be confirmed by your accountant). Import taxes and duties abroad are not included.',
+      'Stripe fee: 1.5% + 20p for UK cards, 2.5% + 20p for European cards, 3.25% + 20p for others.',
+      'Profit is before tax, packaging, returns and your own time.',
+      'One country stands for each zone: the UK for the UK, the US for Europe and North America, Australia for the rest of the world.',
+    ],
+    summary: {
+      worst_margin_percent: worst ? worst.cell.margin_percent : null,
+      worst_case: worst ? `${worst.print} to ${worst.zone}` : null,
+      losing_money: flat.filter((x) => x.cell.flag === 'LOSS').map((x) => `${x.print} to ${x.zone}`),
+      low_margin: flat.filter((x) => x.cell.flag === 'LOW').map((x) => `${x.print} to ${x.zone}`),
+    },
+    rows,
   }
 }
 
 async function view(mode, query, base, token) {
-  if (mode === 'catalogue') {
-    const r = await getJson(base, token, '/v1/products?limit=200&offset=0')
-    if (!r.ok) return { ok: false, status: r.status, message: explain(r.status, r.body) }
-    const products = ((r.body && r.body.products) || []).map((p) => pick(p, ['id', 'name', 'variant_count', 'shopify_handle']))
-    return { ok: true, count: products.length, products }
-  }
-
-  if (mode === 'variants') {
-    const product = String(query.product || '')
-    if (!/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'Add ?product=PRODUCT_ID (from the catalogue page).' }
-    const r = await getJson(base, token, `/v1/products/${product}/variants`)
-    if (!r.ok) return { ok: false, status: r.status, message: explain(r.status, r.body) }
-    const variants = ((r.body && r.body.variants) || []).map((v) => pick(v, VARIANT_FIELDS))
-    return { ok: true, product_id: product, count: variants.length, variants }
-  }
-
-  if (mode === 'import-sql') return importSql(query, base, token)
-
-  if (mode === 'margins') {
-    const country = String(query.country || 'GB').toUpperCase()
-    if (!/^[A-Z]{2}$/.test(country)) return { ok: false, message: 'country must be two letters, like GB.' }
-    let product = String(query.product || '')
-    if (!product) {
-      const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
-      product = list.ok && list.body && list.body.products && list.body.products[0] && list.body.products[0].id
-    }
-    if (!product || !/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'No product found. Add ?product=PRODUCT_ID.' }
-    const vr = await getJson(base, token, `/v1/products/${product}/variants`)
-    if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
-    const variants = ((vr.body && vr.body.variants) || []).slice().sort(
-      (a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed)
-    )
-    const rows = await Promise.all(
-      variants.map(async (v) => {
-        const label = `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`
-        const q = await quoteOne(base, token, v.id, country)
-        if (!q.ok) return { label, price: v.retail_price, error: explain(q.status, q.body) }
-        const c = q.body
-        const price = Number(v.retail_price)
-        const fee = stripeFee(price, country)
-        const costIncl = Number(c.total_incl_vat)
-        const costExcl = Number(c.total_excl_vat)
-        const profitNoVat = price - costIncl - fee
-        const row = {
-          label,
-          your_price: price,
-          creative_hub_cost_incl_vat: money(costIncl),
-          of_which_production: money(c.production_cost),
-          of_which_delivery: money(c.delivery_cost),
-          stripe_fee: money(fee),
-          profit_if_not_vat_registered: money(profitNoVat),
-          margin_if_not_vat_registered: Math.round((profitNoVat / price) * 100) + '%',
-        }
-        if (country === 'GB') {
-          const net = price / 1.2
-          const profitVat = net - costExcl - fee
-          row.profit_if_vat_registered = money(profitVat)
-          row.margin_if_vat_registered = Math.round((profitVat / net) * 100) + '%'
-        }
-        return row
-      })
-    )
-    return {
-      ok: true,
-      country,
-      product_id: product,
-      assumptions: [
-        'your_price is the retail price set in Creative Hub. It is not a price on your own site yet.',
-        'Stripe fee uses its published UK card rates for a card from the same country as the delivery address.',
-        'Profit is before tax, and before any packaging, returns or your own time.',
-        'If you are not VAT-registered, the VAT Creative Hub charges you is a real cost. If you are, you can reclaim it, and your price includes 20% VAT (UK only).',
-      ],
-      rows,
-    }
-  }
-
-  if (mode === 'quote') {
-    const variant = String(query.variant || '')
-    const country = String(query.country || 'GB').toUpperCase()
-    const qty = Number.parseInt(query.qty || '1', 10)
-    if (!/^[A-Za-z0-9_-]{1,100}$/.test(variant)) return { ok: false, message: 'Add ?variant=VARIANT_ID (from the variants page).' }
-    if (!/^[A-Z]{2}$/.test(country)) return { ok: false, message: 'country must be two letters, like GB.' }
-    if (!(qty >= 1 && qty <= 50)) return { ok: false, message: 'qty must be between 1 and 50.' }
-    const response = await fetch(`${base}/v1/orders/quote`, {
-      method: 'POST',
-      headers: authHeaders(token, { 'Content-Type': 'application/json' }),
-      body: JSON.stringify({ items: [{ variant_id: variant, quantity: qty }], delivery_country_code: country }),
-      signal: AbortSignal.timeout(10000),
-    })
-    let body = null
-    try {
-      body = await response.json()
-    } catch (e) {
-      body = null
-    }
-    if (!response.ok) return { ok: false, status: response.status, message: explain(response.status, body), detail: body && (body.detail || body.error_code) }
-    return { ok: true, note: 'This is only a quote. Nothing was ordered.', quote: body }
-  }
-
+  if (mode === 'delivery-table') return deliveryTable(query, base, token)
   if (mode === 'delivery-check') return deliveryCheck(query, base, token)
-  if (mode === 'variant-pictures-sql') return variantPicturesSql(base, token)
   if (mode === 'variant-pictures-json') return variantPicturesJson(base, token)
   if (mode === 'catalogue-json') return catalogueJson(base, token)
-  if (mode === 'inspect') return inspectPictures(query, base, token)
-
   return { ok: false, message: 'Unknown page.' }
 }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
+
+  // Everything below is private. Only the shop owner gets past here.
+  const who = await requireOwner(req)
+  if (!who.ok) return sendDenied(res, who)
 
   const token = process.env.CREATIVEHUB_API_KEY || process.env.CREATIVEHUB_API_TOKEN
   const base = (process.env.CREATIVEHUB_API_BASE || DEFAULT_BASE).replace(/\/+$/, '')
@@ -637,12 +375,7 @@ export default async function handler(req, res) {
   const query = (req && req.query) || {}
   if (query.view) {
     try {
-      const result = await view(String(query.view), query, base, token)
-      if (result && typeof result.__text === 'string') {
-        res.setHeader('Content-Type', 'text/plain; charset=utf-8')
-        return res.status(200).send(result.__text)
-      }
-      return res.status(200).json(result)
+      return res.status(200).json(await view(String(query.view), query, base, token))
     } catch (error) {
       return res.status(200).json({ ok: false, message: 'Could not reach Creative Hub. ' + (error && error.name === 'TimeoutError' ? 'It took too long.' : '') })
     }
@@ -651,7 +384,7 @@ export default async function handler(req, res) {
   // The basic check: can we read your orders list?
   try {
     const r = await getJson(base, token, '/v1/orders?limit=1&offset=0')
-    if (r.ok) return res.status(200).json({ connected: true, status: r.status, message: 'Creative Hub accepted the token.' })
+    if (r.ok) return res.status(200).json({ connected: true, status: r.status, message: 'Creative Hub accepted the key.' })
     const reasons = { 401: 'invalid_token', 403: 'api_access_disabled', 429: 'rate_limited' }
     return res.status(200).json({ connected: false, status: r.status, reason: reasons[r.status] || 'unexpected_status', message: explain(r.status, r.body) })
   } catch (error) {

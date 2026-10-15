@@ -6,6 +6,7 @@ import { fetchPrints, setPublished, setCollection, setDescription, currentUser, 
 import { planSync, applySync } from './sync'
 import SyncPlan from './SyncPlan'
 import DescriptionEditor from './DescriptionEditor'
+import DeliveryTools from './DeliveryTools'
 import { COLLECTIONS, formatPrice } from './artLoftData'
 
 // Only you will find this page, at /art-loft/admin. Anyone else sees nothing to manage.
@@ -201,6 +202,8 @@ export default function AdminPrints() {
           <p className={`al-admin__fill is-${sync.phase}`} role="status">{sync.text}</p>
         </section>
       )}
+
+      {prints.length > 0 && <DeliveryTools />}
 
       {prints.length > 0 && (
         <section className="al-admin__pictures" aria-labelledby="pictures-title">

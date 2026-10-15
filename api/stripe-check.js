@@ -5,7 +5,11 @@
 // - It tells you whether the key is a TEST key (no real money) or a LIVE key (real money).
 // - This page is for setting up. It comes down, with the Creative Hub check pages, once ordering works.
 //
-//   /api/stripe-check     is the connection working, and is it test or live?
+// - It is LOCKED to the shop owner (the sign-in must match OWNER_EMAIL in Vercel). You use it from the publish page.
+//
+//   (no address to type)   is the connection working, and is it test or live?
+
+import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 
 const STRIPE = 'https://api.stripe.com'
 
@@ -17,6 +21,9 @@ function modeOf(key) {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
+
+  const who = await requireOwner(req)
+  if (!who.ok) return sendDenied(res, who)
 
   const key = (process.env.STRIPE_SECRET_KEY || '').trim()
   if (!key) {

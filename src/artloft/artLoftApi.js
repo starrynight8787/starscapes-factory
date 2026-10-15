@@ -57,24 +57,34 @@ export async function setCollection(id, collection) {
   if (error) throw error
 }
 
-// The list of pictures from Creative Hub, as { variant_id, url }. This only exists on the live site,
-// because that is where the Creative Hub key lives.
-export async function fetchPictureList() {
+// The owner-only pages (Creative Hub, Stripe, delivery costs) only answer to your sign-in, so every request carries it.
+// They only exist on the live site, because that is where the keys live.
+async function ownerGet(path) {
+  const { data } = await supabase.auth.getSession()
+  const token = data && data.session && data.session.access_token
+  if (!token) throw new Error('Please sign in again, then try this once more.')
   let res
   try {
-    res = await fetch('/api/creativehub-check?view=variant-pictures-json', { cache: 'no-store' })
+    res = await fetch(path, { cache: 'no-store', headers: { Authorization: `Bearer ${token}` } })
   } catch (e) {
-    throw new Error('Could not reach the site to ask Creative Hub. Check your connection and try again.')
+    throw new Error('Could not reach the site to ask. Check your connection and try again.')
   }
   let body = null
   try {
     body = await res.json()
   } catch (e) {
-    throw new Error("This only works on the live site, because Creative Hub's key lives there. Open starscapesfactory.com/art-loft/admin and try it there.")
+    throw new Error("This only works on the live site, because the keys live there. Open starscapesfactory.com/art-loft/admin and try it there.")
   }
-  if (!body || body.ok !== true || !Array.isArray(body.pictures)) {
-    throw new Error((body && body.message) || 'Creative Hub did not send the pictures. Try again in a minute.')
-  }
+  if (!body || typeof body !== 'object') throw new Error('That did not give a sensible answer. Try again in a minute.')
+  if (body.ok === false) throw new Error(body.message || 'That did not work. Try again in a minute.')
+  return body
+}
+
+// The list of pictures from Creative Hub, as { variant_id, url }. This only exists on the live site,
+// because that is where the Creative Hub key lives.
+export async function fetchPictureList() {
+  const body = await ownerGet('/api/creativehub-check?view=variant-pictures-json')
+  if (body.ok !== true || !Array.isArray(body.pictures)) throw new Error(body.message || 'Creative Hub did not send the pictures. Try again in a minute.')
   return body
 }
 
@@ -98,21 +108,8 @@ const MISSING_COLUMN =
 
 // Creative Hub's whole catalogue, from the live site (that is where the Creative Hub key lives)
 export async function fetchCatalogue() {
-  let res
-  try {
-    res = await fetch('/api/creativehub-check?view=catalogue-json', { cache: 'no-store' })
-  } catch (e) {
-    throw new Error('Could not reach the site to ask Creative Hub. Check your connection and try again.')
-  }
-  let body = null
-  try {
-    body = await res.json()
-  } catch (e) {
-    throw new Error("This only works on the live site, because Creative Hub's key lives there. Open starscapesfactory.com/art-loft/admin and try it there.")
-  }
-  if (!body || body.ok !== true || !Array.isArray(body.prints)) {
-    throw new Error((body && body.message) || 'Creative Hub did not send its prints. Try again in a minute.')
-  }
+  const body = await ownerGet('/api/creativehub-check?view=catalogue-json')
+  if (body.ok !== true || !Array.isArray(body.prints)) throw new Error(body.message || 'Creative Hub did not send its prints. Try again in a minute.')
   return body
 }
 
@@ -158,3 +155,11 @@ export const syncRepo = {
     if (error) throw error
   },
 }
+
+// ---------------------------------------------------------------------------------------------
+// The checks and delivery costs on the publish page. All owner-only.
+// ---------------------------------------------------------------------------------------------
+export const checkCreativeHub = () => ownerGet('/api/creativehub-check')
+export const checkStripe = () => ownerGet('/api/stripe-check')
+export const fetchDeliveryTable = () => ownerGet('/api/creativehub-check?view=delivery-table')
+export const fetchDeliveryCheck = () => ownerGet('/api/creativehub-check?view=delivery-check')
