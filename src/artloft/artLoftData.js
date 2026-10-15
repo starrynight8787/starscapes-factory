@@ -13,7 +13,8 @@ export const ART_LOFT = {
     'A sunlit studio of creativity. Discover prints and artistic experiments, all inspired by life, imagination, and the joy of making.',
 }
 
-// The five canvases on the wall. "name" must match the collection name saved on each product.
+// The five canvases on the wall, alternating horizontal and vertical. "frame" is [x, y, width, height, tilt] and MUST match the
+// frame drawn for that canvas in public/scenes/art-loft.svg (a test checks they agree). "name" must match the collection name saved on each product.
 // "cover" is the title of the print shown on the canvas. If it is not published yet, the first print in the collection is used.
 export const COLLECTIONS = [
   {
@@ -21,35 +22,35 @@ export const COLLECTIONS = [
     name: 'Calm Series',
     blurb: 'Quiet colour and soft light, for the moments you want to slow down.',
     cover: 'Neon Lights',
-    frame: [50, 140, 170, 230, -2],
+    frame: [40, 138, 220, 165, -2],
   },
   {
     slug: 'out-of-this-world',
     name: 'Out of this World',
     blurb: "Planets, stars and far-off places, in colour that doesn't belong on Earth.",
     cover: 'Behind the Curtain',
-    frame: [255, 122, 230, 170, 1.5],
+    frame: [295, 113, 160, 225, 1.5],
   },
   {
     slug: 'oceans-view',
     name: "Ocean's View",
     blurb: 'Sea, sand and the long horizon.',
     cover: 'Beaches',
-    frame: [520, 140, 220, 170, -1.5],
+    frame: [490, 138, 220, 165, -1.5],
   },
   {
     slug: 'dance-like-you-just-dont-care',
     name: "Dance Like You Just Don't Care",
     blurb: 'Tango, ballet and everything in between: movement, music and not a care in the world.',
     cover: 'Tango',
-    frame: [775, 128, 150, 224, 2],
+    frame: [735, 113, 160, 225, 2],
   },
   {
     slug: 'unique-one-of-a-kind',
     name: 'Unique One of a Kind',
     blurb: "Pieces that don't belong to a series, from a rainforest to a quilt.",
     cover: 'Quilting',
-    frame: [960, 136, 190, 180, -1],
+    frame: [930, 138, 220, 165, -1],
   },
 ]
 

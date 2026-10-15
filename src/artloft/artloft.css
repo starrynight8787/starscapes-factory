@@ -112,7 +112,7 @@
   text-decoration: none;
 }
 .al-canvas {
-  background: #fff;
+  background: #f6f8fc; /* the mat, which shows round a painting that is not quite the frame's shape */
   overflow: hidden;
   transform: rotate(var(--rot, 0deg));
   transition: transform 0.25s ease, box-shadow 0.25s ease;
@@ -122,7 +122,7 @@
   display: block;
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain; /* show the WHOLE painting, never crop it */
 }
 a.al-canvas:hover,
 a.al-canvas:focus-visible {
