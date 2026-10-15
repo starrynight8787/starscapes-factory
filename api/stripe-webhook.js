@@ -12,15 +12,17 @@
 // Ordering from Creative Hub is not connected yet. It will be added at the marked place below.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
+import { serviceFetch } from '../lib/serviceKey.js'
 
-// Stripe signs the exact bytes it sends, so the body must reach us unparsed
-export const config = { api: { bodyParser: false }, maxDuration: 30 }
+// Stripe signs the exact bytes it sends, so the body must reach us untouched. This uses the standard web request form
+// (request.text() gives the raw body), which is the way Vercel's own guide recommends for webhooks.
+export const config = { maxDuration: 30 }
 
 const STRIPE = 'https://api.stripe.com'
 const TOLERANCE_SECONDS = 300
 const WANTED = new Set(['checkout.session.completed', 'checkout.session.async_payment_succeeded'])
 const clean = (v) => String(v || '').trim()
-const reply = (res, status, body) => res.status(status).json(body)
+const reply = (status, body) => new Response(JSON.stringify(body), { status, headers: { 'Content-Type': 'application/json', 'Cache-Control': 'no-store' } })
 
 export function signatureIsGood(raw, header, secret, nowMs = Date.now()) {
   const parts = String(header || '').split(',').map((p) => p.trim().split('='))
@@ -33,21 +35,6 @@ export function signatureIsGood(raw, header, secret, nowMs = Date.now()) {
     const given = Buffer.from(String(s))
     return given.length === expected.length && timingSafeEqual(given, expected)
   })
-}
-
-async function readRaw(req) {
-  if (typeof req.body === 'string') return req.body
-  if (Buffer.isBuffer(req.body)) return req.body.toString('utf8')
-  const chunks = []
-  for await (const chunk of req) chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk))
-  return Buffer.concat(chunks).toString('utf8')
-}
-
-function database() {
-  const url = clean(process.env.SUPABASE_URL || process.env.VITE_SUPABASE_URL).replace(/\/+$/, '')
-  const key = clean(process.env.SUPABASE_SERVICE_ROLE_KEY)
-  if (!url || !key) throw new Error('database settings missing')
-  return { url, key }
 }
 
 async function fetchSession(id, key) {
@@ -109,41 +96,39 @@ function buildOrder(event, session, readFully) {
 
 // Returns 'saved', or 'duplicate' if this payment is already recorded
 async function saveOrder(order) {
-  const { url, key } = database()
-  const response = await fetch(`${url}/rest/v1/orders?on_conflict=stripe_session_id`, {
+  const response = await serviceFetch('/rest/v1/orders?on_conflict=stripe_session_id', {
     method: 'POST',
-    headers: { apikey: key, Authorization: `Bearer ${key}`, 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=representation' },
+    headers: { 'Content-Type': 'application/json', Prefer: 'resolution=ignore-duplicates,return=representation' },
     body: JSON.stringify(order),
-    signal: AbortSignal.timeout(10000),
   })
   if (!response.ok) throw new Error(`database answered ${response.status}`)
   const rows = await response.json()
   return Array.isArray(rows) && rows.length > 0 ? 'saved' : 'duplicate'
 }
 
-export default async function handler(req, res) {
-  res.setHeader('Cache-Control', 'no-store')
-  if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
-    return reply(res, 405, { ok: false, message: 'This address only takes messages from Stripe.' })
-  }
-  const secret = clean(process.env.STRIPE_WEBHOOK_SECRET)
-  if (!secret) return reply(res, 503, { ok: false, message: 'STRIPE_WEBHOOK_SECRET is not set on this deployment.' })
+// Anything but a POST gets a polite no (Vercel itself refuses methods that are not exported)
+export function GET() {
+  return reply(405, { ok: false, message: 'This address only takes messages from Stripe.' })
+}
 
-  const raw = await readRaw(req)
-  const signature = (req.headers && (req.headers['stripe-signature'] || req.headers['Stripe-Signature'])) || ''
-  if (!signatureIsGood(raw, signature, secret)) return reply(res, 400, { ok: false, message: 'The signature did not match, so this was ignored.' })
+export async function POST(request) {
+  const secret = clean(process.env.STRIPE_WEBHOOK_SECRET)
+  if (!secret) return reply(503, { ok: false, message: 'STRIPE_WEBHOOK_SECRET is not set on this deployment.' })
+
+  const raw = await request.text()
+  const signature = request.headers.get('stripe-signature') || ''
+  if (!signatureIsGood(raw, signature, secret)) return reply(400, { ok: false, message: 'The signature did not match, so this was ignored.' })
 
   let event
   try {
     event = JSON.parse(raw)
   } catch (e) {
-    return reply(res, 400, { ok: false, message: 'That was not a Stripe message.' })
+    return reply(400, { ok: false, message: 'That was not a Stripe message.' })
   }
-  if (!event || !WANTED.has(event.type)) return reply(res, 200, { ok: true, ignored: event && event.type })
+  if (!event || !WANTED.has(event.type)) return reply(200, { ok: true, ignored: event && event.type })
   const session = event.data && event.data.object
-  if (!session || typeof session.id !== 'string') return reply(res, 400, { ok: false, message: 'That message had no payment in it.' })
-  if (session.payment_status !== 'paid') return reply(res, 200, { ok: true, ignored: 'not paid yet' })
+  if (!session || typeof session.id !== 'string') return reply(400, { ok: false, message: 'That message had no payment in it.' })
+  if (session.payment_status !== 'paid') return reply(200, { ok: true, ignored: 'not paid yet' })
 
   try {
     const key = clean(process.env.STRIPE_SECRET_KEY)
@@ -157,8 +142,9 @@ export default async function handler(req, res) {
     // ---- Ordering from Creative Hub will go here: only for order.livemode === true, with the payment reference as the idempotency key ----
 
     const outcome = await saveOrder(order)
-    return reply(res, 200, { ok: true, order: outcome })
+    return reply(200, { ok: true, order: outcome })
   } catch (e) {
-    return reply(res, 500, { ok: false, message: 'Could not record the order just now. Stripe will send it again.' })
+    // The detail is one of this file's own short messages (never a key), and only Stripe, with a valid signature, ever sees it
+    return reply(500, { ok: false, message: 'Could not record the order just now. Stripe will send it again.', detail: String((e && e.message) || '').slice(0, 120) })
   }
 }
