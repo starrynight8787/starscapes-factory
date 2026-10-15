@@ -45,6 +45,12 @@ export async function setPublished(ids, published) {
   if (error) throw error
 }
 
+// Save your own description of one print ('' clears it). Only your own prints can be changed.
+export async function setDescription(id, description) {
+  const { error } = await supabase.from('products').update({ description }).eq('id', id)
+  if (error) throw error
+}
+
 // Move one print into a collection ('' means no collection). Only your own prints can be changed.
 export async function setCollection(id, collection) {
   const { error } = await supabase.from('products').update({ collection }).eq('id', id)

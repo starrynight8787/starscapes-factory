@@ -94,6 +94,13 @@ export const TYPES = [
   },
 ]
 
+// Facts shown under the Add to cart button on every print. Every line must be true of EVERY print, so check each one before you change it.
+export const PRINT_FACTS = [
+  'Made to order, and posted straight to you from the print studio in plain, unbranded packaging.',
+  'Printed on Hahnemühle Photo Rag, a cotton fine art paper.',
+  'Delivery cost is shown at checkout, which opens soon.',
+]
+
 export function collectionBySlug(slug) {
   return COLLECTIONS.find((c) => c.slug === slug) || null
 }
@@ -122,6 +129,15 @@ export function firstImage(print) {
 
 export function printsIn(collectionName, prints) {
   return prints.filter((p) => p.collection === collectionName)
+}
+
+// The picture for a print's card in a grid: the framed view of its smallest size if Creative Hub gave one,
+// otherwise any size's picture, otherwise the plain artwork.
+export function cardPicture(print) {
+  const variants = Array.isArray(print && print.product_variants) ? print.product_variants.slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0)) : []
+  const framed = variants.find((v) => v.framed && v.image_url)
+  const any = variants.find((v) => v.image_url)
+  return (framed && framed.image_url) || (any && any.image_url) || firstImage(print)
 }
 
 // the picture to show on a canvas: the chosen cover if it is available, otherwise the first print with a picture

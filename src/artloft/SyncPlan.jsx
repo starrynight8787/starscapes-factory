@@ -9,10 +9,19 @@ export default function SyncPlan({ plan, onApply, onCancel }) {
 
       {!plan.hasChanges && <p>Everything already matches Creative Hub. There is nothing to do.</p>}
 
-      {plan.refresh.length > 0 && (
+      {plan.refresh.some((r) => r.reasons.length > 0) && (
         <section aria-label="Will be refreshed">
-          <h3>Will be refreshed ({plan.refresh.length})</h3>
-          <ul>{names(plan.refresh, (r) => <li key={r.shop.id}>{r.ch.name}: {r.reasons.join(', ')}</li>)}</ul>
+          <h3>Will be refreshed ({plan.refresh.filter((r) => r.reasons.length > 0).length})</h3>
+          <ul>{names(plan.refresh.filter((r) => r.reasons.length > 0), (r) => <li key={r.shop.id}>{r.ch.name}: {r.reasons.join(', ')}</li>)}</ul>
+        </section>
+      )}
+
+      {plan.descriptionsToClear > 0 && (
+        <section aria-label="Descriptions">
+          <h3>Descriptions</h3>
+          <p className="al-sync-plan__note">
+            Creative Hub's standard description will be cleared on {plan.descriptionsToClear} {plan.descriptionsToClear === 1 ? 'print' : 'prints'}. Your shop writes its own descriptions now. Any you have written yourself are left alone.
+          </p>
         </section>
       )}
 

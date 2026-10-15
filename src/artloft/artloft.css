@@ -665,6 +665,67 @@ a.al-object:focus-visible {
   opacity: 0.45;
   cursor: not-allowed;
 }
+.al-admin__list li > .al-admin__describe {
+  grid-column: 1 / -1;
+}
+.al-admin__describe summary {
+  cursor: pointer;
+  color: var(--sf-blue, #1f6fa8);
+  font-size: 0.92rem;
+}
+.al-admin__editor {
+  margin: 8px 0 4px;
+}
+.al-admin__editor label span {
+  display: block;
+  margin-bottom: 4px;
+  font-size: 0.85rem;
+  color: var(--sf-muted, #5b6585);
+}
+.al-admin__editor textarea {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 10px 12px;
+  box-sizing: border-box;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--sf-ink, #0e1530);
+  font: inherit;
+  line-height: 1.5;
+  resize: vertical;
+}
+.al-admin__editor textarea:focus-visible,
+.al-admin__editor button:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
+}
+.al-admin__editor-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 8px;
+}
+.al-admin__editor-row small {
+  color: var(--sf-muted, #5b6585);
+}
+.al-admin__editor button {
+  min-height: 40px;
+  padding: 6px 16px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.al-admin__editor button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
 .al-admin__needs {
   margin: 10px 0 4px;
   padding: 8px 12px;

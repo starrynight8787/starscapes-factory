@@ -5,7 +5,7 @@ import useTitle from './useTitle'
 import { fetchPrint } from './artLoftApi'
 import { addItem } from '../cart/cartStore'
 import useCart from '../cart/useCart'
-import { collectionBySlug, COLLECTIONS, firstImage, formatPrice, formatSize } from './artLoftData'
+import { collectionBySlug, COLLECTIONS, PRINT_FACTS, firstImage, formatPrice, formatSize } from './artLoftData'
 
 export default function PrintPage() {
   const { id } = useParams()
@@ -178,8 +178,9 @@ export default function PrintPage() {
             {note && note.kind === 'full' && <>Your cart is full. Remove something to add another. <Link to="/cart">View cart</Link></>}
           </p>
           <ul className="al-facts">
-            <li>Made to order and posted directly from the print studio.</li>
-            <li>Delivery cost is shown at checkout, which opens soon.</li>
+            {PRINT_FACTS.map((fact) => (
+              <li key={fact}>{fact}</li>
+            ))}
           </ul>
         </div>
       </div>

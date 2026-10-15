@@ -6,6 +6,8 @@
 //
 // The rules (the same ones as the old import, now with a preview first):
 //   - Names, prices, artwork and the sizes and frames follow Creative Hub: change them there, then sync.
+//   - Descriptions belong to the SHOP. Creative Hub's standard paragraph is never copied in. Where a print still holds an
+//     untouched copy of Creative Hub's text, a sync clears it; a description you wrote yourself is never touched.
 //   - Your collections and what is live are never changed on a print that is still at Creative Hub.
 //   - A print that is new at Creative Hub is added as a DRAFT.
 //   - A print that was re-created at Creative Hub keeps its collection and live status, if its name matches exactly.
@@ -70,14 +72,16 @@ function compare(ch, shop) {
 
   const reasons = []
   if (shop.title !== ch.name) reasons.push('name')
-  if ((shop.description || '') !== (ch.description || '')) reasons.push('description')
+  // Only an exact, untouched copy of Creative Hub's text is cleared. Anything you wrote is different, so it stays.
+  const chText = (ch.description || '').trim()
+  const clearDescription = chText !== '' && (shop.description || '').trim() === chText
   if (num(shop.price) !== fromPrice(ch)) reasons.push('price')
   if (ch.image && !(Array.isArray(shop.images) && shop.images[0] === ch.image)) reasons.push('artwork')
   if (added.length) reasons.push(`${plural(added.length, 'new size', 'new sizes')}`)
   if (stale.length) reasons.push(`${plural(stale.length, 'old size', 'old sizes')} to remove`)
   if (onlyPictures.length) reasons.push(`${plural(onlyPictures.length, 'picture', 'pictures')}`)
   if (changed.length > onlyPictures.length) reasons.push(`${plural(changed.length - onlyPictures.length, 'size changed', 'sizes changed')}`)
-  return { reasons, stale: stale.map((v) => v.id) }
+  return { reasons, stale: stale.map((v) => v.id), clearDescription }
 }
 
 const groupBy = (items, keyOf) => {
@@ -117,11 +121,14 @@ export function planSync(catalogue, shop) {
   const refresh = []
   const upToDate = []
   for (const m of matched) {
-    const { reasons, stale } = compare(m.ch, m.shop)
-    if (reasons.length) refresh.push({ ...m, reasons, stale })
+    const { reasons, stale, clearDescription } = compare(m.ch, m.shop)
+    if (reasons.length || clearDescription) refresh.push({ ...m, reasons, stale, clearDescription })
     else upToDate.push(m.shop.title)
   }
-  const replace = replaced.map((m) => ({ ...m, reasons: ['re-created at Creative Hub'], stale: compare(m.ch, m.shop).stale }))
+  const replace = replaced.map((m) => {
+    const { stale, clearDescription } = compare(m.ch, m.shop)
+    return { ...m, reasons: ['re-created at Creative Hub'], stale, clearDescription }
+  })
   const add = unmatched.filter((p) => !replacedCh.has(p.id)).map((ch) => ({ ch }))
   const gone = orphans.filter((s) => !replacedShop.has(s.id)).map((s) => ({ shop: s, hide: Boolean(s.published) }))
 
@@ -132,6 +139,7 @@ export function planSync(catalogue, shop) {
     replace,
     add,
     gone,
+    descriptionsToClear: [...refresh, ...replace].filter((x) => x.clearDescription).length,
     hasChanges: refresh.length + replace.length + add.length + gone.length > 0,
   }
 }
@@ -163,14 +171,15 @@ export async function applySync(plan, repo, userId, onProgress = () => {}) {
     const { ch } = step
     const productFields = {
       title: ch.name,
-      description: ch.description || '',
       price: fromPrice(ch),
       ...(ch.image ? { images: [ch.image] } : {}),
+      ...(step.clearDescription ? { description: '' } : {}),
     }
     let productId
     if (step.kind === 'add') {
       productId = await repo.insertProduct({
         ...productFields,
+        description: '', // the shop writes its own; Creative Hub's standard text is never copied in
         images: ch.image ? [ch.image] : [],
         product_type: 'print',
         collection: '',

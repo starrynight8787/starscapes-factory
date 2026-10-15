@@ -2,9 +2,10 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
-import { fetchPrints, setPublished, setCollection, currentUser, fetchPictureList, savePicture, fetchCatalogue, fetchShopCatalogue, syncRepo } from './artLoftApi'
+import { fetchPrints, setPublished, setCollection, setDescription, currentUser, fetchPictureList, savePicture, fetchCatalogue, fetchShopCatalogue, syncRepo } from './artLoftApi'
 import { planSync, applySync } from './sync'
 import SyncPlan from './SyncPlan'
+import DescriptionEditor from './DescriptionEditor'
 import { COLLECTIONS, formatPrice } from './artLoftData'
 
 // Only you will find this page, at /art-loft/admin. Anyone else sees nothing to manage.
@@ -148,6 +149,20 @@ export default function AdminPrints() {
     setFill({ phase: failed ? 'error' : 'done', text: parts.join(' ') })
   }
 
+  async function saveDescription(print, text) {
+    setBusy(true)
+    setMessage('')
+    try {
+      await setDescription(print.id, text)
+      setPrints((cur) => cur.map((p) => (p.id === print.id ? { ...p, description: text } : p)))
+      setMessage(text ? `Saved the description for ${print.title}.` : `Cleared the description for ${print.title}.`)
+    } catch (e) {
+      setMessage('That did not save. Nothing was changed. Please try again.')
+    } finally {
+      setBusy(false)
+    }
+  }
+
   const live = prints.filter((p) => p.published).length
 
   if (user === undefined || status === 'loading') return <main className="al"><p className="al-note">Loading…</p></main>
@@ -234,6 +249,10 @@ export default function AdminPrints() {
                     <input type="checkbox" checked={Boolean(p.published)} disabled={busy} onChange={(e) => apply([p.id], e.target.checked, e.target.checked ? 'Switched on' : 'Switched off')} aria-label={`${p.title}: show to visitors`} />
                     <span>{p.published ? 'Live' : 'Draft'}</span>
                   </label>
+                  <details className="al-admin__describe" key={`d-${p.id}`}>
+                    <summary>{p.description ? 'Edit description' : 'Add description'}</summary>
+                    <DescriptionEditor print={p} busy={busy} onSave={saveDescription} />
+                  </details>
                 </li>
               ))}
             </ul>
