@@ -657,6 +657,7 @@ a.al-object:focus-visible {
   border: 1px solid var(--sf-border, #dde3f0);
   border-radius: 8px;
   background: #fff;
+  color: var(--sf-navy-700, #14306a); /* the old site-wide button style makes text white, which is invisible on white */
   font: inherit;
   cursor: pointer;
 }
