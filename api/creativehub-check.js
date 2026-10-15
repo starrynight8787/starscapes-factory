@@ -11,6 +11,7 @@
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
+//   /api/creativehub-check?view=inspect                            what pictures does Creative Hub give for a print? (add &product=PRODUCT_ID to pick one)
 //   /api/creativehub-check?view=import-sql&email=YOU@EXAMPLE.COM   the SQL that imports your prints into the shop
 //        add &collections=yes to also put each print in its collection and show a check table
 //
@@ -263,6 +264,71 @@ async function importSql(query, base, token) {
   return { __text: buildImportSql(email, withVariants.filter(Boolean), withCollections) }
 }
 
+// ---- inspect: find out what pictures Creative Hub gives us ---------------------------------------
+// Read-only. It lists FIELD NAMES and picture links only (never prices or costs), because this page is open to anyone.
+const looksLikeUrl = (v) => typeof v === 'string' && /^https?:\/\//i.test(v)
+const PICTURE_KEY = /image|img|mockup|mock_up|preview|thumb|photo|picture|media|render|lifestyle|scene|gallery|url/i
+
+function pictureFields(value, where, depth = 0, found = []) {
+  if (found.length >= 40 || value === null || typeof value !== 'object') return found
+  for (const [key, v] of Object.entries(value)) {
+    const here = Array.isArray(value) ? `${where}[${key}]` : `${where}.${key}`
+    if (looksLikeUrl(v) || (typeof v === 'string' && PICTURE_KEY.test(key))) found.push({ where: here, value: String(v).slice(0, 300) })
+    else if (v && typeof v === 'object' && depth < 4) pictureFields(v, here, depth + 1, found)
+  }
+  return found
+}
+
+async function inspectPictures(query, base, token) {
+  const list = await getJson(base, token, '/v1/products?limit=200&offset=0')
+  if (!list.ok) return { ok: false, status: list.status, message: explain(list.status, list.body) }
+  const products = (list.body && list.body.products) || []
+  if (products.length === 0) return { ok: false, message: 'Creative Hub has no products on this account.' }
+
+  const wanted = String(query.product || '')
+  if (wanted && !/^[A-Za-z0-9_-]{4,80}$/.test(wanted)) return { ok: false, message: 'That product id does not look right. Leave off &product=... to use your first product.' }
+  const product = wanted ? products.find((p) => p && p.id === wanted) : products[0]
+  if (!product) return { ok: false, message: 'Not one of your products. Leave off &product=... to use your first product.' }
+
+  const vr = await getJson(base, token, `/v1/products/${product.id}/variants`)
+  if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
+  const variants = ((vr.body && vr.body.variants) || []).filter(Boolean)
+  const framed = variants.find((v) => v.is_framed)
+  const unframed = variants.find((v) => !v.is_framed)
+
+  // every picture-like field that appears on ANY variant, with one example each
+  const onVariants = new Map()
+  for (const v of variants) {
+    for (const f of pictureFields(v, 'variant')) if (!onVariants.has(f.where)) onVariants.set(f.where, f.value)
+  }
+
+  // a few likely places for more pictures. These are only ever read, and a "not found" is harmless.
+  const guesses = [`/v1/products/${product.id}`, `/v1/products/${product.id}/images`, `/v1/products/${product.id}/mockups`]
+  if (framed) guesses.push(`/v1/products/${product.id}/variants/${framed.id}`, `/v1/variants/${framed.id}`)
+  const otherPlaces = []
+  for (const path of guesses) {
+    const r = await getJson(base, token, path)
+    otherPlaces.push({
+      path: path.replace(framed ? framed.id : '\u0000', 'FRAMED_VARIANT_ID').replace(product.id, 'PRODUCT_ID'),
+      status: r.status,
+      field_names: r.ok && r.body && typeof r.body === 'object' ? Object.keys(r.body).slice(0, 60) : null,
+      picture_fields: r.ok && r.body ? pictureFields(r.body, 'response') : [],
+    })
+  }
+
+  return {
+    ok: true,
+    note: 'Read-only. Field names and picture links only. Send this whole page to Claude.',
+    product: { name: product.name, id: product.id, variant_count: variants.length },
+    product_field_names: Object.keys(product),
+    picture_fields_on_product: pictureFields(product, 'product'),
+    framed_variant_field_names: framed ? Object.keys(framed) : null,
+    unframed_variant_field_names: unframed ? Object.keys(unframed) : null,
+    picture_fields_on_variants: [...onVariants].map(([where, value]) => ({ where, example: value })),
+    other_places_tried: otherPlaces,
+  }
+}
+
 async function view(mode, query, base, token) {
   if (mode === 'catalogue') {
     const r = await getJson(base, token, '/v1/products?limit=200&offset=0')
@@ -362,6 +428,8 @@ async function view(mode, query, base, token) {
     if (!response.ok) return { ok: false, status: response.status, message: explain(response.status, body), detail: body && (body.detail || body.error_code) }
     return { ok: true, note: 'This is only a quote. Nothing was ordered.', quote: body }
   }
+
+  if (mode === 'inspect') return inspectPictures(query, base, token)
 
   return { ok: false, message: 'Unknown page.' }
 }
