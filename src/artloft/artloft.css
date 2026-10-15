@@ -645,6 +645,27 @@ a.al-object:focus-visible {
 .al-tools__margin.is-LOSS {
   color: #9a1b1b;
 }
+.al-tools__line {
+  display: block;
+}
+.al-tools__tag {
+  display: inline-block;
+  padding: 1px 8px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
+  color: var(--sf-muted, #5b6585);
+}
+.al-tools__status.is-needs_attention {
+  color: #9a1b1b;
+}
+.al-tools__status.is-sent {
+  color: #1c6b3a;
+}
+.al-tools__table small {
+  color: var(--sf-muted, #5b6585);
+}
 .al-sync-plan h3 {
   margin: 14px 0 4px;
   font-size: 1rem;

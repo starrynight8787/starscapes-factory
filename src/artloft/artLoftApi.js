@@ -160,6 +160,7 @@ export const syncRepo = {
 // The checks and delivery costs on the publish page. All owner-only.
 // ---------------------------------------------------------------------------------------------
 export const checkCreativeHub = () => ownerGet('/api/creativehub-check')
+export const fetchOrders = () => ownerGet('/api/orders')
 export const checkStripe = () => ownerGet('/api/stripe-check')
 export const fetchDeliveryCheck = (set = 'base') =>
   ownerGet(set === 'base' ? '/api/creativehub-check?view=delivery-check' : `/api/creativehub-check?view=delivery-check&set=${encodeURIComponent(set)}`)
