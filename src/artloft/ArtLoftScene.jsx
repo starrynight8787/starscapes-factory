@@ -2,10 +2,17 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
-import { fetchPrints } from './artLoftApi'
+import { fetchPrints, fetchOriginals } from './artLoftApi'
+import { originalsIn } from './originals'
 import { ART_LOFT, COLLECTIONS, TYPES, SCENE, WALL, PLAQUE_Y, UNDER_CONSTRUCTION, pct, coverFor, printsIn, hangFrames, starPath } from './artLoftData'
 
-const countLabel = (n) => (n === 1 ? '1 print' : `${n} prints`)
+// "2 prints", "2 prints and 1 original", or just "1 original" for a collection that holds only originals
+const countLabel = (prints, originals = 0) => {
+  const p = prints === 1 ? '1 print' : `${prints} prints`
+  if (!originals) return p
+  const o = originals === 1 ? '1 original' : `${originals} originals`
+  return prints ? `${p} and ${o}` : o
+}
 const r2 = (n) => Math.round(n * 100) / 100
 
 // One hanging frame, drawn to the shape it is given: a wire to a hook, a frame, and a mat for the picture to sit on
@@ -29,14 +36,17 @@ function Frame({ slug, frame, tilt }) {
 export default function ArtLoftScene() {
   useTitle(ART_LOFT.name)
   const [prints, setPrints] = useState([])
+  const [originals, setOriginals] = useState([])
   const [status, setStatus] = useState('loading') // loading | ready | error
 
   useEffect(() => {
     let alive = true
-    fetchPrints()
-      .then((data) => {
+    // The originals are an extra: if they cannot be loaded, the prints still show
+    Promise.all([fetchPrints(), fetchOriginals().catch(() => [])])
+      .then(([data, extra]) => {
         if (alive) {
           setPrints(data)
+          setOriginals(extra)
           setStatus('ready')
         }
       })
@@ -59,9 +69,10 @@ export default function ArtLoftScene() {
       COLLECTIONS.map((c) => ({
         ...c,
         count: printsIn(c.name, prints).length,
+        originals: originalsIn(c.name, originals).length,
         cover: coverFor(c, prints),
       })),
-    [prints]
+    [prints, originals]
   )
 
   const frames = hangFrames(canvases.map((c) => aspects[c.slug]))
@@ -103,7 +114,7 @@ export default function ArtLoftScene() {
             top: pct(PLAQUE_Y, SCENE.height),
             maxWidth: pct(Math.min(190, Math.max(150, w)), SCENE.width),
           }
-          const open = c.count > 0
+          const open = c.count + c.originals > 0
           return (
             <div key={c.slug} className="al-slot">
               {open ? (
@@ -111,7 +122,7 @@ export default function ArtLoftScene() {
                   className="al-spot al-canvas"
                   style={style}
                   to={`/art-loft/collections/${c.slug}`}
-                  aria-label={`${c.name}, ${countLabel(c.count)}`}
+                  aria-label={`${c.name}, ${countLabel(c.count, c.originals)}`}
                 >
                   {c.cover && (
                     <img
@@ -128,7 +139,7 @@ export default function ArtLoftScene() {
               )}
               <span className="al-plaque al-plaque--wall" style={plaque}>
                 <strong>{c.name}</strong>
-                <small>{open ? countLabel(c.count) : 'Coming soon'}</small>
+                <small>{open ? countLabel(c.count, c.originals) : 'Coming soon'}</small>
               </span>
             </div>
           )
@@ -182,12 +193,12 @@ export default function ArtLoftScene() {
         <ul>
           {canvases.map((c) => (
             <li key={c.slug}>
-              {c.count > 0 ? (
+              {c.count + c.originals > 0 ? (
                 <Link to={`/art-loft/collections/${c.slug}`}>
                   <span className="al-list__thumb">{c.cover && <img src={c.cover} alt="" loading="lazy" />}</span>
                   <span>
                     <strong>{c.name}</strong>
-                    <small>{countLabel(c.count)}</small>
+                    <small>{countLabel(c.count, c.originals)}</small>
                   </span>
                 </Link>
               ) : (

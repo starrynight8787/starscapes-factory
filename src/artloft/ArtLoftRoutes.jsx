@@ -4,6 +4,9 @@ import PrintsPage from './PrintsPage'
 import PrintPage from './PrintPage'
 import CollectionPage from './CollectionPage'
 import AdminPrints from './AdminPrints'
+import OriginalsPage from './OriginalsPage'
+import OriginalPage from './OriginalPage'
+import AdminOriginals from './AdminOriginals'
 import './artloft.css'
 
 // Everything under /art-loft lives here, so the main App only needs one line to know about it.
@@ -14,7 +17,10 @@ export default function ArtLoftRoutes() {
       <Route path="prints" element={<PrintsPage />} />
       <Route path="prints/:id" element={<PrintPage />} />
       <Route path="collections/:slug" element={<CollectionPage />} />
+      <Route path="originals" element={<OriginalsPage />} />
+      <Route path="originals/:id" element={<OriginalPage />} />
       <Route path="admin" element={<AdminPrints />} />
+      <Route path="admin/originals" element={<AdminOriginals />} />
       <Route
         path="*"
         element={

@@ -65,6 +65,10 @@ export function hangFrames(aspects) {
   })
 }
 
+// Original paintings are sold by email for now. Change this to true when checkout can sell them (shipping decided), and every
+// original's page shows Add to cart instead of the email button.
+export const ORIGINALS_ONLINE_CHECKOUT = false
+
 // A five-pointed star as a drawing path, centred on (cx, cy)
 export function starPath(cx, cy, outer = 18, inner = 7.9) {
   const pts = []
@@ -184,7 +188,9 @@ export function formatPrice(n) {
   if (n === null || n === undefined || n === '') return ''
   const v = Number(n)
   if (!Number.isFinite(v)) return ''
-  return `£${Number.isInteger(v) ? v : v.toFixed(2)}`
+  // whole pounds have no pence, anything else has two, and thousands are separated: £89, £149.50, £1,200
+  const digits = Number.isInteger(v) ? 0 : 2
+  return `£${v.toLocaleString('en-GB', { minimumFractionDigits: digits, maximumFractionDigits: digits })}`
 }
 
 // "21x30cm" -> "21 × 30 cm"

@@ -182,6 +182,7 @@ export default function AdminPrints() {
     <main className="al al-admin">
       <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
       <h1>Manage prints</h1>
+      <p className="al-admin__links"><Link className="al-btn al-btn--quiet" to="/art-loft/admin/originals">Manage original paintings</Link></p>
       <p className="al-blurb">
         {prints.length} prints, {live} live. A print is only visible to visitors once you switch it on. You can always see all of them while you are signed in. Use the drop-down beside a print to move it to a different collection.
       </p>

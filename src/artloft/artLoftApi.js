@@ -57,6 +57,97 @@ export async function setCollection(id, collection) {
   if (error) throw error
 }
 
+// ---------------------------------------------------------------------------------------------
+// Original paintings. They live in the same products table as the prints, marked fulfilment = 'hand' (you send them yourself).
+// ---------------------------------------------------------------------------------------------
+const ORIGINAL_COLUMNS = `${COLUMNS}, status, sold_at, medium, width_cm, height_cm, depth_cm, year, framed`
+const PHOTO_BUCKET = 'post-images' // the same public bucket the blog photos use; your files go in a folder named after your sign-in
+
+export const MISSING_ORIGINAL_COLUMNS =
+  'Originals need a few new columns in the database first. Open the Supabase SQL editor, run the file sql/originals.sql, then reload this page.'
+
+// If the new columns are not in the database yet, say what to do rather than showing a database error
+function originalsError(error) {
+  const text = (error && error.message) || ''
+  if (/(status|sold_at|medium|width_cm|height_cm|depth_cm|year|framed)/i.test(text) && /(column|does not exist|schema cache)/i.test(text)) {
+    return new Error(MISSING_ORIGINAL_COLUMNS)
+  }
+  return error
+}
+
+// Every original the signed-in person may see. Visitors get only published ones; you, signed in, also get your own drafts.
+export async function fetchOriginals() {
+  const { data, error } = await supabase.from('products').select(ORIGINAL_COLUMNS).eq('fulfilment', 'hand').order('title', { ascending: true })
+  if (error) throw originalsError(error)
+  return data || []
+}
+
+export async function fetchOriginal(id) {
+  const { data, error } = await supabase.from('products').select(ORIGINAL_COLUMNS).eq('id', id).eq('fulfilment', 'hand').maybeSingle()
+  if (error) throw originalsError(error)
+  return data || null
+}
+
+// Save an original: a new one (no id) is saved as a draft, an existing one is updated. Returns its id.
+export async function saveOriginal(values, { id = null, userId = null } = {}) {
+  if (id) {
+    const { error } = await supabase.from('products').update(values).eq('id', id)
+    if (error) throw originalsError(error)
+    return id
+  }
+  const { data, error } = await supabase
+    .from('products')
+    .insert({ ...values, fulfilment: 'hand', published: false, status: 'available', author_id: userId })
+    .select('id')
+    .single()
+  if (error) throw originalsError(error)
+  return data.id
+}
+
+// Mark an original sold, or available again. Only your own can be changed.
+export async function setSold(id, sold) {
+  const { error } = await supabase.from('products').update({ status: sold ? 'sold' : 'available', sold_at: sold ? new Date().toISOString() : null }).eq('id', id)
+  if (error) throw originalsError(error)
+}
+
+// Delete an original. Only a draft can be deleted, so a piece that has been shown or sold can never be lost by a slip.
+export async function deleteOriginal(id) {
+  const { error } = await supabase.from('products').delete().eq('id', id).eq('published', false)
+  if (error) throw error
+}
+
+// Upload photos into your own folder. Returns each one's place and public address: [{ path, url }].
+// If one fails, the ones already uploaded are removed again, so nothing is left behind.
+export async function uploadOriginalPhotos(files, userId, onProgress = () => {}) {
+  const list = Array.from(files)
+  const done = []
+  try {
+    for (let i = 0; i < list.length; i += 1) {
+      const file = list[i]
+      const ext = ((file.name.split('.').pop() || 'jpg').toLowerCase().replace(/[^a-z0-9]/g, '') || 'jpg').slice(0, 5)
+      const path = `${userId}/originals/${Date.now()}-${i}.${ext}`
+      onProgress(i + 1, list.length)
+      const { error } = await supabase.storage.from(PHOTO_BUCKET).upload(path, file, { contentType: file.type, upsert: false })
+      if (error) throw new Error(`Photo ${i + 1} did not upload (${error.message}).`)
+      done.push(path)
+    }
+  } catch (e) {
+    if (done.length) await supabase.storage.from(PHOTO_BUCKET).remove(done).catch(() => {})
+    throw e
+  }
+  return done.map((path) => ({ path, url: supabase.storage.from(PHOTO_BUCKET).getPublicUrl(path).data.publicUrl }))
+}
+
+// Remove photos that were uploaded but not saved with a piece (for example, because the save failed). Best effort: never throws.
+export async function discardOriginalPhotos(paths) {
+  if (!paths || !paths.length) return
+  try {
+    await supabase.storage.from(PHOTO_BUCKET).remove(paths)
+  } catch (e) {
+    /* a leftover file is harmless; the save already failed and the person has been told */
+  }
+}
+
 // The owner-only pages (Creative Hub, Stripe, delivery costs) only answer to your sign-in, so every request carries it.
 // They only exist on the live site, because that is where the keys live.
 async function ownerGet(path) {
