@@ -11,8 +11,12 @@
 //   - show or log the Stripe key
 //
 // The key lives in Vercel as STRIPE_SECRET_KEY, and should be a TEST key (sk_test_) while you are building.
+//
+// CLOSED TO VISITORS BY DEFAULT: until CHECKOUT_OPEN is set to exactly yes in Vercel, only the signed-in shop owner
+// can start a checkout, and everyone else is told it opens soon. The cart page asks GET /api/checkout whether it is open.
 
 import { LAUNCH_COUNTRIES } from '../src/cart/launchCountries.js'
+import { requireOwner } from '../lib/ownerGuard.js'
 
 const STRIPE = 'https://api.stripe.com'
 const SITE = 'https://starscapesfactory.com'
@@ -24,6 +28,17 @@ const MAX_BODY = 10000
 
 const clean = (v) => String(v || '').trim()
 const say = (res, status, message, extra = {}) => res.status(status).json({ ok: false, message, ...extra })
+
+// Open to everyone only when CHECKOUT_OPEN is exactly yes. Anything else (unset, true, 1, YES) means closed.
+const isOpen = () => clean(process.env.CHECKOUT_OPEN) === 'yes'
+async function ownerIsAsking(req) {
+  try {
+    const who = await requireOwner(req)
+    return Boolean(who && who.ok)
+  } catch (e) {
+    return false
+  }
+}
 
 function allowedOrigins() {
   const list = new Set([SITE, 'https://www.starscapesfactory.com', 'http://localhost:5173'])
@@ -81,8 +96,15 @@ function pictureFor(...candidates) {
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
+
+  // The cart page asks whether checkout is open. It says nothing about why, and reveals nothing else.
+  if (req.method === 'GET') {
+    const open = isOpen()
+    const can_test = open ? false : await ownerIsAsking(req)
+    return res.status(200).json({ ok: true, open, can_test })
+  }
   if (req.method !== 'POST') {
-    res.setHeader('Allow', 'POST')
+    res.setHeader('Allow', 'GET, POST')
     return say(res, 405, 'Checkout is started from the cart page.')
   }
 
@@ -91,6 +113,11 @@ export default async function handler(req, res) {
   const origin = clean(req.headers && req.headers.origin)
   if (origin && !origins.has(origin)) return say(res, 403, 'That request did not come from the shop.')
   const returnTo = origin || SITE
+
+  // Closed to visitors: only the owner may start a checkout until CHECKOUT_OPEN is yes
+  if (!isOpen() && !(await ownerIsAsking(req))) {
+    return say(res, 403, 'Checkout opens soon. Your cart is saved on this device until then.', { reason: 'not_open' })
+  }
 
   const parsed = readItems(req.body)
   if (parsed.error) return say(res, 400, parsed.error)

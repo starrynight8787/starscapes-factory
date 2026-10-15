@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import './cart.css'
 import useCart from './useCart'
-import { startCheckout } from './checkout'
+import { startCheckout, checkoutStatus } from './checkout'
 import { redirectTo } from './redirect'
 import { LAUNCH_COUNTRIES } from './launchCountries'
 import { KINDS, setQty, removeItem, clearCart } from './cartStore'
@@ -19,7 +19,20 @@ export default function CartPage() {
   const { items, count, subtotal } = useCart()
   const [params] = useSearchParams()
   const [paying, setPaying] = useState({ busy: false, error: '' })
+  const [gate, setGate] = useState({ ready: false, open: false, can_test: false })
   const printsOnly = items.every((i) => i.type === 'print')
+  const canPay = gate.ready && (gate.open || gate.can_test)
+
+  // Is checkout open to visitors yet? (The owner can always test it.)
+  useEffect(() => {
+    let alive = true
+    checkoutStatus().then((status) => {
+      if (alive) setGate({ ready: true, ...status })
+    })
+    return () => {
+      alive = false
+    }
+  }, [])
 
   async function handleCheckout() {
     setPaying({ busy: true, error: '' })
@@ -91,9 +104,11 @@ export default function CartPage() {
         </p>
         <p className="cart-summary__note">Delivery is free to {countryList(LAUNCH_COUNTRIES)}. You'll choose your address on the next page.</p>
         {!printsOnly && <p className="cart-summary__note" role="status">Checkout only handles prints for now. Please remove anything else to pay.</p>}
-        <button type="button" className="cart-checkout" disabled={paying.busy || !printsOnly} onClick={handleCheckout}>
-          {paying.busy ? 'Taking you to the payment page…' : 'Checkout'}
+        <button type="button" className="cart-checkout" disabled={paying.busy || !printsOnly || !canPay} onClick={handleCheckout}>
+          {paying.busy ? 'Taking you to the payment page…' : gate.ready && !canPay ? 'Checkout opens soon' : 'Checkout'}
         </button>
+        {gate.ready && !canPay && <p className="cart-summary__note" role="status">Your cart is saved on this device until checkout opens.</p>}
+        {gate.ready && !gate.open && gate.can_test && <p className="cart-summary__note" role="status">Checkout is closed to visitors. You can test it because you are signed in as the owner.</p>}
         {paying.error && <p className="cart-summary__note cart-summary__error" role="alert">{paying.error}</p>}
         <p className="cart-summary__note">You pay on Stripe's secure page. Orders sent outside the UK may be charged import taxes or duties by the destination country, which aren't included in the price.</p>
         <p className="cart-summary__clear">
