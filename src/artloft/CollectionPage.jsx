@@ -15,7 +15,7 @@ export default function CollectionPage() {
 
   useEffect(() => {
     let alive = true
-    fetchPrints()
+    fetchPrints({ withPictures: true })
       .then((data) => alive && (setPrints(data), setStatus('ready')))
       .catch(() => alive && setStatus('error'))
     return () => {
@@ -26,7 +26,7 @@ export default function CollectionPage() {
   if (!collection) {
     return (
       <main className="al">
-        <p className="al-back"><Link to="/art-loft">← The Art Loft</Link></p>
+        <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
         <h1>Collection not found</h1>
         <p>That collection doesn't exist. <Link to="/art-loft">Go back to the Art Loft.</Link></p>
       </main>
@@ -36,7 +36,7 @@ export default function CollectionPage() {
   const items = printsIn(collection.name, prints)
   return (
     <main className="al">
-      <p className="al-back"><Link to="/art-loft">← The Art Loft</Link></p>
+      <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
       <header className="al-head al-head--left">
         <h1>{collection.name}</h1>
         <p className="al-blurb">{collection.blurb}</p>

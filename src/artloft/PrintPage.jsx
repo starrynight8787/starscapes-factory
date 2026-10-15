@@ -96,7 +96,7 @@ export default function PrintPage() {
   if (status === 'missing') {
     return (
       <main className="al">
-        <p className="al-back"><Link to="/art-loft">← The Art Loft</Link></p>
+        <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
         <h1>Print not found</h1>
         <p>We couldn't find that print. <Link to="/art-loft/prints">See all prints.</Link></p>
       </main>

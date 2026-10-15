@@ -31,15 +31,34 @@
 .al-back {
   margin: 0 0 12px;
 }
-.al-back a,
 .al-print__collection a {
   color: var(--sf-blue, #1f6fa8);
   text-decoration: none;
   font-weight: 500;
 }
-.al-back a:hover,
 .al-print__collection a:hover {
   text-decoration: underline;
+}
+/* Back links are real buttons, so nobody has to hunt for them */
+.al-back a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  font-weight: 600;
+  text-decoration: none;
+}
+.al-back a:hover {
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.al-back a:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
 }
 
 .al-head {

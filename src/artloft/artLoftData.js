@@ -20,7 +20,7 @@ export const COLLECTIONS = [
     slug: 'calm-series',
     name: 'Calm Series',
     blurb: 'Quiet colour and soft light, for the moments you want to slow down.',
-    cover: 'Forests',
+    cover: 'Neon Lights',
     frame: [50, 140, 170, 230, -2],
   },
   {

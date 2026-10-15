@@ -15,7 +15,7 @@ export default function PrintsPage() {
 
   useEffect(() => {
     let alive = true
-    fetchPrints()
+    fetchPrints({ withPictures: true })
       .then((data) => alive && (setPrints(data), setStatus('ready')))
       .catch(() => alive && setStatus('error'))
     return () => {
@@ -26,7 +26,7 @@ export default function PrintsPage() {
   const items = active ? prints.filter((p) => p.collection === active.name) : prints
   return (
     <main className="al">
-      <p className="al-back"><Link to="/art-loft">← The Art Loft</Link></p>
+      <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
       <header className="al-head al-head--left">
         <h1>Digital Prints</h1>
         <p className="al-blurb">Every print is made to order and posted directly from the print studio.</p>
