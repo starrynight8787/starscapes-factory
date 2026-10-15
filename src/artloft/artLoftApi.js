@@ -50,6 +50,34 @@ export async function setCollection(id, collection) {
   if (error) throw error
 }
 
+// The list of pictures from Creative Hub, as { variant_id, url }. This only exists on the live site,
+// because that is where the Creative Hub key lives.
+export async function fetchPictureList() {
+  let res
+  try {
+    res = await fetch('/api/creativehub-check?view=variant-pictures-json', { cache: 'no-store' })
+  } catch (e) {
+    throw new Error('Could not reach the site to ask Creative Hub. Check your connection and try again.')
+  }
+  let body = null
+  try {
+    body = await res.json()
+  } catch (e) {
+    throw new Error("This only works on the live site, because Creative Hub's key lives there. Open starscapesfactory.com/art-loft/admin and try it there.")
+  }
+  if (!body || body.ok !== true || !Array.isArray(body.pictures)) {
+    throw new Error((body && body.message) || 'Creative Hub did not send the pictures. Try again in a minute.')
+  }
+  return body
+}
+
+// Save one size and frame's picture. Returns true if a size in your shop matched it.
+export async function savePicture(variantId, url) {
+  const { data, error } = await supabase.from('product_variants').update({ image_url: url }).eq('creativehub_variant_id', variantId).select('id')
+  if (error) throw error
+  return Array.isArray(data) && data.length > 0
+}
+
 export async function currentUser() {
   const { data } = await supabase.auth.getSession()
   return data && data.session ? data.session.user : null

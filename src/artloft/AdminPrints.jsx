@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
-import { fetchPrints, setPublished, setCollection, currentUser } from './artLoftApi'
+import { fetchPrints, setPublished, setCollection, currentUser, fetchPictureList, savePicture } from './artLoftApi'
 import { COLLECTIONS, formatPrice } from './artLoftData'
 
 // Only you will find this page, at /art-loft/admin. Anyone else sees nothing to manage.
@@ -71,6 +71,47 @@ export default function AdminPrints() {
     }
   }
 
+  // Fill in the picture of every size and frame from Creative Hub, six at a time, with a running count
+  const [fill, setFill] = useState({ phase: 'idle', text: '' }) // idle | working | done | error
+  async function fillPictures() {
+    setFill({ phase: 'working', text: 'Asking Creative Hub for the pictures…' })
+    let list
+    try {
+      list = await fetchPictureList()
+    } catch (e) {
+      return setFill({ phase: 'error', text: e.message })
+    }
+    const queue = list.pictures.slice()
+    const total = queue.length
+    let saved = 0
+    let unmatched = 0
+    let failed = 0
+    let noColumn = false
+    let finished = 0
+    async function worker() {
+      while (queue.length) {
+        const item = queue.shift()
+        try {
+          if (await savePicture(item.variant_id, item.url)) saved++
+          else unmatched++
+        } catch (e) {
+          if (/image_url/i.test((e && e.message) || '')) noColumn = true
+          failed++
+        }
+        finished++
+        if (finished % 10 === 0 && finished < total) setFill({ phase: 'working', text: `Saving… ${finished} of ${total}` })
+      }
+    }
+    await Promise.all(Array.from({ length: 6 }, worker))
+    if (noColumn) {
+      return setFill({ phase: 'error', text: 'The picture column is not in the database yet. Run this one line in the Supabase SQL editor, then press the button again: alter table product_variants add column if not exists image_url text;' })
+    }
+    const parts = [`Done. ${saved} ${saved === 1 ? 'picture' : 'pictures'} saved.`]
+    if (unmatched) parts.push(`${unmatched} at Creative Hub ${unmatched === 1 ? 'is' : 'are'} not in your shop, so ${unmatched === 1 ? 'it was' : 'they were'} skipped.`)
+    if (failed) parts.push(`${failed} could not be saved. Press the button again to retry ${failed === 1 ? 'it' : 'them'}.`)
+    setFill({ phase: failed ? 'error' : 'done', text: parts.join(' ') })
+  }
+
   const live = prints.filter((p) => p.published).length
 
   if (user === undefined || status === 'loading') return <main className="al"><p className="al-note">Loading…</p></main>
@@ -92,6 +133,19 @@ export default function AdminPrints() {
         {prints.length} prints, {live} live. A print is only visible to visitors once you switch it on. You can always see all of them while you are signed in. Use the drop-down beside a print to move it to a different collection.
       </p>
       <p className="al-note" role="status">{message}</p>
+
+      {prints.length > 0 && (
+        <section className="al-admin__pictures" aria-labelledby="pictures-title">
+          <h2 id="pictures-title">Pictures of each size and frame</h2>
+          <p>
+            Fetches Creative Hub's picture of every size and frame and saves it to your shop, so the print page can show each frame. It is safe to press again whenever you add or change prints. It never changes prices, collections, or what is live.
+          </p>
+          <button type="button" disabled={fill.phase === 'working'} onClick={fillPictures}>
+            {fill.phase === 'working' ? 'Working…' : 'Fill in pictures from Creative Hub'}
+          </button>
+          <p className={`al-admin__fill is-${fill.phase}`} role="status">{fill.text}</p>
+        </section>
+      )}
 
       {groups.length === 0 && <p className="al-note">There are no prints to manage.</p>}
       {groups.map((g) => {

@@ -11,6 +11,7 @@
 //   /api/creativehub-check?view=variants&product=PRODUCT_ID        the sizes/frames of one product
 //   /api/creativehub-check?view=quote&variant=VARIANT_ID&country=GB&qty=1    a price quote
 //   /api/creativehub-check?view=margins&country=GB                 every size/frame priced against your cost
+//   /api/creativehub-check?view=variant-pictures-json              the same pictures as plain data (the publish page's button uses this)
 //   /api/creativehub-check?view=variant-pictures-sql               the SQL that adds Creative Hub's picture of every size and frame to the shop
 //   /api/creativehub-check?view=inspect                            what pictures does Creative Hub give for a print? (add &product=PRODUCT_ID to pick one)
 //   /api/creativehub-check?view=import-sql&email=YOU@EXAMPLE.COM   the SQL that imports your prints into the shop
@@ -100,8 +101,12 @@ const sqlNum = (value) => {
   return Number.isFinite(n) ? String(Math.round(n * 100) / 100) : 'null'
 }
 // Creative Hub's picture of one size/frame. Only plain https addresses are accepted, anything else becomes null.
-const sqlPicture = (value) =>
-  typeof value === 'string' && value.length < 500 && /^https:\/\/[^\s'"<>\\$]+$/.test(value) ? sqlText(value) : 'null'
+const safePictureUrl = (value) =>
+  typeof value === 'string' && value.length < 500 && /^https:\/\/[^\s'"<>\\$]+$/.test(value) ? value : null
+const sqlPicture = (value) => {
+  const url = safePictureUrl(value)
+  return url ? sqlText(url) : 'null'
+}
 const sqlInt = (value) => {
   const n = Number(value)
   return Number.isFinite(n) ? String(Math.round(n)) : 'null'
@@ -275,6 +280,29 @@ async function importSql(query, base, token) {
   return { __text: buildImportSql(email, withVariants, withCollections) }
 }
 
+// Every size and frame that has a picture we can trust, as { variant_id, url }
+function collectPictures(withVariants) {
+  const rows = []
+  let total = 0
+  for (const p of withVariants) {
+    for (const v of p.variants) {
+      total++
+      const url = safePictureUrl(v.visualised_product_url)
+      if (url) rows.push({ variant_id: v.id, url })
+    }
+  }
+  return { rows, total }
+}
+
+// The same list as plain data. The publish page uses this to fill in the pictures with a button, no pasting needed.
+async function variantPicturesJson(base, token) {
+  const { withVariants, failed, skipped } = await loadProductsWithVariants(base, token)
+  if (failed.length) return { ok: false, message: 'Some prints could not be read just now. Wait a minute and try again.', failed, skipped }
+  const { rows, total } = collectPictures(withVariants)
+  if (rows.length === 0) return { ok: false, message: 'Creative Hub did not give a picture for any size or frame.' }
+  return { ok: true, prints: withVariants.length, sizes_and_frames: total, with_picture: rows.length, pictures: rows }
+}
+
 // Only the pictures: one UPDATE that gives every size and frame already in the shop its Creative Hub picture.
 // It changes nothing else (not prices, collections, or what is published).
 async function variantPicturesSql(base, token) {
@@ -282,15 +310,8 @@ async function variantPicturesSql(base, token) {
   if (failed.length) {
     return { ok: false, message: 'Some prints could not be read, so nothing was produced. Wait a minute and reload.', failed, skipped }
   }
-  const rows = []
-  let total = 0
-  for (const p of withVariants) {
-    for (const v of p.variants) {
-      total++
-      const picture = sqlPicture(v.visualised_product_url)
-      if (picture !== 'null') rows.push(`  (${sqlText(v.id)}, ${picture})`)
-    }
-  }
+  const { rows: found, total } = collectPictures(withVariants)
+  const rows = found.map((r) => `  (${sqlText(r.variant_id)}, ${sqlText(r.url)})`)
   if (rows.length === 0) return { ok: false, message: 'Creative Hub did not give a picture for any size or frame.' }
   const text = [
     "-- Starscapes Factory: add Creative Hub's picture of each size and frame to the shop.",
@@ -477,6 +498,7 @@ async function view(mode, query, base, token) {
   }
 
   if (mode === 'variant-pictures-sql') return variantPicturesSql(base, token)
+  if (mode === 'variant-pictures-json') return variantPicturesJson(base, token)
   if (mode === 'inspect') return inspectPictures(query, base, token)
 
   return { ok: false, message: 'Unknown page.' }

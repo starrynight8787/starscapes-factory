@@ -558,6 +558,52 @@ a.al-object:focus-visible {
 }
 
 /* ---------- The publish page (only you see this) ---------- */
+.al-admin__pictures {
+  margin: 24px 0 8px;
+  padding: 16px 20px 12px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+}
+.al-admin__pictures h2 {
+  margin: 0 0 6px;
+  font-size: 1.1rem;
+}
+.al-admin__pictures p {
+  margin: 0 0 12px;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.5;
+}
+.al-admin__pictures button {
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.al-admin__pictures button:disabled {
+  opacity: 0.6;
+  cursor: progress;
+}
+.al-admin__pictures button:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 3px;
+}
+.al-admin__fill {
+  margin: 12px 0 0;
+  min-height: 1.4em;
+}
+.al-admin__fill.is-done {
+  color: var(--sf-navy-700, #14306a);
+  font-weight: 600;
+}
+.al-admin__fill.is-error {
+  color: #9a1b1b;
+}
 .al-admin__group {
   margin: 28px 0;
 }
