@@ -161,5 +161,5 @@ export const syncRepo = {
 // ---------------------------------------------------------------------------------------------
 export const checkCreativeHub = () => ownerGet('/api/creativehub-check')
 export const checkStripe = () => ownerGet('/api/stripe-check')
-export const fetchDeliveryTable = () => ownerGet('/api/creativehub-check?view=delivery-table')
-export const fetchDeliveryCheck = () => ownerGet('/api/creativehub-check?view=delivery-check')
+export const fetchDeliveryCheck = (set = 'base') =>
+  ownerGet(set === 'base' ? '/api/creativehub-check?view=delivery-check' : `/api/creativehub-check?view=delivery-check&set=${encodeURIComponent(set)}`)

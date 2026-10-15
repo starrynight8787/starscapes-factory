@@ -10,8 +10,8 @@
 //   (no view)                  is the connection working?
 //   view=catalogue-json        every print with its sizes and frames (the Sync button uses this)
 //   view=variant-pictures-json every size and frame's picture (the Pictures only button uses this)
-//   view=delivery-table        delivery cost and margin for every size and frame, by zone
-//   view=delivery-check        the cheapest and dearest print to 13 countries, with the margin if delivery is free
+//   view=delivery-check        the cheapest and dearest print to a set of countries, with the margin if delivery is free
+//                              (add &set=europe-a or &set=europe-b for two sets of European countries)
 //
 // Creative Hub's address is https://escher-v2.creativehub.io. You can point at another one with the
 // optional setting CREATIVEHUB_API_BASE.
@@ -190,6 +190,13 @@ function workOutMargin(country, price, quote) {
 // country, and works out the margin you keep if delivery is free. Read-only. It shows costs, so it is scaffolding for you,
 // not for visitors: it comes down with the other check pages.
 const DELIVERY_CHECK_COUNTRIES = ['GB', 'IE', 'DE', 'FR', 'US', 'CA', 'AU', 'NZ', 'JP', 'SG', 'AE', 'ZA', 'BR']
+// The rest of Europe, in two sets small enough to quote one after the other without running into Creative Hub's rate limit.
+// (Germany, France and Ireland are already in the main set.) Only these named sets can be asked for.
+const COUNTRY_SETS = {
+  base: DELIVERY_CHECK_COUNTRIES,
+  'europe-a': ['AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'GR', 'HU', 'IT', 'LV', 'LT'],
+  'europe-b': ['LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE', 'CH', 'NO', 'IS', 'LI'],
+}
 
 async function quoteWithRetry(base, token, variantId, country) {
   let q = await quoteOne(base, token, variantId, country)
@@ -201,6 +208,9 @@ async function quoteWithRetry(base, token, variantId, country) {
 }
 
 async function deliveryCheck(query, base, token) {
+  const setName = String(query.set || 'base')
+  const countries = COUNTRY_SETS[setName]
+  if (!countries) return { ok: false, message: 'Unknown set of countries.' }
   let product = String(query.product || '')
   if (!product) {
     const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
@@ -218,7 +228,7 @@ async function deliveryCheck(query, base, token) {
   const picks = cheapest.id === dearest.id ? [cheapest] : [cheapest, dearest]
   const labelOf = (v) => `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`
 
-  const jobs = DELIVERY_CHECK_COUNTRIES.flatMap((country) => picks.map((v) => ({ country, v })))
+  const jobs = countries.flatMap((country) => picks.map((v) => ({ country, v })))
   const rows = await mapLimit(jobs, 3, async ({ country, v }) => {
     const price = Number(v.retail_price)
     const q = await quoteWithRetry(base, token, v.id, country)
@@ -231,10 +241,12 @@ async function deliveryCheck(query, base, token) {
     ok: true,
     note: 'Read-only. Uses Creative Hub quotes (free, nothing ordered). Shows your costs, so it is scaffolding that comes down with the other check pages.',
     product_id: product,
+    set: setName,
+    countries: countries.length,
     assumptions: [
       'Delivery is free to the customer, so you pay whatever Creative Hub charges for it.',
       'UK prices include 20% VAT, which is passed on, so UK margins are worked on the price without VAT.',
-      'Overseas, the price is taken as it is (UK VAT does not normally apply to exports, to be confirmed by your accountant). Import taxes and duties abroad are not included.',
+      'Overseas, the price is taken as it is (UK VAT does not normally apply to exports, to be confirmed by your accountant). Import taxes and duties abroad are not included, and neither is any EU VAT you might have to include in the price.',
       'Stripe fee: 1.5% + 20p for UK cards, 2.5% + 20p for European cards, 3.25% + 20p for others.',
       'Profit is before tax, packaging, returns and your own time.',
     ],
@@ -287,67 +299,7 @@ async function variantPicturesJson(base, token) {
   return { ok: true, prints: withVariants.length, sizes_and_frames: total, with_picture: rows.length, pictures: rows }
 }
 
-// ---- delivery-table: delivery cost and margin for every size and frame, by zone -----------------------------------
-// Creative Hub prices delivery by zone, so one country stands for each zone. The 13-country check confirms the others.
-const ZONES = [
-  { key: 'uk', label: 'UK', country: 'GB' },
-  { key: 'eu_na', label: 'Europe and North America', country: 'US' },
-  { key: 'row', label: 'Rest of the world', country: 'AU' },
-]
-
-async function deliveryTable(query, base, token) {
-  let product = String(query.product || '')
-  if (!product) {
-    const list = await getJson(base, token, '/v1/products?limit=1&offset=0')
-    product = list.ok && list.body && list.body.products && list.body.products[0] && list.body.products[0].id
-  }
-  if (!product || !/^[A-Za-z0-9_-]{1,100}$/.test(product)) return { ok: false, message: 'No product found. Add ?product=PRODUCT_ID.' }
-  const vr = await getJson(base, token, `/v1/products/${product}/variants`)
-  if (!vr.ok) return { ok: false, status: vr.status, message: explain(vr.status, vr.body) }
-  const variants = ((vr.body && vr.body.variants) || [])
-    .filter((v) => v && Number.isFinite(Number(v.retail_price)))
-    .sort((a, b) => a.print_width_mm * a.print_height_mm - b.print_width_mm * b.print_height_mm || Number(a.is_framed) - Number(b.is_framed))
-  if (variants.length === 0) return { ok: false, message: 'That print has no sizes with a price.' }
-
-  const jobs = variants.flatMap((v) => ZONES.map((zone) => ({ v, zone })))
-  const cells = await mapLimit(jobs, 3, async ({ v, zone }) => {
-    const price = Number(v.retail_price)
-    const q = await quoteWithRetry(base, token, v.id, zone.country)
-    if (!q.ok) return { error: explain(q.status, q.body) }
-    return workOutMargin(zone.country, price, q.body || {})
-  })
-  const rows = variants.map((v, i) => ({
-    label: `${v.size} ${v.is_framed ? (v.frame_color || 'framed') + ' frame' : 'unframed'}`,
-    your_price: Number(v.retail_price),
-    zones: Object.fromEntries(ZONES.map((zone, j) => [zone.key, cells[i * ZONES.length + j]])),
-  }))
-  const flat = rows.flatMap((r) => ZONES.map((z) => ({ print: r.label, zone: z.label, cell: r.zones[z.key] }))).filter((x) => x.cell.margin_percent !== undefined)
-  const worst = flat.slice().sort((a, b) => a.cell.margin_percent - b.cell.margin_percent)[0] || null
-  return {
-    ok: true,
-    note: 'Read-only. Uses Creative Hub quotes (free, nothing ordered).',
-    product_id: product,
-    zones: ZONES.map(({ key, label, country }) => ({ key, label, country })),
-    assumptions: [
-      'Delivery is free to the customer, so you pay whatever Creative Hub charges for it.',
-      'UK prices include 20% VAT, which is passed on, so UK margins are worked on the price without VAT.',
-      'Overseas, the price is taken as it is (UK VAT does not normally apply to exports, to be confirmed by your accountant). Import taxes and duties abroad are not included.',
-      'Stripe fee: 1.5% + 20p for UK cards, 2.5% + 20p for European cards, 3.25% + 20p for others.',
-      'Profit is before tax, packaging, returns and your own time.',
-      'One country stands for each zone: the UK for the UK, the US for Europe and North America, Australia for the rest of the world.',
-    ],
-    summary: {
-      worst_margin_percent: worst ? worst.cell.margin_percent : null,
-      worst_case: worst ? `${worst.print} to ${worst.zone}` : null,
-      losing_money: flat.filter((x) => x.cell.flag === 'LOSS').map((x) => `${x.print} to ${x.zone}`),
-      low_margin: flat.filter((x) => x.cell.flag === 'LOW').map((x) => `${x.print} to ${x.zone}`),
-    },
-    rows,
-  }
-}
-
 async function view(mode, query, base, token) {
-  if (mode === 'delivery-table') return deliveryTable(query, base, token)
   if (mode === 'delivery-check') return deliveryCheck(query, base, token)
   if (mode === 'variant-pictures-json') return variantPicturesJson(base, token)
   if (mode === 'catalogue-json') return catalogueJson(base, token)

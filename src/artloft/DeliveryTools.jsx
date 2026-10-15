@@ -1,8 +1,7 @@
 import { useState } from 'react'
-import { checkCreativeHub, checkStripe, fetchDeliveryTable, fetchDeliveryCheck } from './artLoftApi'
+import { checkCreativeHub, checkStripe, fetchDeliveryCheck } from './artLoftApi'
 import { formatPrice } from './artLoftData'
 
-const ZONE_ORDER = ['uk', 'eu_na', 'row']
 const money = (n) => (n === null || n === undefined ? 'n/a' : formatPrice(n))
 
 // A margin, written so it can be read without colour: "62%", or "21% LOW", or "-4% LOSS"
@@ -35,13 +34,14 @@ export default function DeliveryTools() {
     <section className="al-admin__pictures al-tools" aria-labelledby="tools-title">
       <h2 id="tools-title">Connections and delivery costs</h2>
       <p>
-        Private checks that only you can use. Delivery costs come from Creative Hub's own quotes (free, and nothing is ordered).
+        Private checks that only you can use. Delivery costs come from Creative Hub's own quotes (free, and nothing is ordered). Wait a minute between the country checks, which keeps Creative Hub happy.
       </p>
       <div className="al-tools__buttons">
         <button type="button" disabled={busy} onClick={() => run('creativehub', checkCreativeHub, 'Asking Creative Hub…')}>Check Creative Hub</button>
         <button type="button" disabled={busy} onClick={() => run('stripe', checkStripe, 'Asking Stripe…')}>Check Stripe</button>
-        <button type="button" disabled={busy} onClick={() => run('table', fetchDeliveryTable, 'Asking Creative Hub for every size and frame. This takes about half a minute…')}>Delivery costs by size</button>
-        <button type="button" disabled={busy} onClick={() => run('spot', fetchDeliveryCheck, 'Asking Creative Hub about 13 countries. This takes about half a minute…')}>Spot-check 13 countries</button>
+        <button type="button" disabled={busy} onClick={() => run('spot', () => fetchDeliveryCheck('base'), 'Asking Creative Hub about 13 countries. This takes about half a minute…')}>Spot-check 13 countries</button>
+        <button type="button" disabled={busy} onClick={() => run('spot', () => fetchDeliveryCheck('europe-a'), 'Asking Creative Hub about 14 European countries. This takes about half a minute…')}>Check Europe (1 of 2)</button>
+        <button type="button" disabled={busy} onClick={() => run('spot', () => fetchDeliveryCheck('europe-b'), 'Asking Creative Hub about 14 more European countries. This takes about half a minute…')}>Check Europe (2 of 2)</button>
       </div>
 
       <p className={`al-admin__fill is-${state.phase}`} role="status">{state.text}</p>
@@ -66,51 +66,6 @@ export default function DeliveryTools() {
         </div>
       )}
 
-      {state.phase === 'done' && kind === 'table' && (
-        <div className="al-tools__result">
-          <p role="status">
-            {data.summary.worst_margin_percent === null
-              ? 'No margins could be worked out.'
-              : `Worst case: ${data.summary.worst_case}, keeping ${data.summary.worst_margin_percent}%.`}
-            {data.summary.losing_money.length > 0 && ` Losing money on: ${data.summary.losing_money.join('; ')}.`}
-            {data.summary.low_margin.length > 0 && ` Under 30%: ${data.summary.low_margin.join('; ')}.`}
-            {data.summary.worst_margin_percent !== null && data.summary.losing_money.length === 0 && data.summary.low_margin.length === 0 && ' Nothing is under 30%.'}
-          </p>
-          <div className="al-tools__scroll">
-            <table className="al-tools__table">
-              <caption>Delivery you pay, and the margin you keep, if delivery is free</caption>
-              <thead>
-                <tr>
-                  <th scope="col">Size and frame</th>
-                  <th scope="col">Your price</th>
-                  {ZONE_ORDER.map((key) => {
-                    const zone = data.zones.find((z) => z.key === key)
-                    return <th key={key} scope="col">{zone.label}</th>
-                  })}
-                </tr>
-              </thead>
-              <tbody>
-                {data.rows.map((row) => (
-                  <tr key={row.label}>
-                    <th scope="row">{row.label}</th>
-                    <td>{money(row.your_price)}</td>
-                    {ZONE_ORDER.map((key) => (
-                      <td key={key}>
-                        {row.zones[key].error ? 'could not check' : <>{money(row.zones[key].delivery_you_pay)} delivery<br /><Margin cell={row.zones[key]} /></>}
-                      </td>
-                    ))}
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-          <details>
-            <summary>What this assumes</summary>
-            <ul>{data.assumptions.map((a) => <li key={a}>{a}</li>)}</ul>
-          </details>
-        </div>
-      )}
-
       {state.phase === 'done' && kind === 'spot' && (
         <div className="al-tools__result">
           <p role="status">
@@ -126,7 +81,7 @@ export default function DeliveryTools() {
             <summary>Every country, worst first</summary>
             <div className="al-tools__scroll">
               <table className="al-tools__table">
-                <caption>The cheapest and the dearest print, to 13 countries</caption>
+                <caption>The cheapest and the dearest print, by country</caption>
                 <thead>
                   <tr><th scope="col">Country</th><th scope="col">Print</th><th scope="col">Delivery you pay</th><th scope="col">Margin</th></tr>
                 </thead>
