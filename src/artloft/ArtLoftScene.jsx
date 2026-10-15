@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
 import { fetchPrints } from './artLoftApi'
-import { ART_LOFT, COLLECTIONS, TYPES, SCENE, WALL, PLAQUE_Y, UNDER_CONSTRUCTION, pct, coverFor, printsIn, frameFor, starPath } from './artLoftData'
+import { ART_LOFT, COLLECTIONS, TYPES, SCENE, WALL, PLAQUE_Y, UNDER_CONSTRUCTION, pct, coverFor, printsIn, hangFrames, starPath } from './artLoftData'
 
 const countLabel = (n) => (n === 1 ? '1 print' : `${n} prints`)
 const r2 = (n) => Math.round(n * 100) / 100
@@ -64,7 +64,8 @@ export default function ArtLoftScene() {
     [prints]
   )
 
-  const hung = canvases.map((c) => ({ ...c, frame: frameFor(c.centre, aspects[c.slug]) }))
+  const frames = hangFrames(canvases.map((c) => aspects[c.slug]))
+  const hung = canvases.map((c, i) => ({ ...c, frame: frames[i] }))
 
   return (
     <main className="al">
@@ -98,9 +99,9 @@ export default function ArtLoftScene() {
             '--rot': `${c.tilt}deg`,
           }
           const plaque = {
-            left: pct(c.centre, SCENE.width),
+            left: pct(x + w / 2, SCENE.width),
             top: pct(PLAQUE_Y, SCENE.height),
-            maxWidth: pct(WALL.maxW, SCENE.width),
+            maxWidth: pct(Math.min(190, Math.max(150, w)), SCENE.width),
           }
           const open = c.count > 0
           return (

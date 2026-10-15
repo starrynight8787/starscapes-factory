@@ -3,37 +3,66 @@
 //
 // The scene is drawn on a 1200 x 840 canvas (public/scenes/art-loft.svg). Every number below that says
 // "box" is a position on that canvas, in pixels: [x, y, width, height]. The five canvases on the wall are different:
-// each frame is drawn to fit its own cover picture (see frameFor below), so they have no fixed box.
+// each frame is drawn to fit its own cover picture (see hangFrames below), so they have no fixed box.
 
 export const SCENE = { width: 1200, height: 840 }
 
-// How the five frames hang. Every frame is centred on the same line along the wall, and its picture is scaled to be as big as
-// it can be inside the biggest box a frame may fill, so every picture keeps its true shape and none is cropped.
+// How the five frames hang. Every picture is given about the same AREA, so a panorama and a tall painting have the same visual weight
+// and neither looks smaller. Frames are centred on one line along the wall and spaced evenly, whatever their widths.
 export const WALL = {
-  centreY: 250,        // the middle of every frame sits on this line
-  maxW: 205,           // the widest a frame may be
-  maxH: 230,           // the tallest a frame may be
-  mat: 14,             // the border between the frame and the picture
-  wire: 42,            // how far the hook sits above the frame
+  centreY: 250,         // the middle of every frame sits on this line
+  maxW: 280,            // the widest a frame may be
+  maxH: 230,            // the tallest a frame may be
+  area: 31000,          // the picture area every frame aims for, in scene pixels squared
+  mat: 14,              // the border between the frame and the picture
+  wire: 42,             // how far the hook sits above the frame
+  margin: 24,           // the space kept clear at each end of the wall
+  minGap: 20,           // the least space between two frames
+  maxGap: 60,           // the most space between two frames, so a few narrow frames stay together in the middle
   defaultAspect: 4 / 3, // the shape used until a picture has loaded, and for a canvas with no picture yet
-  minAspect: 0.55,     // a picture taller or wider than these is kept inside a frame of this shape, with a little mat showing
+  minAspect: 0.55,      // a picture taller or wider than these is kept inside a frame of this shape, with a little mat showing
   maxAspect: 2.2,
 }
 export const PLAQUE_Y = WALL.centreY + WALL.maxH / 2 + 18   // the name plaques all hang on one line, below the tallest frame
 
 const round2 = (n) => Math.round(n * 100) / 100
 
-// The frame for a picture: [x, y, width, height] on the scene, centred on centreX. "aspect" is the picture's width divided by its height.
-export function frameFor(centreX, aspect) {
+// The size of the picture area for a given shape (width divided by height): [width, height]. Same area for every shape, within the limits.
+export function pictureSize(aspect) {
   const usable = Number.isFinite(aspect) && aspect > 0 ? aspect : WALL.defaultAspect
   const a = Math.min(WALL.maxAspect, Math.max(WALL.minAspect, usable))
-  const boxW = WALL.maxW - 2 * WALL.mat
-  const boxH = WALL.maxH - 2 * WALL.mat
-  const pictureW = Math.min(boxW, boxH * a)
-  const pictureH = pictureW / a
-  const w = pictureW + 2 * WALL.mat
-  const h = pictureH + 2 * WALL.mat
-  return [round2(centreX - w / 2), round2(WALL.centreY - h / 2), round2(w), round2(h)]
+  const maxW = WALL.maxW - 2 * WALL.mat
+  const maxH = WALL.maxH - 2 * WALL.mat
+  let w = Math.sqrt(WALL.area * a)
+  let h = w / a
+  if (w > maxW) { w = maxW; h = w / a }
+  if (h > maxH) { h = maxH; w = h * a }
+  return [w, h]
+}
+
+// All the frames at once, given the shape of each cover picture (undefined where not known yet): [[x, y, width, height], ...]
+// Each frame matches its picture; they are spaced evenly along the wall, and shrunk together if they would not all fit.
+export function hangFrames(aspects) {
+  const m = WALL.mat
+  const count = aspects.length
+  let sizes = aspects.map(pictureSize)
+  const sumPictureWidths = () => sizes.reduce((sum, [w]) => sum + w, 0)
+  const room = SCENE.width - 2 * WALL.margin
+  const fit = room - WALL.minGap * (count - 1)
+  if (sumPictureWidths() + 2 * m * count > fit) {
+    const scale = (fit - 2 * m * count) / sumPictureWidths()
+    sizes = sizes.map(([w, h]) => [w * scale, h * scale])
+  }
+  const widths = sizes.reduce((sum, [w]) => sum + w + 2 * m, 0)
+  const gap = Math.min(WALL.maxGap, (room - widths) / (count - 1))
+  let x = (SCENE.width - (widths + gap * (count - 1))) / 2
+  return sizes.map(([pw, ph]) => {
+    const w = pw + 2 * m
+    const h = ph + 2 * m
+    const frame = [round2(x), round2(WALL.centreY - h / 2), round2(w), round2(h)]
+    x += w + gap
+    return frame
+  })
 }
 
 // A five-pointed star as a drawing path, centred on (cx, cy)
@@ -54,8 +83,8 @@ export const ART_LOFT = {
     'A sunlit studio of creativity. Discover prints and artistic experiments, all inspired by life, imagination, and the joy of making.',
 }
 
-// The five canvases on the wall. "centre" is where each one hangs along the wall and "tilt" is its slight lean, in degrees.
-// The frame itself is drawn to the shape of its cover picture, so a tall picture gets a tall frame and a panorama a wide one.
+// The five canvases on the wall. "tilt" is each one's slight lean, in degrees. Where each one hangs, and how big its frame is, is worked
+// out from the shape of its cover picture (see hangFrames below): a tall picture gets a tall frame and a panorama a wide one.
 // "name" must match the collection name saved on each product.
 // "cover" is the title of the print shown on the canvas. If it is not published yet, the first print in the collection is used.
 export const COLLECTIONS = [
@@ -64,7 +93,6 @@ export const COLLECTIONS = [
     name: 'Calm Series',
     blurb: 'Quiet colour and soft light, for the moments you want to slow down.',
     cover: 'Neon Lights',
-    centre: 130,
     tilt: -2,
   },
   {
@@ -72,7 +100,6 @@ export const COLLECTIONS = [
     name: 'Out of this World',
     blurb: "Planets, stars and far-off places, in colour that doesn't belong on Earth.",
     cover: 'Behind the Curtain',
-    centre: 365,
     tilt: 1.5,
   },
   {
@@ -80,7 +107,6 @@ export const COLLECTIONS = [
     name: "Ocean's View",
     blurb: 'Sea, sand and the long horizon.',
     cover: 'Beaches',
-    centre: 600,
     tilt: -1.5,
   },
   {
@@ -88,7 +114,6 @@ export const COLLECTIONS = [
     name: "Dance Like You Just Don't Care",
     blurb: 'Tango, ballet and everything in between: movement, music and not a care in the world.',
     cover: 'Tango',
-    centre: 835,
     tilt: 2,
   },
   {
@@ -96,7 +121,6 @@ export const COLLECTIONS = [
     name: 'Unique One of a Kind',
     blurb: "Pieces that don't belong to a series, from a rainforest to a quilt.",
     cover: 'Quilting',
-    centre: 1070,
     tilt: -1,
   },
 ]
