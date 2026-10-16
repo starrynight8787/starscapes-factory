@@ -4,10 +4,13 @@ import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneR
 
 // An illustrated room: a picture with things on it you can click. Each thing is drawn as its own little picture, so it lifts off the
 // base when you point at it. The same doors are also given as a plain list: phones see only the list, everyone else sees only the picture.
+// which room this is, taken from the picture's own address (/scenes/<room>/base.svg), so each room's heading can be placed clear of its own drawings
+const roomOf = (scene) => ((String(scene.base).match(/\/scenes\/([^/]+)\//) || [])[1]) || ''
+
 export default function RoomScene({ scene }) {
   const items = scene.items.map(resolveItem)
   return (
-    <main className="rs">
+    <main className="rs" data-room={roomOf(scene)}>
       <header className="rs-head">
         <h1>{scene.name}</h1>
         {scene.tagline && <p className="rs-tagline">{scene.tagline}</p>}

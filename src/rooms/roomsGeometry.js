@@ -4,10 +4,10 @@ export const OBJECT_PAD = 24
 
 export const GEOMETRY = {
   'idea-hatchery': {
-    'stop-motion': { cx: 322, cy: 555, w: 140, h: 198 },
-    'short-stories': { cx: 444, cy: 521.5, w: 98, h: 291 },
-    'writing-prompts': { cx: 576, cy: 525, w: 148, h: 258 },
-    'come-study-with-me': { cx: 716.5, cy: 575, w: 133, h: 158 },
+    'stop-motion': { cx: 847, cy: 555, w: 140, h: 198 },
+    'short-stories': { cx: 462, cy: 521.5, w: 98, h: 291 },
+    'writing-prompts': { cx: 340, cy: 525, w: 148, h: 258 },
+    'come-study-with-me': { cx: 580.5, cy: 575, w: 133, h: 158 },
   },
   'leadership-lounge': {
     'leading-from-the-middle': { cx: 600, cy: 480, w: 592, h: 368 },

@@ -24,6 +24,8 @@ function floorPx(value) {
   if (clamp) return Number(clamp[1]) * (clamp[2] === 'rem' ? 16 : 1)
   const max = v.match(/^max\([^,]+,\s*([\d.]+)(px|rem)\)/)
   if (max) return Number(max[1]) * (max[2] === 'rem' ? 16 : 1)
+  const maxFirst = v.match(/^max\(\s*([\d.]+)(px|rem)\s*,/) // max(18px, calc(...)): the first number is the smallest it can come out at
+  if (maxFirst) return Number(maxFirst[1]) * (maxFirst[2] === 'rem' ? 16 : 1)
   const plain = v.match(/^([\d.]+)(px|rem)$/)
   if (plain) return Number(plain[1]) * (plain[2] === 'rem' ? 16 : 1)
   return null

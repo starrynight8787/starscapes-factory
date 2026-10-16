@@ -21,10 +21,10 @@ export const ROOMS = {
     blurb: 'Pick a beaker to see what I am working on.',
     channel: 'idea-hatchery', // the room's name as saved on each post
     items: [
-      { ...piece('idea-hatchery', 'stop-motion'), id: 'stop-motion', name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', kind: 'page', to: '/idea-hatchery/stop-motion', labelAt: [322, 700] },
-      { ...piece('idea-hatchery', 'short-stories'), id: 'short-stories', name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', kind: 'page', to: '/idea-hatchery/short-stories', labelAt: [444, 754] },
-      { ...piece('idea-hatchery', 'writing-prompts'), id: 'writing-prompts', name: 'Writing Prompts', blurb: 'A spark to start something of your own.', kind: 'page', to: '/idea-hatchery/writing-prompts', labelAt: [576, 700] },
-      { ...piece('idea-hatchery', 'come-study-with-me'), id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me. Starting soon.', kind: 'locked', lock: 'not started yet', labelAt: [716, 754] },
+      { ...piece('idea-hatchery', 'writing-prompts'), id: 'writing-prompts', name: 'Writing Prompts', blurb: 'A spark to start something of your own.', kind: 'page', to: '/idea-hatchery/writing-prompts', labelAt: [340, 754] },
+      { ...piece('idea-hatchery', 'short-stories'), id: 'short-stories', name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', kind: 'page', to: '/idea-hatchery/short-stories', labelAt: [462, 700] },
+      { ...piece('idea-hatchery', 'come-study-with-me'), id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me. Starting soon.', kind: 'locked', lock: 'not started yet', labelAt: [600, 754] },
+      { ...piece('idea-hatchery', 'stop-motion'), id: 'stop-motion', name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', kind: 'page', to: '/idea-hatchery/stop-motion', labelAt: [847, 700] },
     ],
     areas: {
       'stop-motion': { name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', layout: 'gallery', tags: ['stop-motion'] },
