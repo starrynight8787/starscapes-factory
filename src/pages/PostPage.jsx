@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import BackToPosts from '../components/BackToPosts'
+import '../styles/articles.css'
 
 export default function PostPage({ session }) {
   const { id } = useParams()
@@ -57,7 +58,7 @@ export default function PostPage({ session }) {
       <p>
         <BackToPosts />
       </p>
-      <h1>{post.title}</h1>
+      <h1 className="sf-article-title">{post.title}</h1>
       <p className="muted">{new Date(post.created_at).toLocaleDateString()}</p>
       {post.image_url && <img src={post.image_url} alt={post.title} />}
       <p style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
@@ -74,8 +75,8 @@ export default function PostPage({ session }) {
                 marginBottom: 6,
                 background: '#eee',
                 color: '#333',
-                fontSize: 12,
-                padding: '4px 10px',
+                fontSize: 14,
+                padding: '6px 12px',
                 borderRadius: 999,
                 textDecoration: 'none',
               }}

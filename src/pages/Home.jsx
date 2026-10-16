@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import '../styles/articles.css'
 
 export default function Home() {
   const [posts, setPosts] = useState([])
@@ -65,7 +66,7 @@ export default function Home() {
       {posts.map((post) => (
         <div className="post-card" key={post.id}>
           {post.image_url && <img src={post.image_url} alt={post.title} />}
-          <h2>
+          <h2 className="sf-article-title">
             <Link to={`/post/${post.id}`}>{post.title}</Link>
           </h2>
           <p className="muted">{new Date(post.created_at).toLocaleDateString()}</p>
@@ -81,8 +82,8 @@ export default function Home() {
                     marginBottom: 6,
                     background: '#eee',
                     color: '#333',
-                    fontSize: 12,
-                    padding: '4px 10px',
+                    fontSize: 14,
+                    padding: '6px 12px',
                     borderRadius: 999,
                   }}
                 >

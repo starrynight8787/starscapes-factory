@@ -1,0 +1,14 @@
+/* Article titles are set in Schoolbell, the same handwriting as the notes and plaques.
+   It has only one weight, so there is no fake bold, and it is wide, so the sizes are chosen for it. */
+.sf-article-title {
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  line-height: 1.2;
+  letter-spacing: 0;
+}
+h1.sf-article-title {
+  font-size: clamp(28px, 4.2vw, 40px);
+}
+.post-card h2.sf-article-title {
+  font-size: 28px;
+}

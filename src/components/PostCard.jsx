@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import '../styles/articles.css'
 
 export default function PostCard({ post, variant = 'feed' }) {
   const excerpt =
@@ -14,8 +15,8 @@ export default function PostCard({ post, variant = 'feed' }) {
             style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 8 }}
           />
         )}
-        <h3 style={{ margin: '10px 0 4px', fontSize: 15 }}>{post.title}</h3>
-        <p className="muted" style={{ fontSize: 13, margin: 0 }}>
+        <h3 className="sf-article-title" style={{ margin: '10px 0 4px', fontSize: 18 }}>{post.title}</h3>
+        <p className="muted" style={{ fontSize: 14, margin: 0 }}>
           {excerpt}
         </p>
         {post.tags && post.tags.length > 0 && (
@@ -25,8 +26,8 @@ export default function PostCard({ post, variant = 'feed' }) {
               marginTop: 6,
               background: '#eee',
               color: '#333',
-              fontSize: 11,
-              padding: '3px 8px',
+              fontSize: 14,
+              padding: '4px 10px',
               borderRadius: 999,
             }}
           >
@@ -61,7 +62,7 @@ export default function PostCard({ post, variant = 'feed' }) {
             }}
           />
         )}
-        <h2 style={{ margin: '0 0 8px' }}>{post.title}</h2>
+        <h2 className="sf-article-title" style={{ margin: '0 0 8px', fontSize: 28 }}>{post.title}</h2>
         <p className="muted" style={{ margin: '0 0 8px' }}>
           {new Date(post.created_at).toLocaleDateString()}
         </p>
@@ -90,8 +91,8 @@ export default function PostCard({ post, variant = 'feed' }) {
         />
       )}
       <div>
-        <h3 style={{ margin: '0 0 4px', fontSize: 17 }}>{post.title}</h3>
-        <p className="muted" style={{ fontSize: 13, margin: '0 0 6px' }}>
+        <h3 className="sf-article-title" style={{ margin: '0 0 4px', fontSize: 20 }}>{post.title}</h3>
+        <p className="muted" style={{ fontSize: 14, margin: '0 0 6px' }}>
           {new Date(post.created_at).toLocaleDateString()}
         </p>
         <p style={{ margin: 0, fontSize: 14 }}>{excerpt}</p>
