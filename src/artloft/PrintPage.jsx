@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import './artloft.css'
+import './printdetails.css'
 import useTitle from './useTitle'
 import { fetchPrint } from './artLoftApi'
 import { addItem } from '../cart/cartStore'
 import useCart from '../cart/useCart'
 import { collectionBySlug, COLLECTIONS, PRINT_FACTS, firstImage, formatPrice, formatSize } from './artLoftData'
+import { detailsFor } from './printDetails'
 
 export default function PrintPage() {
   const { id } = useParams()
@@ -168,6 +170,11 @@ export default function PrintPage() {
                 {selected ? formatPrice(selected.price) : ''}
                 {selected && <span className="al-price__what"> · {formatSize(selected.size_label)}, {selected.framed ? `${selected.frame_colour || 'framed'} frame` : 'unframed'}</span>}
               </p>
+              {selected && (
+                <ul className="al-details" aria-label="About this size and finish">
+                  {detailsFor(selected).map((line) => <li key={line}>{line}</li>)}
+                </ul>
+              )}
             </>
           )}
 

@@ -1,0 +1,11 @@
+/* The short list of details under the price on a print's page: what the chosen size and finish mean in practice */
+.al-details {
+  margin: 0 0 18px;
+  padding: 0 0 0 1.2em;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.al-details li + li {
+  margin-top: 4px;
+}
