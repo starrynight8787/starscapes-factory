@@ -80,7 +80,7 @@ describe('Idea Hatchery: the egg under the dome', () => {
 
 describe('Idea Hatchery: nothing else changed', () => {
   it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', '#FFB36B', '#8FD694', '#B79CF2', '#070B26', '#FFD60A', '#E5484D']) // plus the yellow of the hazard tape and the red of the cone
+    const allowed = new Set(['#fff', '#14306A', 'none', '#FFB36B', '#8FD694', '#B79CF2', '#070B26'])
     for (const f of ['base.svg', ...LIQUIDS.map((l) => l[0]), 'item-come-study-with-me.svg']) {
       for (const m of read(f).matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), `${f}: ${m[1]}`).toBe(true)
     }

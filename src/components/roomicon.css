@@ -1,0 +1,8 @@
+/* A room's little picture, beside its name in a list. Its size comes from the width and height written on it. */
+.sf-room-icon {
+  display: block;
+  flex: none;
+  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
+}
