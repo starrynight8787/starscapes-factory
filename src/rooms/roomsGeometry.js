@@ -13,7 +13,7 @@ export const GEOMETRY = {
     'leading-from-the-middle': { cx: 600, cy: 480, w: 592, h: 368 },
     'blog': { cx: 488, cy: 610.5, w: 224, h: 143 },
     'free-ebook': { cx: 707, cy: 659.5, w: 174, h: 117 },
-    'scribd': { cx: 264, cy: 617, w: 108, h: 270 },
+    'audiobook': { cx: 264, cy: 617, w: 108, h: 270 },
     'udemy-course': { cx: 865, cy: 164.5, w: 158, h: 145 },
   },
   'explorers-bay': {

@@ -5,10 +5,10 @@ import { GEOMETRY, OBJECT_PAD } from './roomsGeometry'
 
 export const SCENE_SIZE = { width: 1200, height: 840 }
 
-// Addresses to fill in. Each must start with https://. Until one is filled in, its object shows as "Opening soon" and goes nowhere,
-// and the moment it is filled in, the object becomes a link that opens in a new tab.
-export const SCRIBD_URL = ''
-export const UDEMY_URL = ''
+// Addresses for the two outside links in the Leadership Lounge. Each must start with https://. If one is ever emptied, its object shows as
+// "Opening soon" and goes nowhere; while it is filled in, the object is a link that opens in a new tab.
+export const AUDIOBOOK_URL = 'https://www.everand.com/audiobook/653427502/Leading-from-the-Middle' // the audio course on Everand (Scribd's newer name)
+export const UDEMY_URL = 'https://www.udemy.com/course/leading-from-the-middle/'
 
 // An object's place and picture, from the measurements. Its name goes on a plaque beside it.
 const piece = (room, key) => ({ ...GEOMETRY[room][key], pad: OBJECT_PAD, rot: 0, art: `/scenes/${room}/item-${key}.svg`, label: 'below' })
@@ -42,7 +42,7 @@ export const ROOMS = {
       { ...piece('leadership-lounge', 'leading-from-the-middle'), id: 'leading-from-the-middle', name: 'Leading from the Middle', blurb: 'The idea behind everything in this room.', kind: 'page', to: '/leadership-lounge/leading-from-the-middle', labelAt: [520, 250] },
       { ...piece('leadership-lounge', 'blog'), id: 'blog', name: 'Blog', blurb: 'Notes on leading from where you are.', kind: 'page', to: '/leadership-lounge/blog', labelAt: [488, 722] },
       { ...piece('leadership-lounge', 'free-ebook'), id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free. Opening soon.', kind: 'locked', lock: 'opening soon', labelAt: [707, 722] },
-      { ...piece('leadership-lounge', 'scribd'), id: 'scribd', name: 'Scribd', blurb: 'Read it on Scribd.', kind: 'external', href: SCRIBD_URL, labelAt: [264, 762] },
+      { ...piece('leadership-lounge', 'audiobook'), id: 'audiobook', name: 'Audiobook', blurb: 'Listen to the audio course on Everand.', kind: 'external', href: AUDIOBOOK_URL, labelAt: [264, 762] },
       { ...piece('leadership-lounge', 'udemy-course'), id: 'udemy-course', name: 'Udemy Course', blurb: 'Take the course on Udemy.', kind: 'external', href: UDEMY_URL, labelAt: [690, 140] },
     ],
     areas: {
@@ -71,9 +71,9 @@ export const ROOMS = {
 export const ROOM_SLUGS = Object.keys(ROOMS)
 
 // A room as the scene needs it
-export function buildRoomScene(slug, { scribdUrl = SCRIBD_URL, udemyUrl = UDEMY_URL } = {}) {
+export function buildRoomScene(slug, { audiobookUrl = AUDIOBOOK_URL, udemyUrl = UDEMY_URL } = {}) {
   const room = ROOMS[slug]
-  const external = { scribd: scribdUrl, 'udemy-course': udemyUrl }
+  const external = { audiobook: audiobookUrl, 'udemy-course': udemyUrl }
   return {
     name: room.name,
     tagline: room.tagline,
