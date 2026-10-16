@@ -3,6 +3,8 @@ import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
 
 const COLUMNS = 'id,created_at,status,livemode,customer_name,customer_email,shipping,amount_total,currency,items,creativehub_order_id,creativehub_status,note'
+// Added later (sql/orders-creativehub.sql). If that has not been run yet, the list is read without them rather than not at all.
+const EXTRA = 'creativehub_order_number,creativehub_due,creativehub_checked_at,sent_at'
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
@@ -14,11 +16,19 @@ export default async function handler(req, res) {
     return res.status(503).json({ ok: false, message: 'No server database key is set on this deployment. In Vercel, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY is needed, so orders cannot be read.' })
   }
   try {
-    const response = await serviceFetch(`/rest/v1/orders?select=${COLUMNS}&order=created_at.desc&limit=50`, { headers: { Accept: 'application/json' } })
+    const read = (columns) => serviceFetch(`/rest/v1/orders?select=${columns}&order=created_at.desc&limit=50`, { headers: { Accept: 'application/json' } })
+    let response = await read(`${COLUMNS},${EXTRA}`)
+    if (response.status === 400) response = await read(COLUMNS)
     if (response.status === 404) return res.status(200).json({ ok: false, message: 'The orders table has not been created yet. Run the orders SQL in Supabase first.' })
     if (!response.ok) {
       const said = await saidWhat(response)
-      const hint = response.status === 401 || response.status === 403 ? ' The database refused the server key, so check SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SECRET_KEY in Vercel.' : ''
+      // 42501 means the key was accepted but the TABLE has not been given permission for the server; anything else
+      // at 401 or 403 means the key itself was refused
+      const hint = /\b42501\b/.test(said)
+        ? ' The server key is fine, but the orders table has not been given permission for it. Run the three grant lines from sql/orders.sql in the Supabase SQL editor.'
+        : response.status === 401 || response.status === 403
+          ? ' The database refused the server key, so check SUPABASE_SERVICE_ROLE_KEY and SUPABASE_SECRET_KEY in Vercel.'
+          : ''
       return res.status(200).json({ ok: false, message: `Could not read the orders: the database answered ${response.status}${said ? ` (${said})` : ''}.${hint}` })
     }
     const orders = await response.json()
