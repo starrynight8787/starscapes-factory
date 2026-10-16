@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom'
 import './roomscene.css'
-import { resolveItem, itemLabel, lockText, placement } from './sceneRules'
+import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneRules'
 
 // An illustrated room: a picture with things on it you can click. Each thing is drawn as its own little picture, so it lifts off the
 // base when you point at it. The same doors are also given as a plain list: phones see only the list, everyone else sees only the picture.
@@ -37,14 +37,24 @@ export default function RoomScene({ scene }) {
 function SceneItem({ item, scene }) {
   const style = placement(item, scene)
   const why = lockText(item.lock)
+  const plaque = hasPlaque(item) // this item's name is on a plaque beside it, so it does not carry writing or a note of its own
   const inside = (
     <>
       <img className="rs-art" src={item.art} alt="" />
-      <span className="rs-label">
-        <strong>{item.name}</strong>
-        <small>{item.blurb}</small>
-      </span>
-      {why && <span className="rs-tip" role="note">{why}</span>}
+      {!plaque && (
+        <span className="rs-label">
+          <strong>{item.name}</strong>
+          <small>{item.blurb}</small>
+        </span>
+      )}
+      {!plaque && why && <span className="rs-tip" role="note">{why}</span>}
+      {plaque && (
+        <span className={`rs-plaque${item.kind === 'locked' ? ' is-locked' : ''}`} aria-hidden="true">
+          <strong>{item.name}</strong>
+          {why && <small className="rs-plaque__why">{why}</small>}
+          <small className="rs-plaque__blurb">{item.blurb}</small>
+        </span>
+      )}
       <span className="rs-hit" aria-hidden="true" />
     </>
   )

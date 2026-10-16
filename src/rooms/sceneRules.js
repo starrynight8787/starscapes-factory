@@ -9,6 +9,8 @@
 //   kind "locked"   is not open, and goes nowhere
 //   "lock" says why something is locked (or paid): paid, not started yet, opening soon
 //   cx, cy, w, h, rot  where the item sits on the base (its middle, its size, its tilt in degrees); pad is the room round it for its shadow
+//   label  "on" (the default) writes the name and description on the item itself, like a paper; "below" gives it a name plaque instead,
+//          for objects too small to carry writing. labelAt is [x, y]: where the middle of the top of the plaque goes on the base.
 
 export const LOCK_TEXT = {
   paid: 'Paid members only',
@@ -42,7 +44,7 @@ export function itemLabel(item) {
 const pc = (n) => `${Math.round(n * 10000) / 100}%`
 
 // The numbers the page needs to put an item and its writing in the right place. All as percentages of the picture, so it scales.
-export function placement(item, scene) {
+export function placement(item, scene) {  // (plaqueAnchor is defined just below)
   const pad = item.pad == null ? 0 : item.pad
   const boxW = item.w + 2 * pad
   const boxH = item.h + 2 * pad
@@ -64,5 +66,16 @@ export function placement(item, scene) {
     '--lw': pc((item.w - 36) / boxW),
     // the little note that says why something is locked, along the bottom edge of the paper
     '--ty': pc((pad + item.h) / boxH),
+    // a name plaque, if the item has one: its anchor point, measured inside the item's own box (so it belongs to the item)
+    '--qx': pc((plaqueAnchor(item)[0] - (item.cx - boxW / 2)) / boxW),
+    '--qy': pc((plaqueAnchor(item)[1] - (item.cy - boxH / 2)) / boxH),
   }
 }
+
+// Where the middle of the top of an item's plaque goes on the base: where the item says, or just under the item
+export function plaqueAnchor(item) {
+  return Array.isArray(item.labelAt) && item.labelAt.length === 2 ? item.labelAt : [item.cx, item.cy + item.h / 2 + 12]
+}
+
+// Does this item use a plaque, and not writing on the item itself?
+export const hasPlaque = (item) => item.label === 'below'

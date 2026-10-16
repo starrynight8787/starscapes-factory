@@ -1,0 +1,111 @@
+/* The pages inside the illustrated rooms (a room's front page is the scene, styled in roomscene.css). */
+.rp {
+  max-width: 980px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+  color: #0e1530;
+  box-sizing: border-box;
+}
+.rp-back {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 0 0 12px;
+}
+.rp-back a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 8px 18px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  font-weight: 600;
+  text-decoration: none;
+}
+.rp-back a:hover {
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.rp-back a:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
+}
+.rp-head h1 {
+  margin: 8px 0 4px;
+  font-family: var(--sf-head, sans-serif);
+}
+.rp-blurb {
+  margin: 0 0 20px;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.5;
+}
+.rp-note {
+  color: var(--sf-muted, #5b6585);
+  min-height: 1.4em;
+}
+.rp-entries {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+.rp-entries--gallery {
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 22px;
+}
+.rp-entry {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 10px;
+  box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6);
+  color: var(--sf-navy-700, #14306a);
+  text-decoration: none;
+  transition: transform 0.2s ease;
+}
+.rp-entry:hover,
+.rp-entry:focus-visible {
+  transform: translateY(-3px);
+}
+.rp-entry:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 3px;
+}
+/* a gallery card: the picture across the top, the title and date underneath */
+.rp-entry__img {
+  flex: 0 0 100%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  background: var(--sf-page, #f6f8fc);
+}
+.rp-entry__title {
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  font-size: 1.6rem;
+  font-weight: 700;
+  line-height: 1.1;
+}
+.rp-entry__date {
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+@media (prefers-reduced-motion: reduce) {
+  .rp-entry {
+    transition: none;
+  }
+  .rp-entry:hover,
+  .rp-entry:focus-visible {
+    transform: none;
+  }
+}

@@ -104,6 +104,58 @@
   color: rgba(20, 48, 106, 0.8); /* a tinted colour, not a faded box, so nothing about the writing is ever trimmed */
 }
 
+/* a name plaque, for objects too small to carry their own writing. It belongs to its object, shows the name all the time, and
+   shows the one-line description when you point at the object or tab to it. It never gets in the way of a click. */
+.rs-plaque {
+  position: absolute;
+  left: var(--qx);
+  top: var(--qy);
+  transform: translateX(-50%);
+  display: block;
+  width: max-content;
+  max-width: 24cqw;
+  padding: 0.1em 0.7em 0.16em;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 10px;
+  box-shadow: 0 2px 4px rgba(20, 48, 106, 0.12);
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  text-align: center;
+  line-height: 1.05;
+  pointer-events: none;
+  z-index: 2;
+}
+.rs-plaque.is-locked {
+  border-style: dashed;
+}
+.rs-plaque strong {
+  display: block;
+  font-size: clamp(13px, 2.4cqw, 30px);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.rs-plaque small {
+  display: block;
+  font-size: clamp(11px, 1.7cqw, 22px);
+  color: rgba(20, 48, 106, 0.8);
+}
+.rs-plaque .rs-plaque__why {
+  font-weight: 700;
+  color: var(--sf-navy-700, #14306a);
+}
+.rs-plaque .rs-plaque__blurb {
+  display: none;
+}
+.rs-item:hover .rs-plaque__blurb,
+.rs-item:focus-visible .rs-plaque__blurb {
+  display: block;
+}
+.rs-item:hover .rs-plaque,
+.rs-item:focus-visible .rs-plaque {
+  z-index: 6;
+}
+
 /* the note that says why something is locked or paid, along the bottom edge of the paper */
 .rs-tip {
   position: absolute;

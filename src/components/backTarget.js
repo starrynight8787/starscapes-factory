@@ -2,6 +2,7 @@
 import { channels } from '../data/channels'
 import { roomPath } from '../data/roomImages'
 import { kindOf } from '../factoryfloor/factoryData'
+import { backLabel } from '../rooms/roomsData'
 
 const roomName = (slug) => {
   const room = (channels || []).find((c) => c.slug === slug)
@@ -19,6 +20,8 @@ export function targetFromPath(path) {
   if (pathname === '/factory-floor' || pathname === '/factory-floor/floor') return { to: path, label: 'The Factory Floor' }
   if (pathname === '/factory-floor/blueprints') return { to: path, label: 'Factory Blueprints' }
   if (pathname === '/art-loft' || pathname.startsWith('/art-loft/')) return { to: path, label: 'The Art Loft' }
+  const ownRoom = pathname.match(/^\/(idea-hatchery|leadership-lounge|explorers-bay)(?:\/([^/]+))?\/?$/)
+  if (ownRoom) return { to: path, label: backLabel(ownRoom[1], ownRoom[2]) }
   if (pathname === '/drafting-desk') return { to: path, label: 'The Drafting Desk' }
   if (pathname === '/drafting-desk/archive-entries') return { to: path, label: 'Archive Entries' }
   if (pathname === '/drafting-desk/authors-notebook') return { to: path, label: "Author's Notebook" }
