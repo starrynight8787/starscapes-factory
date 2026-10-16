@@ -51,12 +51,19 @@ describe('the room\u2019s name sits on the picture', () => {
     expect(h).toMatch(/text-align:\s*left/)
   })
   it('grows and shrinks with the picture, but never below a readable size', () => {
-    expect(rule('.rs-head h1')).toMatch(/font-size:\s*max\(18px, calc\(var\(--rs-stage-w\) \* 0\.03\)\)/)
-    expect(rule('.rs-tagline')).toMatch(/font-size:\s*max\(18px,/)
-    expect(rule('.rs-blurb')).toMatch(/font-size:\s*max\(14px,/)
+    expect(rule('.rs-head h1')).toMatch(/font-size:\s*max\(18px, calc\(var\(--rs-stage-w\) \* var\(--rs-name, 0\.034\)\)\)/)
+    expect(rule('.rs-tagline')).toMatch(/font-size:\s*max\(18px, calc\(var\(--rs-stage-w\) \* var\(--rs-tag, 0\.03\)\)\)/)
+    expect(rule('.rs-blurb')).toMatch(/font-size:\s*max\(14px, calc\(var\(--rs-stage-w\) \* var\(--rs-line, 0\.0165\)\)\)/)
   })
-  it('keeps clear of the moon in Explorer\u2019s Bay', () => {
-    expect(css).toMatch(/\.rs\[data-room='explorers-bay'\] \.rs-head \{\s*padding-left:\s*15%/)
+  it('has three settings for how big the heading is, a little bigger than the design\u2019s 0.03, 0.026 and 0.0145', () => {
+    const root = rule(':root')
+    expect(root).toMatch(/--rs-name:\s*0\.034/)
+    expect(root).toMatch(/--rs-tag:\s*0\.03/)
+    expect(root).toMatch(/--rs-line:\s*0\.0165/)
+  })
+  it('is in the same top-left corner in every room, with no special offset (the moon was moved instead)', () => {
+    expect(css).not.toMatch(/data-room='explorers-bay'\] \.rs-head/)
+    expect(rule('.rs-head')).toMatch(/padding:\s*0 0 0 3%/)
   })
   it('goes back to being a centred heading above the list on a phone', () => {
     expect(phone).toMatch(/\.rs \{\s*display:\s*block/)
@@ -65,3 +72,19 @@ describe('the room\u2019s name sits on the picture', () => {
     expect(phone).toMatch(/\.rs-head h1 \{[^}]*font-size:\s*2rem/)
   })
 })
+
+describe('the Drafting Desk keeps its heading above the picture', () => {
+  const desk = (sel) => (css.match(new RegExp("\\.rs\\[data-room='drafting-desk'\\]" + sel.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\{([^}]*)\\}')) || [0, ''])[1]
+  it('because its desk runs edge to edge, so there is no empty corner to put it in', () => {
+    expect(desk('')).toMatch(/--rs-above:\s*240px/)
+    expect(desk('')).toMatch(/--rs-stage-w:\s*min\(var\(--rs-max, 1440px\), max\(560px,/)
+    expect(desk(' .rs-head')).toMatch(/text-align:\s*center/)
+    expect(desk(' .rs-head')).toMatch(/width:\s*auto/)
+    expect(desk(' .rs-stage')).toMatch(/grid-area:\s*2 \/ 1/)
+  })
+  it('and the other rooms still put it on the picture', () => {
+    expect(rule('.rs-head')).toMatch(/grid-area:\s*1 \/ 1/)
+    expect(rule('.rs-stage')).toMatch(/grid-area:\s*1 \/ 1/)
+  })
+})
+
