@@ -75,7 +75,7 @@ describe('Explorer\u2019s Bay: nothing else changed', () => {
     for (const c of [...PHOTOS, CASE, CLASP, TAG]) expect(base.toLowerCase()).not.toContain(c.toLowerCase())
   })
   it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', ...PHOTOS, CASE, CLASP, TAG])
+    const allowed = new Set(['#fff', '#14306A', 'none', ...PHOTOS, CASE, CLASP, TAG, '#FFD60A', '#E5484D']) // plus the yellow of the hazard tape and the red of the cone
     for (const f of ['base.svg', 'item-photography.svg', 'item-writing-in-transit.svg', 'item-coming-soon.svg']) {
       for (const m of read(f).matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), `${f}: ${m[1]}`).toBe(true)
     }

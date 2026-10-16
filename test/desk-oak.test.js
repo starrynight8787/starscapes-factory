@@ -51,7 +51,7 @@ describe('Drafting Desk: everything on the desk is as it was', () => {
     }
   })
   it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', '#FFF1B8', '#B8CCF5', '#E3D2B4'])
+    const allowed = new Set(['#fff', '#14306A', 'none', '#FFF1B8', '#B8CCF5', '#E3D2B4', '#FFD60A', '#E5484D']) // plus the yellow of the hazard tape and the red of the cone
     for (const m of read('base.svg').matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), m[1]).toBe(true)
     const strokes = new Set(['#14306A', '#C9B08A', '#C2A57C'])
     for (const m of read('base.svg').matchAll(/ stroke="([^"]+)"/g)) expect(m[1] === 'none' || strokes.has(m[1]), m[1]).toBe(true)

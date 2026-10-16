@@ -59,7 +59,7 @@ describe('Leadership Lounge: nothing else changed', () => {
     }
   })
   it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', COUCH, SHADE, POT])
+    const allowed = new Set(['#fff', '#14306A', 'none', COUCH, SHADE, POT, '#FFD60A', '#E5484D']) // plus the yellow of the hazard tape and the red of the cone
     for (const f of ['base.svg', 'item-leading-from-the-middle.svg', 'item-audiobook.svg', 'item-blog.svg', 'item-free-ebook.svg', 'item-udemy-course.svg']) {
       for (const m of read(f).matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), `${f}: ${m[1]}`).toBe(true)
     }
