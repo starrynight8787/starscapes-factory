@@ -2,6 +2,9 @@ import { describe, it, expect } from 'vitest'
 import { render } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import RoomScene from '../src/rooms/RoomScene'
+import DraftingDeskHome from '../src/draftingdesk/DraftingDeskHome'
+import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import { buildRoomScene } from '../src/rooms/roomsData'
 
 const show = (slug) => render(<MemoryRouter><RoomScene scene={buildRoomScene(slug)} /></MemoryRouter>).container.querySelector('main.rs')
@@ -17,3 +20,20 @@ describe('each illustrated room says which room it is', () => {
     expect(main.querySelector('.rs-head h1').textContent).toBe('The Idea Hatchery')
   })
 })
+
+describe('the Drafting Desk\u2019s front page is tagged too, so its own layout rule can find it', () => {
+  const desk = () => render(<MemoryRouter><DraftingDeskHome /></MemoryRouter>).container.querySelector('main.rs')
+  it('says it is the drafting desk', () => {
+    expect(desk().getAttribute('data-room')).toBe('drafting-desk')
+  })
+  it('has its heading, then its picture, in the order its layout rule expects', () => {
+    const kids = [...desk().children].map((c) => c.className.split(' ')[0])
+    expect(kids.slice(0, 2)).toEqual(['rs-head', 'rs-stage'])
+  })
+  it('and the stylesheet has the rule that keeps that heading above the desk (its desk runs edge to edge)', () => {
+    const css = readFileSync(join(process.cwd(), 'src/rooms/roomscene.css'), 'utf8')
+    expect(css).toMatch(/\.rs\[data-room='drafting-desk'\] \.rs-stage \{\s*grid-area:\s*2 \/ 1/)
+    expect(css).toMatch(/\.rs\[data-room='drafting-desk'\] \.rs-head \{[^}]*text-align:\s*center/)
+  })
+})
+
