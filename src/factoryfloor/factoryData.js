@@ -4,10 +4,10 @@ export const FACTORY = {
   name: 'The Factory Floor',
   tagline: 'Building Starscapes Factory, one line of code at a time.',
   channel: 'factory-floor', // the room's name as saved on each post
-  latestCount: 6, // how many post-its show under the two big ones
+  latestCount: 6, // how many post-its show under the two objects
 }
 
-// The two big post-its at the top, and what to call each kind of post.
+// The two things at the top (a protractor and a rolled blueprint), and what to call each kind of post.
 export const SECTIONS = {
   story: {
     key: 'story',
@@ -15,6 +15,7 @@ export const SECTIONS = {
     blurb: 'The story: what happened each day',
     label: 'Factory Floor',
     to: '/factory-floor/floor',
+    art: '/scenes/factory-floor/protractor.svg', // the protractor
   },
   blueprint: {
     key: 'blueprint',
@@ -22,6 +23,7 @@ export const SECTIONS = {
     blurb: 'The reasoning behind every decision',
     label: 'Blueprints',
     to: '/factory-floor/blueprints',
+    art: '/scenes/factory-floor/blueprint-roll.svg', // the rolled blueprint with its lock
   },
 }
 
@@ -77,6 +79,11 @@ export function tagsOf(posts) {
     .sort((a, b) => a.label.localeCompare(b.label, 'en', { sensitivity: 'base' }))
 }
 
+// A post is pinned if it is pinned in its own section (a Blueprint pinned in the story section does not count).
+export function isPinned(post) {
+  return Boolean(post && post.pinned_in && post.pinned_in === kindOf(post))
+}
+
 // Search by the words in the title (every word must be there, in any order), by one tag, and sort by date.
 export function filterPosts(posts, { q = '', tag = '', sort = 'newest' } = {}) {
   const words = String(q).toLowerCase().split(/\s+/).filter(Boolean)
@@ -88,5 +95,7 @@ export function filterPosts(posts, { q = '', tag = '', sort = 'newest' } = {}) {
     return (Array.isArray(post.tags) ? post.tags : []).some((t) => String(t).trim().toLowerCase() === wantedTag)
   })
   const time = (post) => new Date(post.created_at).getTime() || 0
-  return kept.sort((a, b) => (sort === 'oldest' ? time(a) - time(b) : time(b) - time(a)))
+  const ordered = kept.sort((a, b) => (sort === 'oldest' ? time(a) - time(b) : time(b) - time(a)))
+  // the pinned post always leads its section (if it matches the search); the others keep their order
+  return [...ordered.filter(isPinned), ...ordered.filter((p) => !isPinned(p))]
 }

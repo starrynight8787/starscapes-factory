@@ -5,7 +5,7 @@ import useTitle from './useTitle'
 import PostNote from './PostNote'
 import PostFilter from './PostFilter'
 import { fetchFactoryPosts } from './factoryApi'
-import { SECTIONS, kindOf, tagsOf, filterPosts } from './factoryData'
+import { SECTIONS, kindOf, tagsOf, filterPosts, isPinned } from './factoryData'
 
 // Every post of one kind: the story (/factory-floor/floor) or the Blueprints (/factory-floor/blueprints),
 // with a search, a sort and tag buttons. The choices live in the address, so the back button and shared links work.
@@ -31,6 +31,11 @@ export default function SectionPage({ kind }) {
   const sort = params.get('sort') === 'oldest' ? 'oldest' : 'newest'
   const tags = useMemo(() => tagsOf(posts), [posts])
   const shown = useMemo(() => filterPosts(posts, { q, tag, sort }), [posts, q, tag, sort])
+  // The pinned post sits in the right-hand column, under the search, and stays there whatever is typed in the search.
+  // The other posts flow across the left, and the numbers in the filter count only those.
+  const pinnedPost = useMemo(() => posts.find(isPinned) || null, [posts])
+  const rest = useMemo(() => shown.filter((p) => !isPinned(p)), [shown])
+  const restTotal = pinnedPost ? posts.length - 1 : posts.length
 
   function change(patch) {
     const next = new URLSearchParams(params)
@@ -54,20 +59,32 @@ export default function SectionPage({ kind }) {
         {status === 'loading' && <p className="ff-msg">Loading…</p>}
         {status === 'ready' && posts.length === 0 && <p className="ff-msg">Nothing here yet.</p>}
 
-        {status === 'ready' && posts.length > 0 && (
-          <PostFilter q={q} tag={tag} sort={sort} tags={tags} total={posts.length} shown={shown.length} onChange={change} />
-        )}
-        {status === 'ready' && posts.length > 0 && shown.length === 0 && (
-          <p className="ff-msg">No posts match. Try a different word, or clear the filters.</p>
-        )}
+        <div className="ff-split">
+          {/* the right-hand column: the search first, then the pinned post */}
+          <aside className="ff-side" aria-label="Search, and the pinned post">
+            {status === 'ready' && restTotal > 0 && (
+              <PostFilter q={q} tag={tag} sort={sort} tags={tags} total={restTotal} shown={rest.length} onChange={change} />
+            )}
+            {status === 'ready' && pinnedPost && (
+              <div className="ff-side__pinned">
+                <PostNote post={pinnedPost} index={0} />
+              </div>
+            )}
+          </aside>
 
-        <ul className="ff-latest ff-latest--all">
-          {shown.map((p, i) => (
-            <li key={p.id}>
-              <PostNote post={p} index={i} />
-            </li>
-          ))}
-        </ul>
+          <div className="ff-main">
+            {status === 'ready' && restTotal > 0 && rest.length === 0 && (
+              <p className="ff-msg">No posts match. Try a different word, or clear the filters.</p>
+            )}
+            <ul className="ff-latest ff-latest--all">
+              {rest.map((p, i) => (
+                <li key={p.id}>
+                  <PostNote post={p} index={i + (pinnedPost ? 1 : 0)} />
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
       </div>
     </main>
   )

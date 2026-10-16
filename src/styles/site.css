@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Josefin+Sans:wght@300;400;500;600;700&family=Sacramento&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Caveat:wght@400;700&family=Inter:wght@400;500;600&family=Josefin+Sans:wght@300;400;500;600;700&family=Sacramento&family=Schoolbell&display=swap');
 
 /* =========================================================
    Starscapes Factory: brand tokens and the new site pieces
@@ -21,6 +21,15 @@
   --sf-body: 'Inter', system-ui, sans-serif;
   --sf-script: 'Sacramento', cursive;
   --sf-hand: 'Caveat', cursive;
+  --sf-school: 'Schoolbell', 'Caveat', cursive; /* article titles and the name plaques */
+  --sf-blue-deep: #2478b6; /* the lightest end of the blue gradients: white text passes on it everywhere */
+  --sf-focus: #14306a; /* the keyboard focus ring (white on dark backgrounds, see the end of this file) */
+  --sf-btn-h: 40px; /* button height on a mouse; touch screens get 44px */
+}
+@media (pointer: coarse) {
+  :root {
+    --sf-btn-h: 44px;
+  }
 }
 
 /* Homepage background shimmer: change these three numbers to make it calmer or livelier */
@@ -159,20 +168,20 @@ html body h3 {
 .sf-nav button:focus-visible,
 .sf-menu a:focus-visible,
 .sf-menu button:focus-visible {
-  outline: 2px solid var(--sf-blue);
-  outline-offset: 3px;
+  outline: 3px solid var(--sf-focus);
+  outline-offset: 2px;
 }
 .sf-cta {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: var(--sf-btn-h);
   padding: 0 24px;
   border-radius: 999px;
   background: var(--sf-blue);
   color: #fff;
   font-family: var(--sf-body);
-  font-size: 15px;
+  font-size: 14px;
   font-weight: 600;
   text-decoration: none;
 }
@@ -197,7 +206,7 @@ html body h3 {
 }
 .sf-rooms__label {
   margin: 0 0 12px;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -231,7 +240,7 @@ html body h3 {
 }
 .sf-rooms__tag {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.4;
   color: var(--sf-muted);
 }
@@ -292,7 +301,7 @@ html body h3 {
   flex-direction: column;
   justify-content: space-between;
   overflow-y: auto;
-  background: linear-gradient(160deg, #070b26 0%, #14306a 55%, #2e8fd0 100%);
+  background: linear-gradient(160deg, #070b26 0%, #14306a 55%, var(--sf-blue-deep) 100%);
   color: #fff;
 }
 .sf-menu__top {
@@ -318,7 +327,7 @@ html body h3 {
 }
 .sf-menu__item--plain {
   padding: 16px 0;
-  color: var(--sf-star);
+  color: #fff;
 }
 /* the navy line art needs a light backing on the dark mobile menu */
 .sf-menu .sf-tile {
@@ -387,7 +396,7 @@ html body h3 {
   isolation: isolate;
   background:
     linear-gradient(110deg, transparent 42%, rgba(255, 255, 255, var(--sf-sheen-strength)) 50%, transparent 58%),
-    linear-gradient(135deg, #070b26 0%, #14306a 50%, #2e8fd0 100%);
+    linear-gradient(135deg, #070b26 0%, #14306a 50%, var(--sf-blue-deep) 100%);
   background-size: 260% 100%, 100% 100%;
   background-repeat: no-repeat;
   animation: sf-sheen var(--sf-sheen-seconds) ease-in-out infinite;
@@ -476,11 +485,11 @@ html body h3 {
 }
 .sf-eyebrow {
   margin: 0;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
-  color: var(--sf-star);
+  color: #fff;
 }
 .sf-eyebrow--blue {
   color: var(--sf-blue);
@@ -497,7 +506,7 @@ html body h3 {
   max-width: 560px;
   font-size: 16px;
   line-height: 1.6;
-  color: rgba(255, 255, 255, 0.88);
+  color: #fff;
 }
 .sf-panel {
   width: 100%;
@@ -586,7 +595,7 @@ html body h3 {
 }
 .sf-roomcard__tag {
   display: block;
-  font-size: 13px;
+  font-size: 14px;
   line-height: 1.45;
   color: var(--sf-muted);
 }
@@ -656,7 +665,7 @@ html body h3 {
   justify-content: center;
 }
 .sf-post__chip {
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
   letter-spacing: 0.1em;
   text-transform: uppercase;
@@ -713,7 +722,7 @@ html body h3 {
 }
 .sf-footer__links a {
   color: rgba(255, 255, 255, 0.82);
-  font-size: 13px;
+  font-size: 14px;
   text-decoration: none;
 }
 .sf-footer__links a:hover {
@@ -727,7 +736,7 @@ html body h3 {
   background: rgba(255, 255, 255, 0.15);
 }
 .sf-footer__copy {
-  font-size: 13px;
+  font-size: 14px;
   color: rgba(255, 255, 255, 0.7);
 }
 .sf-footer__script {
@@ -743,4 +752,96 @@ html body h3 {
   .sf-footer__script {
     font-size: 32px;
   }
+}
+
+/* =========================================================
+   Accessibility foundations
+   ========================================================= */
+/* One keyboard focus ring for everything that can be tabbed to: 3px, with a 2px gap */
+:where(a, button, input, select, textarea, summary, [tabindex]:not([tabindex='-1'])):focus-visible {
+  outline: 3px solid var(--sf-focus);
+  outline-offset: 2px;
+}
+/* On dark backgrounds the ring is white; the pale floor-plan panel inside the hero goes back to navy */
+.sf-hero,
+.sf-menu,
+.sf-footer {
+  --sf-focus: #fff;
+}
+.sf-panel {
+  --sf-focus: var(--sf-navy-700);
+}
+/* A room on the floor plan: a ring as well as the colour change */
+.sf-room:focus-visible {
+  outline: 3px solid var(--sf-navy-700);
+  outline-offset: 2px;
+}
+/* Skip link: hidden until a keyboard user reaches it */
+.sf-skip {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 200;
+  padding: 12px 20px;
+  border-radius: 999px;
+  background: var(--sf-navy-900);
+  color: #fff;
+  font-family: var(--sf-body);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  transform: translateY(-200%);
+}
+.sf-skip:focus {
+  transform: none;
+  outline: 3px solid #fff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px var(--sf-navy-700);
+}
+#main-content:focus {
+  outline: none;
+}
+/* Touch screens: every button is at least 44px tall */
+@media (pointer: coarse) {
+  button,
+  [type='submit'],
+  [type='button'] {
+    min-height: 44px;
+  }
+}
+/* People who ask their device for less motion get calmer pages everywhere */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Footer: the Follow links */
+.sf-footer__follow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 24px;
+  margin-top: 4px;
+}
+.sf-footer__follow-label {
+  color: rgba(255, 255, 255, 0.7);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.sf-footer__follow a {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 14px;
+  text-decoration: none;
+}
+.sf-footer__follow a:hover {
+  color: #fff;
+  text-decoration: underline;
 }

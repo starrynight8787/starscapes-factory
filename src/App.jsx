@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Routes, Route } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import Navbar from './components/Navbar'
+import SkipLink from './components/SkipLink'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import PostPage from './pages/PostPage'
@@ -46,8 +47,9 @@ export default function App() {
 
   return (
     <>
+      <SkipLink />
       <Navbar session={session} />
-      <div className="container">
+      <div className="container" id="main-content" tabIndex={-1}>
         <Routes>
          <Route path="/" element={<ChannelDirectory />} /> 
 <Route path="/blog" element={<Home />} /> 

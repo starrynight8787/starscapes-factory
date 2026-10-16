@@ -33,10 +33,12 @@ export default function FactoryFloorHome() {
 
         <div className="ff-big" role="navigation" aria-label="Sections of the Factory Floor">
           {[SECTIONS.story, SECTIONS.blueprint].map((s) => (
-            <Link key={s.key} className={`ff-note ff-note--big ff-note--${s.key}`} to={s.to}>
-              <span className="ff-note__title">{s.name}</span>
-              <span className="ff-note__blurb">{s.blurb}</span>
-              <span className="ff-note__go" aria-hidden="true">Read on →</span>
+            <Link key={s.key} className={`ff-obj ff-obj--${s.key}`} to={s.to}>
+              <img className="ff-obj__art" src={s.art} alt="" />
+              <span className="ff-obj__plaque">
+                <span className="ff-obj__name">{s.name}</span>
+                <span className="ff-obj__blurb">{s.blurb}</span>
+              </span>
             </Link>
           ))}
         </div>
