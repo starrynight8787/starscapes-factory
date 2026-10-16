@@ -13,10 +13,10 @@ describe('each illustrated room says which room it is', () => {
   it.each(['idea-hatchery', 'leadership-lounge', 'explorers-bay'])('%s', (slug) => {
     expect(show(slug).getAttribute('data-room')).toBe(slug)
   })
-  it('still has its heading first, then the picture, then the list', () => {
+  it('has the Home link first, then its heading, then the picture, then the list', () => {
     const main = show('idea-hatchery')
     const kids = [...main.children].map((c) => c.className.split(' ')[0])
-    expect(kids).toEqual(['rs-head', 'rs-stage', 'rs-list'])
+    expect(kids).toEqual(['rs-home', 'rs-head', 'rs-stage', 'rs-list'])
     expect(main.querySelector('.rs-head h1').textContent).toBe('The Idea Hatchery')
   })
 })
@@ -26,13 +26,13 @@ describe('the Drafting Desk\u2019s front page is tagged too, so its own layout r
   it('says it is the drafting desk', () => {
     expect(desk().getAttribute('data-room')).toBe('drafting-desk')
   })
-  it('has its heading, then its picture, in the order its layout rule expects', () => {
+  it('has its Home link, its heading, then its picture, in the order its layout rule expects', () => {
     const kids = [...desk().children].map((c) => c.className.split(' ')[0])
-    expect(kids.slice(0, 2)).toEqual(['rs-head', 'rs-stage'])
+    expect(kids.slice(0, 3)).toEqual(['rs-home', 'rs-head', 'rs-stage'])
   })
   it('and the stylesheet has the rule that keeps that heading above the desk (its desk runs edge to edge)', () => {
     const css = readFileSync(join(process.cwd(), 'src/rooms/roomscene.css'), 'utf8')
-    expect(css).toMatch(/\.rs\[data-room='drafting-desk'\] \.rs-stage \{\s*grid-area:\s*2 \/ 1/)
+    expect(css).toMatch(/\.rs\[data-room='drafting-desk'\] \.rs-stage \{\s*grid-area:\s*3 \/ 1/)
     expect(css).toMatch(/\.rs\[data-room='drafting-desk'\] \.rs-head \{[^}]*text-align:\s*center/)
   })
 })

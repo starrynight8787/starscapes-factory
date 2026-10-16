@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import HomeLink from '../components/HomeLink'
 import { Link } from 'react-router-dom'
 import './factoryfloor.css'
 import useTitle from './useTitle'
@@ -26,6 +27,7 @@ export default function FactoryFloorHome() {
   return (
     <main className="ff">
       <div className="ff-inner">
+        <HomeLink className="ff-home" />
         <header className="ff-head">
           <h1>{FACTORY.name}</h1>
           <p className="ff-tagline">{FACTORY.tagline}</p>

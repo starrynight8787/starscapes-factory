@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import HomeLink from '../components/HomeLink'
 import { Link } from 'react-router-dom'
 import './artloft.css'
 import useTitle from './useTitle'
@@ -80,6 +81,7 @@ export default function ArtLoftScene() {
 
   return (
     <main className="al">
+      <HomeLink className="al-home" />
       <header className="al-head">
         <h1>{ART_LOFT.name}</h1>
         <p className="al-tagline">{ART_LOFT.tagline}</p>

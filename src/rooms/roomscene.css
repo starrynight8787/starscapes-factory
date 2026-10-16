@@ -7,12 +7,12 @@
      The pictures are 1200 wide by 840 tall. --rs-above is what is left above and below the picture: the menu and a little space
      (the room's name sits ON the picture, so it takes no room of its own). A bigger number makes the picture smaller. */
   --rs-ratio: 1.4286;
-  --rs-above: 150px;
+  --rs-above: 186px;
   /* how big the heading on the picture is, as a share of the picture's width (the design has 0.03, 0.026 and 0.0145): the room's name, its tagline, and the line under it */
   --rs-name: 0.034;
   --rs-tag: 0.03;
   --rs-line: 0.0165;
-  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 150px)) * var(--rs-ratio, 1.4286))));
+  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 186px)) * var(--rs-ratio, 1.4286))));
 }
 
 /* The normal page column is only 720px wide, which squeezed the rooms into a third of a big screen.
@@ -36,8 +36,17 @@
 }
 /* The room's name and tagline sit on the picture, in its empty top-left corner (the same grid cell as the picture).
    They are only writing, so they never get in the way of a click. */
-.rs-head {
+.rs-home {
   grid-area: 1 / 1;
+  justify-self: center;
+  width: var(--rs-stage-w);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  padding: 0 0 0 3%; /* lines up with the heading below it */
+}
+.rs-head {
+  grid-area: 2 / 1;
   align-self: start;
   justify-self: center;
   position: relative;
@@ -53,8 +62,8 @@
 .rs[data-room='drafting-desk'] {
   /* The Drafting Desk fills its whole picture, edge to edge, so there is no empty corner for the heading:
      here it stays above the desk, which leaves less height for the picture (a bigger number makes the picture smaller). */
-  --rs-above: 240px;
-  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 240px)) * var(--rs-ratio, 1.4286))));
+  --rs-above: 276px;
+  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 276px)) * var(--rs-ratio, 1.4286))));
 }
 .rs[data-room='drafting-desk'] .rs-head {
   width: auto;
@@ -65,7 +74,7 @@
   pointer-events: auto;
 }
 .rs[data-room='drafting-desk'] .rs-stage {
-  grid-area: 2 / 1;
+  grid-area: 3 / 1;
 }
 .rs[data-room='drafting-desk'] .rs-blurb {
   max-width: 640px;
@@ -93,7 +102,7 @@
 }
 
 .rs-stage {
-  grid-area: 1 / 1;
+  grid-area: 2 / 1;
   position: relative;
   width: 100%;
   /* never wider than --rs-max, and never so wide that the picture is taller than the screen (but never narrower than 560px) */
@@ -311,6 +320,11 @@ a.rs-item:focus-visible .rs-art {
   .rs {
     display: block;
     padding: 24px 16px 40px;
+  }
+  .rs-home {
+    width: auto;
+    margin: 0;
+    padding: 0;
   }
   .rs-head {
     width: auto;
