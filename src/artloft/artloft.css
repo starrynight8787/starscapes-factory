@@ -167,7 +167,7 @@ a.al-canvas:focus-visible {
   box-shadow: 0 2px 4px rgba(20, 48, 106, 0.12);
 }
 .al-plaque small {
-  font-size: 0.8em;
+  font-size: max(0.8em, 12px);
   color: var(--sf-muted, #5b6585);
 }
 .al-object {
@@ -204,7 +204,7 @@ a.al-object:focus-visible {
 }
 .al-tip small {
   display: block;
-  font-size: 0.8em;
+  font-size: max(0.8em, 12px);
   color: var(--sf-muted, #5b6585);
 }
 .al-object:hover .al-tip,
@@ -410,7 +410,7 @@ a.al-object:focus-visible {
   border-radius: 999px;
   background: var(--sf-navy-700, #14306a);
   color: #fff;
-  font-size: 12px;
+  font-size: 14px;
   font-weight: 600;
 }
 
@@ -453,7 +453,7 @@ a.al-object:focus-visible {
   border: 2px solid var(--sf-border, #dde3f0);
   border-radius: 10px;
   font: inherit;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   line-height: 1.2;
   color: var(--sf-muted, #5b6585);
   cursor: pointer;
@@ -489,7 +489,7 @@ a.al-object:focus-visible {
 .al-field__label {
   display: block;
   margin-bottom: 8px;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sf-muted, #5b6585);
@@ -500,7 +500,7 @@ a.al-object:focus-visible {
   gap: 10px;
 }
 .al-choice button {
-  min-height: 44px;
+  min-height: var(--sf-btn-h, 40px);
   padding: 8px 16px;
   background: #fff;
   border: 2px solid var(--sf-border, #dde3f0);
@@ -513,7 +513,7 @@ a.al-object:focus-visible {
 .al-choice button small {
   display: block;
   color: var(--sf-muted, #5b6585);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
 }
 .al-choice button:hover {
   border-color: var(--sf-blue, #1f6fa8);
@@ -540,7 +540,7 @@ a.al-object:focus-visible {
 }
 .al-buy {
   width: 100%;
-  min-height: 52px;
+  min-height: 48px;
   padding: 14px;
   border: 2px solid var(--sf-navy-700, #14306a);
   border-radius: 999px;
@@ -607,7 +607,7 @@ a.al-object:focus-visible {
   line-height: 1.5;
 }
 .al-admin__pictures button {
-  min-height: 44px;
+  min-height: var(--sf-btn-h, 40px);
   padding: 8px 18px;
   border: 2px solid var(--sf-navy-700, #14306a);
   border-radius: 999px;
@@ -663,7 +663,7 @@ a.al-object:focus-visible {
 }
 .al-tools__table thead th {
   border-bottom: 2px solid var(--sf-navy-700, #14306a);
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--sf-muted, #5b6585);
@@ -685,7 +685,7 @@ a.al-object:focus-visible {
   padding: 1px 8px;
   border: 1px solid var(--sf-border, #dde3f0);
   border-radius: 999px;
-  font-size: 0.75rem;
+  font-size: 0.875rem;
   letter-spacing: 0.06em;
   color: var(--sf-muted, #5b6585);
 }
@@ -784,7 +784,7 @@ a.al-object:focus-visible {
 .al-admin__editor label span {
   display: block;
   margin-bottom: 4px;
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   color: var(--sf-muted, #5b6585);
 }
 .al-admin__editor textarea {
@@ -968,7 +968,7 @@ a.al-object:focus-visible {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-height: 44px;
+  min-height: var(--sf-btn-h, 40px);
   padding: 8px 18px;
   border: 2px solid var(--sf-navy-700, #14306a);
   border-radius: 999px;
@@ -1072,7 +1072,7 @@ a.al-object:focus-visible {
 }
 .al-orig-photos legend {
   padding: 0;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--sf-muted, #5b6585);
@@ -1154,7 +1154,7 @@ a.al-object:focus-visible {
   border: 2px solid var(--sf-navy-700, #14306a);
   background: #fff;
   color: var(--sf-navy-700, #14306a);
-  font-size: 0.85rem;
+  font-size: 0.875rem;
   font-weight: 600;
 }
 .al-chip.is-live,
@@ -1178,5 +1178,14 @@ a.al-object:focus-visible {
 @media (max-width: 560px) {
   .al-orig-form__sizes {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Touch screens: these buttons are at least 44px tall, whatever the shared size setting says */
+@media (pointer: coarse) {
+  .al-btn,
+  .al-choice button,
+  .al-admin__pictures button {
+    min-height: 44px;
   }
 }

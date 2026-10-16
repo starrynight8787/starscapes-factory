@@ -99,7 +99,7 @@
 .rs-label small {
   display: block;
   margin-top: 0.16em;
-  font-size: clamp(11px, 2cqw, 26px);
+  font-size: clamp(12px, 2cqw, 26px);
   line-height: 1.05;
   color: rgba(20, 48, 106, 0.8); /* a tinted colour, not a faded box, so nothing about the writing is ever trimmed */
 }
@@ -137,7 +137,7 @@
 }
 .rs-plaque small {
   display: block;
-  font-size: clamp(11px, 1.7cqw, 22px);
+  font-size: clamp(12px, 1.7cqw, 22px);
   color: rgba(20, 48, 106, 0.8);
 }
 .rs-plaque .rs-plaque__why {
