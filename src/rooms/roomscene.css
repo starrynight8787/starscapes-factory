@@ -1,0 +1,208 @@
+/* An illustrated room: a picture with things on it you can click. */
+.rs {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 16px 56px;
+  color: #0e1530;
+  box-sizing: border-box;
+}
+.rs-head {
+  text-align: center;
+  margin-bottom: 8px;
+}
+.rs-head h1 {
+  margin: 8px 0 4px;
+  font-family: var(--sf-head, sans-serif);
+}
+.rs-tagline {
+  margin: 0 0 6px;
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  font-size: 1.6rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.rs-blurb {
+  margin: 0 auto;
+  max-width: 640px;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.5;
+}
+
+.rs-stage {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  margin: 12px auto 0;
+  container-type: inline-size; /* so the writing on the papers can scale with the picture */
+}
+.rs-base {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+}
+
+/* one thing on the picture: its middle, size and tilt are set from its numbers. Only the paper itself can be clicked. */
+.rs-item {
+  position: absolute;
+  left: var(--cx);
+  top: var(--cy);
+  width: var(--w);
+  height: var(--h);
+  display: block;
+  color: inherit;
+  text-decoration: none;
+  transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  transition: transform 0.25s ease;
+  pointer-events: none;
+  outline: none;
+}
+.rs-art {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  user-select: none;
+  transition: filter 0.25s ease;
+}
+.rs-hit {
+  position: absolute;
+  left: var(--sx);
+  top: var(--sy);
+  width: var(--sw);
+  height: var(--sh);
+  pointer-events: auto;
+  cursor: pointer;
+  border-radius: 6px;
+}
+.rs-item.is-locked .rs-hit {
+  cursor: not-allowed;
+}
+.rs-label {
+  position: absolute;
+  left: var(--lx);
+  top: var(--ly);
+  width: var(--lw);
+  text-align: center;
+  color: var(--sf-navy-700, #14306a);
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  pointer-events: none;
+}
+.rs-label strong {
+  display: block;
+  font-size: clamp(14px, 3.08cqw, 40px);
+  font-weight: 700;
+  line-height: 1;
+}
+.rs-label small {
+  display: block;
+  margin-top: 0.16em;
+  font-size: clamp(11px, 2cqw, 26px);
+  line-height: 1.05;
+  color: rgba(20, 48, 106, 0.8); /* a tinted colour, not a faded box, so nothing about the writing is ever trimmed */
+}
+
+/* the note that says why something is locked or paid, along the bottom edge of the paper */
+.rs-tip {
+  position: absolute;
+  left: 50%;
+  top: var(--ty);
+  transform: translate(-50%, -50%);
+  padding: 0.15em 0.8em 0.2em;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  font-size: clamp(12px, 2.1cqw, 26px);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s ease;
+}
+.rs-item:hover .rs-tip,
+.rs-item:focus-visible .rs-tip {
+  opacity: 1;
+}
+
+/* pointing at (or tabbing to) something you can open lifts the paper off the desk */
+a.rs-item:hover,
+a.rs-item:focus-visible {
+  transform: translate(-50%, calc(-50% - 0.7cqw)) rotate(var(--rot, 0deg)) scale(1.03);
+  z-index: 5;
+}
+a.rs-item:hover .rs-art,
+a.rs-item:focus-visible .rs-art {
+  filter: drop-shadow(0 1.1cqw 1.1cqw rgba(20, 48, 106, 0.28));
+}
+.rs-item:focus-visible .rs-hit {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 4px;
+}
+
+/* the same doors as a plain list: only phones see it */
+.rs-list {
+  display: none;
+  margin-top: 12px;
+}
+.rs-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+  gap: 10px;
+}
+.rs-list a,
+.rs-list .is-locked {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+  color: inherit;
+  text-decoration: none;
+  min-height: 44px;
+}
+.rs-list a:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.rs-list .is-locked {
+  opacity: 0.7;
+}
+.rs-list strong {
+  display: block;
+}
+.rs-list small {
+  display: block;
+  color: var(--sf-muted, #5b6585);
+}
+.rs-list .rs-list__why {
+  margin-top: 2px;
+  font-weight: 600;
+  color: var(--sf-navy-700, #14306a);
+}
+@media (max-width: 820px) {
+  .rs-stage {
+    display: none;
+  }
+  .rs-list {
+    display: block;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .rs-item,
+  .rs-art,
+  .rs-tip {
+    transition: none;
+  }
+  a.rs-item:hover,
+  a.rs-item:focus-visible {
+    transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
+  }
+}

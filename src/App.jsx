@@ -22,6 +22,7 @@ import ResetPassword from './pages/ResetPassword'
 import FactoryFloorRoutes from './factoryfloor/FactoryFloorRoutes'
 import CartPage from './cart/CartPage'
 import CheckoutSuccess from './cart/CheckoutSuccess'
+import DraftingDeskRoutes from './draftingdesk/DraftingDeskRoutes'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -79,6 +80,7 @@ export default function App() {
           <Route path="/factory-floor/*" element={<FactoryFloorRoutes />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/drafting-desk/*" element={<DraftingDeskRoutes />} />
         </Routes>
       </div>
 <Footer /> 

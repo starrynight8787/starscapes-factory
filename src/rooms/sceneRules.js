@@ -1,0 +1,68 @@
+// The rules for an illustrated room: a picture with things on it you can click. Used by the Drafting Desk now, and by any room later.
+//
+// A room's scene is described like this:
+//   { name, tagline, blurb, width, height, base, items: [ ... ] }
+// "base" is the picture everything sits on. Each item is something you can click, drawn as its own little picture so it can lift
+// off the base:  { id, name, blurb, kind, to | href, lock, art, cx, cy, w, h, rot, pad, labelTop }
+//   kind "page"     opens a page on this site (needs "to")
+//   kind "external" opens another website in a new tab (needs "href", which must start with https://)
+//   kind "locked"   is not open, and goes nowhere
+//   "lock" says why something is locked (or paid): paid, not started yet, opening soon
+//   cx, cy, w, h, rot  where the item sits on the base (its middle, its size, its tilt in degrees); pad is the room round it for its shadow
+
+export const LOCK_TEXT = {
+  paid: 'Paid members only',
+  'not started yet': 'Starting soon',
+  'opening soon': 'Opening soon',
+}
+const FALLBACK_LOCK = 'Not open yet'
+
+export const lockText = (lock) => (lock ? LOCK_TEXT[lock] || FALLBACK_LOCK : '')
+
+// Something is only treated as a link if it really has a safe place to go. Anything else becomes a locked item, so a mistake in the
+// list can never send a visitor to a broken page, or to an address that is not https.
+export function resolveItem(item) {
+  const kind = item && item.kind
+  if (kind === 'page' && typeof item.to === 'string' && item.to.startsWith('/') && !item.to.startsWith('//')) return { ...item, kind: 'page' }
+  if (kind === 'external' && typeof item.href === 'string' && /^https:\/\/[^\s/]+/i.test(item.href.trim())) return { ...item, href: item.href.trim(), kind: 'external' }
+  return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon' }
+}
+
+// What a screen reader says for an item
+export function itemLabel(item) {
+  const why = lockText(item.lock)
+  const parts = [item.name]
+  if (item.kind === 'locked') parts.push(`locked, ${why.toLowerCase()}`)
+  else if (why) parts.push(why.toLowerCase())
+  const head = parts.join(', ')
+  const tail = item.kind === 'external' ? ' (opens in a new tab)' : ''
+  return `${head}. ${item.blurb}${tail}`
+}
+
+const pc = (n) => `${Math.round(n * 10000) / 100}%`
+
+// The numbers the page needs to put an item and its writing in the right place. All as percentages of the picture, so it scales.
+export function placement(item, scene) {
+  const pad = item.pad == null ? 0 : item.pad
+  const boxW = item.w + 2 * pad
+  const boxH = item.h + 2 * pad
+  const top = item.labelTop == null ? 30 : item.labelTop
+  return {
+    '--cx': pc(item.cx / scene.width),
+    '--cy': pc(item.cy / scene.height),
+    '--w': pc(boxW / scene.width),
+    '--h': pc(boxH / scene.height),
+    '--rot': `${item.rot || 0}deg`,
+    // the paper itself, inside the item's own picture
+    '--sx': pc(pad / boxW),
+    '--sy': pc(pad / boxH),
+    '--sw': pc(item.w / boxW),
+    '--sh': pc(item.h / boxH),
+    // the name and the line of description, near the top of the paper
+    '--lx': pc((pad + 18) / boxW),
+    '--ly': pc((pad + top) / boxH),
+    '--lw': pc((item.w - 36) / boxW),
+    // the little note that says why something is locked, along the bottom edge of the paper
+    '--ty': pc((pad + item.h) / boxH),
+  }
+}
