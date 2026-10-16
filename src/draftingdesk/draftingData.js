@@ -8,8 +8,8 @@ export const DESK = {
 }
 
 // The address of your Substack, for the Overthink Archive sheet. It must start with https://
-// For example: 'https://yourname.substack.com'. Until it is filled in, the sheet shows as "Opening soon" and goes nowhere.
-export const OVERTHINK_ARCHIVE_URL = ''
+// If it is ever emptied (or does not start with https://), the sheet shows as "Opening soon" and goes nowhere.
+export const OVERTHINK_ARCHIVE_URL = 'https://overthinkarchive.substack.com'
 
 export const SCENE_SIZE = { width: 1200, height: 840 }
 export const BASE_PICTURE = '/scenes/drafting-desk/base.svg'
@@ -67,6 +67,12 @@ export function areaOf(post) {
   if (tags.includes('authors-notebook') || tags.includes('notebook')) return 'authors-notebook'
   if (tags.includes('archive-entries') || tags.includes('archive-entry')) return 'archive-entries'
   return null
+}
+
+// A post's picture, if it has a usable one: an https address, or one on this site. Anything else is ignored, so a bad value can never break a card.
+export function safeImage(url) {
+  const u = typeof url === 'string' ? url.trim() : ''
+  return /^https:\/\/[^\s/]+/i.test(u) || (u.startsWith('/') && !u.startsWith('//')) ? u : ''
 }
 
 export function formatDate(iso) {

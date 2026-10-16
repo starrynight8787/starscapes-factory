@@ -3,7 +3,8 @@ import { Link, useLocation } from 'react-router-dom'
 import './draftingdesk.css'
 import useTitle from './useTitle'
 import { fetchDeskPosts } from './draftingApi'
-import { AREAS, areaOf, formatDate } from './draftingData'
+import EntryCard from './EntryCard'
+import { AREAS, areaOf } from './draftingData'
 
 // One area of the desk that is a page here, listing its posts newest first. Used for Archive Entries.
 export default function AreaPage({ area }) {
@@ -38,10 +39,7 @@ export default function AreaPage({ area }) {
       <ul className="dd-entries">
         {mine.map((p) => (
           <li key={p.id}>
-            <Link className="dd-entry" to={`/post/${p.id}`} state={{ from: here.pathname + here.search }}>
-              <span className="dd-entry__title">{p.title}</span>
-              {formatDate(p.created_at) && <span className="dd-entry__date">{formatDate(p.created_at)}</span>}
-            </Link>
+            <EntryCard post={p} from={here.pathname + here.search} />
           </li>
         ))}
       </ul>

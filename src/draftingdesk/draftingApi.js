@@ -5,7 +5,7 @@ import { DESK } from './draftingData'
 export async function fetchDeskPosts(limit = 200) {
   const { data, error } = await supabase
     .from('posts')
-    .select('id, title, created_at, tags, channel, published')
+    .select('id, title, created_at, tags, channel, published, image_url')
     .eq('channel', DESK.channel)
     .eq('published', true)
     .order('created_at', { ascending: false })

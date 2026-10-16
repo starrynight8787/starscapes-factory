@@ -75,6 +75,17 @@
   outline: 3px solid var(--sf-blue, #1f6fa8);
   outline-offset: 3px;
 }
+/* a post's picture, across the top of its card */
+.dd-entry__img {
+  flex: 0 0 100%;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  background: var(--sf-page, #f6f8fc);
+}
 .dd-entry__title {
   font-family: var(--sf-hand, 'Caveat', cursive);
   font-size: 1.6rem;
