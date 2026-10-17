@@ -845,3 +845,17 @@ html body h3 {
   color: #fff;
   text-decoration: underline;
 }
+
+/* The footer's two lists of links (the pages, and Follow) sit on the dark footer. The old starter stylesheet (index.css) gives every nav a white box, padding
+   and a bottom border, which put white links on white and hid them. These put that back to nothing. (Those blanket rules come out of index.css in part 2 of
+   the restyle, and these lines can stay: they only say "no box".) */
+.sf-footer nav {
+  padding: 0;
+  background: transparent;
+  border: 0;
+  justify-content: flex-start;
+}
+.sf-footer nav a {
+  margin-right: 0;
+  font-weight: 400;
+}

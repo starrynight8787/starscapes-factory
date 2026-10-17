@@ -1,0 +1,20 @@
+Footer fix: starscapes-footer-fix-17oct.zip
+
+WHAT IT FIXES
+The footer's page links (About, Contact and so on) and the Follow links were sitting inside two white boxes, so their white text could not be seen. The cause was an
+old rule left over from the starter stylesheet that gives every list of links a white background, padding and a border. This update adds one small block of styles
+that puts that back to nothing for the footer. The old rule itself comes out in part 2 of the restyle.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-footer-fix-17oct.zip
+2. python3 tools/add-footer-fix.py          (it checks the file first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs               (all 95 checks should pass)
+4. npm run build                             (must finish without errors)
+5. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Footer: take the white boxes off the links"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN LOOK: scroll to the bottom of any page. You should see the page links (About, Contact and the rest) and YouTube, Instagram and TikTok in white on the dark footer,
+with no white boxes. Check on your phone as well.
