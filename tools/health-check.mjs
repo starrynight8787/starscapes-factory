@@ -56,6 +56,15 @@ const CHECKS = [
   ['Doors: the database file', 'sql/doors.sql', /create table if not exists public\.doors/, 'the doors update'],
   ['Room icon: Art Loft', 'public/icons/rooms/art-loft.png', null, 'the room icons update'],
   ['Room icon: Knowledge Nook', 'public/icons/rooms/knowledge-nook.png', null, 'the room icons update'],
+  ['Order email: the wording and its approval rail', 'lib/orderEmailText.js', /WORDING_APPROVED/, 'the order confirmation email update'],
+  ['Order email: sending through Resend', 'lib/sendEmail.js', /api\.resend\.com/, 'the order confirmation email update'],
+  ['Order email: deciding, sending and recording', 'lib/orderConfirmation.js', /confirmationProblems/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: the payment listener sends it', 'api/stripe-webhook.js', /confirmOrder/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: real checkout waits for it', 'api/checkout.js', /confirmationProblems/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: the owner\'s resend button (server)', 'api/order-actions.js', /resend_confirmation/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: the orders list reads it', 'api/orders.js', /confirmation_status/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: the Orders panel shows it', 'src/artloft/OrdersPanel.jsx', /resend_confirmation/, 'the order confirmation email update (the add-order-email script)'],
+  ['Order email: the database columns file', 'sql/orders-confirmation.sql', /confirmation_status/, 'the order confirmation email update'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

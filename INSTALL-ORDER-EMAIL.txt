@@ -1,0 +1,28 @@
+Order confirmation email: starscapes-order-email-17oct.zip  (task SFW-13)
+
+WHAT IT DOES
+Sends the customer a confirmation email when a new order is recorded (the law requires one, and nothing can go in the parcel).
+It stays switched OFF for real customers until you approve the wording, and real checkout stays closed until then too.
+Test orders get the email (marked TEST) as soon as the Resend key is set.
+
+INSTALL (from the project folder, in this order)
+1. Unzip the zip into the project folder, letting it add and replace files.
+2. python3 tools/add-order-email.py        (it checks all five files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs             (all 60 checks should pass)
+4. npm run build                           (must finish without errors)
+5. git add .
+   git status                              (no files ending .before- should be listed)
+   git commit -m "SFW-13 Order confirmation email (switched off for real customers)"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN, TO TRY IT (test mode)
+a. In Supabase, SQL editor: paste the lines inside sql/orders-confirmation.sql (not the file name), press Run.
+b. In Resend, create a SECOND send-only API key (name it "shop emails"). In Vercel, add it as RESEND_API_KEY (hidden), then redeploy.
+c. Make a test order as the shop owner, using your own email address on Stripe's page (card 4242 4242 4242 4242).
+d. Check the Orders panel (Show recent orders): it should say "Confirmation email: sent", and the email should be in your inbox, headed TEST.
+   If it says FAILED or NOT SENT, it tells you why, and there is a "Send confirmation email" button.
+
+WHAT STAYS CLOSED
+Real checkout will refuse real payments until RESEND_API_KEY is set AND the wording is approved AND two gaps are filled
+(the address a print is sent back to, and what to say about the cost of sending a large framed print back).

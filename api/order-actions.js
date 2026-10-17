@@ -4,6 +4,7 @@
 //   check    look through Creative Hub's recent orders for one that looks like this order (changes nothing)
 //   link     tell the shop "this order IS that Creative Hub order", once you have found it there
 //   send     send an order to Creative Hub (again)
+//   resend_confirmation  send the customer's confirmation email again (only if it has not gone)
 //
 // Rules this keeps:
 //   - Only a real payment is ever sent. A test payment never is.
@@ -17,6 +18,7 @@ import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
 import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, getOrder, listOrders, summariseOrder, candidatesFor, isSafeOrderId, buildPayload } from '../lib/creativehubOrders.js'
 import { patchOrder, claimOrder, placeAndRecord } from '../lib/orderFlow.js'
+import { confirmOrder } from '../lib/orderConfirmation.js'
 
 export const config = { maxDuration: 60 }
 
@@ -165,7 +167,32 @@ async function send(res, body, settings) {
   return res.status(200).json({ ok: true, outcome: patch.status, message: patch.note })
 }
 
-const ACTIONS = { refresh, check, link, send }
+// ---------- resend the confirmation email ----------
+// Only an email that has NOT gone can be sent. The order is first CLAIMED (confirmation_status moved to "sending"), which only one
+// caller can win, so two clicks can never send two emails.
+const NOT_YET_SENT = 'or=(confirmation_status.is.null,confirmation_status.in.(failed,not_sent))'
+async function resendConfirmation(res, body) {
+  if (typeof body.id !== 'string' || !UUID.test(body.id)) return bad(res, 400, 'That is not an order.')
+  const row = await loadOrder(body.id)
+  if (!row) return bad(res, 404, 'That order could not be found.')
+  if (!('confirmation_status' in row)) return bad(res, 409, 'The orders table does not have the confirmation columns yet. Run sql/orders-confirmation.sql in Supabase first.')
+  if (row.confirmation_status === 'sent') return bad(res, 409, 'The confirmation email for that order has already been sent.')
+  if (row.confirmation_status === 'sending') return bad(res, 409, 'That email is being sent right now. Give it a minute, then refresh the orders.')
+  const claim = await serviceFetch(`/rest/v1/orders?id=eq.${row.id}&${NOT_YET_SENT}`, {
+    method: 'PATCH',
+    headers: { 'Content-Type': 'application/json', Prefer: 'return=representation' },
+    body: JSON.stringify({ confirmation_status: 'sending', confirmation_note: 'Sending the confirmation email…' }),
+  })
+  const won = claim.ok ? await claim.json().catch(() => []) : []
+  if (!Array.isArray(won) || won.length !== 1) return bad(res, 409, 'That order changed while you were doing this, so nothing was sent. Refresh the orders and look again.')
+  const result = await confirmOrder({ ...row, ...won[0] }, { match: `id=eq.${row.id}`, keySuffix: `-manual-${Date.now()}` })
+  if (result.status === 'sent') {
+    return res.status(200).json({ ok: true, outcome: 'sent', message: result.saved ? 'The confirmation email has been sent.' : 'The confirmation email was sent, but that could not be written down on the order.' })
+  }
+  return res.status(200).json({ ok: true, outcome: result.status, message: result.note || 'The email was not sent.' })
+}
+
+const ACTIONS = { refresh, check, link, send, resend_confirmation: resendConfirmation }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')

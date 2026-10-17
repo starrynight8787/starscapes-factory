@@ -12,6 +12,8 @@
 //     safe to try again), or "check Creative Hub" (the answer was lost, so it may or may not exist, and it is never resent blindly).
 //   - A REAL payment that cannot be ordered (an item that cannot be matched, an incomplete address, no Creative Hub key) is
 //     recorded as "needs attention" with the reason, so it can never go unnoticed.
+//   - The customer's confirmation email (which the law requires) is sent ONCE, for a new order only, right after it is saved. A problem
+//     with it never stops the order being placed: it is written on the order, and the owner has a button to send it again.
 //   - If something temporary goes wrong BEFORE the order is saved (Stripe or the database cannot be reached), it answers with an
 //     error so Stripe sends the message again later. It never throws a paid order away.
 
@@ -19,6 +21,7 @@ import { createHmac, timingSafeEqual } from 'node:crypto'
 import { serviceFetch } from '../lib/serviceKey.js'
 import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, buildPayload } from '../lib/creativehubOrders.js'
 import { placeAndRecord } from '../lib/orderFlow.js'
+import { confirmOrder } from '../lib/orderConfirmation.js'
 
 // Stripe signs the exact bytes it sends, so the body must reach us untouched. This uses the standard web request form
 // (request.text() gives the raw body), which is the way Vercel's own guide recommends for webhooks.
@@ -165,6 +168,16 @@ export async function POST(request) {
     // 1. Save the order first. For a real payment this is also the "claim": if a repeat of this message finds the order already
     //    there, it does nothing, so one payment can never become two orders at Creative Hub.
     const outcome = await saveOrder(order)
+    // The confirmation email: once, for a NEW order only (a repeat of this message finds the order already saved and stops just below).
+    // It never throws and never holds up the Creative Hub order.
+    if (outcome === 'saved') {
+      try {
+        await confirmOrder(order)
+      } catch (e) {
+        // It should never throw. But if it somehow did, answering with an error would make Stripe send this again, the repeat would find the
+        // order already saved and stop, and the order would never reach Creative Hub. So nothing here is allowed to get in the way.
+      }
+    }
     if (outcome === 'duplicate' || order.status !== 'sending') return reply(200, { ok: true, order: outcome })
 
     // 2. Only now send it. This never throws, and never makes Stripe repeat the message: if what comes back is lost, the order says

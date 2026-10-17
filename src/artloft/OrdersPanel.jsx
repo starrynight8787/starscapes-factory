@@ -11,6 +11,8 @@ const STATUS = {
   sent: 'Sent to Creative Hub',
   paid: 'Paid',
 }
+// Whether the customer's confirmation email went (added with sql/orders-confirmation.sql)
+const CONFIRMATION = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT', sending: 'being sent…' }
 // An order still "sending" after this long is no longer in flight: its answer was lost
 const STUCK_MS = 5 * 60 * 1000
 
@@ -84,6 +86,16 @@ export default function OrdersPanel() {
 
   const busy = state.phase === 'working' || working
   const anySent = state.orders.some((o) => o.status === 'sent' && o.creativehub_order_id)
+
+  // The button for an email that has not gone. It only shows once the status has been recorded, and never for one already sent.
+  function confirmationButton(o) {
+    if (!o.customer_email || !['failed', 'not_sent'].includes(o.confirmation_status)) return null
+    return (
+      <button type="button" disabled={busy} onClick={() => act('resend_confirmation', { id: o.id })} aria-label={`Send the confirmation email to ${o.customer_name || 'this customer'}`}>
+        Send confirmation email
+      </button>
+    )
+  }
 
   function actions(o) {
     if (!o.livemode) return null
@@ -188,8 +200,11 @@ export default function OrdersPanel() {
                       )}
                       {isStuck(o) && <><br /><small>This order was never marked as sent and its answer was lost. It may or may not be at Creative Hub.</small></>}
                       {o.note && !isStuck(o) && <><br /><small>{o.note}</small></>}
+                      {o.confirmation_status && (
+                        <><br /><small>Confirmation email: <strong>{CONFIRMATION[o.confirmation_status] || o.confirmation_status}</strong>{o.confirmation_note && o.confirmation_status !== 'sent' ? `. ${o.confirmation_note}` : ''}</small></>
+                      )}
                     </td>
-                    <td>{actions(o)}</td>
+                    <td>{actions(o)}{confirmationButton(o)}</td>
                   </tr>
                 )
               })}

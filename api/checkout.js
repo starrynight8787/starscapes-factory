@@ -6,8 +6,8 @@
 // What it will NOT do:
 //   - trust a price, name or total sent from the browser
 //   - sell a print that is not published, or that has no Creative Hub id
-//   - take a LIVE payment unless ALLOW_LIVE_CHECKOUT is set to yes in Vercel. Do not set it until orders reach Creative Hub,
-//     or a real payment could be taken without an order being placed.
+//   - take a LIVE payment unless ALLOW_LIVE_CHECKOUT is set to yes in Vercel, AND the confirmation email is ready (see lib/orderConfirmation.js).
+//     (Do not set ALLOW_LIVE_CHECKOUT until orders reach Creative Hub, or a real payment could be taken without an order being placed.)
 //   - show or log the Stripe key
 //
 // The key lives in Vercel as STRIPE_SECRET_KEY, and should be a TEST key (sk_test_) while you are building.
@@ -17,6 +17,7 @@
 
 import { LAUNCH_COUNTRIES } from '../src/cart/launchCountries.js'
 import { requireOwner } from '../lib/ownerGuard.js'
+import { confirmationProblems } from '../lib/orderConfirmation.js'
 
 const STRIPE = 'https://api.stripe.com'
 const SITE = 'https://starscapesfactory.com'
@@ -127,6 +128,9 @@ export default async function handler(req, res) {
   const mode = /^(sk|rk)_live_/.test(key) ? 'live' : /^(sk|rk)_test_/.test(key) ? 'test' : 'unknown'
   if (mode === 'unknown') return say(res, 503, "Checkout isn't set up correctly yet.")
   if (mode === 'live' && clean(process.env.ALLOW_LIVE_CHECKOUT) !== 'yes') return say(res, 503, 'Checkout is not open for real payments yet.')
+  // A real payment must be able to get its confirmation email (the law requires one, and nothing can go in the parcel). So real
+  // payments stay closed until the Resend key is set AND the wording of that email has been approved.
+  if (mode === 'live' && confirmationProblems().length > 0) return say(res, 503, 'Checkout is not open for real payments yet.')
 
   let rows
   try {
