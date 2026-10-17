@@ -9,9 +9,9 @@
 // The page for a door is at /<room>/<door id>, and the posts on it are the room's posts tagged with the door's id.
 export const DOORS = [
   { room: 'idea-hatchery', id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me.', page: { layout: 'list' }, ghost: true },
-  { room: 'leadership-lounge', id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free.', page: null },
+  { room: 'leadership-lounge', id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free.', page: { layout: 'custom' } },
   { room: 'explorers-bay', id: 'coming-soon', name: 'Something New', blurb: 'A message has arrived.', paid: true, page: null },
-  { room: 'knowledge-nook', id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', page: null },
+  { room: 'knowledge-nook', id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', page: { layout: 'custom' } },
   { room: 'knowledge-nook', id: 'come-read-with-me', name: 'Come Read With Me', blurb: 'Read alongside me.', page: { layout: 'list' } },
   { room: 'knowledge-nook', id: 'research', name: 'Research', blurb: 'A space to test things out.', page: { layout: 'list' } },
   { room: 'knowledge-nook', id: 'book-to-screen', name: 'Book to Screen', blurb: 'Books that made it to the screen.', page: { layout: 'gallery' } },
@@ -19,7 +19,7 @@ export const DOORS = [
   { room: 'sarah-jrs-den', id: 'blog', name: 'Blog', blurb: 'Little notes from the Den.', page: { layout: 'list' } },
   { room: 'sarah-jrs-den', id: 'daryls-adventures', name: "Daryl's Adventures", blurb: "Daryl's world, one adventure at a time.", page: { layout: 'gallery' } },
   { room: 'sarah-jrs-den', id: 'books', name: 'Books', blurb: 'Stories to read together.', page: { layout: 'gallery' } },
-  { room: 'sarah-jrs-den', id: 'youtube-series', name: 'YouTube Series', blurb: 'Little adventures to watch.', page: null },
+  { room: 'sarah-jrs-den', id: 'youtube-series', name: 'YouTube Series', blurb: 'Little adventures to watch.', page: { layout: 'custom' } },
 ]
 
 export const doorKey = (room, id) => `${room}/${id}`

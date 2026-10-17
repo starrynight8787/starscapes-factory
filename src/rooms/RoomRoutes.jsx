@@ -5,6 +5,9 @@ import { ROOMS } from './roomsData'
 import DoorGate from '../doors/DoorGate'
 import { doorAreas, findDoor } from '../doors/doorsData'
 import StoryLedgerPage from '../ledger/StoryLedgerPage'
+import YouTubeSeriesPage from '../den/YouTubeSeriesPage'
+import FreeEbookPage from '../ebook/FreeEbookPage'
+import BookClubPage from '../bookclub/BookClubPage'
 import './roompages.css'
 
 // Everything under one room's address (for example /idea-hatchery) lives here, so the main App only needs one line for each room.
@@ -27,7 +30,12 @@ export default function RoomRoutes({ room }) {
 }
 
 // The pages behind a door that have their own design, by "room/door". (The door is listed in src/doors/doorsData.js with layout 'custom'.)
-const CUSTOM_PAGES = { 'knowledge-nook/story-ledger': StoryLedgerPage }
+const CUSTOM_PAGES = {
+  'knowledge-nook/story-ledger': StoryLedgerPage,
+  'sarah-jrs-den/youtube-series': YouTubeSeriesPage,
+  'leadership-lounge/free-ebook': FreeEbookPage,
+  'knowledge-nook/book-club': BookClubPage,
+}
 
 // One page under a room. If it is the page behind a door, the door's gate decides who sees it.
 function AreaRoute({ room }) {

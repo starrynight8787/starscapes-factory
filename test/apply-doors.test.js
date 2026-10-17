@@ -29,14 +29,14 @@ describe('opening a door in a scene', () => {
     expect(out.items.map((i) => [i.id, i.kind])).toEqual([['blog', 'page'], ['daryls-adventures', 'locked'], ['books', 'page'], ['youtube-series', 'locked']])
   })
   it('never opens a door whose page has not been built, even if the database says it is open', () => {
-    const out = applyDoors(buildRoomScene('sarah-jrs-den'), 'sarah-jrs-den', only('sarah-jrs-den/youtube-series'))
-    expect(item(out, 'youtube-series').kind).toBe('locked')
-    expect(item(out, 'youtube-series').lock).toBeTruthy()
-    expect(item(out, 'youtube-series').art).toBe('/scenes/sarah-jrs-den/item-youtube-series.svg')
+    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/coming-soon'))
+    expect(item(out, 'coming-soon').kind).toBe('locked')
+    expect(item(out, 'coming-soon').lock).toBeTruthy()
+    expect(item(out, 'coming-soon').art).toBe('/scenes/explorers-bay/item-coming-soon.svg')
   })
   it('does not touch a door that is already a page, or an outside link', () => {
-    const scene = buildRoomScene('leadership-lounge')
-    const out = applyDoors(scene, 'leadership-lounge', () => true)
+    const scene = buildRoomScene('explorers-bay') // its two pages are already open, and its bottle has no page yet, so nothing changes
+    const out = applyDoors(scene, 'explorers-bay', () => true)
     expect(out.items).toEqual(scene.items)
   })
   it('ignores a door from another room that happens to share a name', () => {
@@ -49,9 +49,9 @@ describe('opening a door in a scene', () => {
     applyDoors(scene, 'knowledge-nook', () => true)
     expect(JSON.parse(JSON.stringify(scene))).toEqual(copy)
   })
-  it('opens the Nook\u2019s four pages (Come Read With Me, Research, Book to Screen, Story Ledger) and leaves Book Club taped off even when all are marked open', () => {
+  it('opens all five of the Nook\u2019s pages when they are marked open', () => {
     const out = applyDoors(buildRoomScene('knowledge-nook'), 'knowledge-nook', () => true)
-    expect(out.items.map((i) => [i.id, i.kind])).toEqual([['book-club', 'locked'], ['come-read-with-me', 'page'], ['research', 'page'], ['book-to-screen', 'page'], ['story-ledger', 'page']])
+    expect(out.items.map((i) => [i.id, i.kind])).toEqual([['book-club', 'page'], ['come-read-with-me', 'page'], ['research', 'page'], ['book-to-screen', 'page'], ['story-ledger', 'page']])
   })
   it('leaves a room with no registered doors exactly as it is', () => {
     const scene = buildRoomScene('idea-hatchery')

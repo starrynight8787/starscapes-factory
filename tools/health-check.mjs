@@ -109,6 +109,22 @@ const CHECKS = [
   ['Story Ledger: the page', 'src/ledger/StoryLedgerPage.jsx', /SuggestPanel space="story-ledger"/, 'the suggest and ledger update'],
   ['Story Ledger: its door', 'src/doors/doorsData.js', /id: 'story-ledger'[^\n]*layout: 'custom'/, 'the suggest and ledger update (the add-suggest-ledger script)'],
   ['Story Ledger: its address', 'src/rooms/RoomRoutes.jsx', /CUSTOM_PAGES/, 'the suggest and ledger update (the add-suggest-ledger script)'],
+  ['YouTube Series: the feed reader', 'lib/youtubeFeed.js', /export function parseFeed/, 'the ebook and YouTube update'],
+  ['YouTube Series: the page', 'src/den/YouTubeSeriesPage.jsx', /youtube-nocookie/, 'the ebook and YouTube update'],
+  ['YouTube Series: its door', 'src/doors/doorsData.js', /id: 'youtube-series'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
+  ['Free Ebook: the sign-up on the server', 'lib/ebookSignup.js', /export async function handleSignup/, 'the ebook and YouTube update'],
+  ['Free Ebook: the database file', 'sql/ebook-signups.sql', /enable row level security/, 'the ebook and YouTube update'],
+  ['Free Ebook: the page', 'src/ebook/FreeEbookPage.jsx', /Get the free ebook/, 'the ebook and YouTube update'],
+  ['Free Ebook: its door', 'src/doors/doorsData.js', /id: 'free-ebook'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
+  ['Free Ebook and YouTube: their addresses', 'src/rooms/RoomRoutes.jsx', /FreeEbookPage/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
+  ['Book Club: the database file', 'sql/books.sql', /reading_goals/, 'the book club update'],
+  ['Book Club: the rules', 'src/bookclub/bookRules.js', /export function cleanBook/, 'the book club update'],
+  ['Book Club: the page', 'src/bookclub/BookClubPage.jsx', /COME_READ/, 'the book club update'],
+  ['Book Club: the books tool', 'src/admin/AdminBooks.jsx', /saveBook/, 'the book club update'],
+  ['Book Club: the admin route', 'src/App.jsx', /admin\/books/, 'the book club update (the add-book-club script)'],
+  ['Book Club: its door', 'src/doors/doorsData.js', /id: 'book-club'[^\n]*layout: 'custom'/, 'the book club update (the add-book-club script)'],
+  ['Book Club: its address', 'src/rooms/RoomRoutes.jsx', /BookClubPage/, 'the book club update (the add-book-club script)'],
+  ['Book Club: the tool listed in Admin', 'src/admin/adminTools.js', /name: 'Books'/, 'the book club update (the add-book-club script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

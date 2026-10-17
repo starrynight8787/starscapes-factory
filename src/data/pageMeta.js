@@ -75,6 +75,7 @@ export const PAGES = {
   '/new-product': { title: 'New product', description: 'Add a product.', image: 'site', index: false, client: true },
   '/admin': { title: 'Admin', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/doors': { title: 'Open a door', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/admin/books': { title: 'Books', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/suggestions': { title: 'Suggestions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin': { title: 'Manage prints', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin/originals': { title: 'Manage originals', description: 'The shop owner\u2019s page.', image: 'site', index: false },

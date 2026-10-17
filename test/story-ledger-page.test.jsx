@@ -8,6 +8,7 @@ import { join } from 'node:path'
 const h = vi.hoisted(() => ({ posts: [], fail: false, doorOpen: false, owner: false }))
 vi.mock('../src/rooms/roomsApi', () => ({ fetchRoomPosts: vi.fn(async () => { if (h.fail) throw new Error('x'); return h.posts }) }))
 vi.mock('../src/suggest/SuggestPanel', () => ({ default: ({ space }) => <div data-testid="suggest-panel">{space}</div> }))
+vi.mock('../src/bookclub/bookApi', () => ({ fetchBooks: async () => [], fetchGoals: async () => ({}) })) // the room routes also load the Book Club page
 vi.mock('../src/doors/useDoors', () => ({ default: () => ({ ready: true, isOpen: () => h.doorOpen }) }))
 vi.mock('../src/doors/useCurrentOwner', () => ({ default: () => ({ checking: false, owner: h.owner }) }))
 import StoryLedgerPage from '../src/ledger/StoryLedgerPage'

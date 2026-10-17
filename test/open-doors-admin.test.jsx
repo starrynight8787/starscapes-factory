@@ -40,8 +40,8 @@ describe('the Open a door tool', () => {
   })
   it('keeps a door with no page switched off, and says why', async () => {
     await show()
-    const row = screen.getByText('Book Club').closest('li')
-    expect(within(row).getByRole('button', { name: 'Open this door: Book Club' })).toBeDisabled()
+    const row = screen.getByText('Something New').closest('li') // the paid bottle is the one door still without a page
+    expect(within(row).getByRole('button', { name: 'Open this door: Something New' })).toBeDisabled()
     expect(within(row).getByText('Its page has not been built yet, so it cannot be opened.')).toBeTruthy()
     expect(within(row).queryByRole('link')).toBeNull()
   })

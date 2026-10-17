@@ -1,0 +1,47 @@
+YouTube Series and Free Ebook: starscapes-ebook-youtube-17oct.zip  (task SFW-196, part 2)
+
+WHAT IT ADDS (both behind their doors, which stay CLOSED until you open them in Admin, Open a door)
+1. YOUTUBE SERIES (/sarah-jrs-den/youtube-series), from your Figma design. It fills itself from Sarah Jr.'s channel (@sarahjradventures) and shows the latest
+   12 videos, newest first, with a Subscribe button. It leaves out YouTube Shorts (to include them, change INCLUDE_SHORTS to true in lib/youtubeFeed.js).
+   PRIVACY: nothing from YouTube loads in a visitor's browser until they press play on a video. The little pictures are passed along by your own site, and the
+   video plays in YouTube's privacy-friendly player. The list is remembered for 15 minutes, so YouTube is asked only a few times an hour.
+2. FREE EBOOK (/leadership-lounge/free-ebook), from your two Figma designs: the sign-up page and the thank-you page. A visitor gives their email and ticks the
+   box (the tick is their agreement to the emails, in the words from your design), and the site keeps the address, the words they agreed to, and when.
+   While there is no PDF yet, the thank-you page says the ebook is being finished and does NOT offer a download or claim an email was sent.
+   Emails come FROM imagine@starscapesfactory.com.
+
+TWO THINGS THAT NEED YOU (neither stops anything else working)
+ A. THE DATABASE FOR SIGN-UPS: run sql/ebook-signups.sql once in Supabase (see below). Until you do, the sign-up says "That did not go through just now".
+ B. THE PDF, WHEN IT IS READY: save it in the project at public/downloads/ (make the folder downloads inside public), for example
+    public/downloads/leading-from-the-middle.pdf. Then open src/ebook/ebookConfig.js, find   file: '',   and change it to
+    file: '/downloads/leading-from-the-middle.pdf',   Push. The page then offers the download, and each new sign-up is emailed the link.
+    (People who signed up before the PDF existed are in your Supabase table, so you can email them the link yourself.)
+
+THINGS TO KNOW BEFORE REAL PEOPLE SIGN UP
+ * The tick box promises "your free blog posts by email" with a way to unsubscribe. This site keeps the list but does NOT send the posts or run unsubscribes:
+   when you start sending them, use an email tool that handles the unsubscribe link for you, and import the addresses from the Supabase table.
+ * Your Privacy Policy must say you keep these emails and why. The one on the site today is still a placeholder (it is on the launch checklist, SFW-185).
+
+NEEDS: the suggest and ledger update (starscapes-suggest-ledger-17oct.zip), which you have. The script stops and says so if it is not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. unzip -o ~/Downloads/starscapes-ebook-youtube-17oct.zip
+   (this also replaces three test files with updated versions)
+2. python3 tools/add-ebook-youtube.py        (it checks both files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs                (all 112 checks should pass)
+4. npm run build                              (must finish without errors)
+5. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "SFW-196 YouTube Series and Free Ebook pages"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN, IN SUPABASE (paste the LINES inside the file, never its name; this is in TERMINAL then SUPABASE, two different places)
+   a. In Terminal, in the project folder:   pbcopy < sql/ebook-signups.sql      (it copies the contents and prints nothing)
+   b. In Supabase's SQL editor: clear the box, press Cmd+V. You should see a file starting "-- FREE EBOOK SIGN-UPS".
+   c. Press Run. It should say "Success. No rows returned."
+   d. To check, run:   select count(*) from pg_policies where tablename = 'ebook_signups';    It should say 0 (that is right: no visitor can touch the table).
+
+THEN LOOK (you can see both pages now as the owner, while their doors are closed)
+   /sarah-jrs-den/youtube-series   : your videos should appear. Press play on one.
+   /leadership-lounge/free-ebook   : try signing up with your own email. Then look in Supabase: Table Editor, ebook_signups, for your row.

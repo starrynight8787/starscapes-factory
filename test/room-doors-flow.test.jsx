@@ -22,6 +22,7 @@ const visit = (url) => render(
     <Routes>
       <Route path="/sarah-jrs-den/*" element={<RoomRoutes room="sarah-jrs-den" />} />
       <Route path="/idea-hatchery/*" element={<RoomRoutes room="idea-hatchery" />} />
+      <Route path="/explorers-bay/*" element={<RoomRoutes room="explorers-bay" />} />
     </Routes>
   </MemoryRouter>,
 )
@@ -88,8 +89,8 @@ describe('the page behind a door', () => {
   })
   it('says page not found for a door whose page has not been built, whoever asks', async () => {
     world.owner = true
-    world.open = { 'sarah-jrs-den/youtube-series': true }
-    visit('/sarah-jrs-den/youtube-series')
+    world.open = { 'explorers-bay/coming-soon': true } // the paid bottle is the one door with no page yet
+    visit('/explorers-bay/coming-soon')
     expect(await screen.findByRole('heading', { level: 1, name: 'Page not found' })).toBeTruthy()
   })
   it('says page not found for an address that is not a page at all', async () => {

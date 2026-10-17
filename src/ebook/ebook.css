@@ -1,0 +1,82 @@
+/* The Free Ebook pages. Stands on its own: nothing here depends on the old index.css rules. */
+.eb__layout {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 32px;
+  align-items: start;
+  margin-top: 8px;
+}
+@media (max-width: 700px) {
+  .eb__layout {
+    grid-template-columns: 1fr;
+  }
+}
+.eb__cover {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 3 / 4;
+  padding: 20px;
+  background: var(--sf-navy-700, #14306a);
+  border-radius: 12px;
+  box-shadow: 8px 10px 0 rgba(184, 204, 245, 0.6);
+  color: #fff;
+  text-align: center;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+.eb__title {
+  margin: 12px 0 8px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  color: var(--sf-navy-700, #14306a);
+}
+.eb__text {
+  margin: 0 0 12px;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.eb__inside {
+  margin: 0 0 20px;
+  padding-left: 1.25rem;
+  line-height: 1.6;
+}
+.eb__form {
+  display: grid;
+  gap: 14px;
+  max-width: 520px;
+}
+.eb__submit,
+.eb__download {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  text-decoration: none;
+}
+.eb__small {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.eb__ok {
+  margin: 20px 0;
+  padding: 14px 18px;
+  background: #e3f4e6;
+  border: 1px solid #1d6b34;
+  border-radius: 10px;
+}
+.eb__ok p {
+  margin: 0 0 4px;
+}
+.eb__ok-title {
+  font-weight: 700;
+}
+/* a box only a robot sees: moved off the page, not hidden with display:none (robots skip those) */
+.eb__trap {
+  position: absolute;
+  left: -9999px;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+}
