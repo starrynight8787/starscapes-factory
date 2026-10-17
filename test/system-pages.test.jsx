@@ -45,7 +45,7 @@ describe('the 404 page', () => {
     for (const a of rooms) expect(a.querySelector('img.sf-room-icon')).not.toBeNull()
     expect(screen.getByRole('link', { name: 'The Art Loft' }).getAttribute('href')).toBe('/art-loft')
     expect(screen.getByRole('link', { name: 'The Factory Floor' }).getAttribute('href')).toBe('/factory-floor')
-    expect(screen.getByRole('link', { name: 'Knowledge Nook' }).getAttribute('href')).toBe('/channel/knowledge-nook')
+    expect(screen.getByRole('link', { name: 'Knowledge Nook' }).getAttribute('href')).toBe('/knowledge-nook')   // the Nook has its own page now
   })
   it('shows the sailboat, as a decoration (the words say everything)', () => {
     const { container } = inRouter(<NotFound />)
@@ -144,9 +144,9 @@ describe('the site\u2019s App.jsx', () => {
     expect(app.indexOf('<ErrorBoundary>')).toBeLessThan(app.indexOf('<Routes>'))
     expect(app.indexOf('</Routes>')).toBeLessThan(app.indexOf('</ErrorBoundary>'))
   })
-  it('ends its routes with the 404 page, so every other address is tried first', () => {
-    const last = [...app.matchAll(/<Route\b[^>]*path="([^"]+)"/g)].map((m) => m[1]).pop()
-    expect(last).toBe('*')
+  it('has the 404 page as its one catch-all route (the router always tries a more specific address first, wherever the catch-all is written)', () => {
+    const paths = [...app.matchAll(/<Route\b[^>]*path="([^"]+)"/g)].map((m) => m[1])
+    expect(paths.filter((p) => p === '*')).toHaveLength(1)
     expect(app).toContain('<Route path="*" element={<NotFound />} />')
   })
 })

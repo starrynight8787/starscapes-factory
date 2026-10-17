@@ -7,8 +7,12 @@
      The pictures are 1200 wide by 840 tall. --rs-above is what is left above and below the picture: the menu and a little space
      (the room's name sits ON the picture, so it takes no room of its own). A bigger number makes the picture smaller. */
   --rs-ratio: 1.4286;
-  --rs-above: 150px;
-  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 150px)) * var(--rs-ratio, 1.4286))));
+  --rs-above: 186px;
+  /* how big the heading on the picture is, as a share of the picture's width (the design has 0.03, 0.026 and 0.0145): the room's name, its tagline, and the line under it */
+  --rs-name: 0.034;
+  --rs-tag: 0.03;
+  --rs-line: 0.0165;
+  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 186px)) * var(--rs-ratio, 1.4286))));
 }
 
 /* The normal page column is only 720px wide, which squeezed the rooms into a third of a big screen.
@@ -32,8 +36,17 @@
 }
 /* The room's name and tagline sit on the picture, in its empty top-left corner (the same grid cell as the picture).
    They are only writing, so they never get in the way of a click. */
-.rs-head {
+.rs-home {
   grid-area: 1 / 1;
+  justify-self: center;
+  width: var(--rs-stage-w);
+  max-width: 100%;
+  box-sizing: border-box;
+  margin: 8px 0 0;
+  padding: 0 0 0 3%; /* lines up with the heading below it */
+}
+.rs-head {
+  grid-area: 2 / 1;
   align-self: start;
   justify-self: center;
   position: relative;
@@ -46,32 +59,54 @@
   text-align: left;
   pointer-events: none;
 }
-.rs[data-room='explorers-bay'] .rs-head {
-  padding-left: 15%; /* the little moon is up in the corner of this room */
+.rs[data-room='drafting-desk'],
+.rs[data-room='knowledge-nook'] {
+  /* The Drafting Desk and the Knowledge Nook fill their whole picture, edge to edge, so there is no empty corner for the heading:
+     here it stays above the desk, which leaves less height for the picture (a bigger number makes the picture smaller). */
+  --rs-above: 276px;
+  --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 276px)) * var(--rs-ratio, 1.4286))));
+}
+.rs[data-room='drafting-desk'] .rs-head,
+.rs[data-room='knowledge-nook'] .rs-head {
+  width: auto;
+  justify-self: center;
+  margin: 12px 0 8px;
+  padding: 0;
+  text-align: center;
+  pointer-events: auto;
+}
+.rs[data-room='drafting-desk'] .rs-stage,
+.rs[data-room='knowledge-nook'] .rs-stage {
+  grid-area: 3 / 1;
+}
+.rs[data-room='drafting-desk'] .rs-blurb,
+.rs[data-room='knowledge-nook'] .rs-blurb {
+  max-width: 640px;
+  margin: 0 auto;
 }
 .rs-head h1 {
   margin: 0 0 2px;
   font-family: var(--sf-head, sans-serif);
-  font-size: max(18px, calc(var(--rs-stage-w) * 0.03));
+  font-size: max(18px, calc(var(--rs-stage-w) * var(--rs-name, 0.034)));
   line-height: 1.1;
 }
 .rs-tagline {
   margin: 0 0 4px;
   font-family: var(--sf-hand, 'Caveat', cursive);
-  font-size: max(18px, calc(var(--rs-stage-w) * 0.026));
+  font-size: max(18px, calc(var(--rs-stage-w) * var(--rs-tag, 0.03)));
   line-height: 1.1;
   color: var(--sf-navy-700, #14306a);
 }
 .rs-blurb {
   margin: 0;
   max-width: 30%;
-  font-size: max(14px, calc(var(--rs-stage-w) * 0.0145));
+  font-size: max(14px, calc(var(--rs-stage-w) * var(--rs-line, 0.0165)));
   color: var(--sf-muted, #5b6585);
   line-height: 1.35;
 }
 
 .rs-stage {
-  grid-area: 1 / 1;
+  grid-area: 2 / 1;
   position: relative;
   width: 100%;
   /* never wider than --rs-max, and never so wide that the picture is taller than the screen (but never narrower than 560px) */
@@ -289,6 +324,11 @@ a.rs-item:focus-visible .rs-art {
   .rs {
     display: block;
     padding: 24px 16px 40px;
+  }
+  .rs-home {
+    width: auto;
+    margin: 0;
+    padding: 0;
   }
   .rs-head {
     width: auto;

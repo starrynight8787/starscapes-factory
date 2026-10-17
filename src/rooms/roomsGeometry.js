@@ -21,4 +21,11 @@ export const GEOMETRY = {
     'photography': { cx: 710, cy: 416.5, w: 300, h: 177 },
     'coming-soon': { cx: 1065, cy: 734.5, w: 80, h: 117 },
   },
+  'knowledge-nook': {
+    'book-club': { cx: 290, cy: 214, w: 132, h: 190 },
+    'come-read-with-me': { cx: 163, cy: 636, w: 66, h: 172 },
+    'more-shelves': { cx: 233, cy: 649, w: 66, h: 146 },
+    'book-to-screen': { cx: 570, cy: 674, w: 200, h: 96 },
+    'story-ledger': { cx: 901, cy: 630.5, w: 176, h: 188 },
+  },
 }

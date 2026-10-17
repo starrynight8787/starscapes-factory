@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import HomeLink from '../components/HomeLink'
 import './roomscene.css'
 import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneRules'
 
@@ -11,6 +12,9 @@ export default function RoomScene({ scene }) {
   const items = scene.items.map(resolveItem)
   return (
     <main className="rs" data-room={roomOf(scene)}>
+      <div className="rs-home">
+        <HomeLink />
+      </div>
       <header className="rs-head">
         <h1>{scene.name}</h1>
         {scene.tagline && <p className="rs-tagline">{scene.tagline}</p>}
