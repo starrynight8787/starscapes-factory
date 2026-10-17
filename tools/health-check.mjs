@@ -89,6 +89,8 @@ const CHECKS = [
   ['Share picture: drafting-desk', 'public/share/drafting-desk.png', null, 'the share pages update'],
   ['Share picture: art-loft', 'public/share/art-loft.png', null, 'the share pages update'],
   ['Share picture: factory-floor', 'public/share/factory-floor.png', null, 'the share pages update'],
+  ['Share previews: posts, prints and collections', 'scripts/dynamicPages.mjs', /export async function databasePages/, 'the share previews update'],
+  ['Share previews: the build uses them', 'scripts/make-share-pages.mjs', /databasePages/, 'the share previews update (the add-share-posts script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

@@ -15,7 +15,7 @@ let output = ''
 
 beforeAll(() => {
   fs.writeFileSync(path.join(dist, 'index.html'), SHELL)
-  output = execFileSync('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8' })
+  output = execFileSync('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8', env: { ...process.env, VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' } }) // no database: this test is about the fixed pages
 }, 60000)
 afterAll(() => fs.rmSync(dist, { recursive: true, force: true }))
 
@@ -65,7 +65,7 @@ describe('the build step that writes each page\u2019s own copy', () => {
   })
   it('is safe to run again on its own output', () => {
     const before = read('idea-hatchery/index.html')
-    execFileSync('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8' })
+    execFileSync('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8', env: { ...process.env, VITE_SUPABASE_URL: '', VITE_SUPABASE_ANON_KEY: '' } }) // no database: this test is about the fixed pages
     expect(read('idea-hatchery/index.html')).toBe(before)
   })
 })

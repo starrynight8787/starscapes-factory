@@ -1,0 +1,34 @@
+Share previews for each post, print and collection: starscapes-share-posts-17oct.zip  (task SFW-199, update 3)
+
+WHAT IT DOES
+When the site is built, it now also reads your PUBLISHED posts and prints from the database and writes a page for each one with its own
+title, description and share picture. So a link to one post, or one print, shows that post's or print's own name and picture when shared,
+instead of the home page's. The five collections get their own pages too, and everything goes in the sitemap.
+- A post's own picture is used if it has a normal https picture; otherwise its room's share picture.
+- A post's TEXT is never used in its description (only its title and room), so a members-only post can never leak into a preview.
+- Drafts and unpublished prints are never read. Originals are not included yet.
+- If the database cannot be reached when the site is built, those pages are skipped, a note is printed, and the build carries on.
+  Nothing breaks: the site still works, and those links just show the general words and picture.
+
+ONE THING TO KNOW: a post or print added after the last build shows the general words until the site is next built. Pushing any change
+rebuilds it. If you would like new posts to appear straight away, say so: a Vercel "deploy hook" can rebuild the site when a post is saved.
+
+INSTALL (from the project folder). It needs the share pages update (starscapes-share-pages-17oct.zip), which you have already installed.
+1. unzip -o ~/Downloads/starscapes-share-posts-17oct.zip
+2. python3 tools/add-share-posts.py        (it checks the file first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs              (all 86 checks should pass)
+4. npm run build                            (must finish without errors. On your own computer it reads your database through your .env settings, so the last line
+                                             should now say how many posts and prints it found, for example "... plus 5 collections, 12 posts and 43 prints ...")
+5. git add .
+   git status                               (no files ending .before- should be listed)
+   git commit -m "SFW-199 Share previews for posts, prints and collections"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN CHECK IT WORKED
+Pick a real post's id (it is the long code at the end of a post's address) and run:
+   curl -s https://starscapesfactory.com/post/PASTE-THE-ID-HERE | grep -o "<title>[^<]*</title>"
+It should print that post's own title. For a print:
+   curl -s https://starscapesfactory.com/art-loft/prints/PASTE-A-PRINT-ID | grep -o "<title>[^<]*</title>"
+And:  curl -s https://starscapesfactory.com/sitemap.xml | grep -c "<loc>"    (a number well above 20)
+If the build line shows 0 posts and 0 prints on Vercel, tell me: Vercel may not have your database settings available at build time.
