@@ -2,8 +2,12 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import BackToPosts from '../components/BackToPosts'
+import { channels } from '../data/channels'
+import { safeImage } from '../rooms/postRules'
 import useTitle from './useTitle'
 import '../styles/articles.css'
+import '../rooms/roompages.css'
+import '../styles/pages.css'
 
 export default function PostPage({ session }) {
   const { id } = useParams()
@@ -18,7 +22,7 @@ export default function PostPage({ session }) {
     async function fetchPost() {
       const { data, error } = await supabase
         .from('posts')
-        .select('id, title, content, image_url, created_at, author_id, tags')
+        .select('id, title, content, image_url, created_at, author_id, tags, channel')
         .eq('id', id)
         .single()
 
@@ -54,35 +58,37 @@ export default function PostPage({ session }) {
   if (!post) return <p>Post not found.</p>
 
   const isAuthor = session && session.user.id === post.author_id
+  const room = channels.find((c) => c.slug === post.channel)
+  const picture = safeImage(post.image_url)
+  const when = new Date(post.created_at)
+  const date = Number.isNaN(when.getTime()) ? '' : when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
   return (
-    <div className="post-detail">
-      <p>
+    <main className="pg pg-post">
+      <p className="rp-back">
         <BackToPosts />
       </p>
+      <div className="pg-post__meta">
+        {room && <span className="pg-chip">{room.name}</span>}
+        {date && <time className="pg-post__date" dateTime={when.toISOString()}>{date}</time>}
+      </div>
       <h1 className="sf-article-title">{post.title}</h1>
-      <p className="muted">{new Date(post.created_at).toLocaleDateString()}</p>
-      {post.image_url && <img src={post.image_url} alt={post.title} />}
-      <p style={{ whiteSpace: 'pre-wrap' }}>{post.content}</p>
+      {picture && (
+        <img
+          className="pg-post__image"
+          src={picture}
+          alt=""
+          onError={(e) => {
+            e.currentTarget.style.display = 'none' // a picture that will not load leaves the page tidy, not broken
+          }}
+        />
+      )}
+      <div className="pg-post__body">{post.content}</div>
 
       {post.tags && post.tags.length > 0 && (
-        <div style={{ marginTop: 16 }}>
+        <div className="pg-tags">
           {post.tags.map((tag) => (
-            <Link
-              key={tag}
-              to={`/?tag=${tag}`}
-              style={{
-                display: 'inline-block',
-                marginRight: 6,
-                marginBottom: 6,
-                background: '#eee',
-                color: '#333',
-                fontSize: 14,
-                padding: '6px 12px',
-                borderRadius: 999,
-                textDecoration: 'none',
-              }}
-            >
+            <Link key={tag} to={`/blog?tag=${encodeURIComponent(tag)}`} className="pg-chip">
               {tag}
             </Link>
           ))}
@@ -90,15 +96,15 @@ export default function PostPage({ session }) {
       )}
 
       {isAuthor && (
-        <div style={{ marginTop: 24, display: 'flex', gap: 12 }}>
+        <div className="pg-actions">
           <Link to={`/edit/${post.id}`}>
-            <button>Edit</button>
+            <button className="pg-btn">Edit</button>
           </Link>
-          <button onClick={handleDelete} disabled={deleting} style={{ background: '#c0392b' }}>
+          <button className="pg-btn pg-btn--danger" onClick={handleDelete} disabled={deleting}>
             {deleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       )}
-    </div>
+    </main>
   )
 }

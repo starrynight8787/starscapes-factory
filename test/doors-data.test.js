@@ -29,9 +29,9 @@ describe('the list of doors', () => {
   })
   it('says which doors have a page now (a plain list or gallery of tagged posts) and which are waiting for their own design', () => {
     const withPage = DOORS.filter((d) => d.page).map((d) => doorKey(d.room, d.id))
-    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'knowledge-nook/come-read-with-me', 'knowledge-nook/book-to-screen', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books'])
+    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books'])
     const without = DOORS.filter((d) => !d.page).map((d) => doorKey(d.room, d.id))
-    expect(without).toEqual(['leadership-lounge/free-ebook', 'explorers-bay/coming-soon', 'knowledge-nook/book-club', 'knowledge-nook/more-shelves', 'knowledge-nook/story-ledger', 'sarah-jrs-den/youtube-series'])
+    expect(without).toEqual(['leadership-lounge/free-ebook', 'explorers-bay/coming-soon', 'knowledge-nook/book-club', 'knowledge-nook/story-ledger', 'sarah-jrs-den/youtube-series'])
     for (const d of DOORS.filter((x) => x.page)) expect(['list', 'gallery']).toContain(d.page.layout)
   })
   it('uses the layouts the designs ask for: the Den\u2019s Books as a gallery, its Blog as a list', () => {
@@ -39,7 +39,7 @@ describe('the list of doors', () => {
     expect(findDoor('sarah-jrs-den', 'blog').page.layout).toBe('list')
   })
   it('flags the two doors whose picture is a dotted outline', () => {
-    expect(DOORS.filter((d) => d.ghost).map((d) => d.id)).toEqual(['come-study-with-me', 'coming-soon'])
+    expect(DOORS.filter((d) => d.ghost).map((d) => d.id)).toEqual(['come-study-with-me']) // the bottle is now a solid bottle with its own padlock, not a dotted outline
   })
   it('gives every door a line that does not say it is still opening soon', () => {
     for (const d of DOORS) {
@@ -60,7 +60,7 @@ describe('the list of doors', () => {
       'daryls-adventures': { name: "Daryl's Adventures", blurb: "Daryl's world, one adventure at a time.", layout: 'gallery', tags: ['daryls-adventures'] },
       books: { name: 'Books', blurb: 'Stories to read together.', layout: 'gallery', tags: ['books'] },
     })
-    expect(Object.keys(doorAreas('knowledge-nook'))).toEqual(['come-read-with-me', 'book-to-screen'])
+    expect(Object.keys(doorAreas('knowledge-nook'))).toEqual(['come-read-with-me', 'research', 'book-to-screen'])
     expect(doorAreas('leadership-lounge')).toEqual({})
     expect(doorAreas('the-moon')).toEqual({})
   })
@@ -69,6 +69,9 @@ describe('the list of doors', () => {
   })
 })
 
+// The bottle's open picture is a new drawing (a solid bottle with its own padlock), not the dotted one with the tape taken off, so it is not
+// held to "shorter than the taped one". Its own test is in research-and-bottle.test.js.
+const REDRAWN = ['explorers-bay/coming-soon']
 describe('the untaped pictures', () => {
   it.each(DOORS.map((d) => [doorKey(d.room, d.id), d]))('%s has an untaped picture, the same size as the taped one but with no tape', (_, d) => {
     const taped = read(`public/scenes/${d.room}/item-${d.id}.svg`)
@@ -78,7 +81,7 @@ describe('the untaped pictures', () => {
     expect(open.match(/viewBox="[^"]+"/)[0]).toBe(taped.match(/viewBox="[^"]+"/)[0])
     expect(open.startsWith('<svg') && open.endsWith('</svg>')).toBe(true)
     expect(open).toContain('aria-hidden="true"')
-    expect(open.length).toBeLessThan(taped.length)
+    if (!REDRAWN.includes(_)) expect(open.length).toBeLessThan(taped.length)
   })
   it('are only drawings, with nothing that runs, loads or links', () => {
     for (const d of DOORS) expect(read(`public${doorArt(d)}`), d.id).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)

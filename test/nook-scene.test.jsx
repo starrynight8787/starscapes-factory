@@ -9,16 +9,16 @@ import { GEOMETRY, OBJECT_PAD } from '../src/rooms/roomsGeometry'
 
 const dir = 'public/scenes/knowledge-nook/'
 const read = (f) => readFileSync(join(process.cwd(), dir + f), 'utf8')
-const KEYS = ['book-club', 'come-read-with-me', 'more-shelves', 'book-to-screen', 'story-ledger']
+const KEYS = ['book-club', 'come-read-with-me', 'research', 'book-to-screen', 'story-ledger']
 const nook = ROOMS['knowledge-nook']
 
 describe('the Knowledge Nook: what it says', () => {
   it('is in the words of the design: reading, learning and personal growth, pick a book', () => {
     expect([nook.name, nook.tagline, nook.blurb]).toEqual(['Knowledge Nook', 'Reading, learning and personal growth.', 'Pick a book.'])
   })
-  it('has five doors, in reading order: Book Club, Come Read With Me, More shelves, Book to Screen, Story Ledger', () => {
+  it('has five doors, in reading order: Book Club, Come Read With Me, Research, Book to Screen, Story Ledger', () => {
     expect(nook.items.map((i) => i.id)).toEqual(KEYS)
-    expect(nook.items.map((i) => i.name)).toEqual(['Book Club', 'Come Read With Me', 'More shelves', 'Book to Screen', 'Story Ledger'])
+    expect(nook.items.map((i) => i.name)).toEqual(['Book Club', 'Come Read With Me', 'Research', 'Book to Screen', 'Story Ledger'])
   })
   it('keeps every door closed for now: taped off, and not a link to anywhere', () => {
     for (const i of nook.items) {
@@ -124,7 +124,7 @@ describe('the tape across every door', () => {
     let left = t.cx - halfW
     let right = t.cx + halfW
     if (k === 'come-read-with-me') right = Math.min(right, 198)
-    if (k === 'more-shelves') left = Math.max(left, 198)
+    if (k === 'research') left = Math.max(left, 198)
     expect(left, k).toBeGreaterThanOrEqual(vx)
     expect(right, k).toBeLessThanOrEqual(vx + vw)
     expect(t.cy - halfH, k).toBeGreaterThanOrEqual(vy)
@@ -132,15 +132,15 @@ describe('the tape across every door', () => {
   })
   it('runs as one long strip across both empty slots: each picture holds its own half, cut at the same line', () => {
     const left = strips('come-read-with-me')[0]
-    const right = strips('more-shelves')[0]
+    const right = strips('research')[0]
     expect(right).toEqual(left)                                         // the very same strip
     expect(read('item-come-read-with-me.svg')).toMatch(/<rect x="0" y="0" width="198" height="840"/)   // the left picture keeps what is left of the line
-    expect(read('item-more-shelves.svg')).toMatch(/<rect x="198" y="0" width="1002" height="840"/)     // the right picture keeps the rest
+    expect(read('item-research.svg')).toMatch(/<rect x="198" y="0" width="1002" height="840"/)     // the right picture keeps the rest
   })
 })
 
 describe('the plaques', () => {
   it('sit where the design has them (Book Club above its book, the others under their doors), clear of every other door', () => {
-    expect(nook.items.map((i) => [i.id, i.labelAt])).toEqual([['book-club', [286, 56]], ['come-read-with-me', [400, 540]], ['more-shelves', [233, 734]], ['book-to-screen', [570, 734]], ['story-ledger', [901, 734]]])
+    expect(nook.items.map((i) => [i.id, i.labelAt])).toEqual([['book-club', [286, 56]], ['come-read-with-me', [400, 540]], ['research', [233, 734]], ['book-to-screen', [570, 734]], ['story-ledger', [901, 734]]])
   })
 })

@@ -1,0 +1,31 @@
+Research, and the message in a bottle's padlock: starscapes-research-bottle-17oct.zip  (task SFW-196)
+
+WHAT IT CHANGES
+1. The Knowledge Nook's "More shelves" door is now called RESEARCH: "A space to test things out." Its address is now /knowledge-nook/research.
+   It already has its page ready: a list of the Nook's posts that you tag "research". It is still taped off, and stays closed until you open it with
+   the Open a door tool. (The two pictures are the same; only their names changed.)
+2. The message in a bottle in Explorer's Bay is now for paying visitors (testers and teasers for the travel work). Its page does not exist yet: it waits
+   for the passes, so the door stays closed. What is new is its PICTURE for when it does open: a solid corked glass bottle with a message in it, and a
+   gold padlock hanging from its neck on rope, stamped with an anchor. The lock is Explorer's Bay's own, so it is not the Notebook's or the blueprint's.
+   Today (closed) it is still the dotted bottle with the tape. The name "Something New" is kept until you decide one.
+
+NEEDS: the restyled pages update (starscapes-restyle-pages-17oct.zip) installed first. The script stops and says so if it is not.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-research-bottle-17oct.zip
+   (this also replaces the picture list and three test files with updated versions)
+2. python3 tools/add-research-bottle.py     (it checks all four files first; if anything is unexpected it changes nothing;
+                                              it then renames the two old More shelves pictures, keeping a copy)
+3. node tools/health-check.mjs               (all 94 checks should pass)
+4. npm run build                             (must finish without errors)
+5. git add .
+   git status                                (no files ending .before- should be listed; the two old pictures should show as deleted or renamed)
+   git commit -m "SFW-196 Research door; the bottle's own padlock"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN LOOK
+Open /knowledge-nook on your computer and phone. The third door on the bookcase should now say Research. It is still taped off.
+(The bottle will not look any different yet, because its door is closed. To see the new bottle you would open that door, which needs its page first.)
+
+IF YOU LIKE, tag a post "research" in the Knowledge Nook now, so the page has something when you open the door.

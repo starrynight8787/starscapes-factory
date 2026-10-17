@@ -1,5 +1,7 @@
 import { Link, useParams } from 'react-router-dom'
 import { staticPages } from '../data/staticPages'
+import '../rooms/roompages.css'
+import '../styles/pages.css'
 
 export default function StaticPage() {
   const { slug } = useParams()
@@ -7,24 +9,22 @@ export default function StaticPage() {
 
   if (!page) {
     return (
-      <div>
-        <p>
+      <main className="pg pg-text">
+        <p className="rp-back">
           <Link to="/">&larr; Back home</Link>
         </p>
-        <p>Page not found.</p>
-      </div>
+        <h1>Page not found</h1>
+      </main>
     )
   }
 
   return (
-    <div>
-      <p>
+    <main className="pg pg-text">
+      <p className="rp-back">
         <Link to="/">&larr; Back home</Link>
       </p>
       <h1>{page.title}</h1>
-      <div style={{ whiteSpace: 'pre-wrap', lineHeight: 1.6, maxWidth: 640 }}>
-        {page.content}
-      </div>
-    </div>
+      <div className="pg-text__body">{page.content}</div>
+    </main>
   )
 }

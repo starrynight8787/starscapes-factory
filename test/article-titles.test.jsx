@@ -126,7 +126,7 @@ describe('the article pages keep working', () => {
         </Routes>
       </MemoryRouter>
     )
-    expect(await screen.findByRole('link', { name: 'art' })).toHaveAttribute('href', '/?tag=art')
+    expect(await screen.findByRole('link', { name: 'art' })).toHaveAttribute('href', '/blog?tag=art')
   })
 })
 

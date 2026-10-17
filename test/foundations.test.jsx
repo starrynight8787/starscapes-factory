@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import Footer from '../src/components/Footer'
 import SkipLink from '../src/components/SkipLink'
 import { social } from '../src/data/social'
+import { SOCIAL_LINKS } from '../src/data/contact'
 
 const css = readFileSync(join(process.cwd(), 'src/styles/site.css'), 'utf8')
 const app = readFileSync(join(process.cwd(), 'src/App.jsx'), 'utf8')
@@ -21,9 +22,19 @@ describe('footer', () => {
     renderFooter({ social: [{ name: 'YouTube', url: '' }, { name: 'TikTok', url: '   ' }] })
     expect(screen.queryByRole('navigation', { name: 'Follow us' })).toBeNull()
   })
-  it('the shipped list names the four accounts, all blank for now', () => {
+  it('the shipped list names the four accounts, and takes their addresses from contact.js (Threads is blank until found)', () => {
     expect(social.map((s) => s.name)).toEqual(['YouTube', 'Instagram', 'TikTok', 'Threads'])
-    expect(social.every((s) => s.url === '')).toBe(true)
+    const byName = Object.fromEntries(social.map((s) => [s.name, s.url]))
+    expect(byName.YouTube).toBe(SOCIAL_LINKS.youtube)
+    expect(byName.Instagram).toBe(SOCIAL_LINKS.instagram)
+    expect(byName.TikTok).toBe(SOCIAL_LINKS.tiktok)
+    expect(byName.Threads).toBe(SOCIAL_LINKS.threads)
+    for (const name of ['YouTube', 'Instagram', 'TikTok']) expect(byName[name], name).toMatch(/^https:\/\//)
+  })
+  it('the real footer shows the accounts that have an address, and hides the blank one', () => {
+    renderFooter()
+    const nav = screen.getByRole('navigation', { name: 'Follow us' })
+    expect(within(nav).getAllByRole('link').map((l) => l.getAttribute('aria-label'))).toEqual(['YouTube (opens in a new tab)', 'Instagram (opens in a new tab)', 'TikTok (opens in a new tab)'])
   })
   it('shows only the accounts that have an address, each opening safely in a new tab', () => {
     renderFooter({ social: [{ name: 'YouTube', url: 'https://youtube.com/@x' }, { name: 'Instagram', url: '' }, { name: 'TikTok', url: 'https://tiktok.com/@x' }] })

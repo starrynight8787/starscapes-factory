@@ -75,7 +75,7 @@ export const ROOMS = {
     items: [
       { ...piece('knowledge-nook', 'book-club'), id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', kind: 'locked', lock: 'opening soon', labelAt: [286, 56] },
       { ...piece('knowledge-nook', 'come-read-with-me'), id: 'come-read-with-me', name: 'Come Read With Me', blurb: 'Read alongside me. Starting soon.', kind: 'locked', lock: 'not started yet', labelAt: [400, 540] },
-      { ...piece('knowledge-nook', 'more-shelves'), id: 'more-shelves', name: 'More shelves', blurb: 'More shelves are on their way.', kind: 'locked', lock: 'opening soon', labelAt: [233, 734] },
+      { ...piece('knowledge-nook', 'research'), id: 'research', name: 'Research', blurb: 'A space to test things out.', kind: 'locked', lock: 'opening soon', labelAt: [233, 734] },
       { ...piece('knowledge-nook', 'book-to-screen'), id: 'book-to-screen', name: 'Book to Screen', blurb: 'Books that made it to the screen.', kind: 'locked', lock: 'opening soon', labelAt: [570, 734] },
       { ...piece('knowledge-nook', 'story-ledger'), id: 'story-ledger', name: 'Story Ledger', blurb: 'Audits of old TV.', kind: 'locked', lock: 'opening soon', labelAt: [901, 734] },
     ],

@@ -1,0 +1,38 @@
+The older pages restyled: starscapes-restyle-pages-17oct.zip  (tasks SFW-200 and SFW-201, part 1)
+
+WHAT IT CHANGES (the pages visitors see)
+- The post list at /blog: the same cards as the room pages, a filter of the tags on your posts (with "All"), the whole row a link. Plain words if the
+  posts cannot load (it no longer shows the database's own message).
+- A single post: the room's name as a small label, the date in full ("15 October 2026"), the title in Schoolbell, the header picture (only if its
+  address is safe), the words with their line breaks, and the tags. Edit and Delete show only to you, as before.
+- The plain text pages (About, Contact and so on): the same page style, with a way back. (They still hold placeholder text: see the launch checklist.)
+- The footer's Follow links now read from contact.js, the one place your addresses live, so YouTube, Instagram and TikTok appear. Threads stays hidden
+  until it has an address.
+- A post's tag links used to send people to the home page, which ignores tags. They now go to /blog filtered to that tag.
+
+WHAT IT DOES NOT CHANGE YET (on purpose)
+- New post, Edit post, New product (only you see them), log in and sign up, the old shop pages, and the old index.css rules. The old rules stay until you
+  have looked at these pages, because taking them out is the step most likely to change how another page looks. Tell Claude when you are happy and
+  those go in the next update.
+- The footer's four-column design waits for the legal pages (it links to pages that are not published yet).
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-restyle-pages-17oct.zip
+   (this also replaces two test files, article-titles and foundations, with updated versions)
+2. python3 tools/add-restyle-pages.py       (it checks all four files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs               (all 91 checks should pass)
+4. npm run build                             (must finish without errors)
+5. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "SFW-200 Restyle the post list, single post and text pages; footer social links"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN LOOK (this is the check that matters: Claude cannot see the pages)
+Open each of these on your computer AND your phone, and send Claude a screenshot of anything that looks wrong:
+   /blog
+   /blog?tag=<one of your tags>
+   one single post (click one from the list)
+   /page/contact
+   the footer at the bottom of any page (the Follow links)
+Look for: text that is hard to read, anything cut off, a picture that is stretched, a button that looks blank or white, and anything that jumps when you click.

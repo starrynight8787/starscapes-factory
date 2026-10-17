@@ -2,16 +2,17 @@
 //
 // page: { layout } means a plain page of the room's posts that carry this door's tag, as a list or a gallery. It exists now, so the door can be opened.
 // page: null means the page has not been built yet (it needs its own design), so the door cannot be opened until it is.
+// paid: true means the page, once it is built, is for pass holders only (testers and teasers for the travel work). The bottle is drawn with its own padlock.
 // ghost: true means the door's picture is a dotted outline, which is its "not yet" look. Opened as it is, it would still look unfinished.
 //
 // The page for a door is at /<room>/<door id>, and the posts on it are the room's posts tagged with the door's id.
 export const DOORS = [
   { room: 'idea-hatchery', id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me.', page: { layout: 'list' }, ghost: true },
   { room: 'leadership-lounge', id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free.', page: null },
-  { room: 'explorers-bay', id: 'coming-soon', name: 'Something New', blurb: 'A message has arrived.', page: null, ghost: true },
+  { room: 'explorers-bay', id: 'coming-soon', name: 'Something New', blurb: 'A message has arrived.', paid: true, page: null },
   { room: 'knowledge-nook', id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', page: null },
   { room: 'knowledge-nook', id: 'come-read-with-me', name: 'Come Read With Me', blurb: 'Read alongside me.', page: { layout: 'list' } },
-  { room: 'knowledge-nook', id: 'more-shelves', name: 'More shelves', blurb: 'More shelves have arrived.', page: null },
+  { room: 'knowledge-nook', id: 'research', name: 'Research', blurb: 'A space to test things out.', page: { layout: 'list' } },
   { room: 'knowledge-nook', id: 'book-to-screen', name: 'Book to Screen', blurb: 'Books that made it to the screen.', page: { layout: 'gallery' } },
   { room: 'knowledge-nook', id: 'story-ledger', name: 'Story Ledger', blurb: 'Audits of old TV.', page: null },
   { room: 'sarah-jrs-den', id: 'blog', name: 'Blog', blurb: 'Little notes from the Den.', page: { layout: 'list' } },

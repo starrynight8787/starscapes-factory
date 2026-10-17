@@ -91,6 +91,14 @@ const CHECKS = [
   ['Share picture: factory-floor', 'public/share/factory-floor.png', null, 'the share pages update'],
   ['Share previews: posts, prints and collections', 'scripts/dynamicPages.mjs', /export async function databasePages/, 'the share previews update'],
   ['Share previews: the build uses them', 'scripts/make-share-pages.mjs', /databasePages/, 'the share previews update (the add-share-posts script)'],
+  ['Restyled pages: the stylesheet', 'src/styles/pages.css', /\.pg-post__body/, 'the restyled pages update'],
+  ['Restyled pages: the post list', 'src/pages/Home.jsx', /pg--list/, 'the restyled pages update (the add-restyle-pages script)'],
+  ['Restyled pages: a single post', 'src/pages/PostPage.jsx', /pg-post/, 'the restyled pages update (the add-restyle-pages script)'],
+  ['Restyled pages: the text pages', 'src/pages/StaticPage.jsx', /pg-text/, 'the restyled pages update (the add-restyle-pages script)'],
+  ['Footer: the social links come from contact.js', 'src/data/social.js', /SOCIAL_LINKS/, 'the restyled pages update (the add-restyle-pages script)'],
+  ['Nook: the Research door', 'src/rooms/roomsData.js', /id: 'research'/, 'the research and bottle update (the add-research-bottle script)'],
+  ['Doors: Research has its page', 'src/doors/doorsData.js', /id: 'research'[^\n]*page: \{ layout: 'list' \}/, 'the research and bottle update (the add-research-bottle script)'],
+  ['Bay bottle: its own padlock', 'public/scenes/explorers-bay/item-coming-soon-open.svg', /data-lock="explorers-bay"/, 'the research and bottle update'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

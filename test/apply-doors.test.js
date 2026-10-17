@@ -49,9 +49,9 @@ describe('opening a door in a scene', () => {
     applyDoors(scene, 'knowledge-nook', () => true)
     expect(JSON.parse(JSON.stringify(scene))).toEqual(copy)
   })
-  it('opens the Nook\u2019s two plain pages and leaves its three special doors taped off even when all are marked open', () => {
+  it('opens the Nook\u2019s three plain pages (Come Read With Me, Research, Book to Screen) and leaves its two special doors taped off even when all are marked open', () => {
     const out = applyDoors(buildRoomScene('knowledge-nook'), 'knowledge-nook', () => true)
-    expect(out.items.map((i) => [i.id, i.kind])).toEqual([['book-club', 'locked'], ['come-read-with-me', 'page'], ['more-shelves', 'locked'], ['book-to-screen', 'page'], ['story-ledger', 'locked']])
+    expect(out.items.map((i) => [i.id, i.kind])).toEqual([['book-club', 'locked'], ['come-read-with-me', 'page'], ['research', 'page'], ['book-to-screen', 'page'], ['story-ledger', 'locked']])
   })
   it('leaves a room with no registered doors exactly as it is', () => {
     const scene = buildRoomScene('idea-hatchery')
