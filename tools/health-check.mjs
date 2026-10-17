@@ -101,6 +101,14 @@ const CHECKS = [
   ['Bay bottle: its own padlock', 'public/scenes/explorers-bay/item-coming-soon-open.svg', /data-lock="explorers-bay"/, 'the research and bottle update'],
   ['Footer: the links are not in white boxes', 'src/styles/site.css', /\.sf-footer nav \{/, 'the footer fix update (the add-footer-fix script)'],
   ['Footer: the social links list', 'src/components/Footer.jsx', /aria-label="Follow us"/, 'the footer label update (the add-footer-label script)'],
+  ['Suggest and vote: the database file', 'sql/suggestions.sql', /suggestion_tally/, 'the suggest and ledger update'],
+  ['Suggest and vote: the rules', 'src/suggest/suggestRules.js', /export function cleanSuggestion/, 'the suggest and ledger update'],
+  ['Suggest and vote: the box', 'src/suggest/SuggestPanel.jsx', /Most wanted/, 'the suggest and ledger update'],
+  ['Suggest and vote: the admin tool', 'src/admin/AdminSuggestions.jsx', /setSpaceOn/, 'the suggest and ledger update'],
+  ['Suggest and vote: the admin route', 'src/App.jsx', /admin\/suggestions/, 'the suggest and ledger update (the add-suggest-ledger script)'],
+  ['Story Ledger: the page', 'src/ledger/StoryLedgerPage.jsx', /SuggestPanel space="story-ledger"/, 'the suggest and ledger update'],
+  ['Story Ledger: its door', 'src/doors/doorsData.js', /id: 'story-ledger'[^\n]*layout: 'custom'/, 'the suggest and ledger update (the add-suggest-ledger script)'],
+  ['Story Ledger: its address', 'src/rooms/RoomRoutes.jsx', /CUSTOM_PAGES/, 'the suggest and ledger update (the add-suggest-ledger script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

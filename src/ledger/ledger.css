@@ -1,0 +1,117 @@
+/* The Story Ledger page (Figma: "Story Ledger page"). Stands on its own: nothing here depends on the old index.css rules. */
+.sl section,
+.sl aside {
+  margin: 32px 0;
+}
+.sl h2 {
+  margin: 0 0 12px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  color: var(--sf-navy-700, #14306a);
+}
+.sl__sr {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+.sl__title {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 2.5rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.sl__hero {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px 16px;
+  text-align: center;
+  background: #070b26;
+  border-radius: 16px;
+  color: #fff;
+}
+.sl__hero .sl__title {
+  color: #fff;
+}
+.sl__logo {
+  display: block;
+  width: min(100%, 340px);
+  height: auto;
+  border-radius: 12px;
+}
+.sl__tagline {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+.sl__text {
+  max-width: 760px;
+  margin: 0 0 12px;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.sl__cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 12px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sl__cards--two {
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+}
+.sl__card {
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+}
+.sl__card h3 {
+  margin: 0 0 4px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.1rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.sl__card p {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.5;
+}
+.sl__mosaic {
+  display: grid;
+  grid-template-columns: repeat(24, minmax(0, 1fr));
+  gap: 3px;
+  max-width: 760px;
+  margin-top: 16px;
+}
+.sl__mosaic span {
+  aspect-ratio: 1;
+  background: var(--sf-star, #dce6ff);
+  border-radius: 2px;
+}
+.sl__mosaic span.is-done {
+  background: #b3232a; /* 6.7 to 1 against white */
+}
+.sl__note {
+  padding: 18px 20px;
+  background: var(--sf-star, #dce6ff);
+  border-radius: 12px;
+}
+.sl__note p {
+  margin: 0;
+  line-height: 1.6;
+}
+.sl__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.sl__link {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}

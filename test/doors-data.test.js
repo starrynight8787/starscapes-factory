@@ -29,10 +29,10 @@ describe('the list of doors', () => {
   })
   it('says which doors have a page now (a plain list or gallery of tagged posts) and which are waiting for their own design', () => {
     const withPage = DOORS.filter((d) => d.page).map((d) => doorKey(d.room, d.id))
-    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books'])
+    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'knowledge-nook/story-ledger', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books'])
     const without = DOORS.filter((d) => !d.page).map((d) => doorKey(d.room, d.id))
-    expect(without).toEqual(['leadership-lounge/free-ebook', 'explorers-bay/coming-soon', 'knowledge-nook/book-club', 'knowledge-nook/story-ledger', 'sarah-jrs-den/youtube-series'])
-    for (const d of DOORS.filter((x) => x.page)) expect(['list', 'gallery']).toContain(d.page.layout)
+    expect(without).toEqual(['leadership-lounge/free-ebook', 'explorers-bay/coming-soon', 'knowledge-nook/book-club', 'sarah-jrs-den/youtube-series'])
+    for (const d of DOORS.filter((x) => x.page)) expect(['list', 'gallery', 'custom']).toContain(d.page.layout) // custom = its own designed page, not a list of posts
   })
   it('uses the layouts the designs ask for: the Den\u2019s Books as a gallery, its Blog as a list', () => {
     expect(findDoor('sarah-jrs-den', 'books').page.layout).toBe('gallery')

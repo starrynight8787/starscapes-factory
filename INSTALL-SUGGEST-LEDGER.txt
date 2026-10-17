@@ -1,0 +1,47 @@
+Suggest and vote, and the Story Ledger page: starscapes-suggest-ledger-17oct.zip  (task SFW-196, part 1)
+
+WHAT IT ADDS
+1. The STORY LEDGER PAGE, from your Figma design, behind the Nook's television door (/knowledge-nook/story-ledger): What it is, What gets tracked, The videos,
+   The Mosaic (288 squares, 5 coloured so far), How the heavy storylines are handled, Where to find it (TikTok and YouTube), the suggest box, and Latest
+   audits (the Nook's posts you tag "story-ledger"). The door stays CLOSED until you open it in Admin, Open a door.
+2. The SUGGEST AND VOTE BOX, drawn in Figma and shared by Story Ledger (what to audit next: a show or a stat) and, in part 2, Book Club (what to read next).
+   Visitors must be signed in to suggest or vote. Every suggestion waits for YOUR approval before anyone sees it. One vote per person per suggestion, which
+   they can take back. At most 3 suggestions per person per day. No web addresses allowed in a suggestion.
+3. A SUGGESTIONS TOOL in Admin (/admin/suggestions): an on/off switch for each box, what is waiting for you (Approve, Hide, Delete), what is showing (Mark as
+   chosen, Hide), and what is hidden (Show again). Both boxes start OFF.
+
+THE ONE THING THAT NEEDS YOU: the database. It needs one file run in Supabase, once (sql/suggestions.sql). Until you do, the box simply stays hidden.
+
+NEEDS: the restyled pages update (starscapes-restyle-pages-17oct.zip) installed first, which you have. The script stops and says so if it is not there.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-suggest-ledger-17oct.zip
+   (this also replaces two test files with updated versions)
+2. python3 tools/add-suggest-ledger.py       (it checks all five files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs                (all 104 checks should pass)
+4. npm run build                              (must finish without errors)
+5. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "SFW-196 Suggest and vote box, the Suggestions admin tool, and the Story Ledger page"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN, IN SUPABASE (this is the step that has tripped us up before: you paste the LINES INSIDE the file, never the file's name)
+   a. In Terminal, in the project folder, run:   pbcopy < sql/suggestions.sql
+      That copies everything inside the file. Nothing seems to happen: that is right.
+   b. In Supabase, open the SQL editor, click in the box, press Cmd+V to paste. You should see a long file starting "-- SUGGEST AND VOTE".
+   c. Press Run. It should say "Success. No rows returned."  (Running it twice does no harm.)
+   d. To check: run   select tablename, policyname, cmd from pg_policies where tablename like 'suggestion%' order by tablename, policyname;
+      It should list 9 rows.
+
+THEN TRY IT (nothing is visible to visitors yet)
+   1. Admin, Suggestions: switch Story Ledger ON.
+   2. Admin, Open a door: open the Story Ledger door when you are ready (or just look at /knowledge-nook/story-ledger yourself: as the owner you can see it while closed).
+   3. Sign up with a second email (or ask a friend), suggest a show, and see it appear under "Waiting for you" in Admin. Approve it. Vote for it.
+   4. Mark it as chosen, and switch the box off again to see it vanish.
+
+THE LOGO: your design's neon Story Ledger logo is a picture, and I cannot move it into the code from here. Until you add it, the page shows "Story Ledger" as a
+plain heading. To add it: in Figma, select the "Story Ledger logo" (on the Components page), export it as PNG at 2x, name it logo.png, and put it in the project at
+public/story-ledger/logo.png (make the folder story-ledger inside public). Then git add ., commit, push. The page picks it up by itself.
+
+KEEPING THE MOSAIC UP TO DATE: open src/ledger/ledgerData.js and change the number after "done:" as each episode is watched.
