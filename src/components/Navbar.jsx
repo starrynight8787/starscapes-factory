@@ -4,7 +4,7 @@ import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { roomPath } from '../data/roomImages'
 import Logo from './Logo'
-import RoomTile from './RoomTile'
+import RoomIcon from './RoomIcon'
 import '../styles/site.css'
 import CartNavLink from '../cart/CartNavLink'
 
@@ -107,7 +107,7 @@ export default function Navbar({ session }) {
                   <div className="sf-rooms__grid">
                     {channels.map((c) => (
                       <Link key={c.slug} to={roomPath(c.slug)} className="sf-rooms__item">
-                        <RoomTile slug={c.slug} size={48} />
+                        <RoomIcon room={c.slug} size={44} />
                         <span>
                           <span className="sf-rooms__name">{c.name}</span>
                           <span className="sf-rooms__tag">{c.tagline}</span>
@@ -181,7 +181,7 @@ export default function Navbar({ session }) {
           <div className="sf-menu__list">
             {channels.map((c) => (
               <Link key={c.slug} to={roomPath(c.slug)} className="sf-menu__item" onClick={closeMenu}>
-                <RoomTile slug={c.slug} size={40} />
+                <RoomIcon room={c.slug} size={40} />
                 {c.name}
               </Link>
             ))}
