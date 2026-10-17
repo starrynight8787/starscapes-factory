@@ -1,0 +1,10 @@
+# Private pages and the shop's behind-the-scenes pages are kept out of search results.
+# (Pages that say noindex in their own HTML are not listed here, so search engines can read that instruction.)
+User-agent: *
+Disallow: /admin
+Disallow: /art-loft/admin
+Disallow: /new
+Disallow: /new-product
+Disallow: /api/
+
+Sitemap: https://starscapesfactory.com/sitemap.xml

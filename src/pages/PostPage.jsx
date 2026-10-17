@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import BackToPosts from '../components/BackToPosts'
+import useTitle from './useTitle'
 import '../styles/articles.css'
 
 export default function PostPage({ session }) {
@@ -11,6 +12,7 @@ export default function PostPage({ session }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  useTitle(post ? post.title : 'Post') // the tab, and a search result, say which post this is
 
   useEffect(() => {
     async function fetchPost() {

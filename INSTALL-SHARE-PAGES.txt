@@ -1,0 +1,36 @@
+Page titles, descriptions and share pictures: starscapes-share-pages-17oct.zip  (task SFW-199)
+
+WHAT IT DOES
+- The page shell no longer says "My Blog": it has a proper title, description, site icon (the Factory Floor gear and star) and theme colour.
+- When the site is built, every fixed page gets its own copy with its own title, description, address and share picture in the HTML itself.
+  That is what WhatsApp, Facebook, X, iMessage and Slack read (they do not run the site's code). Google reads it too.
+- The eight rooms and the home page have their own share pictures (public/share/).
+- Private pages (admin, cart, log-in, the starter pages that still hold placeholder text) are told not to appear in search results.
+- A sitemap and a robots file are added.
+- The browser tab keeps the right title as you move around, and a single post sets its own title.
+- Nothing else about the site changes, and vercel.json is NOT touched. If the new build step were ever skipped, the site still works.
+
+THE WORDING IS A DRAFT: every description is in src/data/pageMeta.js, one line per page. Read them and tell Claude what to change.
+Do this before you push, because they become public.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-share-pages-17oct.zip
+2. python3 tools/add-share-pages.py        (it checks all four files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs              (all 84 checks should pass)
+4. npm run build                            (must finish without errors, and now ends with a line "Share pages: 34 written (15 in the sitemap).")
+5. git add .
+   git status                               (no files ending .before- should be listed)
+   git commit -m "SFW-199 Page titles, descriptions and share pictures"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN CHECK IT WORKED (two minutes)
+a. In Terminal:   curl -s https://starscapesfactory.com/idea-hatchery | grep -c "og:title"
+   It should print a number above 0. (It proves the page's own copy is being served.)
+   And:           curl -s https://starscapesfactory.com/sitemap.xml | head -5
+b. Paste a link such as https://starscapesfactory.com/idea-hatchery into a WhatsApp chat with yourself (do not send). A preview with the room's picture should appear.
+   Sharing sites remember what they saw, so if you tried a link before, it may show the old preview for a while.
+c. If (a) prints 0, Vercel's own build settings are probably overriding the build command. Tell Claude and paste what Vercel says its Build Command is.
+
+WHEN A DOOR OPENS
+The share pictures show the rooms as they are today, with tape on closed doors. When you open a door, tell Claude and the picture is made again.
