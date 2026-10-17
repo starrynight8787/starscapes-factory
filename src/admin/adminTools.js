@@ -10,4 +10,5 @@ export const ADMIN_TOOLS = [
   { group: 'Members', name: 'Passes and members', blurb: 'The four passes, who has them, and what they cost.' },
   { group: 'Members', name: 'Promotions', blurb: 'Discount codes for passes and prints, and the half-price first year.' },
   { group: 'Rooms', name: 'Open a door', to: '/admin/doors', blurb: 'Choose which closed doors in each room are open to visitors.' },
+  { group: 'Rooms', name: 'Suggestions', to: '/admin/suggestions', blurb: 'Switch the suggest and vote boxes on or off, and approve what visitors suggest.' },
 ]

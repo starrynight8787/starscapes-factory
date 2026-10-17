@@ -20,6 +20,7 @@ import ProductPage from './pages/ProductPage'
 import NewProduct from './pages/NewProduct'
 import AdminConsole from './admin/AdminConsole'
 import OpenDoors from './admin/OpenDoors'
+import AdminSuggestions from './admin/AdminSuggestions'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -69,6 +70,7 @@ export default function App() {
 <Route path="/new-product" element={ <ProtectedRoute session={session}> <NewProduct session={session} /> </ProtectedRoute> } />
 <Route path="/admin" element={ <ProtectedRoute session={session}> <AdminConsole session={session} /> </ProtectedRoute> } />
 <Route path="/admin/doors" element={ <ProtectedRoute session={session}> <OpenDoors session={session} /> </ProtectedRoute> } />
+<Route path="/admin/suggestions" element={ <ProtectedRoute session={session}> <AdminSuggestions session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"
             element={
