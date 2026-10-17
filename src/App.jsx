@@ -25,6 +25,9 @@ import CartPage from './cart/CartPage'
 import CheckoutSuccess from './cart/CheckoutSuccess'
 import DraftingDeskRoutes from './draftingdesk/DraftingDeskRoutes'
 import RoomRoutes from './rooms/RoomRoutes'
+import NotFound from './pages/NotFound'
+import PageLoading from './components/PageLoading'
+import ErrorBoundary from './components/ErrorBoundary'
 
 export default function App() {
   const [session, setSession] = useState(null)
@@ -43,13 +46,14 @@ export default function App() {
     return () => listener.subscription.unsubscribe()
   }, [])
 
-  if (loading) return <div className="container">Loading...</div>
+  if (loading) return <div className="container"><PageLoading /></div>
 
   return (
     <>
       <SkipLink />
       <Navbar session={session} />
       <div className="container" id="main-content" tabIndex={-1}>
+        <ErrorBoundary>
         <Routes>
          <Route path="/" element={<ChannelDirectory />} /> 
 <Route path="/blog" element={<Home />} /> 
@@ -87,7 +91,9 @@ export default function App() {
           <Route path="/idea-hatchery/*" element={<RoomRoutes room="idea-hatchery" />} />
           <Route path="/leadership-lounge/*" element={<RoomRoutes room="leadership-lounge" />} />
           <Route path="/explorers-bay/*" element={<RoomRoutes room="explorers-bay" />} />
+          <Route path="*" element={<NotFound />} />
         </Routes>
+        </ErrorBoundary>
       </div>
 <Footer /> 
     </>
