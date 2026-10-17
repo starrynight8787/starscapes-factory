@@ -1,7 +1,10 @@
 // The rules for original paintings: what the form accepts, and how a piece is described.
 // An original is one of a kind. It lives in the same products table as the prints, marked fulfilment = 'hand' (you send it yourself).
 
-export const ENQUIRY_EMAIL = 'inspire@starscapesfactory.com'
+import { CONTACT_EMAIL } from '../data/contact'
+
+// The originals page uses the site's one contact address, so it can never drift from the others.
+export const ENQUIRY_EMAIL = CONTACT_EMAIL
 export const MAX_PHOTOS = 8
 export const MAX_PHOTO_MB = 6
 export const MAX_PHOTO_BYTES = MAX_PHOTO_MB * 1024 * 1024

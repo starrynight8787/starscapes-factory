@@ -6,7 +6,7 @@ import './systempages.css'
 
 // Shown when something breaks. It says plainly that it is not the visitor's fault, offers to try again, and (once there is an address) a way to tell us.
 // Focus moves to the heading so a screen reader reads it straight away.
-export default function ErrorPage({ onRetry }) {
+export default function ErrorPage({ onRetry, email = CONTACT_EMAIL }) {
   useTitle('Something went wrong')
   const heading = useRef(null)
   useEffect(() => {
@@ -28,9 +28,9 @@ export default function ErrorPage({ onRetry }) {
           Back to the homepage
         </Link>
       </div>
-      {CONTACT_EMAIL && (
+      {email && (
         <p className="sp-note">
-          Contact: <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          Contact: <a href={`mailto:${email}`}>{email}</a>
         </p>
       )}
     </main>

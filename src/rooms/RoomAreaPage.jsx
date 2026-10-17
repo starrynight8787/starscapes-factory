@@ -9,10 +9,11 @@ import { inArea } from './postRules'
 
 // One area of a room, at /<room>/<area>: the room's published posts that belong to it, newest first.
 // A gallery shows each post's picture; a list is a compact column of rectangles.
-export default function RoomAreaPage({ room }) {
+export default function RoomAreaPage({ room, areas }) {
   const config = ROOMS[room]
   const { area: areaKey } = useParams()
-  const area = Object.prototype.hasOwnProperty.call(config.areas, areaKey) ? config.areas[areaKey] : null
+  const known = areas || config.areas // the room's own areas, or those plus the pages behind its doors
+  const area = Object.prototype.hasOwnProperty.call(known, areaKey) ? known[areaKey] : null
   useTitle(area ? area.name : 'Page not found')
   const here = useLocation() // remembered, so a post's Back link can return to this list
   const [posts, setPosts] = useState([])

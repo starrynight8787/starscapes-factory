@@ -7,6 +7,7 @@ import Logo from './Logo'
 import RoomIcon from './RoomIcon'
 import '../styles/site.css'
 import CartNavLink from '../cart/CartNavLink'
+import useIsOwner from '../admin/useIsOwner'
 
 const iconProps = {
   width: 24,
@@ -36,6 +37,7 @@ const CloseIcon = () => (
 )
 
 export default function Navbar({ session }) {
+  const isOwner = useIsOwner(session)
   const navigate = useNavigate()
   const location = useLocation()
   const [roomsOpen, setRoomsOpen] = useState(false)
@@ -131,12 +133,11 @@ export default function Navbar({ session }) {
           <div className="sf-nav__actions">
             {session ? (
               <>
-                <Link to="/new" className="sf-link">
-                  New post
-                </Link>
-                <Link to="/new-product" className="sf-link">
-                  New product
-                </Link>
+                {isOwner && (
+                  <Link to="/admin" className="sf-link sf-admin-btn">
+                    Admin
+                  </Link>
+                )}
                 <button type="button" className="sf-link" onClick={handleLogout}>
                   Log out
                 </button>
@@ -189,15 +190,10 @@ export default function Navbar({ session }) {
               About
             </Link>
             <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
-            {session && (
-              <>
-                <Link to="/new" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-                  New post
-                </Link>
-                <Link to="/new-product" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-                  New product
-                </Link>
-              </>
+            {isOwner && (
+              <Link to="/admin" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
+                Admin
+              </Link>
             )}
           </div>
           <div className="sf-menu__actions">

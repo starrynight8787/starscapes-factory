@@ -72,9 +72,18 @@ describe('the error page', () => {
     expect(retry).toHaveBeenCalledTimes(1)
     expect(screen.getByRole('link', { name: 'Back to the homepage' }).getAttribute('href')).toBe('/')
   })
-  it('leaves out the contact line until there is an address (so there is never a blank or a placeholder)', () => {
-    inRouter(<ErrorPage />)
+  it('leaves out the contact line when there is no address (so there is never a blank or a placeholder)', () => {
+    inRouter(<ErrorPage email="" />)
     expect(screen.queryByText(/Contact:/)).toBeNull()
+  })
+  it('shows the contact line, with a mail link, when there is an address', () => {
+    inRouter(<ErrorPage email="hello@example.com" />)
+    expect(screen.getByText(/Contact:/)).toBeTruthy()
+    expect(screen.getByRole('link', { name: 'hello@example.com' }).getAttribute('href')).toBe('mailto:hello@example.com')
+  })
+  it('uses the site\u2019s real contact address when none is given', () => {
+    inRouter(<ErrorPage />)
+    expect(screen.getByRole('link', { name: 'imagine@starscapesfactory.com' }).getAttribute('href')).toBe('mailto:imagine@starscapesfactory.com')
   })
 })
 
