@@ -7,6 +7,8 @@ const COLUMNS = 'id,created_at,status,livemode,customer_name,customer_email,ship
 const EXTRA = 'creativehub_order_number,creativehub_due,creativehub_checked_at,sent_at'
 // Added later still (sql/orders-confirmation.sql): whether the customer's confirmation email went.
 const CONFIRMATION = 'confirmation_status,confirmation_note,confirmation_sent_at'
+// And the "your order has been posted" email (sql/orders-dispatch.sql).
+const DISPATCH = 'dispatch_status,dispatch_note,dispatch_sent_at,tracking_url,tracking_number'
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
@@ -19,7 +21,8 @@ export default async function handler(req, res) {
   }
   try {
     const read = (columns) => serviceFetch(`/rest/v1/orders?select=${columns}&order=created_at.desc&limit=50`, { headers: { Accept: 'application/json' } })
-    let response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION}`)
+    let response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION},${DISPATCH}`)
+    if (response.status === 400) response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION}`)
     if (response.status === 400) response = await read(`${COLUMNS},${EXTRA}`)
     if (response.status === 400) response = await read(COLUMNS)
     if (response.status === 404) return res.status(200).json({ ok: false, message: 'The orders table has not been created yet. Run the orders SQL in Supabase first.' })

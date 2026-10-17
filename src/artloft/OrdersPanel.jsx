@@ -13,6 +13,8 @@ const STATUS = {
 }
 // Whether the customer's confirmation email went (added with sql/orders-confirmation.sql)
 const CONFIRMATION = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT', sending: 'being sent…' }
+// Whether the "your order has been posted" email went (added with sql/orders-dispatch.sql)
+const DISPATCH = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT', sending: 'being sent…' }
 // An order still "sending" after this long is no longer in flight: its answer was lost
 const STUCK_MS = 5 * 60 * 1000
 
@@ -35,6 +37,8 @@ export default function OrdersPanel() {
   const [flash, setFlash] = useState('')
   const [working, setWorking] = useState(false)
   const [confirming, setConfirming] = useState(null) // the id of the order waiting for a "Yes, send it"
+  const [dispatching, setDispatching] = useState(null) // the id of the order whose posted email is being filled in
+  const [track, setTrack] = useState({ url: '', number: '' }) // what was typed for it
   const [looked, setLooked] = useState({}) // an order's id -> what the look through Creative Hub's orders found
 
   async function load() {
@@ -52,6 +56,7 @@ export default function OrdersPanel() {
   async function act(action, extra = {}) {
     setWorking(true)
     setConfirming(null)
+    setDispatching(null)
     setFlash('Working…')
     try {
       const body = await orderAction(action, extra)
@@ -94,6 +99,29 @@ export default function OrdersPanel() {
       <button type="button" disabled={busy} onClick={() => act('resend_confirmation', { id: o.id })} aria-label={`Send the confirmation email to ${o.customer_name || 'this customer'}`}>
         Send confirmation email
       </button>
+    )
+  }
+
+  // The "your order has been posted" email: for an order really with Creative Hub (or a test order) that has not had it yet. The owner can add
+  // a tracking link and/or number; both are optional, and the email never mentions tracking unless one is given.
+  function dispatchControl(o) {
+    if (!o.customer_email || !('dispatch_status' in o) || o.dispatch_status === 'sent' || o.dispatch_status === 'sending') return null
+    if (o.livemode && o.status !== 'sent') return null
+    const who = o.customer_name || 'this customer'
+    if (dispatching !== o.id) {
+      return (
+        <button type="button" disabled={busy} onClick={() => { setDispatching(o.id); setTrack({ url: '', number: '' }) }} aria-label={`Send the posted email to ${who}`}>
+          Send posted email
+        </button>
+      )
+    }
+    return (
+      <span className="al-tools__confirm">
+        <label>Tracking link (optional) <input type="url" value={track.url} onChange={(e) => setTrack((t) => ({ ...t, url: e.target.value }))} placeholder="https://" /></label>{' '}
+        <label>Tracking number (optional) <input type="text" value={track.number} onChange={(e) => setTrack((t) => ({ ...t, number: e.target.value }))} /></label>{' '}
+        <button type="button" disabled={busy} onClick={() => act('send_dispatch', { id: o.id, tracking_url: track.url, tracking_number: track.number })}>Send it now</button>{' '}
+        <button type="button" disabled={busy} onClick={() => setDispatching(null)}>Cancel</button>
+      </span>
     )
   }
 
@@ -203,8 +231,11 @@ export default function OrdersPanel() {
                       {o.confirmation_status && (
                         <><br /><small>Confirmation email: <strong>{CONFIRMATION[o.confirmation_status] || o.confirmation_status}</strong>{o.confirmation_note && o.confirmation_status !== 'sent' ? `. ${o.confirmation_note}` : ''}</small></>
                       )}
+                      {o.dispatch_status && (
+                        <><br /><small>Posted email: <strong>{DISPATCH[o.dispatch_status] || o.dispatch_status}</strong>{o.dispatch_note && o.dispatch_status !== 'sent' ? `. ${o.dispatch_note}` : ''}{o.dispatch_status === 'sent' && o.tracking_number ? `. Tracking number ${o.tracking_number}` : ''}</small></>
+                      )}
                     </td>
-                    <td>{actions(o)}{confirmationButton(o)}</td>
+                    <td>{actions(o)}{confirmationButton(o)}{dispatchControl(o)}</td>
                   </tr>
                 )
               })}

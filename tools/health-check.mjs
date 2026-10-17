@@ -65,6 +65,12 @@ const CHECKS = [
   ['Order email: the orders list reads it', 'api/orders.js', /confirmation_status/, 'the order confirmation email update (the add-order-email script)'],
   ['Order email: the Orders panel shows it', 'src/artloft/OrdersPanel.jsx', /resend_confirmation/, 'the order confirmation email update (the add-order-email script)'],
   ['Order email: the database columns file', 'sql/orders-confirmation.sql', /confirmation_status/, 'the order confirmation email update'],
+  ['Posted email: the wording', 'lib/dispatchEmailText.js', /cleanTracking/, 'the posted email update'],
+  ['Posted email: sending and recording', 'lib/dispatchEmail.js', /dispatchOrder/, 'the posted email update'],
+  ['Posted email: the owner\'s button (server)', 'api/order-actions.js', /send_dispatch/, 'the posted email update (the add-dispatch-email script)'],
+  ['Posted email: the orders list reads it', 'api/orders.js', /dispatch_status/, 'the posted email update (the add-dispatch-email script)'],
+  ['Posted email: the Orders panel shows it', 'src/artloft/OrdersPanel.jsx', /send_dispatch/, 'the posted email update (the add-dispatch-email script)'],
+  ['Posted email: the database columns file', 'sql/orders-dispatch.sql', /dispatch_status/, 'the posted email update'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

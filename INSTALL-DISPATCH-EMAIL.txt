@@ -1,0 +1,30 @@
+"Your order has been posted" email: starscapes-dispatch-email-17oct.zip  (task SFW-17, first part)
+
+WHAT IT DOES
+Adds a "Send posted email" button to each order on the publish page's Orders panel. You press it AFTER you have seen that the order has really
+been posted. A small form opens: paste a tracking link and/or number if you have one (both optional), then press "Send it now".
+The customer gets our own email saying the order has been posted. It says nothing about tracking unless you gave one.
+It can only be sent once per order, only for an order that is with Creative Hub (or a test order), and only by you.
+
+THIS NEEDS THE CONFIRMATION EMAIL INSTALLED FIRST (starscapes-order-email-17oct.zip). It refuses to run otherwise.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-dispatch-email-17oct.zip
+2. python3 tools/add-dispatch-email.py     (it checks all three files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs              (all 66 checks should pass)
+4. npm run build                            (must finish without errors)
+5. git add .
+   git status                               (no files ending .before- should be listed)
+   git commit -m "SFW-17 Posted email with optional tracking"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN, TO TRY IT
+a. In Supabase, SQL editor: paste the lines inside sql/orders-dispatch.sql (not the file name), press Run.
+b. On the publish page, Show recent orders. On a TEST order, press "Send posted email", add a made-up https tracking link if you like, press "Send it now".
+c. The row should say "Posted email: sent", and a message headed [TEST] ... has been posted should arrive in your inbox.
+
+WHY IT IS A BUTTON AND NOT AUTOMATIC
+Creative Hub's documentation does not say how an order shows that it has shipped, or whether the order carries a tracking number, and their
+help pages and their reply to us disagree about whether they email the customer for orders placed through the API. Until that is answered,
+a button you press is the only way that can never tell a customer something untrue.
