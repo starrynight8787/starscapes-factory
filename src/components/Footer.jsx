@@ -29,7 +29,6 @@ export default function Footer({ social = socialLinks }) {
             </nav>
             {follow.length > 0 && (
               <nav className="sf-footer__follow" aria-label="Follow us">
-                <span className="sf-footer__follow-label">Follow</span>
                 {follow.map((s) => (
                   <a
                     key={s.name}

@@ -47,3 +47,19 @@ describe('the footer links on the dark footer', () => {
     expect(read('src/index.css')).toMatch(/nav \{[^}]*background:\s*#fff/s)
   })
 })
+
+describe('the footer shows the three social links with no heading word', () => {
+  it('has just the links in the Follow list, with no visible "Follow" label', () => {
+    const [, follow] = navs()
+    expect(within(follow).getAllByRole('link')).toHaveLength(3)
+    expect(follow.textContent).not.toMatch(/follow/i)
+    expect(follow.querySelector('.sf-footer__follow-label')).toBeNull()
+  })
+  it('still names the list for screen reader users, who cannot see a heading', () => {
+    const [, follow] = navs()
+    expect(follow).toHaveAttribute('aria-label', 'Follow us')
+  })
+  it('leaves no unused label style behind', () => {
+    expect(read('src/styles/site.css')).not.toContain('sf-footer__follow-label')
+  })
+})

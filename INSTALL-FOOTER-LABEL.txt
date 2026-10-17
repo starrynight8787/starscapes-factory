@@ -1,0 +1,16 @@
+Footer: no "Follow" word: starscapes-footer-label-17oct.zip
+
+WHAT IT CHANGES
+The footer's social links (YouTube, Instagram, TikTok) no longer have the word FOLLOW in front of them: just the three links. Screen readers still hear the list named
+"Follow us", since someone who cannot see the page has no other way to know what the links are. Nothing else changes.
+
+INSTALL (from the project folder, in this order)
+1. unzip -o ~/Downloads/starscapes-footer-label-17oct.zip
+2. python3 tools/add-footer-label.py        (it checks both files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs               (all 96 checks should pass)
+4. npm run build                             (must finish without errors)
+5. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Footer: take the word Follow off the social links"
+   git push
+6. Wait for Vercel to say Ready, then look at the bottom of any page.

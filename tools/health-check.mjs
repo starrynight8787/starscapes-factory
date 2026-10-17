@@ -100,6 +100,7 @@ const CHECKS = [
   ['Doors: Research has its page', 'src/doors/doorsData.js', /id: 'research'[^\n]*page: \{ layout: 'list' \}/, 'the research and bottle update (the add-research-bottle script)'],
   ['Bay bottle: its own padlock', 'public/scenes/explorers-bay/item-coming-soon-open.svg', /data-lock="explorers-bay"/, 'the research and bottle update'],
   ['Footer: the links are not in white boxes', 'src/styles/site.css', /\.sf-footer nav \{/, 'the footer fix update (the add-footer-fix script)'],
+  ['Footer: the social links list', 'src/components/Footer.jsx', /aria-label="Follow us"/, 'the footer label update (the add-footer-label script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {
