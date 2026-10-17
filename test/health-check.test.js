@@ -22,7 +22,7 @@ function run(cwd) {
 function copy() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'healthtest-'))
   dirs.push(dir)
-  for (const part of ['src', 'public/scenes', 'public/icons']) fs.cpSync(path.resolve(part), path.join(dir, part), { recursive: true })
+  for (const part of ['src', 'public/scenes', 'public/icons', 'tools']) fs.cpSync(path.resolve(part), path.join(dir, part), { recursive: true })
   return dir
 }
 const hashAll = (dir) => {
@@ -72,6 +72,34 @@ describe('the health check', () => {
     expect(r.code).toBe(1)
     expect(r.out).toMatch(/App: Sarah Jr\.'s Den page/)
     expect(r.out).not.toMatch(/PROBLEM\s+Room pages/)
+  })
+  it('checks every picture against its exact current copy, and says all of them match when they do', () => {
+    const r = run(path.resolve('.'))
+    expect(r.out).toMatch(/Pictures: all \d+ match the current versions/)
+  })
+  it('names a picture that is an older or changed copy, even if it still looks nearly right', () => {
+    const dir = copy()
+    const file = path.join(dir, 'public/scenes/explorers-bay/base.svg')
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('translate(640 -10)', 'translate(0 0)'))
+    const r = run(dir)
+    expect(r.code).toBe(1)
+    expect(r.out).toMatch(/Picture: public\/scenes\/explorers-bay\/base\.svg: is not the current version\. It comes from the pictures zip/)
+    expect(r.out).not.toMatch(/Picture: public\/scenes\/idea-hatchery/)
+  })
+  it('names a picture that is missing, including a room icon', () => {
+    const dir = copy()
+    fs.rmSync(path.join(dir, 'public/scenes/knowledge-nook/item-book-club.svg'))
+    const r = run(dir)
+    expect(r.code).toBe(1)
+    expect(r.out).toMatch(/Picture: public\/scenes\/knowledge-nook\/item-book-club\.svg: is missing/)
+  })
+  it('covers every picture the rooms use, and the room icons', () => {
+    const manifest = JSON.parse(fs.readFileSync(path.resolve('tools/art-manifest.json'), 'utf8'))
+    const names = Object.keys(manifest)
+    expect(names.length).toBeGreaterThanOrEqual(47)
+    for (const room of ['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'drafting-desk', 'knowledge-nook', 'sarah-jrs-den']) expect(names.some((n) => n === `public/scenes/${room}/base.svg`), room).toBe(true)
+    expect(names).toContain('public/scenes/art-loft.svg')
+    expect(names).toContain('public/icons/rooms/art-loft.png')
   })
   it('only reads: it changes nothing, whether it passes or fails', () => {
     const dir = copy()

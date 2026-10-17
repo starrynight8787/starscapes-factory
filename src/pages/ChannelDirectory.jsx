@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { roomImages, roomPath } from '../data/roomImages'
-import RoomTile from '../components/RoomTile'
+import RoomIcon from '../components/RoomIcon'
+import { ROOM_ICONS } from '../components/roomIcons'
 import { StarMark } from '../components/Logo'
 import '../styles/site.css'
 
@@ -114,7 +115,7 @@ export default function ChannelDirectory() {
                 >
                   <polygon className="sf-room__shape" points={toPoints(spec.pts)} />
                   <image
-                    href={roomImages[c.slug]}
+                    href={ROOM_ICONS[c.slug] || roomImages[c.slug]}
                     x={p.tileX}
                     y={p.tileY}
                     width={spec.tile}
@@ -147,7 +148,7 @@ export default function ChannelDirectory() {
         <div className="sf-roomlist">
           {channels.map((c) => (
             <Link key={c.slug} to={roomPath(c.slug)} className="sf-roomcard">
-              <RoomTile slug={c.slug} size={64} />
+              <RoomIcon room={c.slug} size={64} />
               <span>
                 <span className="sf-roomcard__name">{c.name}</span>
                 <span className="sf-roomcard__tag">{c.tagline}</span>

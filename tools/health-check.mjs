@@ -2,6 +2,7 @@
 // Run it from the project folder at any time (especially after unpacking a zip):   node tools/health-check.mjs
 // It only reads. It never changes anything.
 import fs from 'node:fs'
+import crypto from 'node:crypto'
 
 const CHECKS = [
   // [what it checks, file, what must be in it, which update it came from]
@@ -40,6 +41,7 @@ const CHECKS = [
   ['Forgot password form: the new messages', 'src/pages/ForgotPassword.jsx', /FailureMessage/, 'the form messages update'],
   ['Reset password form: the new messages', 'src/pages/ResetPassword.jsx', /ErrorSummary/, 'the form messages update'],
   ['Form wording: what the forms say', 'src/pages/formRules.js', /loginMessage/, 'the form messages update'],
+  ['Home floor plan: the new room icons', 'src/pages/ChannelDirectory.jsx', /ROOM_ICONS\[c\.slug\]/, 'the home icons update (the add-home-icons script)'],
   ['Room icon: Art Loft', 'public/icons/rooms/art-loft.png', null, 'the room icons update'],
   ['Room icon: Knowledge Nook', 'public/icons/rooms/knowledge-nook.png', null, 'the room icons update'],
 ]
@@ -50,6 +52,23 @@ const results = CHECKS.map(([what, file, pattern, from]) => {
   const ok = pattern.test(fs.readFileSync(file, 'utf8'))
   return { what, ok, why: ok ? '' : `${file} is an older copy`, from }
 })
+// Every picture is checked against the exact current copy (a list of fingerprints in tools/art-manifest.json). A picture is never edited by hand,
+// so any difference means an older copy has been put back.
+const manifestFile = 'tools/art-manifest.json'
+let pictureCount = 0
+if (fs.existsSync(manifestFile)) {
+  const manifest = JSON.parse(fs.readFileSync(manifestFile, 'utf8'))
+  for (const [file, fingerprint] of Object.entries(manifest)) {
+    pictureCount += 1
+    if (!fs.existsSync(file)) {
+      results.push({ what: `Picture: ${file}`, ok: false, why: 'is missing', from: 'the pictures zip (starscapes-art-current-17oct.zip)' })
+      continue
+    }
+    const now = crypto.createHash('sha256').update(fs.readFileSync(file)).digest('hex').slice(0, 16)
+    if (now !== fingerprint) results.push({ what: `Picture: ${file}`, ok: false, why: 'is not the current version', from: 'the pictures zip (starscapes-art-current-17oct.zip)' })
+  }
+  if (results.filter((r) => r.what.startsWith('Picture:')).length === 0) results.push({ what: `Pictures: all ${pictureCount} match the current versions`, ok: true })
+}
 const bad = results.filter((r) => !r.ok)
 console.log('')
 for (const r of results) console.log(`  ${r.ok ? 'ok     ' : 'PROBLEM'}  ${r.what}`)
