@@ -34,6 +34,12 @@ const CHECKS = [
   ['Tape on Explorer\'s Bay\'s Something New', 'public/scenes/explorers-bay/item-coming-soon.svg', /data-tape-group/, 'the closed objects tape update'],
   ['Tape on the Drafting Desk\'s Come Write With Me', 'public/scenes/drafting-desk/sheet-come-write-with-me.svg', /data-tape-group/, 'the closed objects tape update'],
   ['Knowledge Nook picture: the bookcase', 'public/scenes/knowledge-nook/base.svg', /viewBox="0 0 1200 840"/, 'the Knowledge Nook update'],
+  ['Form messages: the failure box', 'src/components/FormMessages.jsx', /export function FailureMessage/, 'the form messages update'],
+  ['Log in form: the new messages', 'src/pages/Login.jsx', /ErrorSummary/, 'the form messages update'],
+  ['Sign up form: the new messages', 'src/pages/Signup.jsx', /SuccessMessage/, 'the form messages update'],
+  ['Forgot password form: the new messages', 'src/pages/ForgotPassword.jsx', /FailureMessage/, 'the form messages update'],
+  ['Reset password form: the new messages', 'src/pages/ResetPassword.jsx', /ErrorSummary/, 'the form messages update'],
+  ['Form wording: what the forms say', 'src/pages/formRules.js', /loginMessage/, 'the form messages update'],
   ['Room icon: Art Loft', 'public/icons/rooms/art-loft.png', null, 'the room icons update'],
   ['Room icon: Knowledge Nook', 'public/icons/rooms/knowledge-nook.png', null, 'the room icons update'],
 ]

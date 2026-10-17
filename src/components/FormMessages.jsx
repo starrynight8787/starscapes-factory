@@ -89,6 +89,17 @@ export function ErrorSummary({ errors, title = 'There is a problem', intro = 'Fi
   )
 }
 
+// For when the service failed and it is not the person's mistake (the network, too many requests): the same red box as the summary, but with
+// nothing to fix and no links, so it just says plainly what happened. It is announced to a screen reader the moment it appears.
+export function FailureMessage({ title, children }) {
+  return (
+    <div role="alert" className="sf-summary sf-failure">
+      <h2 className="sf-summary__title">{title}</h2>
+      <p>{children}</p>
+    </div>
+  )
+}
+
 export function SuccessMessage({ title, children }) {
   return (
     <div className="sf-success" role="status">

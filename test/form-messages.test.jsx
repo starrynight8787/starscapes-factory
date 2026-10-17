@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
-import { Field, CheckField, FieldError, ErrorSummary, SuccessMessage } from '../src/components/FormMessages'
+import { Field, CheckField, FieldError, ErrorSummary, SuccessMessage, FailureMessage } from '../src/components/FormMessages'
 
 const email = (props = {}) => (
   <Field id="email" label="Your email address" help="We use this only to send you the ebook." {...props}>
@@ -101,3 +101,14 @@ describe('a success message', () => {
     expect(screen.getByRole('status').textContent).toBe('\u2713Saved.')
   })
 })
+
+describe('a failure message', () => {
+  it('is announced at once, with a title and what happened, and nothing to click (it is not the person\u2019s mistake)', () => {
+    render(<FailureMessage title="We couldn't send the email">Please try again in a moment.</FailureMessage>)
+    const box = screen.getByRole('alert')
+    expect(within(box).getByRole('heading', { name: "We couldn't send the email" })).toBeTruthy()
+    expect(box.textContent).toContain('Please try again in a moment.')
+    expect(within(box).queryByRole('link')).toBeNull()
+  })
+})
+

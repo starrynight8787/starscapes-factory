@@ -1,21 +1,46 @@
 import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { Field, ErrorSummary, FailureMessage } from '../components/FormMessages'
+import { emailProblem, loginMessage } from './formRules'
 
 export default function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState(null)
+  const [fieldErrors, setFieldErrors] = useState({}) // a message under each field with a problem
+  const [summary, setSummary] = useState([]) // the box at the top of the form, listing each problem as a link to its field
+  const [failure, setFailure] = useState(null) // a problem on our side, with nothing for the person to fix
+  const [busy, setBusy] = useState(false)
   const navigate = useNavigate()
+
+  function showProblems(found) {
+    setFailure(null)
+    setFieldErrors(found)
+    setSummary([['email', 'login-email'], ['password', 'login-password']].filter(([key]) => found[key]).map(([key, id]) => ({ id, message: found[key] })))
+  }
 
   async function handleSubmit(e) {
     e.preventDefault()
-    setError(null)
+    const found = {}
+    const emailIssue = emailProblem(email)
+    if (emailIssue) found.email = emailIssue
+    if (!password) found.password = 'Enter your password'
+    if (Object.keys(found).length > 0) return showProblems(found)
 
-    const { error } = await supabase.auth.signInWithPassword({ email, password })
+    setFieldErrors({})
+    setSummary([])
+    setFailure(null)
+    setBusy(true)
+    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    setBusy(false)
 
     if (error) {
-      setError(error.message)
+      const say = loginMessage(error)
+      if (say.fix) {
+        setSummary([{ id: 'login-email', message: say.fix }])
+      } else {
+        setFailure(say.failure)
+      }
       return
     }
 
@@ -25,23 +50,18 @@ export default function Login() {
   return (
     <div>
       <h1>Log in</h1>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="email"
-          placeholder="Email"
-          value={email}
-          onChange={(e) => setEmail(e.target.value)}
-          required
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          required
-        />
-        <button type="submit">Log in</button>
+      <ErrorSummary errors={summary} />
+      {failure && <FailureMessage title="We couldn't log you in">{failure}</FailureMessage>}
+      <form onSubmit={handleSubmit} noValidate>
+        <Field id="login-email" label="Email" error={fieldErrors.email}>
+          {(p) => <input {...p} type="email" placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}
+        </Field>
+        <Field id="login-password" label="Password" error={fieldErrors.password}>
+          {(p) => <input {...p} type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}
+        </Field>
+        <button type="submit" disabled={busy}>
+          Log in
+        </button>
       </form>
       <p className="muted">
         <Link to="/forgot-password">Forgot your password?</Link>
