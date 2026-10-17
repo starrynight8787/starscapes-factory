@@ -28,6 +28,10 @@ const NAMES = "export const channels = [{ slug: 'drafting-desk', name: 'The Draf
 const real = (rel) => fs.readFileSync(path.resolve(rel), 'utf8')
 
 // the room files as they were before the Nook: the real ones with the Nook's parts taken out
+const noDen = {
+  data: (t) => t.replace(/ {2}'sarah-jrs-den': \{\n(?:.*\n)*? {4}areas: \{\},\n {2}\},\n/, ''),
+  geo: (t) => t.replace(/ {2}'sarah-jrs-den': \{\n(?: {4}.*\n)*? {2}\},\n/, ''),
+}
 const without = {
   data: (t) => t.replace(/ {2}'knowledge-nook': \{\n(?:.*\n)*? {4}areas: \{\},\n {2}\},\n/, ''),
   geo: (t) => t.replace(/ {2}'knowledge-nook': \{\n(?: {4}.*\n)*? {2}\},\n/, ''),
@@ -48,8 +52,8 @@ function project({ withNotFound = false } = {}) {
   put('src/rooms/RoomScene.jsx', 'export default function X() { return null }\n')
   put('src/rooms/RoomRoutes.jsx', 'export default function X() { return null }\n')
   put('public/scenes/knowledge-nook/base.svg', '<svg xmlns="http://www.w3.org/2000/svg"></svg>')
-  put(FILES.data, without.data(real(FILES.data)))
-  put(FILES.geo, without.geo(real(FILES.geo)))
+  put(FILES.data, without.data(noDen.data(real(FILES.data))))
+  put(FILES.geo, without.geo(noDen.geo(real(FILES.geo))))
   put(FILES.css, without.css(real(FILES.css)))
   for (const [script, name] of [[DESK_SCRIPT, 'desk'], [ROOMS_SCRIPT, 'rooms']]) {
     const r = run(script, dir)
@@ -114,8 +118,8 @@ describe('adding the Knowledge Nook to a site that already has the other rooms',
   it('puts the Nook\u2019s room, measurements and layout into the room files, exactly as the real ones have them', () => {
     const dir = project()
     expect(run(SCRIPT, dir).code).toBe(0)
-    expect(read(dir, FILES.data)).toBe(real(FILES.data))
-    expect(read(dir, FILES.geo)).toBe(real(FILES.geo))
+    expect(read(dir, FILES.data)).toBe(noDen.data(real(FILES.data)))
+    expect(read(dir, FILES.geo)).toBe(noDen.geo(real(FILES.geo)))
     expect(read(dir, FILES.css)).toBe(real(FILES.css))
   })
   it('keeps everything else in those files exactly as you have it, including wording you have changed', () => {
@@ -129,7 +133,7 @@ describe('adding the Knowledge Nook to a site that already has the other rooms',
     expect(run(SCRIPT, dir).code).toBe(0)
     expect(read(dir, FILES.data)).toContain('MY OWN WORDS FOR THE HATCHERY.')
     expect(read(dir, FILES.data)).toContain("name: 'Knowledge Nook'")
-    expect(read(dir, FILES.data).replace('MY OWN WORDS FOR THE HATCHERY.', 'Pick a beaker to see what I am working on.')).toBe(real(FILES.data))
+    expect(read(dir, FILES.data).replace('MY OWN WORDS FOR THE HATCHERY.', 'Pick a beaker to see what I am working on.')).toBe(noDen.data(real(FILES.data)))
     expect(read(dir, FILES.css)).toContain('--rs-above: 250px;')
     expect(read(dir, FILES.css)).toContain("data-room='knowledge-nook'")
   })

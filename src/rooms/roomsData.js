@@ -81,6 +81,20 @@ export const ROOMS = {
     ],
     areas: {},
   },
+  'sarah-jrs-den': {
+    slug: 'sarah-jrs-den',
+    name: "Sarah Jr.'s Den",
+    tagline: "Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl.",
+    blurb: 'Pick a door.',
+    channel: 'sarah-jrs-den',
+    items: [
+      { ...piece('sarah-jrs-den', 'blog'), id: 'blog', name: 'Blog', blurb: 'Little notes from the Den.', kind: 'locked', lock: 'opening soon', labelAt: [155, 726] },
+      { ...piece('sarah-jrs-den', 'daryls-adventures'), id: 'daryls-adventures', name: "Daryl's Adventures", blurb: "Daryl's world: being developed.", kind: 'locked', lock: 'opening soon', labelAt: [564, 716] },
+      { ...piece('sarah-jrs-den', 'books'), id: 'books', name: 'Books', blurb: 'Stories to read together.', kind: 'locked', lock: 'opening soon', labelAt: [935, 672] },
+      { ...piece('sarah-jrs-den', 'youtube-series'), id: 'youtube-series', name: 'YouTube Series', blurb: 'Little adventures to watch.', kind: 'locked', lock: 'opening soon', labelAt: [1085, 750] },
+    ],
+    areas: {},
+  },
 }
 
 export const ROOM_SLUGS = Object.keys(ROOMS)

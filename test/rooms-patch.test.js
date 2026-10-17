@@ -8,8 +8,8 @@ import { execFileSync } from 'node:child_process'
 import { buildSync, transformSync } from 'esbuild'
 import { ROOM_SLUGS as EVERY_ROOM } from '../src/rooms/roomsData'
 
-// the rooms this script adds: the Knowledge Nook was added later, by its own script (see nook-patch.test.js)
-const ROOM_SLUGS = EVERY_ROOM.filter((s) => s !== 'knowledge-nook')
+// the rooms this script adds: the Knowledge Nook and Sarah Jr.'s Den were added later, by their own scripts (see nook-patch.test.js and den-patch.test.js)
+const ROOM_SLUGS = EVERY_ROOM.filter((s) => !['knowledge-nook', 'sarah-jrs-den'].includes(s))
 
 const FIX = path.resolve('test/fixtures/desk')
 const DESK_SCRIPT = path.resolve('scripts/add-drafting-desk.mjs')

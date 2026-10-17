@@ -65,6 +65,14 @@ describe('the health check', () => {
     expect(r.out).toMatch(/Room addresses: the Nook opens its own page/)
     expect(r.out).not.toMatch(/PROBLEM\s+Room pages/)   // the stylesheet is fine, so it is not blamed
   })
+  it('also checks the Den: its page, its address and its room', () => {
+    const dir = copy()
+    fs.writeFileSync(path.join(dir, 'src/App.jsx'), fs.readFileSync(path.join(dir, 'src/App.jsx'), 'utf8').replace('<Route path="/sarah-jrs-den/*" element={<RoomRoutes room="sarah-jrs-den" />} />', ''))
+    const r = run(dir)
+    expect(r.code).toBe(1)
+    expect(r.out).toMatch(/App: Sarah Jr\.'s Den page/)
+    expect(r.out).not.toMatch(/PROBLEM\s+Room pages/)
+  })
   it('only reads: it changes nothing, whether it passes or fails', () => {
     const dir = copy()
     const before = hashAll(dir)

@@ -93,6 +93,7 @@ export default function App() {
           <Route path="/explorers-bay/*" element={<RoomRoutes room="explorers-bay" />} />
           <Route path="*" element={<NotFound />} />
           <Route path="/knowledge-nook/*" element={<RoomRoutes room="knowledge-nook" />} />
+          <Route path="/sarah-jrs-den/*" element={<RoomRoutes room="sarah-jrs-den" />} />
         </Routes>
         </ErrorBoundary>
       </div>

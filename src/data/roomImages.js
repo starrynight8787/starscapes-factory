@@ -15,7 +15,7 @@ export const roomImages = {
 export const roomImagesSmall = {}
 
 // The page each room opens. The Art Loft and the Factory Floor have their own scenes; every other room uses the general room page for now.
-const OWN_PAGE = { 'art-loft': '/art-loft', 'factory-floor': '/factory-floor', 'drafting-desk': '/drafting-desk', 'idea-hatchery': '/idea-hatchery', 'leadership-lounge': '/leadership-lounge', 'explorers-bay': '/explorers-bay', 'knowledge-nook': '/knowledge-nook' }
+const OWN_PAGE = { 'art-loft': '/art-loft', 'factory-floor': '/factory-floor', 'drafting-desk': '/drafting-desk', 'idea-hatchery': '/idea-hatchery', 'leadership-lounge': '/leadership-lounge', 'explorers-bay': '/explorers-bay', 'knowledge-nook': '/knowledge-nook', 'sarah-jrs-den': '/sarah-jrs-den' }
 export function roomPath(slug) {
   return OWN_PAGE[slug] || `/channel/${slug}`
 }

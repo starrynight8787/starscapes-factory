@@ -28,4 +28,10 @@ export const GEOMETRY = {
     'book-to-screen': { cx: 570, cy: 674, w: 200, h: 96 },
     'story-ledger': { cx: 901, cy: 630.5, w: 176, h: 188 },
   },
+  'sarah-jrs-den': {
+    'blog': { cx: 162.5, cy: 453, w: 251, h: 510 },
+    'daryls-adventures': { cx: 579.5, cy: 569, w: 543, h: 354 },
+    'books': { cx: 927, cy: 475, w: 202, h: 390 },
+    'youtube-series': { cx: 1101, cy: 625, w: 144, h: 150 },
+  },
 }

@@ -22,8 +22,8 @@ const EMPTY = { audiobookUrl: '', udemyUrl: '' }          // as if the two outsi
 
 // ---------- what each room says and where it leads ----------
 describe('the rooms', () => {
-  it('are the four rooms drawn so far, in the order of the site', () => {
-    expect(ROOM_SLUGS).toEqual(['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook'])
+  it('are the five rooms drawn so far, in the order of the site', () => {
+    expect(ROOM_SLUGS).toEqual(['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook', 'sarah-jrs-den'])
   })
   it.each(ALL)('%s: has a name, a line under it and a sentence, and posts are filed under its own name', (slug) => {
     const r = ROOMS[slug]
