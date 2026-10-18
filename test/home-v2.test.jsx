@@ -15,6 +15,7 @@ vi.mock('../src/home/homeApi', () => ({
   removeEvent: vi.fn(async (id) => { h.calls.push(['removeEvent', id]) }),
   saveFeaturedSlug: vi.fn(async (slug) => { h.calls.push(['saveFeaturedSlug', slug]) }),
 }))
+vi.mock('../src/den/youtubeApi', () => ({ fetchIntroId: vi.fn(async () => ''), saveIntroId: vi.fn(async () => {}), clearIntroId: vi.fn(async () => {}), fetchSeries: vi.fn(async () => []) }))
 vi.mock('../src/admin/useIsOwner', () => ({ useOwnerCheck: () => ({ checking: false, owner: h.owner }) }))
 import HomeSections, { NextEventBox, MembershipBox, FeaturedRoomBox, LatestPostBox } from '../src/home/HomeSections'
 import ChannelDirectory from '../src/pages/ChannelDirectory'

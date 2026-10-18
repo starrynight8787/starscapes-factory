@@ -154,6 +154,10 @@ const CHECKS = [
   ['Leadership Blog: its address', 'src/rooms/RoomRoutes.jsx', /LeadershipBlogPage/, 'the Leadership Blog update (the add-leadership-blog script)'],
   ['Leadership Blog: the banner', 'src/components/PageBanner.jsx', /pb__title/, 'the Leadership Blog update'],
   ['Leadership Blog: the page uses the banner', 'src/leadership/LeadershipBlogPage.jsx', /PageBanner/, 'the Leadership Blog update'],
+  ['YouTube: the rules for the pinned video', 'src/den/youtubeRules.js', /export function pickIntro/, 'the YouTube update'],
+  ['YouTube: the database change', 'sql/youtube-intro.sql', /youtube_intro/, 'the YouTube update'],
+  ['YouTube: the page uses the banner', 'src/den/YouTubeSeriesPage.jsx', /PageBanner/, 'the YouTube update (the add-youtube-v2 script)'],
+  ['YouTube: the pinned-video choice in Admin', 'src/admin/AdminHome.jsx', /saveIntroId/, 'the YouTube update (the add-youtube-v2 script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

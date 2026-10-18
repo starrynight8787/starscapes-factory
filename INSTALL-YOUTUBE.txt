@@ -1,0 +1,44 @@
+The new YouTube Series page: starscapes-youtube-18oct.zip   (one small SQL step)
+
+WHAT IT BUILDS (from your Figma design "YouTube v2", at /sarah-jrs-den/youtube-series)
+  * THE BANNER (the same one now on the Leadership Blog): "YouTube Series", "Watch the adventures come to life.", a Subscribe on YouTube button, and Sarah Jr.'s Den's own picture.
+  * THE PINNED INTRO VIDEO, big, with a "Start here" chip, its title, and a Watch on YouTube link.
+  * LATEST VIDEOS: the next seven, newest first, never repeating the pinned one, with "See all videos on YouTube". On a PHONE only four show at first, with a
+    "Show more videos" button; on a computer all seven show.
+  * Still true: nothing from YouTube loads in a visitor's browser until they press play (the pictures are passed along by your own site; the video plays in
+    YouTube's privacy-friendlier player). The list comes from your channel's feed by itself, and is remembered for 15 minutes.
+A NEW SECTION IN ADMIN, Home page, "YouTube intro video": paste the address of the video you want pinned (any kind of YouTube address works), press Pin this video.
+"Unpin it" puts it back. If none is chosen, the newest video is pinned.
+
+WHAT IS DIFFERENT FROM THE DRAWING (on purpose)
+  * NO NEWSLETTER BOX. The drawing has a newsletter sign-up beside the pinned video. It needs a mailing tool that handles unsubscribing, and your Privacy policy has to say you
+    keep the emails and why, and neither exists yet. I will not put a sign-up form on the site that does not work, so the pinned video simply takes the full width.
+    When the mailing tool and the Privacy policy are ready, the box can be added.
+  * No line of text under the pinned video's title (the drawing had a placeholder): there is nowhere to write it yet. Tell me if you want one.
+  * The banner picture is the Den's own picture, not a YouTube banner picture.
+
+NEEDS: the banner (the Leadership Blog update) and the home page update. The script stops and says so if they are not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-youtube-18oct.zip
+   (this also replaces three test files, youtube-series, home-v2 and story-ledger-page, with updated versions)
+3. python3 tools/add-youtube-v2.py            (it checks all three files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 153 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "YouTube Series page: banner, pinned video, latest seven"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN, IN SUPABASE (only needed to choose a pinned video; the page works without it and pins the newest video)
+   Paste the SQL from the chat (or the file sql/youtube-intro.sql), clear the editor first, make sure nothing is highlighted, and press Run. It should say
+   "Success. No rows returned." It lets the settings table hold a second setting besides the featured room.
+
+THEN TRY IT
+   1. Open /sarah-jrs-den/youtube-series (you can as the owner even if the door is closed): the banner, the pinned video, the seven below.
+   2. Admin, Home page, YouTube intro video: paste an address, press Pin this video, and reload the page: that video is now pinned.
+   3. Press play on a video: it plays in place. On a phone (or a narrow window) only four show until you press Show more videos.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

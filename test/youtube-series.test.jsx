@@ -4,6 +4,7 @@ import { render, screen, within, fireEvent, waitFor } from '@testing-library/rea
 import { MemoryRouter } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
+vi.mock('../src/supabaseClient', () => ({ supabase: { from: () => ({ select: () => ({ eq: () => ({ maybeSingle: async () => ({ data: null, error: null }) }) }) }) } }))
 import { parseFeed, decode, fetchVideos, fetchThumbnail, CHANNEL_ID, FEED_URL } from '../lib/youtubeFeed.js'
 import seriesHandler from '../api/youtube-series.js'
 import thumbHandler from '../api/youtube-thumb.js'
@@ -116,7 +117,8 @@ describe('the page', () => {
   it('loads NOTHING from YouTube before a play button is pressed: the pictures come from this site, and there is no frame', async () => {
     const { container } = show()
     await screen.findByText('Episode one')
-    for (const img of container.querySelectorAll('img')) expect(img.getAttribute('src')).toMatch(/^\/api\/youtube-thumb\?id=[A-Za-z0-9_-]{11}$/)
+    for (const img of container.querySelectorAll('.yt__play img')) expect(img.getAttribute('src')).toMatch(/^\/api\/youtube-thumb\?id=[A-Za-z0-9_-]{11}$/) // every video picture is passed along by this site
+    for (const img of container.querySelectorAll('img')) expect(img.getAttribute('src'), 'no picture comes from another site').toMatch(/^\//)
     expect(container.querySelector('iframe')).toBeNull()
     expect(container.innerHTML).not.toMatch(/ytimg|youtube\.com\/embed|youtube-nocookie/)
   })
@@ -145,7 +147,7 @@ describe('the page', () => {
     const { container } = show()
     await screen.findByText('Episode one')
     expect(screen.queryByText('Bad')).toBeNull()
-    expect(container.querySelectorAll('li')).toHaveLength(1)
+    expect(container.querySelectorAll('.yt__play')).toHaveLength(1) // only the real video is shown (it is the pinned one)
   })
 })
 

@@ -7,6 +7,8 @@ import { useOwnerCheck } from './useIsOwner'
 import { channels } from '../data/channels'
 import { cleanEvent, featuredRoomSlug, formatEventWhen, isoToLondonInputs } from '../home/homeRules'
 import { fetchFeaturedSlug, listEvents, removeEvent, saveEvent, saveFeaturedSlug } from '../home/homeApi'
+import { clearIntroId, fetchIntroId, saveIntroId } from '../den/youtubeApi'
+import { videoIdFrom } from '../den/youtubeRules'
 import '../styles/pages.css'
 import './admin.css'
 
@@ -25,11 +27,14 @@ export default function AdminHome({ session }) {
   const [errors, setErrors] = useState({})
   const [problem, setProblem] = useState('')
   const [saved, setSaved] = useState('')
+  const [intro, setIntro] = useState('') // the pinned YouTube video now chosen ('' if none)
+  const [introText, setIntroText] = useState('')
+  const [introError, setIntroError] = useState('')
 
   const load = useCallback(async () => {
     try {
-      const [list, slug] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => '')])
-      setEvents(list); setFeatured(featuredRoomSlug(slug, channels.map((c) => c.slug))); setStatus('ready')
+      const [list, slug, chosen] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => ''), fetchIntroId().catch(() => '')])
+      setEvents(list); setFeatured(featuredRoomSlug(slug, channels.map((c) => c.slug))); setIntro(chosen); setStatus('ready')
     } catch (e) { setProblem(e.message); setStatus('error') }
   }, [])
   useEffect(() => { if (owner) load() }, [owner, load])
@@ -52,6 +57,18 @@ export default function AdminHome({ session }) {
     try { await saveFeaturedSlug(featured); const room = channels.find((c) => c.slug === featured); setSaved(`${room ? room.name : 'That room'} is now the featured room.`) } catch (e) { setProblem(e.message) }
   }
 
+  async function submitIntro(event) {
+    event.preventDefault(); setProblem(''); setSaved('')
+    const id = videoIdFrom(introText)
+    if (!id) { setIntroError('Paste the address of a YouTube video, or its 11-character code.'); return }
+    setIntroError('')
+    try { await saveIntroId(id); setIntro(id); setIntroText(''); setSaved('That video is now pinned at the top of the YouTube Series page.') } catch (e) { setProblem(e.message) }
+  }
+  async function unpinIntro() {
+    setProblem(''); setSaved('')
+    try { await clearIntroId(); setIntro(''); setSaved('Nothing is pinned now, so the YouTube Series page shows its newest video at the top.') } catch (e) { setProblem(e.message) }
+  }
+
   const now = Date.now()
   return (
     <main className="ad ab">
@@ -68,6 +85,19 @@ export default function AdminHome({ session }) {
             {(p) => <select {...p} value={featured} onChange={(e) => setFeatured(e.target.value)}>{channels.map((c) => <option key={c.slug} value={c.slug}>{c.name}</option>)}</select>}
           </Field>
           <button type="submit" className="pg-btn sg-btn--primary">Save the featured room</button>
+        </form>
+      </section>
+
+      <section aria-labelledby="ah-intro-title">
+        <h2 id="ah-intro-title">YouTube intro video</h2>
+        <p className="ad-note">{intro ? <>Pinned now: <a href={`https://www.youtube.com/watch?v=${intro}`} target="_blank" rel="noopener noreferrer">this video (opens in a new tab)</a>.</> : 'None chosen, so the YouTube Series page pins its newest video.'}</p>
+        <form className="ab__form" onSubmit={submitIntro} noValidate>
+          <ErrorSummary errors={introError ? [{ id: 'ah-intro', message: introError }] : []} />
+          <Field id="ah-intro" label="Address of the video to pin" help="Copy the address from your browser when you are watching it on YouTube." error={introError}>{(p) => <input {...p} type="text" value={introText} onChange={(e) => setIntroText(e.target.value)} />}</Field>
+          <div className="ab__buttons">
+            <button type="submit" className="pg-btn sg-btn--primary">Pin this video</button>
+            {intro && <button type="button" className="pg-btn" onClick={unpinIntro}>Unpin it</button>}
+          </div>
         </form>
       </section>
 
