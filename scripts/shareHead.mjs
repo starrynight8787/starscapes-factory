@@ -18,19 +18,22 @@ const OURS = [
 ]
 
 export const THEME_COLOUR = '#14306A'
-export const ICON = '/icons/rooms/factory-floor.png'
+// The tab icon is the shooting star from the banner (src/components/Logo.jsx), drawn once as star.svg and sized for browsers that need a picture file.
+export const ICONS = { svg: '/icons/star.svg', png: '/icons/star-32.png', apple: '/icons/apple-touch-icon.png' }
 
 // meta: { title, description, siteName, url (omit for a page with no address of its own), imageUrl, imageAlt, index }
-export function renderHead(template, meta) {
+// options.closed: the whole site is closed to search engines (src/data/siteSettings.js), so EVERY page says noindex, nofollow, not only the private ones
+export function renderHead(template, meta, { closed = false } = {}) {
   let html = String(template)
   for (const pattern of OURS) html = html.replace(pattern, '')
   const lines = [
     `<title>${esc(meta.title)}</title>`,
     `<meta name="description" content="${esc(meta.description)}" />`,
     `<meta name="theme-color" content="${THEME_COLOUR}" />`,
-    `<link rel="icon" type="image/png" href="${ICON}" />`,
-    `<link rel="apple-touch-icon" href="${ICON}" />`,
-    ...(meta.index === false ? ['<meta name="robots" content="noindex" />'] : []),
+    `<link rel="icon" type="image/svg+xml" href="${ICONS.svg}" />`,
+    `<link rel="icon" type="image/png" sizes="32x32" href="${ICONS.png}" />`,
+    `<link rel="apple-touch-icon" href="${ICONS.apple}" />`,
+    ...(closed ? ['<meta name="robots" content="noindex, nofollow" />'] : meta.index === false ? ['<meta name="robots" content="noindex" />'] : []),
     ...(meta.url ? [`<link rel="canonical" href="${esc(meta.url)}" />`] : []),
     '<meta property="og:type" content="website" />',
     `<meta property="og:site_name" content="${esc(meta.siteName)}" />`,

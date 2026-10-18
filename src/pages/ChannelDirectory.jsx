@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
-import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { roomImages, roomPath } from '../data/roomImages'
 import RoomIcon from '../components/RoomIcon'
 import { ROOM_ICONS } from '../components/roomIcons'
-import { StarMark } from '../components/Logo'
+import HomeSections from '../home/HomeSections'
+import { fetchFeaturedSlug, fetchLatestPost, fetchNextEvent } from '../home/homeApi'
 import '../styles/site.css'
 
 // The floor plan is drawn on a 960 x 640 grid.
@@ -52,21 +52,13 @@ function place(spec) {
 export default function ChannelDirectory() {
   const navigate = useNavigate()
   const [active, setActive] = useState(null)
-  const [posts, setPosts] = useState([])
-
-  // The three newest published posts, for the "Latest posts" section
+  // The three extras under the floor plan. A problem with any of them just means that box has nothing to show.
+  const [extras, setExtras] = useState({ event: null, featured: '', post: null })
   useEffect(() => {
     let cancelled = false
-    async function loadPosts() {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('id, title, content, image_url, channel, created_at')
-        .eq('published', true)
-        .order('created_at', { ascending: false })
-        .limit(3)
-      if (!cancelled && !error && data) setPosts(data)
-    }
-    loadPosts()
+    Promise.all([fetchNextEvent().catch(() => null), fetchFeaturedSlug().catch(() => ''), fetchLatestPost().catch(() => null)]).then(([event, featured, post]) => {
+      if (!cancelled) setExtras({ event, featured, post })
+    })
     return () => {
       cancelled = true
     }
@@ -158,40 +150,8 @@ export default function ChannelDirectory() {
         </div>
       </section>
 
-      {/* ---------- Latest posts ---------- */}
-      {posts.length > 0 && (
-        <section className="sf-latest" aria-labelledby="sf-latest-title">
-          <div className="sf-latest__head">
-            <div>
-              <p className="sf-eyebrow sf-eyebrow--blue">Fresh from the Factory</p>
-              <h2 id="sf-latest-title">Latest posts</h2>
-            </div>
-            <Link to="/blog" className="sf-morelink">
-              See all posts →
-            </Link>
-          </div>
-          <div className="sf-latest__grid">
-            {posts.map((post) => {
-              const room = channels.find((c) => c.slug === post.channel)
-              const excerpt = post.content.length > 140 ? post.content.slice(0, 140) + '…' : post.content
-              return (
-                <Link key={post.id} to={`/post/${post.id}`} className="sf-post">
-                  {post.image_url ? (
-                    <img className="sf-post__img" src={post.image_url} alt="" loading="lazy" />
-                  ) : (
-                    <div className="sf-post__img sf-post__img--empty">
-                      <StarMark width={72} color="#DCE6FF" />
-                    </div>
-                  )}
-                  <span className="sf-post__chip">{room ? room.name : 'Blog'}</span>
-                  <span className="sf-post__title">{post.title}</span>
-                  <span className="sf-post__ex">{excerpt}</span>
-                </Link>
-              )
-            })}
-          </div>
-        </section>
-      )}
+      {/* ---------- Next event, membership, the featured room and the latest post ---------- */}
+      <HomeSections event={extras.event} featured={extras.featured} post={extras.post} />
     </div>
   )
 }

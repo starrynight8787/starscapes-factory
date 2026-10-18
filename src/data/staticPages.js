@@ -1,6 +1,7 @@
 export const staticPages = [
   {
     slug: 'about',
+    ready: false,
     title: 'About Me',
     content: `Hi, I'm Gill — the person behind Starscapes Factory.
 
@@ -8,15 +9,16 @@ export const staticPages = [
   },
   {
     slug: 'contact',
+    ready: true,
+    showEmail: true,
     title: 'Contact',
-    content: `Want to get in touch? Reach me at:
+    content: `Want to get in touch? I read every message myself, and I will reply as soon as I can.
 
-imagine@starscapesfactory.com
-
-[Replace with your real contact email, or add a contact form here later.]`,
+Email is the best way to reach me. If it is about an order, please put your order number in the message, so I can find it quickly.`,
   },
   {
     slug: 'terms',
+    ready: false,
     title: 'Terms & Conditions',
     content: `Last updated: [date]
 
@@ -41,6 +43,7 @@ Contact: imagine@starscapesfactory.com`,
   },
   {
     slug: 'privacy',
+    ready: false,
     title: 'Privacy Policy',
     content: `Last updated: [date]
 
@@ -67,6 +70,7 @@ Contact: imagine@starscapesfactory.com`,
   },
   {
     slug: 'ai-policy',
+    ready: false,
     title: 'AI Policy',
     content: `Last updated: [date]
 
@@ -79,3 +83,10 @@ This policy will be updated as tools and practices evolve.
 Contact: imagine@starscapesfactory.com`,
   },
 ]
+
+// A page is only shown, and only linked from the footer and the menu, once "ready" is true. Set it to true when the page has its real words.
+// (Until then the address shows a plain "not ready yet" message, never the placeholder text.)
+export const pageIsReady = (slug) => {
+  const page = staticPages.find((p) => p.slug === slug)
+  return Boolean(page && page.ready === true)
+}

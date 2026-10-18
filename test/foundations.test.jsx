@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import Footer from '../src/components/Footer'
 import SkipLink from '../src/components/SkipLink'
 import { social } from '../src/data/social'
+import { pageIsReady } from '../src/data/staticPages'
 import { SOCIAL_LINKS } from '../src/data/contact'
 
 const css = readFileSync(join(process.cwd(), 'src/styles/site.css'), 'utf8')
@@ -16,7 +17,12 @@ describe('footer', () => {
   it('keeps every existing link', () => {
     renderFooter({ social: [] })
     const nav = screen.getByRole('navigation', { name: 'Footer' })
-    for (const name of ['About', 'Contact', 'Terms & Conditions', 'Privacy Policy', 'AI Policy']) expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
+    // only a page that is ready is linked: Contact now, the other four once they have their real words (staticPages.js, ready: true)
+    for (const [name, slug] of [['About', 'about'], ['Contact', 'contact'], ['Terms & Conditions', 'terms'], ['Privacy Policy', 'privacy'], ['AI Policy', 'ai-policy']]) {
+      if (pageIsReady(slug)) expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
+      else expect(within(nav).queryByRole('link', { name })).toBeNull()
+    }
+    expect(within(nav).getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/page/contact')
   })
   it('shows no Follow links until an address is filled in', () => {
     renderFooter({ social: [{ name: 'YouTube', url: '' }, { name: 'TikTok', url: '   ' }] })

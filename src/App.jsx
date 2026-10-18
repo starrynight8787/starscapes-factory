@@ -14,6 +14,7 @@ import EditPost from './pages/EditPost'
 import ChannelDirectory from './pages/ChannelDirectory'
 import ChannelPage from './pages/ChannelPage'
 import StaticPage from './pages/StaticPage'
+import TestersPage from './testers/TestersPage'
 import Footer from './components/Footer'
 import ProductGallery from './pages/ProductGallery'
 import ProductPage from './pages/ProductPage'
@@ -22,6 +23,7 @@ import AdminConsole from './admin/AdminConsole'
 import OpenDoors from './admin/OpenDoors'
 import AdminSuggestions from './admin/AdminSuggestions'
 import AdminBooks from './admin/AdminBooks'
+import AdminHome from './admin/AdminHome'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -66,6 +68,7 @@ export default function App() {
 <Route path="/channel/:slug" element={<ChannelPage />} />
 <Route path="/post/:id" element={<PostPage session={session} />} />
 <Route path="/page/:slug" element={<StaticPage />} /> 
+<Route path="/testers" element={<TestersPage />} />
 <Route path="/products" element={<ProductGallery />} /> 
 <Route path="/products/:id" element={<ProductPage />} /> 
 <Route path="/new-product" element={ <ProtectedRoute session={session}> <NewProduct session={session} /> </ProtectedRoute> } />
@@ -73,6 +76,7 @@ export default function App() {
 <Route path="/admin/doors" element={ <ProtectedRoute session={session}> <OpenDoors session={session} /> </ProtectedRoute> } />
 <Route path="/admin/suggestions" element={ <ProtectedRoute session={session}> <AdminSuggestions session={session} /> </ProtectedRoute> } />
 <Route path="/admin/books" element={ <ProtectedRoute session={session}> <AdminBooks session={session} /> </ProtectedRoute> } />
+<Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"
             element={

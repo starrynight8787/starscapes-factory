@@ -1,4 +1,4 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="2 4.663 32 32" width="32" height="32">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="3 -10 60 60" width="32" height="32">
   <title>Starscapes Factory</title>
-  <path d="M18 8 L21.409 17.308 L31.315 17.674 L23.516 23.792 L26.229 33.326 L18 27.8 L9.771 33.326 L12.484 23.792 L4.685 17.674 L14.591 17.308 Z" fill="#2E8FD0"/>
+  <path d="M18 8 L21.409 17.308 L31.315 17.674 L23.516 23.792 L26.229 33.326 L18 27.8 L9.771 33.326 L12.484 23.792 L4.685 17.674 L14.591 17.308 Z" fill="#2E8FD0"/><path d="M36 13 Q48 7 60 8" stroke="#2E8FD0" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M38 20 Q50 18 62 19" stroke="#2E8FD0" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M36 27 Q47 28 56 30" stroke="#2E8FD0" stroke-width="4" stroke-linecap="round" fill="none"/>
 </svg>

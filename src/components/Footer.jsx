@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
 import Logo from './Logo'
 import { social as socialLinks } from '../data/social'
+import { pageIsReady } from '../data/staticPages'
 import '../styles/site.css'
 
 const links = [
@@ -21,7 +22,7 @@ export default function Footer({ social = socialLinks }) {
           <Logo dark />
           <div>
             <nav className="sf-footer__links" aria-label="Footer">
-              {links.map(([label, to]) => (
+              {links.filter(([, to]) => pageIsReady(to.replace('/page/', ''))).map(([label, to]) => (
                 <Link key={to} to={to}>
                   {label}
                 </Link>

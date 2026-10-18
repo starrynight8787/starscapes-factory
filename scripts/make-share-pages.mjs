@@ -26,15 +26,20 @@ const template = fs.readFileSync(path.join(dist, 'index.html'), 'utf8')
 
 // The table imports the rooms' own data the way the site does, so it is loaded the way the site loads it
 const server = await createServer({ server: { middlewareMode: true }, appType: 'custom', logLevel: 'silent', root: process.cwd() })
-let meta, collections, rooms
+let meta, collections, rooms, settings
 try {
   meta = await server.ssrLoadModule('/src/data/pageMeta.js')
+  settings = await server.ssrLoadModule('/src/data/siteSettings.js')
   collections = (await server.ssrLoadModule('/src/artloft/artLoftData.js')).COLLECTIONS
   rooms = Object.fromEntries((await server.ssrLoadModule('/src/data/channels.js')).channels.map((c) => [c.slug, c.name]))
 } finally {
   await server.close()
 }
 const { PAGES, IMAGES, SITE_NAME, urlFor, fullTitleFor, imageUrlFor } = meta
+
+// Is the whole site closed to search engines? (src/data/siteSettings.js.) SEARCH_ENGINES_OVERRIDE is only for the tests: open or closed.
+const allowed = process.env.SEARCH_ENGINES_OVERRIDE === 'open' ? true : process.env.SEARCH_ENGINES_OVERRIDE === 'closed' ? false : settings.SEARCH_ENGINES_ALLOWED === true
+const closed = !allowed
 
 const forPage = (page, urlPath) => ({
   title: fullTitleFor(page),
@@ -53,7 +58,7 @@ for (const [urlPath, page] of Object.entries(PAGES)) {
   fs.mkdirSync(path.dirname(target), { recursive: true })
   const info = forPage(page, urlPath)
   if (urlPath === '/') delete info.url // the home page file is also the fallback for unlisted addresses, so it carries no address of its own
-  fs.writeFileSync(target, renderHead(template, info))
+  fs.writeFileSync(target, renderHead(template, info, { closed }))
   if (page.index !== false) indexable.push(urlFor(urlPath))
 }
 
@@ -64,11 +69,12 @@ const extra = [...collections.map((c) => collectionPage(c, ctx)), ...database.pa
 for (const { urlPath, meta: info } of extra) {
   const target = path.join(dist, fileFor(urlPath))
   fs.mkdirSync(path.dirname(target), { recursive: true })
-  fs.writeFileSync(target, renderHead(template, info))
+  fs.writeFileSync(target, renderHead(template, info, { closed }))
   indexable.push(info.url)
 }
 
 // The sitemap
-fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemapXml(indexable))
+fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemapXml(closed ? [] : indexable))
+console.log(closed ? 'The whole site is CLOSED to search engines (every page says noindex, and the sitemap is empty). To open it, set SEARCH_ENGINES_ALLOWED to true in src/data/siteSettings.js.' : 'The site is OPEN to search engines.')
 console.log(`Share pages: ${Object.keys(PAGES).length} written, plus ${collections.length} collections, ${database.counts.posts} post${database.counts.posts === 1 ? '' : 's'} and ${database.counts.prints} print${database.counts.prints === 1 ? '' : 's'} (${indexable.length} in the sitemap).`)
 for (const note of database.notes) console.log(`  note: ${note}`)

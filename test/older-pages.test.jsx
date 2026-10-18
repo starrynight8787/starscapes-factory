@@ -152,7 +152,8 @@ describe('a plain text page', () => {
   it('shows its title and its words with their line breaks, with a way back', () => {
     const { container } = at('contact')
     expect(screen.getByRole('heading', { level: 1, name: 'Contact' })).toBeInTheDocument()
-    expect(container.querySelector('.pg-text__body').textContent).toMatch(/imagine@starscapesfactory\.com/)
+    expect(container.querySelector('.pg-text__body').textContent).toMatch(/Want to get in touch\?/)
+    expect(screen.getByRole('link', { name: 'imagine@starscapesfactory.com' })).toHaveAttribute('href', 'mailto:imagine@starscapesfactory.com') // the address comes from contact.js, not from the page's text
     expect(screen.getByRole('link', { name: /Back home/ })).toHaveAttribute('href', '/')
     noInlineStyles(container)
   })

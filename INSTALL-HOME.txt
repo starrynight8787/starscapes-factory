@@ -1,0 +1,53 @@
+The new home page boxes: starscapes-home-18oct.zip   (SQL needed)
+
+WHAT IT BUILDS (from your Figma design "Row: Home v2")
+Under the floor plan, which does not change, the home page now has:
+  * NEXT EVENT (wide) and MEMBERSHIP (narrow) side by side. Next event shows the soonest event you have added that has not finished: its name, the day and time
+    in London time, a line about it, an "Add to calendar" button (a calendar file that works in any calendar app) and a button to YouTube or to your own link.
+    When nothing is planned it says "No event planned yet. Check back soon."  Membership says "Into the Nebula: every star starts somewhere." and, honestly,
+    that it is not open yet, with a button that cannot be pressed ("Coming soon"). Nothing in that box promises anything that does not exist yet.
+  * FEATURED ROOM: one room with its picture, name, tagline, description and a "Step inside" button. It is the Art Loft until you choose another.
+  * LATEST POST: your newest published post from any room, with its room and date, "Read the post" and "See all posts".
+The old row of three latest posts is gone, as in your sketch.
+A NEW TOOL IN ADMIN, "Home page" (/admin/home): choose the featured room, and add, change or delete events.
+
+ALSO IN THIS PACKAGE: THE TAB ICON IS NOW THE BANNER'S MARK, THE STAR WITH ITS THREE TRAILS (your request). It replaces the star-on-its-own icon from the tab icon update
+(it showed in your tab as a thin sliver). It is drawn from the banner's own shapes, in the banner's blue, with the trails a little bolder than in the banner so they
+still show at 16 pixels, and a navy version for phone home screens. A test fails if the icon ever stops matching the banner's star and all three trails.
+Browsers keep old tab icons for a while: after Vercel says Ready, open the site in a private window to see it at once (Safari can take a day or so).
+
+BEFORE ANYTHING ELSE: TWO EARLIER UPDATES ARE NOT ON YOUR LIVE SITE YET
+A health check on a clean copy of what is on GitHub says 8 of 136 checks need attention: the TESTER KIT and the TAB ICON are not installed. Their picture files
+arrived, but the files that connect them did not change, because the tab icon update refuses to run until the tester kit is in. In plain terms, the live site is
+NOT closed to search engines yet, there is no tester page, and the old placeholder pages are still showing. This list puts that right, in the right order.
+If your own health check already says 136, skip steps 2 to 5.
+
+NEEDS: the tester kit and the Book Club update (the script stops and says so if they are not there).
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-tester-kit-18oct.zip
+3. python3 tools/add-tester-kit.py
+4. unzip -o ~/Downloads/starscapes-tab-icon-18oct.zip
+5. python3 tools/add-tab-icon.py
+6. unzip -o ~/Downloads/starscapes-home-18oct.zip
+7. python3 tools/add-home-v2.py              (it checks all four files first; if anything is unexpected it changes nothing)
+8. node tools/health-check.mjs | tail -2      (all 143 checks should pass)
+9. npm run build                              (must finish without errors; it should say: The whole site is CLOSED to search engines)
+10. git add .
+    git status                                (no files ending .before- should be listed; if any are, run:  find . -name '*.before-*' -not -path './node_modules/*' -delete   then git add . again)
+    git commit -m "Tester kit, tab icon and the new home page boxes"
+    git push
+11. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN, IN SUPABASE (Terminal first is NOT needed: paste the SQL from the chat, or use the file)
+   The tables are made by sql/home.sql. Until you run it, the home page still works: it shows "No event planned yet", the Art Loft as the featured room and your
+   latest post; and the Home page tool cannot save. To check it worked, run:
+      select tablename, policyname, cmd from pg_policies where tablename in ('events', 'site_settings') order by tablename, policyname;
+   It should list 4 rows.
+
+THEN TRY IT (as the owner)
+   1. Admin, Home page: add an event for a day soon. Look at the home page: it should show that event.
+   2. Press "Add to calendar": a calendar file downloads. Open it: the time should be right in London time.
+   3. Choose a different featured room and save: the home page changes.
+   4. Check the Latest post is your newest post.

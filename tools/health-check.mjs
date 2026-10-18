@@ -141,6 +141,13 @@ const CHECKS = [
   ['Tab icon: the star picture', 'public/icons/star.svg', /M18 8 L21\.409/, 'the tab icon update'],
   ['Tab icon: the build uses it', 'scripts/shareHead.mjs', /star\.svg/, 'the tab icon update (the add-tab-icon script)'],
   ['Tab icon: the page template uses it', 'index.html', /star\.svg/, 'the tab icon update (the add-tab-icon script)'],
+  ['Home: the database file', 'sql/home.sql', /site_settings/, 'the home page update'],
+  ['Home: the rules for events', 'src/home/homeRules.js', /export function pickNextEvent/, 'the home page update'],
+  ['Home: the four boxes', 'src/home/HomeSections.jsx', /NextEventBox/, 'the home page update'],
+  ['Home: the Home page tool', 'src/admin/AdminHome.jsx', /saveFeaturedSlug/, 'the home page update'],
+  ['Home: the home page uses the boxes', 'src/pages/ChannelDirectory.jsx', /HomeSections/, 'the home page update (the add-home-v2 script)'],
+  ['Home: the tool address', 'src/App.jsx', /admin\/home/, 'the home page update (the add-home-v2 script)'],
+  ['Home: the tool listed in Admin', 'src/admin/adminTools.js', /name: 'Home page'/, 'the home page update (the add-home-v2 script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

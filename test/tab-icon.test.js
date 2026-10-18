@@ -11,14 +11,25 @@ const SHELL = '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="U
 const META = { title: 'T', description: 'D', siteName: 'S', url: 'https://x.example/p', imageUrl: 'https://x.example/i.png', imageAlt: 'A', index: true }
 const starOf = (text) => text.match(/d="(M18 8 L[^"]+)"/)[1]
 
-describe('the star', () => {
-  it('is drawn from the banner\u2019s own shape, in the banner\u2019s blue, so the two cannot drift apart', () => {
+describe('the banner mark: the star and its three trails', () => {
+  const logo = read('src/components/Logo.jsx')
+  const starMark = logo.slice(logo.indexOf('export function StarMark'), logo.indexOf('export default function Logo'))
+  const shapesOf = (text) => [...text.matchAll(/\sd="([^"]+)"/g)].map((m) => m[1])
+  it('is drawn from the banner\u2019s own shapes (the star and all three trails), so the two cannot drift apart', () => {
     const svg = read('public/icons/star.svg')
-    expect(starOf(svg)).toBe(starOf(read('src/components/Logo.jsx')))
-    expect(svg).toContain('fill="#2E8FD0"')
-    expect(read('src/components/Logo.jsx')).toMatch(/color = '#2E8FD0'/)
+    const banner = shapesOf(starMark)
+    expect(banner).toHaveLength(4) // the star and three trails
+    for (const d of banner) expect(shapesOf(svg), d).toContain(d)
   })
-  it('is a square picture, so a browser tab does not squash it, with a name for anything that reads it', () => {
+  it('is in the banner\u2019s blue, with the trails drawn bolder than in the banner so they still show at tab size', () => {
+    const svg = read('public/icons/star.svg')
+    expect(svg).toContain('fill="#2E8FD0"'); expect(logo).toMatch(/color = '#2E8FD0'/)
+    const banner = Number(starMark.match(/strokeWidth="(\d+(?:\.\d+)?)"/)[1])
+    const strokes = [...svg.matchAll(/stroke-width="(\d+(?:\.\d+)?)"/g)].map((m) => Number(m[1]))
+    expect(strokes).toHaveLength(3)
+    for (const w of strokes) expect(w, 'trail thickness').toBeGreaterThan(banner)
+  })
+  it('sits in a square picture (the mark is twice as wide as it is tall), so a browser tab does not squash it, with a name for anything that reads it', () => {
     const svg = read('public/icons/star.svg')
     const [, , w, h] = svg.match(/viewBox="([^"]+)"/)[1].split(' ').map(Number)
     expect(w).toBe(h)

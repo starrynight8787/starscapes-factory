@@ -1,0 +1,60 @@
+/* The private page for testers. Stands on its own: nothing here depends on the old index.css rules. */
+.ts section {
+  margin: 28px 0;
+}
+.ts h2 {
+  margin: 0 0 10px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  color: var(--sf-navy-700, #14306a);
+}
+.ts__intro {
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.ts li {
+  margin: 6px 0;
+  line-height: 1.55;
+}
+.ts__card {
+  display: grid;
+  gap: 8px;
+  margin: 0 0 14px;
+  padding: 16px 18px;
+  background: #fff;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 12px;
+  box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6);
+}
+.ts__row {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 4px 16px;
+}
+@media (max-width: 560px) {
+  .ts__row {
+    grid-template-columns: 1fr;
+  }
+}
+.ts__row dt {
+  font-weight: 700;
+  color: var(--sf-navy-700, #14306a);
+}
+.ts__row dd {
+  margin: 0;
+}
+.ts code {
+  padding: 2px 8px;
+  background: var(--sf-star, #dce6ff);
+  border-radius: 6px;
+  font-size: 1.125rem;
+  letter-spacing: 0.04em;
+}
+.ts__mail {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.ts__thanks {
+  font-weight: 700;
+  color: var(--sf-navy-700, #14306a);
+}

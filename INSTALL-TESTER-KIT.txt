@@ -1,0 +1,46 @@
+The tester kit: starscapes-tester-kit-18oct.zip  (get the site ready to share). No SQL.
+
+WHAT IT DOES
+1. ONE SWITCH THAT CLOSES THE WHOLE SITE TO SEARCH ENGINES. While it is closed, EVERY page says "noindex, nofollow" (do not list me, do not follow my links) and the
+   sitemap is empty, so Google and the others leave the site alone while you build and while testers try it. The switch is one line in src/data/siteSettings.js:
+        export const SEARCH_ENGINES_ALLOWED = false
+   AT LAUNCH, change false to true, push, and the public pages and the sitemap open up again (private pages stay private). It is on the launch list.
+   (This is done with the page tags, not by blocking the site in robots.txt: a blocked page cannot be read, so search engines would never see its "do not list me".)
+2. A PRIVATE PAGE FOR TESTERS at /testers. Not in the footer, the menu or the sitemap: you send people the address. It says what is pretend (no real money, nothing made
+   or posted, use only the test card), gives Stripe's test card (4242 4242 4242 4242, any future date, any three numbers, and 4000 0000 0000 0002 to see a payment fail),
+   lists what to try, and tells them how to email you what they found (a button that opens an email to imagine@ with a subject line already filled in).
+3. A REAL CONTACT PAGE: "Want to get in touch? I read every message myself..." with your email as a link (from contact.js, never typed into the page).
+4. THE FOUR PAGES THAT ARE NOT READY ARE HIDDEN: About, Terms & Conditions, Privacy Policy and AI Policy. They are gone from the footer, and About is gone from the menu
+   (computer and phone). If someone types their address they see "This page is not ready yet. Please check back soon.", never the "[Replace this...]" text.
+   WHEN A PAGE HAS ITS REAL WORDS: put them in src/data/staticPages.js and change that page's  ready: false  to  ready: true.  The footer and the menu then show it.
+
+BEFORE YOU INVITE ANYONE (three things only you can do)
+ A. CHECK THE SEARCH SWITCH WORKED: on the live site, open the home page, right-click, View Page Source, and search for the word robots. You should see
+    <meta name="robots" content="noindex, nofollow" />
+ B. CHECK YOUR STRIPE KEY IS A TEST KEY: Vercel, your project, Settings, Environment Variables, STRIPE_SECRET_KEY, Production. Click to reveal the first few letters only.
+    It must start sk_test_ . Do NOT paste the key to me or anyone. If it starts sk_live_, stop: do not do step C.
+ C. LET TESTERS CHECK OUT: still in Vercel's Environment Variables, set CHECKOUT_OPEN to yes (exactly that, lower case) for Production, then redeploy. Testers can now place
+    pretend orders. (The site refuses real payments unless ALLOW_LIVE_CHECKOUT is also yes, and it is not, so even a mistake cannot charge anyone.) To close checkout again,
+    delete CHECKOUT_OPEN and redeploy.
+ Then send the address  https://starscapesfactory.com/testers  to your testers.
+
+THINGS TO KNOW
+ * The 11 test blog posts are still published. They are hidden from search engines now, but testers can see them. Delete or replace them when you are ready (SFW-204).
+ * The Free Ebook sign-up links to the Privacy policy, which is not ready, so KEEP THE FREE EBOOK DOOR CLOSED until the Privacy policy has its real words.
+ * Tell testers to use their own email if they make an account: sign-up sends a real email.
+
+NEEDS: restyle part 2 (starscapes-restyle-two-18oct.zip) installed first. The script stops and says so if it is not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. unzip -o ~/Downloads/starscapes-tester-kit-18oct.zip
+   (this also replaces five test files with updated versions)
+2. python3 tools/add-tester-kit.py            (it checks all eight files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs                (all 133 checks should pass)
+4. npm run build                              (must finish without errors; it should say: The whole site is CLOSED to search engines)
+5. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Tester kit: site closed to search engines, tester page, real Contact page, unready pages hidden"
+   git push
+6. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

@@ -47,7 +47,7 @@ async function build(env) {
   const dist = fs.mkdtempSync(path.join(os.tmpdir(), 'dynpages-'))
   dirs.push(dist)
   fs.writeFileSync(path.join(dist, 'index.html'), SHELL)
-  const { stdout } = await run('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8', env: { ...process.env, ...env } })
+  const { stdout } = await run('node', ['scripts/make-share-pages.mjs', dist], { encoding: 'utf8', env: { ...process.env, SEARCH_ENGINES_OVERRIDE: 'open', ...env } })
   return { dist, out: stdout }
 }
 const read = (dist, rel) => fs.readFileSync(path.join(dist, rel), 'utf8')

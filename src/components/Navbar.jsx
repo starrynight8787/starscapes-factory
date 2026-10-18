@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
+import { pageIsReady } from '../data/staticPages'
 import { roomPath } from '../data/roomImages'
 import Logo from './Logo'
 import RoomIcon from './RoomIcon'
@@ -124,9 +125,11 @@ export default function Navbar({ session }) {
                 </div>
               )}
             </div>
-            <Link to="/page/about" className="sf-link">
-              About
-            </Link>
+            {pageIsReady('about') && (
+              <Link to="/page/about" className="sf-link">
+                About
+              </Link>
+            )}
             <CartNavLink className="sf-link" />
           </div>
 
@@ -186,9 +189,11 @@ export default function Navbar({ session }) {
                 {c.name}
               </Link>
             ))}
-            <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-              About
-            </Link>
+            {pageIsReady('about') && (
+              <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
+                About
+              </Link>
+            )}
             <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
             {isOwner && (
               <Link to="/admin" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
