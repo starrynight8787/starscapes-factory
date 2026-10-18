@@ -192,6 +192,11 @@ describe('how it is wired in', () => {
     for (let i = 1; i <= 5; i++) expect(css).toContain(`.lb__o${i} { order: ${i}; }`)
     expect(css).toMatch(/@media \(max-width: 960px\)[\s\S]*\.lb__left,\s*\.lb__right \{\s*display: contents/)
   })
+  it('shrinks its two columns together on a narrower screen instead of running off the side (no fixed widths that add up to more than the page)', () => {
+    const css = read('src/leadership/leadership.css')
+    expect(css).toMatch(/\.lb__cols \{[^}]*grid-template-columns: minmax\(0, 784fr\) minmax\(0, 384fr\)/)
+    expect(css).not.toMatch(/grid-template-columns: 784px/)
+  })
   it('has no inline styles apart from hiding a picture that will not load, and no text under 14px', () => {
     expect(read('src/leadership/LeadershipBlogPage.jsx').replace("e.currentTarget.style.visibility = 'hidden'", '')).not.toMatch(/style=\{\{/)
     for (const m of read('src/leadership/leadership.css').matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)

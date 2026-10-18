@@ -1,0 +1,26 @@
+The banner width fix: starscapes-banner-fix-18oct.zip   (no SQL, no script: just unzip)
+
+WHAT IT FIXES (from your screenshot of the live Leadership Blog)
+The banner had shrunk to about half the page, with the picture dropped underneath the words. In your Figma designs the banner stretches across the whole page, with the words on
+the left and the picture on the right. This makes the banner stretch to the full width, on every page that uses it (the Leadership Blog now, and the YouTube page).
+It also makes any room page that has a banner as wide as your Figma designs (1200 pixels of content, instead of the 980 other room pages are held to), and lets the
+Leadership Blog's two columns shrink together on a narrower screen instead of running off the side.
+
+IMPORTANT, AND HONEST: I have no web browser where I work, so I could not look at the finished page. The change makes the banner insist on the full width, which works
+whatever was shrinking it, and tests check each rule, but PLEASE look at the live page after you push and send me a screenshot if anything is still off.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-banner-fix-18oct.zip
+3. node tools/health-check.mjs | tail -2        (it should still pass)
+4. npm run build                                (must finish without errors)
+5. git add .
+   git status                                   (four files should be listed; no files ending .before-)
+   git commit -m "Banner stretches across the page"
+   git push
+6. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK at /leadership-lounge/blog on a computer: the navy banner should reach from the left edge of the page to the right edge, with the words on the left and the Lounge
+picture on the right. On a phone (or a narrow window) the picture goes under the words, and the buttons are full width.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

@@ -29,6 +29,15 @@ describe('the banner', () => {
     expect(read('src/components/PageBanner.jsx').replace("e.currentTarget.style.visibility = 'hidden'", '')).not.toMatch(/style=\{\{/)
     for (const m of read('src/components/pagebanner.css').matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)
   })
+  it('stretches across the whole page, and makes a room page that has a banner as wide as the Figma designs (1200 pixels of content, not 980)', () => {
+    const css = read('src/components/pagebanner.css')
+    expect(css).toMatch(/\.pb \{[^}]*width: 100%/)
+    expect(css).toMatch(/\.pb \{[^}]*box-sizing: border-box/)
+    expect(css).toMatch(/\.pb \{[^}]*align-self: stretch/)
+    expect(css).toMatch(/\.pb \{[^}]*max-width: none/)
+    expect(css).toMatch(/\.rp:has\(> \.pb\) \{\s*max-width: 1232px;/)
+    expect(read('src/rooms/roompages.css')).toMatch(/\.rp \{\s*max-width: 980px;/) // the ordinary room page width, which the banner's rule overrides
+  })
   it('stacks into one column on a phone, with full-width buttons', () => {
     expect(read('src/components/pagebanner.css')).toMatch(/@media \(max-width: 960px\)[\s\S]*\.pb__buttons,\s*\.pb__buttons \.pg-btn \{\s*width: 100%/)
   })

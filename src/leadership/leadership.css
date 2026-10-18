@@ -1,7 +1,7 @@
 /* The Leadership Blog page. Stands on its own: nothing here depends on the old index.css rules. */
 .lb__cols {
   display: grid;
-  grid-template-columns: 784px 384px;
+  grid-template-columns: minmax(0, 784fr) minmax(0, 384fr); /* 784 and 384 pixels at full width, and shrinking together on a narrower screen instead of overflowing */
   gap: 32px;
   align-items: start;
   margin-top: 24px;

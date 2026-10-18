@@ -1,5 +1,13 @@
 /* The banner at the top of a page. Stands on its own: nothing here depends on the old index.css rules. */
+/* A room page that has a banner is as wide as the Figma designs (1200 pixels of content), not the 980 pixels other room pages are held to. */
+.rp:has(> .pb) {
+  max-width: 1232px;
+}
 .pb {
+  box-sizing: border-box;
+  width: 100%; /* stretch across the page; without this the banner shrinks to fit its contents */
+  max-width: none;
+  align-self: stretch; /* and the same if its parent happens to lay its children out in a column */
   display: flex;
   flex-wrap: wrap;
   align-items: center;
