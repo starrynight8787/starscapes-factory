@@ -46,7 +46,7 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="cart">
+      <main className="cart legacy">
         <h1>Your cart</h1>
         <p className="cart-empty">Your cart is empty.</p>
         <p>
@@ -57,7 +57,7 @@ export default function CartPage() {
   }
 
   return (
-    <main className="cart">
+    <main className="cart legacy">
       <h1>Your cart</h1>
       <p className="cart-count" role="status">
         {count} {count === 1 ? 'item' : 'items'}

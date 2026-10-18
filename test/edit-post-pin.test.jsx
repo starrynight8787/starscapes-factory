@@ -70,7 +70,7 @@ async function open(id, posts, opts) {
       </Routes>
     </MemoryRouter>
   )
-  await screen.findByRole('heading', { name: 'Edit Post' })
+  await screen.findByRole('heading', { name: 'Edit post' })
   return user
 }
 const sw = () => screen.queryByRole('switch', { name: /Pin this post to the top of its section/ })
@@ -226,5 +226,44 @@ describe('the live page file', () => {
   it('asks for pinned_in with a fallback, and only saves it when the column exists', () => {
     expect(src).toMatch(/\/pinned_in\/i\.test/)
     expect(src).toMatch(/if \(canPin\)/)
+  })
+})
+
+describe('the edit page\u2019s own form (labels, plain-words problems, Cancel)', () => {
+  it('has a visible label on every field, as well as the placeholder text', async () => {
+    await open('day6', [DAY_SIX])
+    for (const label of ['Title', 'Post text', 'Tags', 'Room']) expect(screen.getByLabelText(label)).toBeInTheDocument()
+    expect(screen.getByLabelText(/New header picture \(optional, up to 6 MB\)/)).toBeInTheDocument()
+  })
+  it('does not save a post with no title, and says so in words with a link to the field', async () => {
+    const user = await open('day6', [DAY_SIX])
+    await user.clear(screen.getByLabelText('Title'))
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Write a title for the post.')
+    expect(screen.getByLabelText('Title')).toHaveAttribute('aria-invalid', 'true')
+    expect(h.db.log).toEqual([])
+  })
+  it('does not save a post with no words in it', async () => {
+    const user = await open('day6', [DAY_SIX])
+    await user.clear(screen.getByLabelText('Post text'))
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('Write the post itself.')
+    expect(h.db.log).toEqual([])
+  })
+  it('refuses a header picture over 6 MB, and says so', async () => {
+    const user = await open('day6', [DAY_SIX])
+    const big = new File(['x'], 'big.png', { type: 'image/png' })
+    Object.defineProperty(big, 'size', { value: 7 * 1024 * 1024 })
+    await user.upload(screen.getByLabelText(/New header picture/), big)
+    await user.click(screen.getByRole('button', { name: 'Save Changes' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent('That picture is over 6 MB. Choose a smaller one.')
+    expect(h.db.log).toEqual([])
+  })
+  it('goes back to the post, without saving, when Cancel is pressed', async () => {
+    const user = await open('day6', [DAY_SIX])
+    await user.type(screen.getByLabelText('Title'), ' CHANGED')
+    await user.click(screen.getByRole('button', { name: 'Cancel' }))
+    expect(await screen.findByText('The post page')).toBeInTheDocument()
+    expect(h.db.log).toEqual([])
   })
 })

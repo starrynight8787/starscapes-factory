@@ -3,7 +3,7 @@
 export default function PostFilter({ q, tag, sort, tags, total, shown, onChange }) {
   const filtering = Boolean(q.trim() || tag)
   return (
-    <form className="ff-filter" role="search" aria-label="Filter posts" onSubmit={(e) => e.preventDefault()}>
+    <form className="ff-filter legacy" role="search" aria-label="Filter posts" onSubmit={(e) => e.preventDefault()}>
       <div className="ff-filter__row">
         <label className="ff-filter__field">
           <span>Search</span>

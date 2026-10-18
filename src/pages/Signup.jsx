@@ -2,6 +2,8 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
+import '../styles/pages.css'
+import '../styles/forms.css'
 import { emailProblem, signupMessage } from './formRules'
 
 export default function Signup() {
@@ -48,12 +50,14 @@ export default function Signup() {
   }
 
   return (
-    <div>
-      <h1>Sign up</h1>
+    <main className="fm fm--auth">
+     <div className="fm__card">
+      <h1 className="fm__title">Sign up</h1>
+      <p className="fm__sub">So you can follow along, and keep your orders in one place.</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't create your account">{failure}</FailureMessage>}
       {info && <SuccessMessage title="Account created">{info}</SuccessMessage>}
-      <form onSubmit={handleSubmit} noValidate>
+      <form className="fm__form" onSubmit={handleSubmit} noValidate>
         <Field id="signup-email" label="Email" error={fieldErrors.email}>
           {(p) => <input {...p} type="email" placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}
         </Field>
@@ -62,13 +66,16 @@ export default function Signup() {
             <input {...p} type="password" placeholder="Password (min 6 characters)" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} minLength={6} required />
           )}
         </Field>
-        <button type="submit" disabled={busy}>
+        <button type="submit" className="pg-btn fm-btn--primary fm__submit" disabled={busy}>
           Create account
         </button>
       </form>
-      <p className="muted">
-        Already have an account? <Link to="/login">Log in</Link>
+      <p className="fm__links">
+        <span>
+          Already have an account? <Link to="/login">Log in</Link>
+        </span>
       </p>
-    </div>
+     </div>
+    </main>
   )
 }

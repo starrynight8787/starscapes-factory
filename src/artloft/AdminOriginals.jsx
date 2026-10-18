@@ -185,7 +185,7 @@ export default function AdminOriginals() {
 
   if (user === undefined && status === 'loading') {
     return (
-      <main className="al al-admin">
+      <main className="al al-admin legacy">
         <h1>Manage originals</h1>
         <p className="al-note">Loading…</p>
       </main>
@@ -193,7 +193,7 @@ export default function AdminOriginals() {
   }
   if (!user) {
     return (
-      <main className="al al-admin">
+      <main className="al al-admin legacy">
         <h1>Manage originals</h1>
         <p>Please <Link to="/login">log in</Link> to manage originals.</p>
       </main>
@@ -210,7 +210,7 @@ export default function AdminOriginals() {
   )
 
   return (
-    <main className="al al-admin">
+    <main className="al al-admin legacy">
       <p className="al-back">
         <Link to="/art-loft">← Back to the Art Loft</Link>
         <Link to="/art-loft/admin">Manage prints</Link>

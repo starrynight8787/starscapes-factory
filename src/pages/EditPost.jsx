@@ -4,6 +4,12 @@ import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { FACTORY, SECTIONS, kindOf } from '../factoryfloor/factoryData'
 import './pinswitch.css'
+import { Field, ErrorSummary } from '../components/FormMessages'
+import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
+import '../styles/pages.css'
+import '../styles/forms.css'
+
+const IDS = { title: 'ep-title', content: 'ep-content', file: 'ep-file' }
 
 export default function EditPost({ session }) {
   const { id } = useParams()
@@ -17,6 +23,7 @@ export default function EditPost({ session }) {
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({}) // a plain-words problem under each field that needs fixing
   // Pinning: does the database have the pinned_in column yet, is this post pinned, and which other post holds the pin
   const [canPin, setCanPin] = useState(false)
   const [pinned, setPinned] = useState(false)
@@ -84,6 +91,12 @@ export default function EditPost({ session }) {
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    const found = postProblems({ title, content, file })
+    if (Object.keys(found).length > 0) {
+      setErrors(found)
+      return
+    }
+    setErrors({})
     setSaving(true)
 
     let newImageUrl = imageUrl
@@ -148,37 +161,33 @@ export default function EditPost({ session }) {
   if (error) return <p className="error">{error}</p>
 
   return (
-    <div>
-      <h1>Edit Post</h1>
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="Write your post..."
-          rows={10}
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-          required
-        />
-        <input
-          type="text"
-          placeholder="Tags (comma separated, e.g. art, travel)"
-          value={tags}
-          onChange={(e) => setTags(e.target.value)}
-        />
-        <select value={channel} onChange={(e) => setChannel(e.target.value)}>
-          <option value="">No channel</option>
-          {channels.map((c) => (
-            <option key={c.slug} value={c.slug}>
-              {c.emoji} {c.name}
-            </option>
-          ))}
-        </select>
+    <main className="fm">
+      <h1 className="fm__title">Edit post</h1>
+      <ErrorSummary errors={summaryOf(errors, IDS)} />
+      <form className="fm__form" onSubmit={handleSubmit} noValidate>
+        <Field id="ep-title" label="Title" error={errors.title}>
+          {(p) => <input {...p} type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />}
+        </Field>
+        <Field id="ep-content" label="Post text" error={errors.content}>
+          {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
+        </Field>
+        <div className="fm__row">
+          <Field id="ep-tags" label="Tags" help="Separate them with commas, for example art, travel.">
+            {(p) => <input {...p} type="text" placeholder="Tags (comma separated, e.g. art, travel)" value={tags} onChange={(e) => setTags(e.target.value)} />}
+          </Field>
+          <Field id="ep-room" label="Room">
+            {(p) => (
+              <select {...p} value={channel} onChange={(e) => setChannel(e.target.value)}>
+                <option value="">No channel</option>
+                {channels.map((c) => (
+                  <option key={c.slug} value={c.slug}>
+                    {c.emoji} {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        </div>
         {pinnable && (
           <fieldset className="pin-box">
             <legend>Pin to the top</legend>
@@ -206,16 +215,23 @@ export default function EditPost({ session }) {
           </fieldset>
         )}
         {imageUrl && (
-          <div style={{ marginBottom: 12 }}>
-            <p className="muted">Current image:</p>
-            <img src={imageUrl} alt="Current" style={{ maxWidth: 200 }} />
+          <div>
+            <p className="fm__small">Current picture:</p>
+            <img className="fm__preview" src={imageUrl} alt="The post's current header picture" />
           </div>
         )}
-        <input type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0])} />
-        <button type="submit" disabled={saving}>
-          {saving ? 'Saving...' : 'Save Changes'}
-        </button>
+        <Field id="ep-file" label={`New header picture (optional, up to ${MAX_PICTURE_MB} MB)`} error={errors.file}>
+          {(p) => <input {...p} type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0] || null)} />}
+        </Field>
+        <div className="fm__actions">
+          <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
+            {saving ? 'Saving...' : 'Save Changes'}
+          </button>
+          <button type="button" className="pg-btn" onClick={() => navigate(`/post/${id}`)}>
+            Cancel
+          </button>
+        </div>
       </form>
-    </div>
+    </main>
   )
 }

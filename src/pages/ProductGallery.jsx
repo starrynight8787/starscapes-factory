@@ -44,7 +44,7 @@ export default function ProductGallery() {
   if (error) return <p className="error">{error}</p>
 
   return (
-    <div>
+    <div className="legacy">
       <h1>🎨 The Art Loft</h1>
 
       {activeCollection && (

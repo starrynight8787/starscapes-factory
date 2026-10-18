@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, SuccessMessage } from '../components/FormMessages'
+import '../styles/pages.css'
+import '../styles/forms.css'
 
 // Step 2: the page the emailed link opens. Supabase signs you in briefly from the link, and this page lets you choose a new password.
 export default function ResetPassword({ waitMs = 1500 }) {
@@ -53,47 +55,55 @@ export default function ResetPassword({ waitMs = 1500 }) {
 
   if (phase === 'checking') {
     return (
-      <div>
-        <h1>Reset your password</h1>
-        <p className="muted" role="status">Checking your link…</p>
-      </div>
+      <main className="fm fm--auth">
+        <div className="fm__card">
+          <h1 className="fm__title">Reset your password</h1>
+          <p className="fm__sub" role="status">Checking your link…</p>
+        </div>
+      </main>
     )
   }
 
   if (phase === 'expired') {
     return (
-      <div>
-        <h1>This link has expired</h1>
-        <p>The link may be old, or it may already have been used. Reset links only work once.</p>
-        <p><Link to="/forgot-password">Send me a new link</Link></p>
-      </div>
+      <main className="fm fm--auth">
+        <div className="fm__card">
+          <h1 className="fm__title">This link has expired</h1>
+          <p className="fm__sub">The link may be old, or it may already have been used. Reset links only work once.</p>
+          <p className="fm__links"><Link to="/forgot-password">Send me a new link</Link></p>
+        </div>
+      </main>
     )
   }
 
   if (phase === 'done') {
     return (
-      <div>
-        <h1>Password updated</h1>
-        <SuccessMessage title="Your new password is saved and you're signed in." />
-        <p><Link to="/">Continue to the homepage</Link></p>
-      </div>
+      <main className="fm fm--auth">
+        <div className="fm__card">
+          <h1 className="fm__title">Password updated</h1>
+          <SuccessMessage title="Your new password is saved and you're signed in." />
+          <p className="fm__links"><Link to="/">Continue to the homepage</Link></p>
+        </div>
+      </main>
     )
   }
 
   return (
-    <div>
-      <h1>Choose a new password</h1>
-      <p className="muted">Use at least 8 characters. If it isn't strong enough, you'll be told what's missing.</p>
+    <main className="fm fm--auth">
+     <div className="fm__card">
+      <h1 className="fm__title">Choose a new password</h1>
+      <p className="fm__sub">Use at least 8 characters. If it isn't strong enough, you'll be told what's missing.</p>
       <ErrorSummary errors={summary} />
-      <form onSubmit={handleSubmit} noValidate>
+      <form className="fm__form" onSubmit={handleSubmit} noValidate>
         <Field id="reset-password" label="New password" error={fieldErrors.password}>
           {(p) => <input {...p} type="password" placeholder="New password" autoComplete="new-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}
         </Field>
         <Field id="reset-confirm" label="Confirm new password" error={fieldErrors.confirm}>
           {(p) => <input {...p} type="password" placeholder="Type it again" autoComplete="new-password" value={confirm} onChange={(e) => setConfirm(e.target.value)} required />}
         </Field>
-        <button type="submit" disabled={saving}>{saving ? 'Saving…' : 'Save new password'}</button>
+        <button type="submit" className="pg-btn fm-btn--primary fm__submit" disabled={saving}>{saving ? 'Saving…' : 'Save new password'}</button>
       </form>
-    </div>
+     </div>
+    </main>
   )
 }

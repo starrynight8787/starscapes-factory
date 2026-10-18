@@ -43,8 +43,8 @@ describe('the footer links on the dark footer', () => {
     expect(site).toMatch(/\.sf-footer nav \{[^}]*padding:\s*0;[^}]*background:\s*transparent;[^}]*border:\s*0/s)
     expect(site).toMatch(/\.sf-footer nav a \{[^}]*margin-right:\s*0/s)
   })
-  it('leave the old starter rule for other pages exactly as it was (it comes out in part 2, not here)', () => {
-    expect(read('src/index.css')).toMatch(/nav \{[^}]*background:\s*#fff/s)
+  it('no longer depend on the footer override alone: the old white-box rule for every nav is gone from the shared stylesheet (retired in restyle part 2)', () => {
+    expect(read('src/index.css')).not.toMatch(/nav \{[^}]*background:\s*#fff/s)
   })
 })
 

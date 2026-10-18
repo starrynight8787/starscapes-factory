@@ -1,0 +1,36 @@
+Restyle part 2: starscapes-restyle-two-18oct.zip  (task SFW-200)
+
+WHAT IT CHANGES
+1. The SIGN-IN PAGES (log in, sign up, forgot password, and reset password, including their "check your email", "checking your link", "expired" and "updated" screens)
+   are now one card each, from your Figma design: a navy border, the soft blue shadow, a heading, a line under it, a full-width blue button, and the links on one row.
+   Every word that matters is unchanged (for example, sign up still says 6 characters, because that is the real rule; the design says 8).
+2. The OWNER'S FORMS (New post, Edit post, New product) have a visible label on every field, plain-words problems if something is missing (it no longer shows the browser's
+   own pop-up), a header-picture limit of 6 MB, and a Cancel button. Edit post keeps its pin switch exactly as it was.
+3. THE OLD BLANKET RULES are out of the shared stylesheet. They were the cause of the white boxes (and of buttons and fields looking wrong in odd places).
+   - The rule that gave every navigation list a white box is GONE (every list on the site already has its own styles).
+   - The old rules for buttons, fields and forms now live in a new file that applies ONLY to the pages that still use them: the CART, the ART LOFT ADMIN TOOLS and the
+     OLD SHOP pages. Those pages are marked "legacy" and should look EXACTLY as they do today. (They are being decided in SFW-204.)
+   - A new test fails if anyone ever adds a bare button or field without a style of its own, so the old problem cannot creep back.
+4. A small fix: the Admin console said New post lets you "save it as a draft". It never could, so it now just says it lets you publish.
+
+WHAT TO LOOK AT AFTER YOU PUSH (this is the test that matters: I cannot see the pages)
+   COMPUTER AND PHONE:  /login   /signup   /forgot-password (and send yourself a reset link: the "Check your email" screen)   the reset link from that email
+   NEW:                 /new   (New post)    open any post and press Edit    /new-product
+   MUST LOOK EXACTLY AS BEFORE:  the cart (/cart, with a print in it)   Admin, Prints, orders and Creative Hub   Admin, Originals   the Factory Floor's filter box
+   Send me a screenshot of anything that looks different, especially a button or field that has lost its colour or shape.
+
+NEEDS: the Book Club update installed first. The script stops and says so if it is not there. No SQL this time.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. unzip -o ~/Downloads/starscapes-restyle-two-18oct.zip
+   (this also replaces two test files, edit-post-pin and footer-nav, with updated versions)
+2. python3 tools/add-restyle-two.py          (it checks all sixteen files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs                (all 127 checks should pass)
+4. npm run build                              (must finish without errors)
+5. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "SFW-200 Restyle part 2: sign-in pages, owner forms, and the old rules retired"
+   git push
+6. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: in the project folder, run   git revert HEAD   then   git push   (after the push, this puts the site back as it was, in one step).

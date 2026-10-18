@@ -35,7 +35,7 @@ export default function ProductPage() {
   const images = product.images && product.images.length > 0 ? product.images : []
 
   return (
-    <div>
+    <div className="legacy">
       <p>
         <Link to="/products">&larr; Back to The Art Loft</Link>
       </p>

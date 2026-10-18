@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
 import { emailProblem } from './formRules'
+import '../styles/pages.css'
+import '../styles/forms.css'
 
 // Step 1 of getting back in: ask for a reset link by email.
 export default function ForgotPassword() {
@@ -45,38 +47,42 @@ export default function ForgotPassword() {
 
   if (status === 'sent') {
     return (
-      <div>
-        <h1>Check your email</h1>
-        <SuccessMessage title="If there is an account for that email address, we've sent a link to reset your password.">
-          It can take a few minutes, and it might land in your spam folder.
-        </SuccessMessage>
-        <p className="muted">
-          <button type="button" onClick={() => setStatus('idle')}>Use a different email</button>
-        </p>
-        <p className="muted">
-          <Link to="/login">Back to log in</Link>
-        </p>
-      </div>
+      <main className="fm fm--auth">
+        <div className="fm__card">
+          <h1 className="fm__title">Check your email</h1>
+          <SuccessMessage title="If there is an account for that email address, we've sent a link to reset your password.">
+            It can take a few minutes, and it might land in your spam folder.
+          </SuccessMessage>
+          <div className="fm__actions">
+            <button type="button" className="pg-btn" onClick={() => setStatus('idle')}>Use a different email</button>
+          </div>
+          <p className="fm__links">
+            <Link to="/login">Back to log in</Link>
+          </p>
+        </div>
+      </main>
     )
   }
 
   return (
-    <div>
-      <h1>Forgot your password?</h1>
-      <p className="muted">Enter your email and we'll send you a link to choose a new one.</p>
+    <main className="fm fm--auth">
+     <div className="fm__card">
+      <h1 className="fm__title">Forgot your password?</h1>
+      <p className="fm__sub">Enter your email and we'll send you a link to choose a new one.</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't send the email">{failure}</FailureMessage>}
-      <form onSubmit={handleSubmit} noValidate>
+      <form className="fm__form" onSubmit={handleSubmit} noValidate>
         <Field id="forgot-email" label="Email" error={fieldError}>
           {(p) => <input {...p} type="email" placeholder="Email" autoComplete="email" value={email} onChange={(e) => setEmail(e.target.value)} required />}
         </Field>
-        <button type="submit" disabled={status === 'sending'}>
+        <button type="submit" className="pg-btn fm-btn--primary fm__submit" disabled={status === 'sending'}>
           {status === 'sending' ? 'Sending…' : 'Send reset link'}
         </button>
       </form>
-      <p className="muted">
+      <p className="fm__links">
         <Link to="/login">Back to log in</Link>
       </p>
-    </div>
+     </div>
+    </main>
   )
 }

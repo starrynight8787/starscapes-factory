@@ -125,6 +125,13 @@ const CHECKS = [
   ['Book Club: its door', 'src/doors/doorsData.js', /id: 'book-club'[^\n]*layout: 'custom'/, 'the book club update (the add-book-club script)'],
   ['Book Club: its address', 'src/rooms/RoomRoutes.jsx', /BookClubPage/, 'the book club update (the add-book-club script)'],
   ['Book Club: the tool listed in Admin', 'src/admin/adminTools.js', /name: 'Books'/, 'the book club update (the add-book-club script)'],
+  ['Restyle 2: the form styles', 'src/styles/forms.css', /\.fm__card/, 'the restyle part 2 update'],
+  ['Restyle 2: the legacy rules', 'src/styles/legacy.css', /:where\(\.legacy\)/, 'the restyle part 2 update'],
+  ['Restyle 2: the post form rules', 'src/pages/postFormRules.js', /export function postProblems/, 'the restyle part 2 update'],
+  ['Restyle 2: the log in card', 'src/pages/Login.jsx', /fm__card/, 'the restyle part 2 update (the add-restyle-two script)'],
+  ['Restyle 2: New post', 'src/pages/NewPost.jsx', /postProblems/, 'the restyle part 2 update (the add-restyle-two script)'],
+  ['Restyle 2: the old rules are retired', 'src/index.css', /legacy\.css/, 'the restyle part 2 update (the add-restyle-two script)'],
+  ['Restyle 2: the legacy rules are loaded', 'src/main.jsx', /legacy\.css/, 'the restyle part 2 update (the add-restyle-two script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

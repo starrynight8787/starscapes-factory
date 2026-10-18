@@ -1,3 +1,5 @@
+/* The few rules the whole site still shares. The old blanket rules for nav, button, input, textarea and form used to live here: they now live in
+   legacy.css and apply only to the pages marked "legacy". */
 * {
   box-sizing: border-box;
 }
@@ -13,54 +15,6 @@ body {
   max-width: 720px;
   margin: 0 auto;
   padding: 24px 20px 80px;
-}
-
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e5e5;
-  background: #fff;
-}
-
-nav a {
-  margin-right: 16px;
-  color: #1a1a1a;
-  text-decoration: none;
-  font-weight: 500;
-}
-
-nav a:hover {
-  text-decoration: underline;
-}
-
-button {
-  cursor: pointer;
-  padding: 10px 16px;
-  border-radius: 6px;
-  border: none;
-  background: #1a1a1a;
-  color: #fff;
-  font-size: 14px;
-}
-
-button:hover {
-  opacity: 0.85;
-}
-
-input, textarea {
-  display: block;
-  width: 100%;
-  padding: 10px;
-  margin-bottom: 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-}
-
-form {
-  max-width: 400px;
 }
 
 .post-card {

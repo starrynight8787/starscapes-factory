@@ -1,6 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import { Field, FailureMessage } from '../components/FormMessages'
+import '../styles/pages.css'
+import '../styles/forms.css'
 
 const COLLECTIONS = [
   'Calm Series',
@@ -68,58 +71,54 @@ export default function NewProduct({ session }) {
   }
 
   return (
-    <div>
-      <h1>New Product</h1>
-      {error && <p className="error">{error}</p>}
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          placeholder="Title"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          required
-        />
-        <textarea
-          placeholder="Description"
-          rows={6}
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-          required
-        />
-        <input
-          type="number"
-          step="0.01"
-          placeholder="Price (£)"
-          value={price}
-          onChange={(e) => setPrice(e.target.value)}
-          required
-        />
-        <select value={productType} onChange={(e) => setProductType(e.target.value)}>
-          <option value="original">Original</option>
-          <option value="print">Print</option>
-          <option value="digital">Digital Download</option>
-        </select>
-        <select value={collection} onChange={(e) => setCollection(e.target.value)}>
-          <option value="">No collection</option>
-          {COLLECTIONS.map((c) => (
-            <option key={c} value={c}>
-              {c}
-            </option>
-          ))}
-        </select>
-        <label className="muted" style={{ display: 'block', marginBottom: 6 }}>
-          Images (3–6 recommended, first one becomes the thumbnail)
-        </label>
-        <input
-          type="file"
-          accept="image/*"
-          multiple
-          onChange={(e) => setFiles(Array.from(e.target.files))}
-        />
-        <button type="submit" disabled={saving}>
-          {saving ? 'Publishing...' : 'Publish Product'}
-        </button>
+    <main className="fm">
+      <h1 className="fm__title">New product</h1>
+      {error && <FailureMessage title="The product was not saved">{error}</FailureMessage>}
+      <form className="fm__form" onSubmit={handleSubmit}>
+        <Field id="npr-title" label="Title">
+          {(p) => <input {...p} type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />}
+        </Field>
+        <Field id="npr-description" label="Description">
+          {(p) => <textarea {...p} placeholder="Description" rows={6} value={description} onChange={(e) => setDescription(e.target.value)} required />}
+        </Field>
+        <div className="fm__row">
+          <Field id="npr-price" label="Price (£)">
+            {(p) => <input {...p} type="number" step="0.01" placeholder="Price (£)" value={price} onChange={(e) => setPrice(e.target.value)} required />}
+          </Field>
+          <Field id="npr-type" label="Kind of product">
+            {(p) => (
+              <select {...p} value={productType} onChange={(e) => setProductType(e.target.value)}>
+                <option value="original">Original</option>
+                <option value="print">Print</option>
+                <option value="digital">Digital Download</option>
+              </select>
+            )}
+          </Field>
+        </div>
+        <Field id="npr-collection" label="Collection">
+          {(p) => (
+            <select {...p} value={collection} onChange={(e) => setCollection(e.target.value)}>
+              <option value="">No collection</option>
+              {COLLECTIONS.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          )}
+        </Field>
+        <Field id="npr-images" label="Images" help="3 to 6 recommended. The first one becomes the thumbnail.">
+          {(p) => <input {...p} type="file" accept="image/*" multiple onChange={(e) => setFiles(Array.from(e.target.files))} />}
+        </Field>
+        <div className="fm__actions">
+          <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
+            {saving ? 'Publishing...' : 'Publish Product'}
+          </button>
+          <button type="button" className="pg-btn" onClick={() => navigate('/admin')}>
+            Cancel
+          </button>
+        </div>
       </form>
-    </div>
+    </main>
   )
 }

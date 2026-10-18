@@ -1,0 +1,29 @@
+/* The old starter rules for buttons, fields and forms, kept ONLY for the few pages that still rely on them: the cart, the art-loft admin tools, and the
+   old shop pages. Each of those pages' outer element carries the class "legacy". Everywhere else these rules no longer apply.
+   :where() gives them no extra priority, so every button or field with a class of its own wins over them, exactly as it did before. New pages must not
+   use this: give each button and field its own class (a test fails if a bare one appears). */
+:where(.legacy) button {
+  cursor: pointer;
+  padding: 10px 16px;
+  border-radius: 6px;
+  border: none;
+  background: #1a1a1a;
+  color: #fff;
+  font-size: 14px;
+}
+:where(.legacy) button:hover {
+  opacity: 0.85;
+}
+:where(.legacy) input,
+:where(.legacy) textarea {
+  display: block;
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+}
+:where(.legacy) form {
+  max-width: 400px;
+}

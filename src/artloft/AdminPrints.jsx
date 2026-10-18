@@ -179,7 +179,7 @@ export default function AdminPrints() {
   }
 
   return (
-    <main className="al al-admin">
+    <main className="al al-admin legacy">
       <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
       <h1>Manage prints</h1>
       <p className="al-admin__links"><Link className="al-btn al-btn--quiet" to="/art-loft/admin/originals">Manage original paintings</Link></p>

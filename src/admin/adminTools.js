@@ -3,7 +3,7 @@
 export const ADMIN_GROUPS = ['Write', 'Shop', 'Members', 'Rooms']
 
 export const ADMIN_TOOLS = [
-  { group: 'Write', name: 'New post', to: '/new', blurb: 'Write a post and publish it, or save it as a draft.' },
+  { group: 'Write', name: 'New post', to: '/new', blurb: 'Write a post and publish it.' },
   { group: 'Shop', name: 'New product', to: '/new-product', blurb: 'Add a product by hand. Prints come from Creative Hub, so this is for anything else.' },
   { group: 'Shop', name: 'Prints, orders and Creative Hub', to: '/art-loft/admin', blurb: 'Switch prints on, sort them into collections, write descriptions, sync with Creative Hub, and see your orders.' },
   { group: 'Shop', name: 'Originals', to: '/art-loft/admin/originals', blurb: 'Add your original paintings, mark them sold, and switch them on.' },
