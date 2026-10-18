@@ -1,0 +1,48 @@
+The Leadership Blog: starscapes-leadership-blog-18oct.zip   (no SQL)
+
+WHAT IT BUILDS (from your Figma design "Leadership Blog, layout B")
+The Blog in the Leadership Lounge (at /leadership-lounge/blog) was a plain list of every Lounge post. It is now a page of its own:
+  LEFT:  the FEATURED post (picture, a "Featured" chip, date, title, "Read the post"); MORE WAYS IN (the free ebook, the audiobook, the Udemy course);
+         and MORE FROM THE BLOG (older posts that are NOT already on the page above).
+  RIGHT: BUILDING BLOCKS, six numbered steps, then LATEST POSTS (the five newest, and "See all posts").
+On a phone it is one column in the order: Featured, Building Blocks, More ways in, Latest posts, More from the blog.
+The ebook box says "Opening soon" with a button that cannot be pressed until you open its door in Admin, Open a door; then it becomes a real link.
+The audiobook and course open safely in a new tab (the addresses are the ones already in your rooms data).
+
+HOW YOU CHOOSE THINGS: WITH THE TAGS BOX ON A POST (no database change, no change to your forms)
+  * FEATURED POST: give a Leadership Lounge post the tag   featured   . The newest post with that tag is shown. If none has it, the newest post is shown.
+  * BUILDING BLOCK 1 to 6: give a Leadership Lounge post the tag   building-block-1   (or building-block-2, 3, 4, 5, 6). A block with no post shows "Coming soon" and
+    is not a link. If two posts carry the same block tag, the newest is used.
+  Capitals and spaces do not matter in a tag ("Building Block 1" works).
+  Tags are typed separated by commas in New post and Edit post, in the Tags box.
+
+WHAT IS DIFFERENT FROM THE DRAWING (on purpose)
+  * The drawing had a one-line description under each Building Block and a line of text under the featured post's title. Those would need a new place to write them,
+    and I did not want the page filling them with the first words of a post, so for now each shows its TITLE and DATE only. Tell me if you want a description field.
+  * The drawing's notes to you ("you choose the featured post by pinning it" and so on) are not on the live page.
+  * Featured uses a tag, not the pin. Pinning only exists for the Factory Floor today; extending it would change the database and the post forms.
+    If you prefer a "Building block" choice (none, 1 to 6) on the post forms, say so and I will build that as a separate update.
+  * The one line under "Building Blocks" is in src/leadership/leadershipData.js (BLOCKS_INTRO): change the words there whenever you like.
+
+NEEDS: the home page update (and the tester kit). The script stops and says so if they are not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-leadership-blog-18oct.zip
+3. python3 tools/add-leadership-blog.py     (it checks both files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2     (all 147 checks should pass)
+5. npm run build                             (must finish without errors)
+6. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Leadership Blog page"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN TRY IT
+   1. Edit one Leadership Lounge post and add the tag  featured  . Open /leadership-lounge/blog: that post should be the big card.
+   2. Edit another and add  building-block-1  . It should appear as Building Block 1, a link. The other five should say "Coming soon".
+   3. Check "More from the blog" never shows a post that is already on the page.
+   4. Look at it on a phone (or a narrow window): Featured, then Building Blocks.
+   5. From the Lounge's picture, press the Blog: it should take you here.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

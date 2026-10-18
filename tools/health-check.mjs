@@ -148,6 +148,10 @@ const CHECKS = [
   ['Home: the home page uses the boxes', 'src/pages/ChannelDirectory.jsx', /HomeSections/, 'the home page update (the add-home-v2 script)'],
   ['Home: the tool address', 'src/App.jsx', /admin\/home/, 'the home page update (the add-home-v2 script)'],
   ['Home: the tool listed in Admin', 'src/admin/adminTools.js', /name: 'Home page'/, 'the home page update (the add-home-v2 script)'],
+  ['Leadership Blog: the words and tags', 'src/leadership/leadershipData.js', /FEATURED_TAG/, 'the Leadership Blog update'],
+  ['Leadership Blog: the rules', 'src/leadership/leadershipRules.js', /export function blocksFrom/, 'the Leadership Blog update'],
+  ['Leadership Blog: the page', 'src/leadership/LeadershipBlogPage.jsx', /lb-blocks-title/, 'the Leadership Blog update'],
+  ['Leadership Blog: its address', 'src/rooms/RoomRoutes.jsx', /LeadershipBlogPage/, 'the Leadership Blog update (the add-leadership-blog script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

@@ -8,6 +8,7 @@ import StoryLedgerPage from '../ledger/StoryLedgerPage'
 import YouTubeSeriesPage from '../den/YouTubeSeriesPage'
 import FreeEbookPage from '../ebook/FreeEbookPage'
 import BookClubPage from '../bookclub/BookClubPage'
+import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
 import './roompages.css'
 
 // Everything under one room's address (for example /idea-hatchery) lives here, so the main App only needs one line for each room.
@@ -37,12 +38,19 @@ const CUSTOM_PAGES = {
   'knowledge-nook/book-club': BookClubPage,
 }
 
+// Pages with their own design that are always open (not behind a door), by "room/page".
+const CUSTOM_AREAS = {
+  'leadership-lounge/blog': LeadershipBlogPage,
+}
+
 // One page under a room. If it is the page behind a door, the door's gate decides who sees it.
 function AreaRoute({ room }) {
   const { area } = useParams()
   const areas = { ...ROOMS[room].areas, ...doorAreas(room) }
   const page = <RoomAreaPage room={room} areas={areas} />
   const door = findDoor(room, area)
+  const Own = !door ? CUSTOM_AREAS[`${room}/${area}`] : null
+  if (Own) return <Own />
   const Custom = door && door.page && door.page.layout === 'custom' ? CUSTOM_PAGES[`${room}/${door.id}`] : null
   if (Custom) return <DoorGate room={room} door={door.id}><Custom /></DoorGate>
   return door && door.page ? <DoorGate room={room} door={door.id}>{page}</DoorGate> : page

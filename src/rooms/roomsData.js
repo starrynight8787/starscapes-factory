@@ -47,7 +47,7 @@ export const ROOMS = {
     ],
     areas: {
       'leading-from-the-middle': { name: 'Leading from the Middle', blurb: 'The idea behind everything in this room.', layout: 'list', tags: ['leading-from-the-middle'] },
-      blog: { name: 'Blog', blurb: 'Notes on leading from where you are.', layout: 'list', tags: null },
+      blog: { name: 'Leadership Blog', blurb: 'Notes on leading from where you are.', layout: 'list', tags: null },
     },
   },
   'explorers-bay': {
