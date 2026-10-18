@@ -132,6 +132,15 @@ const CHECKS = [
   ['Restyle 2: New post', 'src/pages/NewPost.jsx', /postProblems/, 'the restyle part 2 update (the add-restyle-two script)'],
   ['Restyle 2: the old rules are retired', 'src/index.css', /legacy\.css/, 'the restyle part 2 update (the add-restyle-two script)'],
   ['Restyle 2: the legacy rules are loaded', 'src/main.jsx', /legacy\.css/, 'the restyle part 2 update (the add-restyle-two script)'],
+  ['Tester kit: the search-engine switch', 'src/data/siteSettings.js', /SEARCH_ENGINES_ALLOWED/, 'the tester kit update'],
+  ['Tester kit: the build follows the switch', 'scripts/make-share-pages.mjs', /SEARCH_ENGINES_ALLOWED/, 'the tester kit update (the add-tester-kit script)'],
+  ['Tester kit: the page for testers', 'src/testers/TestersPage.jsx', /ts-card/, 'the tester kit update'],
+  ['Tester kit: its address', 'src/App.jsx', /TestersPage/, 'the tester kit update (the add-tester-kit script)'],
+  ['Tester kit: pages only show when ready', 'src/data/staticPages.js', /export const pageIsReady/, 'the tester kit update (the add-tester-kit script)'],
+  ['Tester kit: the footer reads it', 'src/components/Footer.jsx', /pageIsReady/, 'the tester kit update (the add-tester-kit script)'],
+  ['Tab icon: the star picture', 'public/icons/star.svg', /M18 8 L21\.409/, 'the tab icon update'],
+  ['Tab icon: the build uses it', 'scripts/shareHead.mjs', /star\.svg/, 'the tab icon update (the add-tab-icon script)'],
+  ['Tab icon: the page template uses it', 'index.html', /star\.svg/, 'the tab icon update (the add-tab-icon script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

@@ -64,7 +64,8 @@ describe('renderHead', () => {
   })
   it('adds the site icon and the theme colour', () => {
     const html = renderHead(SHELL, meta)
-    expect(html).toContain('<link rel="icon" type="image/png" href="/icons/rooms/factory-floor.png" />')
+    expect(html).toContain('<link rel="icon" type="image/svg+xml" href="/icons/star.svg" />')
+    expect(html).toContain('<link rel="icon" type="image/png" sizes="32x32" href="/icons/star-32.png" />')
     expect(html).toContain('<meta name="theme-color" content="#14306A" />')
   })
   it('refuses a page with no head, rather than quietly doing nothing', () => {

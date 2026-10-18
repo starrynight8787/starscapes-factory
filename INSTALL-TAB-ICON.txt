@@ -1,0 +1,29 @@
+The tab icon: starscapes-tab-icon-18oct.zip  (the star from the banner). No SQL.
+
+WHAT IT CHANGES
+The little picture in the browser tab was the Factory Floor's gear-and-star (one room's icon), on every page. It is now the SHOOTING STAR FROM THE BANNER:
+  * a blue star (the banner's blue, #2E8FD0) on a see-through background, so it reads on both light and dark browser tab bars;
+  * a 32 pixel picture of the same star for browsers that need a picture file;
+  * a phone home-screen icon (used if someone saves your site to their phone): the pale star on your brand navy, with no see-through parts, because a phone would
+    draw black behind them.
+The star is taken from the banner's own drawing (src/components/Logo.jsx), and a test fails if the two ever differ. Each room's own icon is NOT touched: the menu and the
+room cards still use them.
+
+NEEDS: the tester kit (starscapes-tester-kit-18oct.zip) installed first, because both change the same build file. The script stops and says so if it is not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. unzip -o ~/Downloads/starscapes-tab-icon-18oct.zip
+   (this also replaces one test file, share-head, with an updated version)
+2. python3 tools/add-tab-icon.py              (it checks both files first; if anything is unexpected it changes nothing)
+3. node tools/health-check.mjs                (all 136 checks should pass)
+4. npm run build                              (must finish without errors)
+5. git add .
+   git status                                 (no files ending .before- should be listed; the three new files in public/icons should be)
+   git commit -m "Tab icon: the shooting star from the banner"
+   git push
+6. Wait for Vercel to say Ready.
+
+THEN LOOK: browsers keep the old tab icon for a while, so it may not change at once. Hard-refresh (Cmd+Shift+R), or open the site in a private window, or close the
+tab and open a new one. In Safari the icon can take a day or so to change. If it still shows the wheel after a private window, tell me.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.
