@@ -6,7 +6,8 @@ import { formatDate, safeImage } from '../rooms/postRules'
 import { AUDIOBOOK_URL, UDEMY_URL } from '../rooms/roomsData'
 import useDoors from '../doors/useDoors'
 import { StarMark } from '../components/Logo'
-import { BLOCKS_INTRO, ROOM, SUBTITLE, WAYS } from './leadershipData'
+import PageBanner from '../components/PageBanner'
+import { BANNER_CHIP, BANNER_PICTURE, BLOCKS_INTRO, ROOM, SUBTITLE, WAYS } from './leadershipData'
 import { blocksFrom, latestPosts, morePosts, pickFeatured } from './leadershipRules'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -34,16 +35,16 @@ export default function LeadershipBlogPage() {
   const blocks = useMemo(() => blocksFrom(posts), [posts])
   const latest = useMemo(() => latestPosts(posts), [posts])
   const more = useMemo(() => morePosts(posts, { featured, latest, blocks }), [posts, featured, latest, blocks])
+  const firstBlock = blocks[0] ? blocks[0].post : null
   const ebookOpen = isOpen(ROOM, 'free-ebook')
   const picture = featured ? safeImage(featured.image_url) : ''
 
   return (
     <main className="rp lb">
       <p className="rp-back"><Link to={`/${ROOM}`}>← Back to Leadership Lounge</Link></p>
-      <header className="rp-head">
-        <h1>Leadership Blog</h1>
-        <p className="rp-blurb">{SUBTITLE}</p>
-      </header>
+      <PageBanner chip={BANNER_CHIP} title="Leadership Blog" subtitle={SUBTITLE} picture={BANNER_PICTURE}>
+        {firstBlock && <Link className="pg-btn fm-btn--primary" to={`/post/${firstBlock.id}`} state={{ from }}>Start with Building Block 1</Link>}
+      </PageBanner>
       {status === 'error' && <p className="rp-note" role="alert">The posts could not load just now. Please try again in a moment.</p>}
       {status === 'loading' && <p className="rp-note">Loading…</p>}
       {status === 'ready' && posts.length === 0 && <p className="rp-note">The first post is on its way.</p>}

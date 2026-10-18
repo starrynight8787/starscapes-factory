@@ -5,6 +5,9 @@ The Blog in the Leadership Lounge (at /leadership-lounge/blog) was a plain list 
   LEFT:  the FEATURED post (picture, a "Featured" chip, date, title, "Read the post"); MORE WAYS IN (the free ebook, the audiobook, the Udemy course);
          and MORE FROM THE BLOG (older posts that are NOT already on the page above).
   RIGHT: BUILDING BLOCKS, six numbered steps, then LATEST POSTS (the five newest, and "See all posts").
+A BANNER now sits at the top (your request, drawn in Figma first): a navy panel with a "Leading from the Middle" chip, the heading "Leadership Blog", the line under it,
+a "Start with Building Block 1" button, and the Leadership Lounge's own picture (the room with the sofa and the lamp) on the right. The button goes to your post tagged
+building-block-1 and does not appear until that post exists (no button that goes nowhere). The banner is a reusable part, so the YouTube and Book Club pages can use the same one.
 On a phone it is one column in the order: Featured, Building Blocks, More ways in, Latest posts, More from the blog.
 The ebook box says "Opening soon" with a button that cannot be pressed until you open its door in Admin, Open a door; then it becomes a real link.
 The audiobook and course open safely in a new tab (the addresses are the ones already in your rooms data).
@@ -30,7 +33,7 @@ INSTALL (from the project folder, in this order; ONLY run git add . at the very 
 1. cd ~/Website/supabase-blog-starter
 2. unzip -o ~/Downloads/starscapes-leadership-blog-18oct.zip
 3. python3 tools/add-leadership-blog.py     (it checks both files first; if anything is unexpected it changes nothing)
-4. node tools/health-check.mjs | tail -2     (all 147 checks should pass)
+4. node tools/health-check.mjs | tail -2     (all 149 checks should pass)
 5. npm run build                             (must finish without errors)
 6. git add .
    git status                                (no files ending .before- should be listed)

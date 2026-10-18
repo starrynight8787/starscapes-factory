@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Builds the new Leadership Blog page.
+"""Builds the new Leadership Blog page, with its banner.
 
 Run it from the project folder, AFTER unzipping starscapes-leadership-blog-18oct.zip into it:   python3 tools/add-leadership-blog.py
 
@@ -10,7 +10,7 @@ How it keeps you safe:
   - It checks ALL two files first. If any is not exactly the way it expects, it changes NOTHING and says which.
   - Before changing a file it keeps a copy, ending .before-leadership-blog.
   - It is safe to run twice: a file already done is left alone.
-  - The new files (src/leadership/leadershipData.js, src/leadership/leadershipRules.js, src/leadership/LeadershipBlogPage.jsx, src/leadership/leadership.css) come in the zip itself.
+  - The new files (src/leadership/leadershipData.js, src/leadership/leadershipRules.js, src/leadership/LeadershipBlogPage.jsx, src/leadership/leadership.css, src/components/PageBanner.jsx, src/components/pagebanner.css) come in the zip itself.
 """
 import json
 import pathlib
@@ -34,7 +34,7 @@ PATCH = json.loads(r'''{
 ]
 ]
 }''')
-NEW_FILES = ["src/leadership/leadershipData.js", "src/leadership/leadershipRules.js", "src/leadership/LeadershipBlogPage.jsx", "src/leadership/leadership.css"]
+NEW_FILES = ["src/leadership/leadershipData.js", "src/leadership/leadershipRules.js", "src/leadership/LeadershipBlogPage.jsx", "src/leadership/leadership.css", "src/components/PageBanner.jsx", "src/components/pagebanner.css"]
 
 root = pathlib.Path('.')
 if not (root / 'src').exists() or not (root / 'package.json').exists():

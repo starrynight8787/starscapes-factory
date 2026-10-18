@@ -152,6 +152,8 @@ const CHECKS = [
   ['Leadership Blog: the rules', 'src/leadership/leadershipRules.js', /export function blocksFrom/, 'the Leadership Blog update'],
   ['Leadership Blog: the page', 'src/leadership/LeadershipBlogPage.jsx', /lb-blocks-title/, 'the Leadership Blog update'],
   ['Leadership Blog: its address', 'src/rooms/RoomRoutes.jsx', /LeadershipBlogPage/, 'the Leadership Blog update (the add-leadership-blog script)'],
+  ['Leadership Blog: the banner', 'src/components/PageBanner.jsx', /pb__title/, 'the Leadership Blog update'],
+  ['Leadership Blog: the page uses the banner', 'src/leadership/LeadershipBlogPage.jsx', /PageBanner/, 'the Leadership Blog update'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {
@@ -187,5 +189,5 @@ if (bad.length === 0) {
   console.log(`${bad.length} of ${results.length} checks need attention:`)
   for (const r of bad) console.log(`  - ${r.what}: ${r.why}. It comes from ${r.from}.`)
   console.log('\nPaste this whole list to me and I will tell you exactly which zip to unpack again, and in which order.\n')
-  process.exit(1)
+  process.exitCode = 1 // not process.exit: that can cut the list short when there are many problems
 }

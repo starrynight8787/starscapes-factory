@@ -9,7 +9,7 @@ import { execFileSync } from 'node:child_process'
 const SCRIPT = path.resolve('tools/add-leadership-blog.py')
 const FIX = path.resolve('test/fixtures/leadership-blog')
 const FILES = ['src/rooms/RoomRoutes.jsx', 'src/rooms/roomsData.js']
-const NEW = ['src/leadership/leadershipData.js', 'src/leadership/leadershipRules.js', 'src/leadership/LeadershipBlogPage.jsx', 'src/leadership/leadership.css']
+const NEW = ['src/leadership/leadershipData.js', 'src/leadership/leadershipRules.js', 'src/leadership/LeadershipBlogPage.jsx', 'src/leadership/leadership.css', 'src/components/PageBanner.jsx', 'src/components/pagebanner.css']
 const flat = (rel) => rel.replace(/\//g, '__')
 const before = (rel) => fs.readFileSync(path.join(FIX, 'before', flat(rel)), 'utf8')
 const after = (rel) => fs.readFileSync(path.join(FIX, 'after', flat(rel)), 'utf8')

@@ -10,6 +10,8 @@ export const LATEST_COUNT = 5 // posts in the Latest posts box
 export const MORE_COUNT = 3 // posts in More from the blog (older ones, not already shown above)
 
 export const SUBTITLE = 'Notes on leading from where you are.'
+export const BANNER_CHIP = 'Leading from the Middle'
+export const BANNER_PICTURE = '/scenes/leadership-lounge/base.svg' // the Lounge's own picture: the room with the sofa and the lamp
 export const BLOCKS_INTRO = 'Leading from the middle, one step at a time. Start at the first and work down.'
 
 // The boxes under the featured post. The ebook's box follows its door: "Opening soon" while the door is closed, a real button once you open it.

@@ -150,6 +150,33 @@ describe('the page', () => {
   })
 })
 
+describe('the banner on this page', () => {
+  it('has the chip, the one heading, the line under it, and the Lounge\u2019s own picture', async () => {
+    h.posts = [post('A post', 4)]; const { container } = page()
+    await screen.findByRole('heading', { level: 2, name: 'A post' })
+    expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
+    const banner = container.querySelector('.pb')
+    expect(within(banner).getByText('Leading from the Middle')).toBeInTheDocument(); expect(within(banner).getByRole('heading', { level: 1, name: 'Leadership Blog' })).toBeInTheDocument()
+    expect(within(banner).getByText('Notes on leading from where you are.')).toBeInTheDocument()
+    expect(banner.querySelector('img')).toHaveAttribute('src', '/scenes/leadership-lounge/base.svg')
+  })
+  it('has a "Start with Building Block 1" button that goes to that post, once the first block exists', async () => {
+    h.posts = [post('Block one title', 2, ['building-block-1']), post('Other', 5)]; const { container } = page()
+    const start = await screen.findByRole('link', { name: 'Start with Building Block 1' })
+    expect(within(container.querySelector('.pb')).getByRole('link', { name: 'Start with Building Block 1' })).toBe(start)
+    expect(start.getAttribute('href')).toMatch(/^\/post\/p\d+$/)
+  })
+  it('leaves that button out until there is a first block, instead of showing a button that goes nowhere', async () => {
+    h.posts = [post('Just a post', 5)]; page()
+    await screen.findByRole('heading', { level: 2, name: 'Just a post' })
+    expect(screen.queryByRole('link', { name: /Start with Building Block 1/ })).toBeNull()
+  })
+  it('comes straight after the way back, before the boxes', () => {
+    const jsx = read('src/leadership/LeadershipBlogPage.jsx')
+    expect(jsx.indexOf('<PageBanner')).toBeGreaterThan(jsx.indexOf('rp-back')); expect(jsx.indexOf('<PageBanner')).toBeLessThan(jsx.indexOf('lb__cols'))
+  })
+})
+
 describe('how it is wired in', () => {
   it('is the page at /leadership-lounge/blog, replacing the plain list', async () => {
     h.posts = [post('A post', 4)]
