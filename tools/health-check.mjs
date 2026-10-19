@@ -184,6 +184,12 @@ const CHECKS = [
   ['Layout: the wider page column', 'src/components/pagebanner.css', /container:has\(> \.rp > \.pb\)/, 'the layout pass (the add-layout-pass script)'],
   ['Layout: tablet layouts for Home', 'src/home/homeSections.css', /a tablet: the same boxes/, 'the layout pass (the add-layout-pass script)'],
   ['Pages: the app tells them whether you are the owner', 'src/App.jsx', /<StaticPage owner=/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Membership: the price rules', 'src/membership/pricing.js', /PRICE_LADDER_POUNDS/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the passes and the tick-box wording', 'src/membership/passes.js', /CONSENT_TEXT/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the choose-your-passes page', 'src/membership/MembershipPage.jsx', /Continue to payment/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the page styles', 'src/membership/membership.css', /\.mb__hero/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the page is on the site', 'src/App.jsx', /MembershipPage/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the database file', 'sql/memberships.sql', /founding_members/, 'the membership page update (the add-membership-page script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

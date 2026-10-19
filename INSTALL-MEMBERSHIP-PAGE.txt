@@ -1,0 +1,42 @@
+Membership, steps 1 to 3: starscapes-membership-page-19oct.zip   (and ONE SQL file to run in Supabase)
+
+WHAT THIS ADDS (nothing is open to visitors; nothing takes a payment)
+  1. THE PRICE RULES, written down once (src/membership/pricing.js): 1 pass 5 pounds a month, 2 passes 7, 3 passes 10, four or more ("Everything") 12; a year costs ten months; the launch
+     offer is half price for the FIRST YEAR (set LAUNCH_OFFER.active to false to end it). The page shows these, and the payment step will CHARGE them (it never trusts a price from the browser).
+     The four passes are in src/membership/passes.js, with your approved tick-box wording.
+  2. A DATABASE FILE (sql/memberships.sql): two tables, WITH the permission lines this time.
+       memberships       one row per member (which passes, how they pay, when it renews, whether cancelled). The payment server writes it; a member can only READ their own row.
+       founding_members  the early supporters; anyone can read the NAMES of founders who ticked "show my name", one column only, never who they are.
+  3. THE "CHOOSE YOUR PASSES" PAGE at /membership, built from your Figma design: the four passes as real tick boxes, the live price box (with the launch offer, monthly or yearly), the promo
+     box, your approved tick box, "Continue to payment" (greyed out until a pass is chosen AND the box is ticked), the Stripe note and the price table. On a tablet and a phone it is one column.
+     VISITORS see "Memberships are not open yet". ONLY YOU see the page, under a yellow draft banner. "Continue to payment" does nothing yet except say so: payment is step 4.
+
+THREE SMALL WORDING CHANGES FROM THE DESIGN (I have changed your Figma design to match, so they agree):
+  * "The first three posts in every pass are free to read too" now sits under "Free, always" (it was only on Blueprints, but you decided it applies to all four passes).
+  * The yearly button says "Yearly: save 2 months" (the longer words did not fit the column at 14 pixels).
+  * The launch chip says "first year", not "first 3 months".
+
+THE ONE SQL STEP (in Supabase: SQL editor, clear it, PASTE THE SQL ITSELF, not the file name):
+  Open sql/memberships.sql in your project, copy everything in it, paste it in the SQL editor, make sure nothing is highlighted, and press Run. It should say "Success. No rows returned."
+  Then check it with this (it should list 4 rows):   select tablename, policyname, cmd from pg_policies where tablename in ('memberships', 'founding_members') order by tablename, policyname;
+  (Nothing on the live site reads these tables yet, so it is safe to run at any time, before or after the install.)
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-membership-page-19oct.zip
+3. python3 tools/add-membership-page.py     (it checks the two existing files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2    (all 185 checks should pass)
+5. npm run build                            (must finish without errors)
+6. git add .
+   git status                               (no files ending .before- should be listed)
+   git commit -m "Membership: the price rules, the choose-your-passes page, and the memberships tables"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, signed in as you, at  starscapesfactory.com/membership  and SEND ME A SCREENSHOT:
+   * the yellow draft banner, then the navy hero, the four passes, and the price box on the right (on a computer);
+   * tick three passes: the box should say "Your passes: 3 of 4", "£5 a month for your first year", "then £10 a month...";
+   * tick the box above "Continue to payment": the button should come alive. (Clicking it just says payment is not connected yet.)
+   * signed OUT (or a private window): it should say "Memberships are not open yet".
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.
