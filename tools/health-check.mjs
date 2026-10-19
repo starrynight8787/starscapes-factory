@@ -178,6 +178,9 @@ const CHECKS = [
   ['Pages: the legal page shows its introduction', 'src/pages/LegalPage.jsx', /lg-intro/, 'the legal pages update (the add-legal-pages script)'],
   ['Pages: tables and quotes in the text renderer', 'src/pages/simpleMarkdown.jsx', /md-tablewrap/, 'the legal pages update (the add-legal-pages script)'],
   ['Pages: the table and quote styles', 'src/pages/markdown.css', /md-tablewrap/, 'the legal pages update'],
+  ['Doors: the permission lines', 'sql/doors.sql', /grant select on public\.doors/, 'the doors fix (the add-doors-fix script)'],
+  ['Doors: the page shows the real reason', 'src/admin/OpenDoors.jsx', /od-code/, 'the doors fix (the add-doors-fix script)'],
+  ['Doors: the loader keeps the reason', 'src/doors/useDoors.js', /reason/, 'the doors fix (the add-doors-fix script)'],
   ['Pages: the app tells them whether you are the owner', 'src/App.jsx', /<StaticPage owner=/, 'the footer and pages update (the add-footer-pages script)'],
 ]
 

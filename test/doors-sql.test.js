@@ -41,4 +41,13 @@ describe('the doors table (sql/doors.sql)', () => {
   it('tells you to check the email before running it', () => {
     expect(sql).toMatch(/BEFORE YOU RUN IT/)
   })
+  it('gives the website permission to read the table (without it the page says it cannot read the doors), and lets only a signed-in account write', () => {
+    expect(code).toMatch(/^grant select on public\.doors to anon, authenticated;$/m)
+    expect(code).toMatch(/^grant insert, update, delete on public\.doors to authenticated;$/m)
+    expect(code).not.toMatch(/grant [a-z, ]*(insert|update|delete)[a-z, ]* on public\.doors to [^;]*anon/i)
+    expect(code).not.toMatch(/grant all/i)
+  })
+  it('says how to check the permissions, and why they matter', () => {
+    expect(sql).toMatch(/information_schema\.role_table_grants/); expect(sql).toMatch(/PERMISSIONS: a table made in the SQL editor cannot be read by the website/)
+  })
 })

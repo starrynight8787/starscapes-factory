@@ -9,6 +9,7 @@ import useDoors, { loadDoors } from '../doors/useDoors'
 import { saveDoor } from '../doors/doorsApi'
 import { useOwnerCheck } from './useIsOwner'
 import './admin.css'
+import './opendoors.css'
 
 const ROOM_ORDER = ['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook', 'sarah-jrs-den']
 
@@ -16,7 +17,7 @@ const ROOM_ORDER = ['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'know
 export default function OpenDoors({ session }) {
   useTitle('Open a door')
   const { checking, owner } = useOwnerCheck(session)
-  const { ready, failed, isOpen } = useDoors()
+  const { ready, failed, reason, isOpen } = useDoors()
   const [busy, setBusy] = useState(null)
   const [message, setMessage] = useState(null) // { ok, text }
 
@@ -55,7 +56,10 @@ export default function OpenDoors({ session }) {
       <p className="ad-note">Every door starts closed. Visitors see it taped off and cannot reach its page. Open one when what is behind it is ready.</p>
       {failed && (
         <FailureMessage title="I could not read the doors">
-          Every door is staying closed for now. Has sql/doors.sql been run in Supabase? If it has, try again in a moment.
+          <span className="od-fail">Every door is staying closed for now. The database said: &ldquo;{reason || 'no reason given'}&rdquo;.</span>
+          <span className="od-fail">The usual cause is a missing permission on the doors table. In Supabase&apos;s SQL editor, paste and run these two lines (the lines themselves, not a file name), then reload this page:</span>
+          <code className="od-code">grant select on public.doors to anon, authenticated;<br />grant insert, update, delete on public.doors to authenticated;</code>
+          <span className="od-fail">If the database says the table does not exist, ask Claude for the doors SQL.</span>
         </FailureMessage>
       )}
       {message && (message.ok ? <SuccessMessage title={message.text} /> : <FailureMessage title="That did not work">{message.text}</FailureMessage>)}

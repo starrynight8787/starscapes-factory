@@ -2,8 +2,8 @@ import { useCallback, useEffect, useState } from 'react'
 import { fetchDoors } from './doorsApi'
 
 // Which doors are open, asked once and remembered while the site is open, so every page shares one answer.
-// If the question fails for any reason, every door counts as closed.
-let cache = null // { open: {}, failed: false }
+// If the question fails for any reason, every door counts as closed, and the reason the database gave is kept (for the owner's Open a door page).
+let cache = null // { open: {}, failed: false, reason }
 let inflight = null
 const listeners = new Set()
 
@@ -12,7 +12,7 @@ export function loadDoors({ force = false } = {}) {
   if (!inflight) {
     inflight = fetchDoors()
       .then((open) => ({ open, failed: false }))
-      .catch(() => ({ open: {}, failed: true }))
+      .catch((e) => ({ open: {}, failed: true, reason: String((e && e.message) || '') }))
       .then((result) => {
         cache = result
         inflight = null
@@ -41,5 +41,5 @@ export default function useDoors() {
     }
   }, [])
   const isOpen = useCallback((room, door) => Boolean(state && state.open[`${room}/${door}`]), [state])
-  return { ready: state !== null, failed: Boolean(state && state.failed), isOpen }
+  return { ready: state !== null, failed: Boolean(state && state.failed), reason: (state && state.reason) || '', isOpen }
 }

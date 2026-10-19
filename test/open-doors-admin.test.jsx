@@ -88,8 +88,18 @@ describe('the Open a door tool', () => {
   it('keeps every door shut, and says what to check, when the doors cannot be read', async () => {
     store.loadFails = true
     await show()
-    expect(screen.getByRole('alert').textContent).toMatch(/sql\/doors\.sql/)
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toMatch(/Every door is staying closed for now/)
     for (const b of screen.getAllByRole('button')) expect(b).toBeDisabled()
+  })
+  it('shows the database\u2019s own reason when the doors cannot be read, and the two lines to run, instead of telling you to run a file by name', async () => {
+    store.loadFails = true
+    await show()
+    const alert = screen.getByRole('alert')
+    expect(alert.textContent).toContain('The database said: \u201cno table\u201d.')
+    expect(alert.querySelector('code').textContent).toBe('grant select on public.doors to anon, authenticated;grant insert, update, delete on public.doors to authenticated;')
+    expect(alert.textContent).not.toMatch(/sql\/doors\.sql|Has .* been run/)
+    expect(alert.textContent).toMatch(/the lines themselves, not a file name/)
   })
   it('is for the owner only', async () => {
     store.owner = { checking: false, owner: false }

@@ -1,0 +1,36 @@
+The doors fix: starscapes-doors-fix-19oct.zip   (and TWO LINES TO RUN IN SUPABASE)
+
+WHAT WENT WRONG
+Your Admin "Open a door" page said "I could not read the doors". The cause: the doors table had no permission for the website to read it. Supabase checks two things: the table's
+RULES (who may do what; yours were right) and its PERMISSIONS (whether the website may touch the table at all). The doors file only had the rules. Your table showed only a technical
+REFERENCES permission for the visitor and signed-in roles, and no SELECT, so every read was refused. The page's message then told you to run "sql/doors.sql" by name, which is not
+something Supabase can run. That was my wording, and I am sorry.
+
+STEP 1, RIGHT NOW (this is the actual fix; the zip below just makes sure it cannot happen again)
+In Supabase's SQL editor, clear it, paste these two lines (the lines themselves), make sure nothing is highlighted, and press Run. It should say "Success. No rows returned."
+    grant select on public.doors to anon, authenticated;
+    grant insert, update, delete on public.doors to authenticated;
+Then hard-refresh your Open a door page (Cmd+Shift+R): the red box should be gone and the doors should show.
+
+WHAT THE ZIP DOES (so it never happens again, for you or for anyone setting the site up)
+  * sql/doors.sql now contains those two permission lines, with a note on why, and a line to check them.
+  * The Open a door page, when it cannot read the doors, now shows the DATABASE'S OWN REASON, and the two lines to paste, instead of telling you to run a file.
+  * A new safety-net test checks that EVERY table the website reads from the browser has its permission line in its database file, and that the two tables only your server touches
+    (orders and ebook_signups) have none. I checked all your database files by hand too: doors was the only one with this problem.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-doors-fix-19oct.zip
+   (this also replaces two test files with updated versions)
+3. python3 tools/add-doors-fix.py            (it checks all three files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2     (all 177 checks should pass)
+5. npm run build                             (must finish without errors)
+6. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Doors: permission lines, and the real reason when they cannot be read"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh.
+
+AFTER BOTH STEPS: your doors can be opened. Open the ones you want to walk through (Admin, Open a door). Remember the Free Ebook door stays CLOSED until the Privacy policy covers the sign-up.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

@@ -1,0 +1,19 @@
+/* The message on the Open a door page when the doors cannot be read. Stands on its own: nothing here depends on the old index.css rules. */
+.od-fail {
+  display: block;
+  margin: 0 0 10px;
+  line-height: 1.5;
+}
+.od-code {
+  display: block;
+  margin: 0 0 10px;
+  padding: 12px 14px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.9375rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  user-select: all; /* one click selects both lines, ready to copy */
+}

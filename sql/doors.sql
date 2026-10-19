@@ -6,6 +6,10 @@
 -- WHO CAN DO WHAT: everyone can read it (the website needs to know which doors to show as open). Only the account with the email below
 -- can open or close a door, the same rule as your products, posts and photos.
 --
+-- PERMISSIONS: a table made in the SQL editor cannot be read by the website until it is granted permission, however good its rules are. The two grant lines near
+-- the end do that (visitors can read; only a signed-in account can write, and the rules above then limit that to you). Without them the Open a door page says
+-- "I could not read the doors".
+--
 -- BEFORE YOU RUN IT: check the email below is the one you sign in with, the same one as in lock-editing-to-owner.sql.
 -- To undo it at any time, run the DROP lines at the very bottom. Nothing else depends on this table.
 
@@ -33,8 +37,13 @@ create policy "only the owner changes doors" on public.doors for update to authe
 create policy "only the owner deletes doors" on public.doors for delete to authenticated
   using (lower(auth.jwt() ->> 'email') = 'gillian@gillianbennet.com');
 
+grant select on public.doors to anon, authenticated;
+grant insert, update, delete on public.doors to authenticated;
+
 -- To confirm it worked, run this. It should list 4 rows:
 --   select policyname, cmd from pg_policies where tablename = 'doors' order by policyname;
+-- And this should show SELECT for both anon and authenticated:
+--   select grantee, privilege_type from information_schema.role_table_grants where table_schema = 'public' and table_name = 'doors' order by grantee, privilege_type;
 
 -- TO UNDO (run these lines if you ever need to):
 --   drop table if exists public.doors;
