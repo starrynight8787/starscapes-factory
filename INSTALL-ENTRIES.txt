@@ -1,0 +1,45 @@
+The entry template, on Writing in Transit: starscapes-entries-19oct.zip   (no SQL)
+
+WHAT IT BUILDS (from your Figma design "Archive Entry / Author's Notebook")
+A page template for a series of entries, used right now on WRITING IN TRANSIT (Explorer's Bay, at /explorers-bay/writing-in-transit), replacing its plain list:
+  * the LATEST ENTRY, big, on the left: its picture, a "Latest entry" chip, the date, the title, "Read the entry".
+  * the PINNED ENTRY on the right: "Pinned", "Entry 1", its title, "Start from the beginning".
+  * a GRID of the rest underneath the latest entry, newest first, up to eight (more open with "Show more entries").
+  * On a PHONE it is one column: latest, pinned, the grid (four first, then "Show more entries").
+The title, the line under it and the tag that picks the posts all still come from the room's own data, so they live in one place.
+
+HOW YOU CHOOSE THINGS (the Tags box on a post; no database change, no change to your forms)
+  * A post belongs on this page if it has the tag  writing-in-transit  (as before).
+  * LATEST ENTRY: simply the newest post.
+  * PINNED ENTRY: the newest post that also has the tag  pinned  . If none does, the OLDEST post is pinned: the beginning of the series ("Start from the beginning").
+    A post is never shown twice: if the newest is the one tagged pinned, the oldest is pinned instead.
+
+WHAT IS NOT IN THIS UPDATE, AND WHY (please read)
+  * ARCHIVE ENTRIES AND THE AUTHOR'S NOTEBOOK. They belong to the Drafting Desk, and the Drafting Desk is not built as an illustrated room in the code yet: it has no
+    Archive Entries or Notebook door or page to attach this to. The template is built so they can use it as soon as that room exists. The Notebook is also for members,
+    and memberships come after testing.
+  * THE TALL BOX under the pinned entry in the drawing (the Author's Notebook, for members). It belongs with the Notebook, so it is not on Writing in Transit; what
+    goes there was undecided. The template can show an extra box under the pinned entry when one is given.
+  * NO BANNER. The drawing has none for this page, so none is built. Tell me if you want one like the Leadership Blog and the YouTube page.
+  * The two marks I could not read in your sketch (the black bar and the three small squares) are still left out.
+
+NEEDS: the Leadership Blog update (which holds the banner). The script stops and says so if it is not there.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-entries-19oct.zip
+3. python3 tools/add-entry-template.py       (it checks the file first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 156 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Entry template on Writing in Transit"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, and SEND ME A SCREENSHOT (I cannot see the live page), at /explorers-bay/writing-in-transit
+   1. The latest entry big on the left, the pinned entry on the right, the grid under the latest entry.
+   2. Give one post the tag  pinned  (Edit post, Tags box), reload: that post becomes the pinned one and the button says "Read this entry".
+   3. On a phone (or a narrow window): one column, only four grid entries until you press "Show more entries".
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

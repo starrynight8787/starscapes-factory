@@ -158,6 +158,9 @@ const CHECKS = [
   ['YouTube: the database change', 'sql/youtube-intro.sql', /youtube_intro/, 'the YouTube update'],
   ['YouTube: the page uses the banner', 'src/den/YouTubeSeriesPage.jsx', /PageBanner/, 'the YouTube update (the add-youtube-v2 script)'],
   ['YouTube: the pinned-video choice in Admin', 'src/admin/AdminHome.jsx', /saveIntroId/, 'the YouTube update (the add-youtube-v2 script)'],
+  ['Entries: the rules for which entry goes where', 'src/entries/entryRules.js', /export function pickPinned/, 'the entry template update'],
+  ['Entries: the template page', 'src/entries/EntryPage.jsx', /en-pinned-title/, 'the entry template update'],
+  ['Entries: Writing in Transit uses it', 'src/rooms/RoomRoutes.jsx', /WritingInTransitPage/, 'the entry template update (the add-entry-template script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {
