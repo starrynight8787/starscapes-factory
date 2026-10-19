@@ -26,6 +26,23 @@ export const VIDEOS = [
   ['Call-outs', 'A short video when something is too wild to wait.'],
 ]
 
+// The "Currently watching" half of the first box (Figma: "Story Ledger v2"). When the show changes (after Baywatch), change this and NOW_WATCHING above.
+// PLEASE CHECK the numbers and the years before launch: 242, 44 and 2 come from the Mosaic line below; the 11 seasons and 1989 to 2001 need confirming.
+export const CURRENTLY = {
+  show: 'Baywatch',
+  season: 'Season 1',
+  blurb: 'Baywatch follows a team of Los Angeles lifeguards through rescues, romances and a great deal of slow-motion running. It was cancelled after one season, then came back and became one of the most widely watched shows on television.',
+  facts: [['11', 'seasons'], ['242', 'episodes'], ['44', 'spin-off episodes'], ['2', 'films']],
+  years: 'On air from 1989 to 2001.',
+}
+
+export const SUBSCRIBE = {
+  title: 'Never miss an audit',
+  text: 'New episode audits, extras and call-outs, as soon as they go up.',
+}
+
+export const PREVIOUS_COUNT = 3 // audits listed under Previous audits (the newest one is shown as the Latest video)
+
 export const MOSAIC = {
   show: 'BAYWATCH',
   total: 288,

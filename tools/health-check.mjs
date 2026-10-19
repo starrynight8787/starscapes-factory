@@ -161,6 +161,9 @@ const CHECKS = [
   ['Entries: the rules for which entry goes where', 'src/entries/entryRules.js', /export function pickPinned/, 'the entry template update'],
   ['Entries: the template page', 'src/entries/EntryPage.jsx', /en-pinned-title/, 'the entry template update'],
   ['Entries: Writing in Transit uses it', 'src/rooms/RoomRoutes.jsx', /WritingInTransitPage/, 'the entry template update (the add-entry-template script)'],
+  ['Story Ledger: the words for Currently watching', 'src/ledger/ledgerData.js', /export const CURRENTLY/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
+  ['Story Ledger: the new page', 'src/ledger/StoryLedgerPage.jsx', /sl-subscribe/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
+  ['Story Ledger: the new styles', 'src/ledger/ledger.css', /sl__row--wide/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

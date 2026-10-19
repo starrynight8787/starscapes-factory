@@ -1,0 +1,47 @@
+The new Story Ledger page: starscapes-story-ledger-19oct.zip   (no SQL)
+
+WHAT IT BUILDS (from your Figma design "Story Ledger v2", at /knowledge-nook/story-ledger, behind the Nook's television door)
+  * THE BLACK BANNER, full width: the logo (or the name "Story Ledger" until the logo file exists), "A deadpan audit of old TV", and "Now watching: Baywatch, Season 1".
+  * ROW 1: one box in two halves, WHAT IT IS (with how the heavy storylines are handled inside it) over CURRENTLY WATCHING (Baywatch: a blurb, four quick facts, the years,
+    and "5 of 288 watched so far"); beside it a SUBSCRIBE box (the logo, "Never miss an audit", a Subscribe on YouTube button and a Follow on TikTok button).
+  * ROW 2: THE VIDEOS (the four kinds, "New videos appear latest first") beside PREVIOUS AUDITS (the next three, with a link to see them all on YouTube).
+  * ROW 3: THE MOSAIC (24 squares across on a computer, 16 on a phone; 288 in all, five coloured) beside the LATEST VIDEO (the newest audit's picture, title and date,
+    "Read the audit" and "Watch on YouTube").
+  * ROW 4: WHERE TO WATCH beside the SUGGEST AND VOTE box (it still only appears while it is switched on in Admin; when it is off, Where to watch takes the whole row).
+  * On a PHONE it is one column in the same order. Each pair of boxes is the same height on a computer.
+LATEST VIDEO and PREVIOUS AUDITS fill themselves from the Knowledge Nook posts that have the tag  story-ledger  (the newest is the Latest video), as the old
+"Latest audits" list did. Nothing to change in Admin.
+
+WHAT IS DIFFERENT FROM THE DRAWING (on purpose)
+  * "WHAT GETS TRACKED" (the eight things: Rescues, Relationships, and so on) IS NOT ON THE PAGE. In the drawing its box became the Subscribe box, and you have not yet
+    said where it should live. The words are still saved in the page's data file, ready to put somewhere. Tell me where.
+  * LATEST VIDEO shows the newest audit's picture with a "Read the audit" button, not a video that plays on the page, because the audits are posts. "Watch on YouTube" goes
+    to the channel. A playing video would need the channel's own feed set up, as for the Den. Tell me if you want that.
+  * The BLURB under "Currently watching" is a short draft I wrote (the drawing had a placeholder). PLEASE READ AND REWRITE IT in src/ledger/ledgerData.js (CURRENTLY).
+  * PLEASE CHECK THE FACTS in the same place before launch: 242 episodes, 44 spin-off episodes and 2 films come from the Mosaic line you wrote; 11 seasons and
+    "on air 1989 to 2001" are mine and need confirming.
+  * THE LOGO: the picture file public/story-ledger/logo.png is still missing, so the banner and the Subscribe box show the name instead. Export the logo from Figma
+    (the Story Ledger logo component) as a PNG, save it as public/story-ledger/logo.png, and push. Nothing else needs changing.
+
+NEEDS: the entry template update and the home page update (the script stops and says so if they are not there). Install the entry template update FIRST, because the
+health check in this package checks for its files too.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-story-ledger-19oct.zip
+   (this also replaces the Story Ledger test file with an updated version)
+3. python3 tools/add-story-ledger-v2.py       (it checks all three files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 159 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Story Ledger page: banner, currently watching, subscribe, latest video"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, and SEND ME A SCREENSHOT (I cannot see the live page), at /knowledge-nook/story-ledger (you can as the owner even while the door is closed)
+   1. The black banner across the full width; Row 1 with the two-half box and the Subscribe box side by side; and so on down.
+   2. Check each pair of boxes is the same height, and the Mosaic shows 24 squares across.
+   3. On a phone (or a narrow window): one column; the Mosaic is 16 squares across.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.
