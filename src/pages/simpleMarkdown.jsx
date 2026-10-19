@@ -60,11 +60,14 @@ export function renderMarkdown(text) {
     const [head, ...rest] = table
     const body = rest.filter((r) => !/^\|[\s|:-]+\|?$/.test(r.trim()))
     nodes.push(
-      <div key={`t${nodes.length}`} className="md-tablewrap">
+      <div key={`t${nodes.length}`} className="md-table">
+        <p className="md-hint" aria-hidden="true">Scroll sideways to see every column &rarr;</p>
+        <div className="md-tablewrap" tabIndex={0} role="region" aria-label="Table: scroll sideways to see every column">
         <table>
           <thead><tr>{cells(head).map((c, k) => <th key={k} scope="col">{inline(c, `th${nodes.length}-${k}`)}</th>)}</tr></thead>
           <tbody>{body.map((r, i) => <tr key={i}>{cells(r).map((c, k) => <td key={k}>{inline(c, `td${nodes.length}-${i}-${k}`)}</td>)}</tr>)}</tbody>
         </table>
+        </div>
       </div>,
     )
     table = []

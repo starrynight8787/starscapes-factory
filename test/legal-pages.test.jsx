@@ -104,6 +104,12 @@ describe('they show properly', () => {
     expect(table.querySelectorAll('tbody tr')).toHaveLength(6); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
     expect(container.querySelector('.md-tablewrap')).toBeTruthy()
   })
+  it('a table scrolls inside a box a keyboard can reach and a screen reader can name, with a short hint for people on a phone', () => {
+    const { container } = open('privacy')
+    const box = container.querySelector('.md-tablewrap')
+    expect(box).toHaveAttribute('tabindex', '0'); expect(box).toHaveAttribute('role', 'region'); expect(box.getAttribute('aria-label')).toMatch(/scroll sideways/i)
+    expect(container.querySelector('.md-hint')).toHaveTextContent('Scroll sideways to see every column'); expect(container.querySelector('.md-hint')).toHaveAttribute('aria-hidden', 'true')
+  })
   it('the AI policy\u2019s table is a real table: three columns, six rows', () => {
     const { container } = open('ai-policy')
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
@@ -144,6 +150,10 @@ describe('the table and quote styles', () => {
   })
   it('draw the table cells with borders and the headings in the site\u2019s colours, and the quote with a bar down its side', () => {
     expect(css).toMatch(/\.md-tablewrap th,\s*\.md-tablewrap td \{[^}]*border: 1px solid/); expect(css).toMatch(/\.md-tablewrap th \{[^}]*background:/); expect(css).toMatch(/blockquote \{[^}]*border-left: 4px solid/)
+  })
+  it('keep room for a table\u2019s columns on a phone, and show the scroll hint only there', () => {
+    expect(css).toMatch(/\.md-hint \{\s*display: none/); expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*\.md-hint \{\s*display: block/); expect(css).toMatch(/@media \(max-width: 720px\)[\s\S]*\.md-tablewrap table \{\s*min-width: 560px/)
+    expect(css).toMatch(/\.md-tablewrap:focus-visible \{\s*outline: 3px solid/)
   })
   it('have no text under 14px', () => {
     for (const m of css.matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)

@@ -1,4 +1,7 @@
 /* Tables and quotes in the text pages (the legal pages). Stands on its own: nothing here depends on the old index.css rules. */
+.md-hint {
+  display: none; /* only on a phone, where the table scrolls sideways */
+}
 .md-tablewrap {
   margin: 0 0 16px;
   overflow-x: auto; /* a wide table scrolls inside its own box on a phone, instead of pushing the page sideways */
@@ -38,6 +41,28 @@ blockquote p {
 }
 .lg-intro p {
   margin: 0 0 12px;
+}
+
+/* The legal pages are drawn wider than the 720 pixel page column every page sits in, so the contents list and the text had only about 650 pixels between them and a table was
+   squeezed. 1000 is the legal page's 960 plus the 20 pixels of padding each side. (The accessibility statement is drawn narrow, so it is left as it is.) */
+.container:has(> .lg:not(.lg--narrow)) {
+  max-width: 1000px;
+}
+.md-tablewrap:focus-visible {
+  outline: 3px solid var(--sf-focus, #14306a);
+  outline-offset: 2px;
+}
+@media (max-width: 720px) {
+  /* on a phone a table keeps room for its columns and scrolls sideways inside its own box, instead of squeezing every cell to a few words */
+  .md-hint {
+    display: block;
+    margin: 0 0 6px;
+    font-size: 0.875rem;
+    color: var(--sf-muted, #5b6585);
+  }
+  .md-tablewrap table {
+    min-width: 560px;
+  }
 }
 
 /* The legal pages are drawn wider than the 720 pixel page column every page sits in, so the contents list and the text had only about 650 pixels between them and a table was

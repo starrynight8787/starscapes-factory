@@ -8,7 +8,7 @@ import { execFileSync } from 'node:child_process'
 
 const SCRIPT = path.resolve('tools/add-layout-pass.py')
 const FIX = path.resolve('test/fixtures/layout-pass')
-const FILES = ['src/components/pagebanner.css', 'src/entries/entries.css', 'src/ledger/ledger.css', 'src/leadership/leadership.css', 'src/den/youtube.css', 'src/home/homeSections.css', 'src/home/HomeSections.jsx', 'src/entries/EntryPage.jsx', 'src/leadership/LeadershipBlogPage.jsx', 'src/pages/markdown.css']
+const FILES = ['src/components/pagebanner.css', 'src/den/youtube.css', 'src/entries/EntryPage.jsx', 'src/entries/entries.css', 'src/home/HomeSections.jsx', 'src/home/homeSections.css', 'src/leadership/LeadershipBlogPage.jsx', 'src/leadership/leadership.css', 'src/ledger/ledger.css', 'src/pages/StaticPage.jsx', 'src/pages/markdown.css', 'src/pages/simpleMarkdown.jsx', 'src/pages/staticpage.css']
 const NEW = [] // this update only changes files that already exist
 const flat = (rel) => rel.replace(/\//g, '__')
 const before = (rel) => fs.readFileSync(path.join(FIX, 'before', flat(rel)), 'utf8')
@@ -21,7 +21,6 @@ function project({ change = {} } = {}) {
   dirs.push(dir)
   const put = (rel, text) => { fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true }); fs.writeFileSync(path.join(dir, rel), text) }
   for (const rel of FILES) put(rel, change[rel] ?? before(rel))
-  put('src/pages/StaticPage.jsx', '// from the footer and pages update\n')
   put('package.json', '{}\n')
   return dir
 }
@@ -31,7 +30,7 @@ const run = (cwd) => {
 const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8')
 
 describe('the layout pass', () => {
-  it('changes the ten files into exactly the finished versions, and says so', () => {
+  it('changes the thirteen files into exactly the finished versions, and says so', () => {
     const dir = project()
     const r = run(dir)
     expect(r.code, r.out).toBe(0)

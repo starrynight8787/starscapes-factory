@@ -66,3 +66,11 @@ describe('a tablet gets its own layout, not a stretched phone', () => {
     expect(phone).toMatch(/\.sl__row--wide,\s*\.sl__row--even \{\s*grid-template-columns: minmax\(0, 1fr\)/); expect(phone).toMatch(/\.sl__mosaic \{\s*grid-template-columns: repeat\(16, minmax\(0, 1fr\)\)/)
   })
 })
+
+describe('the text pages\u2019 class name does not clash with another style', () => {
+  it('uses txp, not sp: the system pages (404, error, loading) already own .sp, which centres everything inside it', () => {
+    expect(read('src/pages/systempages.css')).toMatch(/\.sp \{[^}]*text-align: center/)
+    expect(read('src/pages/StaticPage.jsx')).toMatch(/className="pg pg-text txp"/); expect(read('src/pages/StaticPage.jsx')).not.toMatch(/className="[^"]*\bsp\b/)
+    expect(read('src/pages/staticpage.css')).toMatch(/^\.txp \{/m); expect(read('src/pages/staticpage.css')).not.toMatch(/^\.sp[ _{]/m)
+  })
+})

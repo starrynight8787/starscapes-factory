@@ -117,7 +117,7 @@ describe('a legal page', () => {
     const { container } = at('drafted', true)
     expect(screen.getByRole('note')).toHaveTextContent('3 gaps in [square brackets] still to fill.')
     expect(screen.getByRole('heading', { level: 1, name: 'A draft legal page' })).toBeInTheDocument()
-    expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument(); expect(container.querySelector('.sp__draftwrap ~ main.lg, main.lg')).toBeTruthy()
+    expect(screen.getByRole('navigation', { name: 'On this page' })).toBeInTheDocument(); expect(container.querySelector('.txp__draftwrap ~ main.lg, main.lg')).toBeTruthy()
     expect(screen.getByRole('link', { name: 'home' })).toHaveAttribute('href', '/')
   })
   it('shows a ready one to everyone with its numbered sections, a contents list, the company details, and no banner', () => {

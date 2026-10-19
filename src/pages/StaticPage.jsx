@@ -16,8 +16,8 @@ const GAP_WORDS = { lastReviewed: '[date]', notYetRight: '[To be filled in after
 
 function DraftBanner({ gaps }) {
   return (
-    <div className="sp__draftwrap">
-      <div className="sp__draft" role="note">
+    <div className="txp__draftwrap">
+      <div className="txp__draft" role="note">
         <strong>Draft: only you can see this page.</strong>{' '}
         {gaps > 0 ? `${gaps} ${gaps === 1 ? 'gap' : 'gaps'} in [square brackets] still to fill. ` : 'No gaps are left in [square brackets]. '}
         Visitors see &ldquo;not ready yet&rdquo; until you switch it on.
@@ -59,11 +59,11 @@ export default function StaticPage({ owner = false }) {
   const { nodes } = renderMarkdown(t.content)
   const gaps = page.ready ? 0 : countGaps(t.content)
   return (
-    <main className="pg pg-text sp">
+    <main className="pg pg-text txp">
       {back}
       {!page.ready && <DraftBanner gaps={gaps} />}
       <h1>{t.title}</h1>
-      <div className="sp__body">{nodes}</div>
+      <div className="txp__body">{nodes}</div>
       {t.showEmail && CONTACT_EMAIL && (
         <p>
           <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>

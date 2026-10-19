@@ -1,0 +1,30 @@
+Layout pass, part 2: starscapes-layout-pass-2-19oct.zip   (no SQL)   BUILDS ON the first layout pass, which is already on your live site.
+
+WHAT IT FIXES (found by photographing the rest of the site in a real browser)
+  1. THE TABLE IN THE PRIVACY POLICY, ON A PHONE: its four columns were crushed to a few words wide. It now keeps room for its columns and scrolls sideways inside its own box
+     (reachable with the keyboard, and named for a screen reader), with a short "Scroll sideways to see every column" hint shown on phones only. The AI policy's table too.
+  2. THE CONTACT PAGE (AND EVERY PLAIN TEXT PAGE) HAD CENTRED TEXT. My text pages used a style name, "sp", that your 404, error and loading pages already own, and theirs centres
+     everything inside it. Mine is now called "txp". (The Delivery and returns page and About were affected the same way.)
+
+ALSO CHECKED, AND FOUND RIGHT (no change needed): the footer on a phone; the accessibility statement as you see it (draft banner, gap count, contact card, company card); the Home page
+admin tool on a phone; a room page on a phone; and no page scrolls sideways on a phone (I checked 26 pages: Home, all eight rooms, the cart, log in, sign up, forgot password,
+not found, the Leadership Blog, YouTube, Writing in Transit, Archive Entries, Story Ledger, Terms, Privacy, Returns, AI policy, accessibility, Delivery, About, Contact, and four admin pages).
+
+This changes only FOUR files: src/pages/StaticPage.jsx, staticpage.css, simpleMarkdown.jsx and markdown.css (the script checks them first; anything from the first layout pass that is already in place
+it simply skips, and says so). It also replaces five test files with updated versions.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-layout-pass-2-19oct.zip
+3. python3 tools/add-layout-pass.py          (if it says "Everything was already in place", the first layout pass is in and this part is already done too)
+4. node tools/health-check.mjs | tail -2     (all 179 checks should pass)
+5. npm run build                             (must finish without errors)
+6. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Layout pass part 2: tables on a phone, and the text pages no longer centred"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK at /page/contact (signed in as you): the words should be left-aligned, not centred.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.
