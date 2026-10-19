@@ -1,0 +1,36 @@
+The deployment fix: starscapes-function-fix-19oct.zip   (no SQL, nothing to do in Stripe)
+
+WHAT WENT WRONG
+Vercel's free plan allows only 12 "serverless functions" per site, and every file in the api folder counts as one. You had exactly 12. The account update added a 13th (api/membership-account.js), so
+Vercel refused to build the site, every time, in about ten seconds. While that happens Vercel keeps serving the LAST version that did build (the payment step), which is why your site stayed up.
+This also explains the signing-secret trouble: you added the variable AFTER that last good build, and every "Redeploy" you pressed was of a FAILED build, so nothing ever picked it up.
+
+THE FIX
+The account actions (the card line, Stripe's billing page, taking back a cancellation, changing passes) now live in lib/membershipAccount.js, and the one membership function (api/membership-checkout.js) hands
+those requests over. Nothing you see changes. There are 12 functions again. A new test fails loudly if anyone ever adds a 13th, so this cannot happen again.
+The script also REMOVES api/membership-account.js, but only if it is exactly the file I put there (if you have changed it, it stops and says so, and changes nothing).
+
+TO CONFIRM THAT THIS WAS THE CAUSE (optional): in Vercel, click one of the failed deployments and read the error. It should say something like "No more than 12 Serverless Functions can be added to a Deployment on the
+Hobby plan". If it says something DIFFERENT, send me the words before you do anything else.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-function-fix-19oct.zip
+ 3. python3 tools/fix-function-count.py       (it checks the three files and the old function file first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 200 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed; api/membership-account.js should show as "deleted")
+    git commit -m "Fix the failed deployments: 12 functions again"
+    git push
+ 8. Watch Vercel's Deployments page. This time the new row should say READY (about 15 seconds). If it says Error again, click it and send me the error words.
+
+AFTER IT SAYS READY
+ * Because this is a brand-new build, it picks up STRIPE_MEMBERSHIP_WEBHOOK_SECRET automatically. You do NOT need to redeploy by hand.
+ * Account pages: starscapesfactory.com/membership/passes and /membership/change should now exist. (The one SQL line, the offer_note column, you have already run.)
+ * Webhook: in Stripe, Membership destination, Event deliveries, press Resend on the latest checkout.session.completed. The new attempt should show 200.
+ * You have two test purchases for the same account. In Stripe, cancel the OLDER subscription immediately (the one from 8:26pm, sub_1USN9m...) and keep the newer one (sub_1USNFy...). Then resend the newer one's two
+   events last, so your membership row reflects the subscription you are keeping.
+
+IF YOU WANT IT ALL BACK: git revert HEAD, then git push (but that would put the 13th function back, so tell me instead).

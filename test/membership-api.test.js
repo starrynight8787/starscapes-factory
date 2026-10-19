@@ -87,6 +87,12 @@ describe('the account calls', () => {
     stub(async () => { throw new Error('offline') }); await expect(fetchAccount()).resolves.toEqual({ card: null })
     stub(async () => ({ ok: false, status: 500, json: async () => { throw new Error('x') } })); await expect(fetchAccount()).resolves.toEqual({ card: null })
   })
+  it('sends every account request to the membership checkout function (there is no function of its own: the free Vercel plan allows 12)', async () => {
+    let f = stub(async () => reply({ ok: true, card: null })); await fetchAccount(); expect(f.mock.calls[0][0]).toBe('/api/membership-checkout?account=1')
+    f = stub(async () => reply({ ok: true, url: 'https://billing.stripe.com/p/session/x' })); await openBillingPortal(); expect(f.mock.calls[0][0]).toBe('/api/membership-checkout')
+    f = stub(async () => reply({ ok: true })); await resumePasses(); expect(f.mock.calls[0][0]).toBe('/api/membership-checkout')
+    f = stub(async () => reply({ ok: true })); await changePasses({ passes: ['blueprints'], consent: false }); expect(f.mock.calls[0][0]).toBe('/api/membership-checkout')
+  })
   it('opens only a Stripe billing address, and asks with the person\u2019s sign-in', async () => {
     const f = stub(async () => reply({ ok: true, url: 'https://billing.stripe.com/p/session/x' }))
     await expect(openBillingPortal()).resolves.toBe('https://billing.stripe.com/p/session/x')

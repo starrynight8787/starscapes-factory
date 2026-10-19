@@ -1,7 +1,7 @@
 // @vitest-environment node
 // The account function (api/membership-account.js): card, billing page, taking back a cancellation, and changing passes. A pretend Stripe and a pretend database.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
-import handler from '../api/membership-account.js'
+import handler from '../api/membership-checkout.js' // the account requests are handled through this one function (the free Vercel plan allows only 12)
 import { CONSENT_TEXT } from '../src/membership/passes.js'
 
 const USER = { id: '11111111-2222-4333-8444-555555555555', email: 'reader@example.com', email_confirmed_at: '2026-10-01T00:00:00Z' }
@@ -41,7 +41,7 @@ async function call({ method = 'POST', token = 'user-token', body, origin } = {}
   const headers = {}
   if (token) headers.authorization = `Bearer ${token}`
   if (origin) headers.origin = origin
-  await handler({ method, headers, body }, res)
+  await handler({ method, headers, body, query: method === 'GET' ? { account: '1' } : {} }, res)
   return { status: res.code, body: res.body }
 }
 
@@ -73,7 +73,8 @@ describe('who may use it', () => {
     expect([r.status, r.body.reason]).toEqual([404, 'no_membership']); expect(stripePosts(fn)).toHaveLength(0)
   })
   it('refuses any other kind of request', async () => {
-    withNetwork(); expect((await call({ method: 'DELETE' })).status).toBe(405); expect((await call({ body: { action: 'delete everything' } })).status).toBe(400)
+    const fn = withNetwork(); expect((await call({ method: 'DELETE' })).status).toBe(405)
+    expect((await call({ body: { action: 'delete everything' } })).status).not.toBe(200); expect(stripePosts(fn)).toHaveLength(0) // an action it does not know is never an account request
   })
 })
 

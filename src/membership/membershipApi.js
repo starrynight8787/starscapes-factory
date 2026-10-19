@@ -66,7 +66,7 @@ export async function fetchMyMembership() {
 export async function fetchAccount() {
   const token = await signInToken()
   try {
-    const res = await fetch('/api/membership-account', { cache: 'no-store', headers: authHeader(token) })
+    const res = await fetch('/api/membership-checkout?account=1', { cache: 'no-store', headers: authHeader(token) })
     const body = await res.json()
     const card = body && body.ok === true && body.card && /^\d{4}$/.test(String(body.card.last4)) ? { brand: String(body.card.brand || 'card'), last4: String(body.card.last4) } : null
     return { card }
@@ -79,7 +79,7 @@ async function accountAction(action, extra = {}) {
   const token = await signInToken()
   let res
   try {
-    res = await fetch('/api/membership-account', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader(token) }, body: JSON.stringify({ action, ...extra }) })
+    res = await fetch('/api/membership-checkout', { method: 'POST', headers: { 'Content-Type': 'application/json', ...authHeader(token) }, body: JSON.stringify({ action, ...extra }) })
   } catch (e) {
     throw new Error('We could not reach the site just now. Check your connection and try again.')
   }
