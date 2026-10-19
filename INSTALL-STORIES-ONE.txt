@@ -1,0 +1,42 @@
+Let's write a story, step one: starscapes-stories-one-19oct.zip   (ONE SQL step in Supabase, and it goes FIRST this time)
+
+WHAT THIS DOES
+ * The "Short Stories" beaker in the Idea Hatchery is now "Let's write a story" and opens a new page (starscapesfactory.com/idea-hatchery/lets-write-a-story), built to your Stories v2 design:
+     - the story's FIRST CHAPTER pinned at the top (Pinned, Free to read, First chapter, the story's title, its first lines, and a Start reading button)
+     - the other chapters as cards: chapters 2 and 3 say "Free to read", chapter 4 onwards say "Members only", and the newest says "Latest" (a phone shows four, then "Show more chapters")
+     - THE VOTE box, in its "Soon" state (the voting itself is step two)
+     - COMPLETED STORIES (four, then "See all completed stories"), each linking to its first chapter
+ * A chapter is an ORDINARY POST. Write it in New post, choose the pass "Come Write With Me" (so its words are protected like any other pass post), then give it its number in the new Stories tool in Admin.
+   Chapters 1 to 3 of EVERY story are free to read; chapter 4 and on need the Come Write With Me pass. A members-only chapter's card still opens its post, and a visitor sees the pass gate instead of the words.
+ * The rule in the database that decides who may read a locked post is updated so every story has its own free three (before, it counted the first three posts of the whole pass). The pass labels on cards
+   (Blueprints pass: free to read, and so on) follow the same rule, so a members-only chapter never says "free to read".
+ * The old Short Stories gallery of tagged posts still works at /idea-hatchery/short-stories (so anything shared or bookmarked keeps working) but the beaker no longer leads to it. Tell me if you want it removed.
+
+THE ORDER MATTERS THIS TIME: run the SQL FIRST (see the message), THEN install. If the page goes live before the SQL, visitors would see "The stories could not load just now" until you run it.
+
+THE SQL (in Supabase: SQL editor, clear it, PASTE THE SQL ITSELF, make sure nothing is highlighted, press Run; "Success. No rows returned."; safe to run twice). It is in this message, and also in sql/stories.sql after the unzip.
+   Run it AFTER sql/locked-posts.sql (you already have). NEVER run locked-posts.sql again afterwards: it would put the old rule back.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-stories-one-19oct.zip
+    (this also replaces two older test files with updated versions)
+ 3. python3 tools/add-stories-one.py          (it checks the six files first; if anything is unexpected it changes nothing; it needs the pass labels package installed first)
+ 4. node tools/health-check.mjs | tail -2     (every check should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Let's write a story: the page, the chapters and the owner's Stories tool"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+USING IT (after it is Ready)
+ 1. Admin, then Stories (a new tool in the Rooms group): "Add a story": its title, optionally its first lines and a picture, and leave "Where is the story?" on Still being written.
+ 2. Write chapter 1 in New post (Room: Idea Hatchery is a good choice), with the Pass choice set to Come Write With Me. Do the same for each chapter.
+ 3. Back in Admin, Stories, "Make a post a chapter": choose the story, the chapter number, and paste the post's address (it ends with /post/ and a long code, or just the code). Saving gets ready for the next number.
+ 4. To see the wall: open /idea-hatchery/lets-write-a-story in a PRIVATE window. Chapters 1 to 3 open with their words; click chapter 4 and you see the pass gate. (As yourself you can read everything.)
+ 5. When a story is finished: Admin, Stories, Change, set it to Finished with the date, and it moves to Completed stories.
+
+STILL TO COME: step two, the voting (the options, one vote per member, changeable until it closes, results hidden until a member has voted or the vote has closed, counted in the database); step three, the owner's forms
+for creating each vote and choosing the winner.

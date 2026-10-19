@@ -28,6 +28,7 @@ import AdminConsole from './admin/AdminConsole'
 import OpenDoors from './admin/OpenDoors'
 import AdminSuggestions from './admin/AdminSuggestions'
 import AdminBooks from './admin/AdminBooks'
+import AdminStories from './admin/AdminStories'
 import AdminHome from './admin/AdminHome'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
@@ -86,6 +87,7 @@ export default function App() {
 <Route path="/admin/doors" element={ <ProtectedRoute session={session}> <OpenDoors session={session} /> </ProtectedRoute> } />
 <Route path="/admin/suggestions" element={ <ProtectedRoute session={session}> <AdminSuggestions session={session} /> </ProtectedRoute> } />
 <Route path="/admin/books" element={ <ProtectedRoute session={session}> <AdminBooks session={session} /> </ProtectedRoute> } />
+<Route path="/admin/stories" element={ <ProtectedRoute session={session}> <AdminStories session={session} /> </ProtectedRoute> } />
 <Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"

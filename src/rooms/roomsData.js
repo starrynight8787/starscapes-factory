@@ -22,13 +22,15 @@ export const ROOMS = {
     channel: 'idea-hatchery', // the room's name as saved on each post
     items: [
       { ...piece('idea-hatchery', 'writing-prompts'), id: 'writing-prompts', name: 'Writing Prompts', blurb: 'A spark to start something of your own.', kind: 'page', to: '/idea-hatchery/writing-prompts', labelAt: [340, 754] },
-      { ...piece('idea-hatchery', 'short-stories'), id: 'short-stories', name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', kind: 'page', to: '/idea-hatchery/short-stories', labelAt: [462, 700] },
+      { ...piece('idea-hatchery', 'short-stories'), id: 'short-stories', name: 'Let\u2019s write a story', blurb: 'I write, you decide where the story goes.', kind: 'page', to: '/idea-hatchery/lets-write-a-story', labelAt: [462, 700] }, // (the beaker keeps its old internal id, picture and place: only its name and where it leads changed)
       { ...piece('idea-hatchery', 'come-study-with-me'), id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me. Starting soon.', kind: 'locked', lock: 'not started yet', labelAt: [600, 754] },
       { ...piece('idea-hatchery', 'stop-motion'), id: 'stop-motion', name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', kind: 'page', to: '/idea-hatchery/stop-motion', labelAt: [847, 700] },
     ],
     areas: {
       'stop-motion': { name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', layout: 'gallery', tags: ['stop-motion'] },
-      'short-stories': { name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', layout: 'gallery', tags: ['short-stories'] },
+      'lets-write-a-story': { name: 'Let\u2019s write a story', blurb: 'I write, you decide where the story goes.', layout: 'list', tags: null }, // its own designed page (src/stories), not a list of posts
+      // The old Short Stories gallery of tagged posts. The beaker no longer leads here, but the address still works, so anything shared or bookmarked keeps working (oldLink: true says it is kept on purpose).
+      'short-stories': { name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', layout: 'gallery', tags: ['short-stories'], oldLink: true },
       'writing-prompts': { name: 'Writing Prompts', blurb: 'A spark to start something of your own.', layout: 'gallery', tags: ['writing-prompts'] },
     },
   },

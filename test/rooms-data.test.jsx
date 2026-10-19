@@ -51,10 +51,16 @@ describe('the rooms', () => {
       expect(Object.keys(areas), i.id).toContain(key)
     })
   })
-  it.each(ALL)('%s: no area page is left without a door to it', (slug) => {
+  it.each(ALL)('%s: no area page is left without a door to it (unless it is kept on purpose for old links)', (slug) => {
     const { items, areas } = ROOMS[slug]
     const doors = items.filter((i) => i.kind === 'page').map((i) => i.to.replace(`/${slug}/`, ''))
-    expect(Object.keys(areas).sort()).toEqual(doors.sort())
+    expect(Object.keys(areas).filter((k) => !areas[k].oldLink).sort()).toEqual(doors.sort())
+  })
+  it('keeps the old Short Stories gallery reachable for old links, and says so, and nothing else is kept that way', () => {
+    const kept = Object.entries(ROOMS['idea-hatchery'].areas).filter(([, a]) => a.oldLink).map(([k]) => k)
+    expect(kept).toEqual(['short-stories'])
+    for (const slug of ROOM_SLUGS.filter((s) => s !== 'idea-hatchery')) expect(Object.values(ROOMS[slug].areas).filter((a) => a.oldLink)).toHaveLength(0)
+    expect(ROOMS['idea-hatchery'].items.some((i) => i.to === '/idea-hatchery/short-stories')).toBe(false)
   })
   it.each(ALL)('%s: every area has a name, a line, a layout, and says which posts belong to it', (slug) => {
     Object.entries(ROOMS[slug].areas).forEach(([key, a]) => {

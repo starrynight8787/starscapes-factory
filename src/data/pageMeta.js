@@ -50,7 +50,8 @@ export const PAGES = {
   '/drafting-desk/authors-notebook': { title: AREAS['authors-notebook'].name, description: 'Behind the scenes, straight from my notebook. A members-only page.', image: 'drafting-desk', index: false },
   '/drafting-desk/come-write-with-me': { title: 'Come Write With Me', description: 'Join me on YouTube while I write. Watch the sessions, newest first, and write along with me at your own desk.', image: 'drafting-desk' },
 
-  '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion, short stories and writing prompts: pick a beaker to see what I am working on.'),
+  '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion, a story we write together and writing prompts: pick a beaker to see what I am working on.'),
+  '/idea-hatchery/lets-write-a-story': { title: 'Stories: let\u2019s write a story', description: 'A story we write together: I write each chapter, and members vote on where it goes next. The first three chapters are free to read.', image: 'idea-hatchery' },
   '/leadership-lounge': room('leadership-lounge', 'Leading from the middle. A blog, an audio course and an online course for people who lead without authority.'),
   '/explorers-bay': room('explorers-bay', 'Stories and pictures from the road: writing in transit and travel photography, from the pier.'),
   '/knowledge-nook': room('knowledge-nook', 'Reading, learning and personal growth. A bookcase of what I am reading and learning.'),
@@ -77,6 +78,7 @@ export const PAGES = {
   '/admin': { title: 'Admin', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/doors': { title: 'Open a door', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/home': { title: 'Home page tool', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/admin/stories': { title: 'Stories', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/books': { title: 'Books', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/suggestions': { title: 'Suggestions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin': { title: 'Manage prints', description: 'The shop owner\u2019s page.', image: 'site', index: false },

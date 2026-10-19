@@ -10,6 +10,7 @@ import FreeEbookPage from '../ebook/FreeEbookPage'
 import BookClubPage from '../bookclub/BookClubPage'
 import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
 import WritingInTransitPage from '../entries/WritingInTransitPage'
+import LetsWriteStoryPage from '../stories/LetsWriteStoryPage'
 import './roompages.css'
 
 // Everything under one room's address (for example /idea-hatchery) lives here, so the main App only needs one line for each room.
@@ -43,6 +44,7 @@ const CUSTOM_PAGES = {
 const CUSTOM_AREAS = {
   'leadership-lounge/blog': LeadershipBlogPage,
   'explorers-bay/writing-in-transit': WritingInTransitPage,
+  'idea-hatchery/lets-write-a-story': LetsWriteStoryPage,
 }
 
 // One page under a room. If it is the page behind a door, the door's gate decides who sees it.
