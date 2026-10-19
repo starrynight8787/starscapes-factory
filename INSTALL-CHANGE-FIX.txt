@@ -1,0 +1,35 @@
+The Change my passes fix: starscapes-change-fix-19oct.zip   (no SQL, nothing to do in Stripe or Vercel)
+
+WHAT WAS WRONG
+When you pressed "Save my passes", Stripe answered: "The product ... is marked as inactive, and thus no new subscriptions can be created to any plans of this product."
+The payment page makes its product on the spot, and Stripe quietly files a product made that way as INACTIVE. That is fine for the first purchase. But my "change passes" code reused that same
+product for the new price, and Stripe refuses to start a new price on an inactive product. Nothing was charged and nothing changed.
+
+THE FIX
+A change now uses ONE active product of our own ("Starscapes Factory passes", with a fixed id), made the first time it is needed and reused after that. It never uses the subscription's own product.
+A new test makes sure a change can never go back to doing that.
+
+ALSO IN THIS PACKAGE: THE REAL REASON FOR ANY FAILURE NOW GOES TO VERCEL'S LOGS
+Until now, when something failed, the site told the customer something kind and kept the reason to itself, so we kept having to guess. Now every failure in the membership functions writes one line to Vercel's
+Logs, starting [membership], with the real reason (including Stripe's own words). Anything that looks like a key is scrubbed out first. The customer still only sees the kind message.
+To read it: Vercel, your project, Logs, and search for  [membership]
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-change-fix-19oct.zip
+ 3. python3 tools/fix-change-passes.py        (it checks the five files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 202 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Fix Change my passes (active product), and log the real reason for failures"
+    git push
+ 8. Watch Vercel's Deployments page for READY (about 15 seconds). If it says Error, click it and send me the words. Do not redeploy by hand.
+
+THEN TRY IT AGAIN
+ Go to starscapesfactory.com/membership/change, tick the box and press Save my passes. You should land on My passes with "Your passes are changed", and the price should now read £5 a month (launch offer).
+ In Stripe (test mode), Products should now show a "Starscapes Factory passes" product, and the subscription's price should have changed, with NO new charge.
+ If it fails again: Vercel, Logs, search [membership], and send me the line.
+
+STILL TO COME (the next package): permission lines for the server's key in the database files (orders and ebook_signups need them too), a check with Stripe before a second purchase is allowed, then step 6, locking the posts.

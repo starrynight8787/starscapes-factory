@@ -11,7 +11,7 @@
 
 import { signatureIsGood } from './stripe-webhook.js'
 import { serviceFetch } from '../lib/serviceKey.js'
-import { fetchSubscription, membershipRowFromSubscription, stripeMode } from '../lib/membershipStripe.js'
+import { fetchSubscription, membershipRowFromSubscription, stripeMode, logProblem } from '../lib/membershipStripe.js'
 
 export const config = { maxDuration: 30 }
 
@@ -72,6 +72,7 @@ export async function POST(request) {
     await saveMembership(row)
     return reply(200, { ok: true, membership: row.status })
   } catch (e) {
+    logProblem(`recording a membership (${event.type})`, e)
     return reply(500, { ok: false, message: 'Could not record the membership just now. Stripe will send it again.', detail: String((e && e.message) || '').slice(0, 120) })
   }
 }

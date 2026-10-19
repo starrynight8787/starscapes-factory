@@ -205,6 +205,8 @@ const CHECKS = [
   ['Membership: the Change my passes page', 'src/membership/ChangePassesPage.jsx', /CHANGE_TERMS/, 'the account pages update (the add-membership-account script)'],
   ['Membership: the Stripe version is pinned', 'lib/membershipStripe.js', /STRIPE_VERSION/, 'the account pages update (the add-membership-account script)'],
   ['Membership: the Subscribe button goes to the passes page', 'src/components/Navbar.jsx', /MEMBERSHIP\.open/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: changes are priced under an active product', 'lib/membershipStripe.js', /PRODUCT_ID/, 'the change fix (the fix-change-passes script)'],
+  ['Membership: failures are written to the log', 'lib/membershipStripe.js', /logProblem/, 'the change fix (the fix-change-passes script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

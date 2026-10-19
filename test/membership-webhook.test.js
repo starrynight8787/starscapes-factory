@@ -114,6 +114,12 @@ describe('when something goes wrong, Stripe is told to try again', () => {
   it('answers 500 if Stripe cannot be asked, and saves nothing', async () => {
     const fn = withNetwork({ stripeFails: true }); expect((await POST(request(eventOf('customer.subscription.updated', subscription())))).status).toBe(500); expect(saved(fn)).toHaveLength(0)
   })
+  it('writes the reason to the log (never a key) when it could not record a membership', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    withNetwork({ dbFails: true }); await POST(request(eventOf('customer.subscription.updated', subscription())))
+    const logged = spy.mock.calls.map((c) => String(c[0])).join('\n')
+    expect(logged).toContain('[membership] recording a membership (customer.subscription.updated): database answered 500'); expect(logged).not.toMatch(/sk_test|srv|whsec/); spy.mockRestore()
+  })
   it('answers 500 if the database cannot be written, without showing what it said', async () => {
     withNetwork({ dbFails: true }); const r = await POST(request(eventOf('customer.subscription.updated', subscription())))
     expect(r.status).toBe(500); expect(JSON.stringify(await r.json())).not.toMatch(/sk_test|srv|whsec/)

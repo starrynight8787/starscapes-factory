@@ -203,6 +203,12 @@ describe('when Stripe has a problem', () => {
     withNetwork({ stripeDown: true }); const r = await call({ body: good })
     expect(r.status).toBe(502); expect(JSON.stringify(r.body)).not.toMatch(/sk_test|boom/)
   })
+  it('writes Stripe\u2019s own reason to the log, while the customer only sees the kind message', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    withNetwork({ stripeDown: true }); const r = await call({ body: good })
+    expect(r.body.message).toBe("We couldn't start the payment just now. Please try again in a moment.")
+    expect(spy.mock.calls.map((c) => String(c[0])).join('\n')).toContain('[membership] starting a payment: stripe answered 500: boom'); spy.mockRestore()
+  })
   it('says so kindly if the launch coupon cannot be made', async () => {
     const fn = withNetwork({ couponFails: true }); expect((await call({ body: good })).status).toBe(502); expect(fn.calls.some((c) => c.url.endsWith('/v1/checkout/sessions'))).toBe(false)
   })

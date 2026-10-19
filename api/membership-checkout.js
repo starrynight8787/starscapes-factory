@@ -19,7 +19,7 @@ import { serviceFetch } from '../lib/serviceKey.js'
 import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
 import { handleAccount, isAccountRequest } from '../lib/membershipAccount.js'
-import { STRIPE, stripeMode, stripeHeaders, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
+import { STRIPE, stripeMode, stripeHeaders, logProblem, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
 
 const SITE = 'https://starscapesfactory.com'
 const MAX_BODY = 4000
@@ -105,6 +105,7 @@ export default async function handler(req, res) {
       if (!found) return say(res, 404, 'That code is not valid, or it has ended.')
       return res.status(200).json({ ok: true, summary: found.summary })
     } catch (e) {
+      logProblem('checking a promo code', e)
       return say(res, 502, "We couldn't check that code just now. Please try again in a moment.")
     }
   }
@@ -135,6 +136,7 @@ export default async function handler(req, res) {
   try {
     existing = await currentMembership(who.user.id)
   } catch (e) {
+    logProblem('reading the membership row', e)
     return say(res, 502, "We couldn't check your account just now. Please try again in a moment.")
   }
   if (existing && ['active', 'trialing', 'past_due', 'unpaid'].includes(existing.status)) {
@@ -171,9 +173,13 @@ export default async function handler(req, res) {
       signal: AbortSignal.timeout(15000),
     })
     const data = await response.json().catch(() => null)
-    if (!response.ok || !data || typeof data.url !== 'string') return say(res, 502, "We couldn't start the payment just now. Please try again in a moment.")
+    if (!response.ok || !data || typeof data.url !== 'string') {
+      logProblem('starting a payment', new Error(`stripe answered ${response.status}${data && data.error && data.error.message ? `: ${data.error.message}` : ''}`))
+      return say(res, 502, "We couldn't start the payment just now. Please try again in a moment.")
+    }
     return res.status(200).json({ ok: true, url: data.url, mode: k.mode })
   } catch (e) {
+    logProblem('starting a payment', e)
     return say(res, 502, "We couldn't start the payment just now. Please try again in a moment.")
   }
 }

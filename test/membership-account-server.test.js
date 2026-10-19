@@ -10,7 +10,7 @@ const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, statu
 const MEMBER = { status: 'active', passes: ['authors-notebook', 'blueprints'], stripe_customer_id: 'cus_1', stripe_subscription_id: 'sub_1', cancel_at_period_end: false }
 const sub = (over = {}) => ({ id: 'sub_1', customer: 'cus_1', status: 'active', cancel_at_period_end: false, current_period_end: 1800000000, items: { data: [{ id: 'si_1', price: { product: 'prod_1', recurring: { interval: 'month' } } }] }, metadata: { user_id: USER.id, passes: 'authors-notebook,blueprints', interval: 'month' }, ...over })
 
-function network({ member = MEMBER, portal = 'ok', stripeFails = false, card = { card: { last4: '4242', brand: 'visa' } } } = {}) {
+function network({ member = MEMBER, portal = 'ok', stripeFails = false, productFails = false, card = { card: { last4: '4242', brand: 'visa' } } } = {}) {
   const calls = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url)
@@ -18,6 +18,7 @@ function network({ member = MEMBER, portal = 'ok', stripeFails = false, card = {
     if (u.endsWith('/auth/v1/user')) return (init.headers || {}).Authorization === 'Bearer user-token' ? json(USER) : json({}, 401)
     if (u.includes('/rest/v1/memberships') && (!init.method || init.method === 'GET')) return json(member ? [member] : [])
     if (u.includes('/rest/v1/memberships') && init.method === 'POST') return json(null, 201)
+    if (u.endsWith('/v1/products')) return productFails ? json({ error: { message: 'Your account cannot create products.' } }, 403) : json({ id: 'starscapes-passes' })
     if (u.includes('/v1/billing_portal/sessions')) return portal === 'ok' ? json({ url: 'https://billing.stripe.com/p/session/test_1' }) : json({ error: { message: 'No configuration provided and your test mode default configuration has not been created.' } }, 400)
     if (u.includes('/v1/subscriptions/sub_1') && init.method === 'POST') {
       if (stripeFails) return json({}, 500)
@@ -33,7 +34,8 @@ function network({ member = MEMBER, portal = 'ok', stripeFails = false, card = {
   fn.calls = calls
   return fn
 }
-const stripePosts = (fn) => fn.calls.filter((c) => c.url.startsWith('https://api.stripe.com') && c.init.method === 'POST')
+const stripePosts = (fn) => fn.calls.filter((c) => c.url.startsWith('https://api.stripe.com') && c.init.method === 'POST' && !c.url.endsWith('/v1/products'))
+const updateOf = (fn) => fn.calls.find((c) => c.url.includes('/v1/subscriptions/sub_1') && c.init.method === 'POST')
 const saves = (fn) => fn.calls.filter((c) => c.url.includes('/rest/v1/memberships') && c.init.method === 'POST')
 
 async function call({ method = 'POST', token = 'user-token', body, origin } = {}) {
@@ -143,6 +145,23 @@ describe('changing passes (action change)', () => {
     for (const member of [{ ...MEMBER, cancel_at_period_end: true }, { ...MEMBER, status: 'past_due' }, { ...MEMBER, status: 'canceled' }]) {
       const fn = withNetwork({ member }); expect((await call({ body: { action: 'change', passes: ['blueprints'] } })).status).toBe(409); expect(stripePosts(fn)).toHaveLength(0)
     }
+  })
+  it('prices a change under an ACTIVE product of its own, never the subscription\u2019s inactive one (the bug that stopped the first real change)', async () => {
+    const fn = withNetwork(); await call({ body: { action: 'change', passes: ['blueprints'] } })
+    const f = new URLSearchParams(updateOf(fn).init.body)
+    expect(f.get('items[0][price_data][product]')).toBe('starscapes-passes'); expect(f.toString()).not.toContain('prod_1')
+    const made = fn.calls.find((c) => c.url.endsWith('/v1/products')); expect(new URLSearchParams(made.init.body).get('active')).toBe('true')
+  })
+  it('says kindly, and changes nothing, if that product cannot be made', async () => {
+    const fn = withNetwork({ productFails: true }); const r = await call({ body: { action: 'change', passes: ['blueprints'] } })
+    expect(r.status).toBe(502); expect(updateOf(fn)).toBeUndefined(); expect(saves(fn)).toHaveLength(0)
+  })
+  it('writes the real reason to the log when something fails, while the customer still only sees the kind message', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    withNetwork({ productFails: true }); const r = await call({ body: { action: 'change', passes: ['blueprints'] } })
+    expect(r.body.message).toBe("We couldn't do that just now. Please try again in a moment.")
+    const logged = spy.mock.calls.map((c) => String(c[0])).join('\n')
+    expect(logged).toContain('[membership] account action change: stripe could not make the passes product (403): Your account cannot create products.'); expect(logged).not.toMatch(/sk_test_abc|srv/); spy.mockRestore()
   })
   it('says kindly if Stripe cannot make the change, and never shows its words', async () => {
     withNetwork({ stripeFails: true }); const r = await call({ body: { action: 'change', passes: ['blueprints'] } })

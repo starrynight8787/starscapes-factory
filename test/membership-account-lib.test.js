@@ -2,7 +2,7 @@
 // The account helpers (src/membership/account.js) and the Stripe helpers for changing, cancelling and the billing page (lib/membershipStripe.js).
 import { describe, it, expect, vi } from 'vitest'
 import { accountView, formatDate, nameList, priceNow, changeOf, unitWord } from '../src/membership/account'
-import { buildChangeForm, buildCheckoutForm, setCancelAtPeriodEnd, cardOnFile, createPortalSession, membershipRowFromSubscription, ensureLaunchCoupon, STRIPE_VERSION } from '../lib/membershipStripe.js'
+import { buildChangeForm, buildCheckoutForm, setCancelAtPeriodEnd, cardOnFile, createPortalSession, membershipRowFromSubscription, ensureLaunchCoupon, ensureProduct, updateSubscription, safeReason, logProblem, PRODUCT_ID, STRIPE_VERSION } from '../lib/membershipStripe.js'
 import { CONSENT_TEXT } from '../src/membership/passes'
 
 const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
@@ -62,10 +62,10 @@ const item = (over = {}) => ({ id: 'si_1', price: { product: 'prod_1', recurring
 const subscription = (over = {}) => ({ id: 'sub_1', items: { data: [item()] }, ...over })
 
 describe('the Stripe request that changes a membership', () => {
-  const base = { subscription: subscription(), passes: ['book-club', 'blueprints'], changedAt: '2026-10-19T10:00:00.000Z', added: ['blueprints'], removed: [] }
-  it('keeps the same product and way of paying, sets the new price from the rules, and charges and credits nothing today', () => {
+  const base = { subscription: subscription(), passes: ['book-club', 'blueprints'], changedAt: '2026-10-19T10:00:00.000Z', added: ['blueprints'], removed: [], productId: 'starscapes-passes' }
+  it('prices the change under the active product it is given, keeps the way of paying, sets the new price from the rules, and charges and credits nothing today', () => {
     const f = buildChangeForm(base)
-    expect(f.get('items[0][id]')).toBe('si_1'); expect(f.get('items[0][price_data][product]')).toBe('prod_1'); expect(f.get('items[0][price_data][currency]')).toBe('gbp')
+    expect(f.get('items[0][id]')).toBe('si_1'); expect(f.get('items[0][price_data][product]')).toBe('starscapes-passes'); expect(f.get('items[0][price_data][currency]')).toBe('gbp')
     expect(f.get('items[0][price_data][unit_amount]')).toBe('700'); expect(f.get('items[0][price_data][recurring][interval]')).toBe('month')
     expect(f.get('proration_behavior')).toBe('none')
   })
@@ -73,8 +73,14 @@ describe('the Stripe request that changes a membership', () => {
     const f = buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ price: { product: 'prod_1', recurring: { interval: 'year' } } })] } }) })
     expect(f.get('items[0][price_data][recurring][interval]')).toBe('year'); expect(f.get('items[0][price_data][unit_amount]')).toBe('7000')
   })
-  it('reads the product whether Stripe gives its id or the whole product', () => {
-    expect(buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ price: { product: { id: 'prod_9' }, recurring: { interval: 'month' } } })] } }) }).get('items[0][price_data][product]')).toBe('prod_9')
+  it('NEVER prices a change under the subscription\u2019s own product (the one a checkout makes on the spot is inactive, and Stripe refuses to start a price on it)', () => {
+    const f = buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ price: { product: { id: 'prod_inactive' }, recurring: { interval: 'month' } } })] } }) })
+    expect(f.get('items[0][price_data][product]')).toBe('starscapes-passes'); expect(f.toString()).not.toContain('prod_inactive')
+    expect(buildChangeForm({ ...base, subscription: subscription() }).toString()).not.toContain('prod_1')
+  })
+  it('refuses to build a change with no product to price it under', () => {
+    const { productId, ...noProduct } = base; void productId
+    expect(() => buildChangeForm(noProduct)).toThrow(); expect(() => buildChangeForm({ ...base, productId: '  ' })).toThrow()
   })
   it('writes the new passes and what changed on the subscription, and the agreement ONLY when a pass was added', () => {
     const adding = buildChangeForm({ ...base, consentAt: '2026-10-19T10:00:00.000Z' })
@@ -137,5 +143,35 @@ describe('the discount a member has', () => {
     const base = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com', offerNote: '20% off for 3 months' }
     expect(buildCheckoutForm({ ...base, promotionCodeId: 'promo_1' }).get('subscription_data[metadata][offer_note]')).toBe('20% off for 3 months')
     expect(buildCheckoutForm({ ...base, launch: true }).get('subscription_data[metadata][offer_note]')).toBeNull()
+  })
+})
+
+describe('the product a change is priced under', () => {
+  it('makes one active product with a fixed id, and carries on if it already exists', async () => {
+    const fn = vi.fn(async () => json({ id: 'starscapes-passes' }))
+    await expect(ensureProduct('sk_test_x', fn)).resolves.toBe('starscapes-passes'); expect(PRODUCT_ID).toBe('starscapes-passes')
+    const [url, init] = fn.mock.calls[0]; const f = new URLSearchParams(init.body)
+    expect(url).toBe('https://api.stripe.com/v1/products'); expect([f.get('id'), f.get('active'), f.get('name')]).toEqual(['starscapes-passes', 'true', 'Starscapes Factory passes']); expect(init.headers['Stripe-Version']).toBe(STRIPE_VERSION)
+    await expect(ensureProduct('sk_test_x', async () => json({ error: { code: 'resource_already_exists' } }, 400))).resolves.toBe('starscapes-passes')
+  })
+  it('throws, with Stripe\u2019s own words for the log, if the product cannot be made', async () => {
+    const err = await ensureProduct('sk_test_x', async () => json({ error: { message: 'Your account cannot create products.' } }, 403)).catch((e) => e)
+    expect(err.message).toBe('stripe could not make the passes product (403): Your account cannot create products.')
+  })
+})
+
+describe('writing the real reason in the log', () => {
+  it('carries Stripe\u2019s own explanation in the error, for the log', async () => {
+    const err = await updateSubscription('sub_1', new URLSearchParams(), 'sk_test_x', async () => json({ error: { message: 'The product prod_x is marked as inactive.' } }, 400)).catch((e) => e)
+    expect(err.message).toBe('stripe could not change the subscription (400): The product prod_x is marked as inactive.')
+  })
+  it('scrubs anything key-like from what it writes, and shortens it', () => {
+    const key = 'sk_test_' + 'A1b2C3d4E5f6G7h8I9j0K1l2M3n4'
+    expect(safeReason(new Error(`stripe said no to ${key}`))).toBe('stripe said no to …'); expect(safeReason('x'.repeat(1000)).length).toBeLessThanOrEqual(300); expect(safeReason(undefined)).toBe('')
+  })
+  it('writes one clear line to the log, tagged so it is easy to find, and never the key', () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    logProblem('changing passes', new Error('stripe could not change the subscription (400): boom ' + 'sk_test_' + 'A1b2C3d4E5f6G7h8I9j0K1l2M3n4'))
+    expect(spy).toHaveBeenCalledTimes(1); expect(spy.mock.calls[0][0]).toBe('[membership] changing passes: stripe could not change the subscription (400): boom …'); spy.mockRestore()
   })
 })
