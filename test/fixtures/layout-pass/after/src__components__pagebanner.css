@@ -1,0 +1,98 @@
+/* The banner at the top of a page. Stands on its own: nothing here depends on the old index.css rules. */
+/* A room page that has a banner is as wide as the Figma designs (1200 pixels of content), not the 980 pixels other room pages are held to. */
+.rp:has(> .pb) {
+  max-width: 1232px;
+}
+/* ...and the page column that holds it: every page sits in a .container that is only 720 pixels wide, which no page inside it can outgrow. 1272 is 1232 plus the 20 pixels of padding each side. */
+.container:has(> .rp > .pb) {
+  max-width: 1272px;
+}
+.pb {
+  box-sizing: border-box;
+  width: 100%; /* stretch across the page; without this the banner shrinks to fit its contents */
+  max-width: none;
+  align-self: stretch; /* and the same if its parent happens to lay its children out in a column */
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 32px;
+  margin: 8px 0 8px;
+  padding: 40px;
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+  border-radius: 16px;
+}
+.pb__text {
+  display: grid;
+  gap: 16px;
+  flex: 1 1 360px;
+  max-width: 640px;
+  justify-items: start;
+}
+.pb__chip {
+  margin: 0;
+  padding: 4px 12px;
+  background: var(--sf-blue, #1f6fa8);
+  color: #fff;
+  border-radius: 999px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.pb__title {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 2.75rem;
+  line-height: 1.1;
+  color: #fff;
+  overflow-wrap: anywhere;
+}
+.pb__subtitle {
+  margin: 0;
+  font-size: 1.125rem;
+  line-height: 1.5;
+  color: #fff;
+}
+.pb__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.pb__buttons .pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.pb__picture {
+  flex: 0 1 400px;
+  padding: 12px;
+  background: var(--sf-star, #dce6ff);
+  border-radius: 10px;
+}
+.pb__picture img {
+  display: block;
+  width: 100%;
+  max-height: 220px;
+  object-fit: contain;
+}
+@media (max-width: 960px) {
+  .pb {
+    padding: 24px;
+    gap: 24px;
+  }
+  .pb__title {
+    font-size: 2rem;
+  }
+  .pb__text,
+  .pb__picture {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+  .pb__buttons,
+  .pb__buttons .pg-btn {
+    width: 100%;
+  }
+}

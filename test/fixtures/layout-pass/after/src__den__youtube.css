@@ -1,0 +1,152 @@
+/* The YouTube Series page. Stands on its own: nothing here depends on the old index.css rules. */
+.yt__card {
+  display: grid;
+  gap: 10px;
+  align-content: start;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+}
+.yt__intro {
+  margin: 24px 0;
+  padding: 24px;
+  gap: 16px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 10px;
+  box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6);
+}
+.yt__play,
+.yt__frame {
+  display: block;
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  padding: 0;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  background: var(--sf-star, #dce6ff);
+  overflow: hidden;
+}
+.yt__play {
+  cursor: pointer;
+}
+.yt__play img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.yt__icon {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-size: 2.25rem;
+  color: #fff;
+  background: rgba(7, 11, 38, 0.28);
+  text-shadow: 0 2px 6px rgba(7, 11, 38, 0.6);
+}
+.yt__play--big .yt__icon {
+  font-size: 3.5rem;
+}
+.yt__play:hover .yt__icon {
+  background: rgba(7, 11, 38, 0.1);
+}
+.yt__play:focus-visible {
+  outline: 3px solid var(--sf-focus, #14306a);
+  outline-offset: 3px;
+}
+.yt__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.yt__title {
+  margin: 0;
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  font-size: 1.875rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.yt__buttons,
+.yt__after {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.yt__buttons .pg-btn,
+.yt__after .pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.yt__latest {
+  display: grid;
+  gap: 16px;
+  margin: 32px 0 0;
+}
+.yt__h2 {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 2rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.yt__grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.yt__cardtitle {
+  margin: 0;
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.yt__date {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.yt__more {
+  display: none !important;
+}
+@media (max-width: 960px) {
+  .yt__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* a tablet: two to a row */
+  }
+}
+@media (max-width: 700px) {
+  .yt__grid {
+    grid-template-columns: 1fr; /* a phone: one under another */
+  }
+  .yt__grid:not(.is-expanded) .yt__card:nth-child(n + 5) {
+    display: none;
+  }
+  .yt__more {
+    display: inline-flex !important;
+  }
+  .yt__intro {
+    padding: 16px;
+  }
+  .yt__title {
+    font-size: 1.625rem;
+  }
+  .yt__buttons .pg-btn,
+  .yt__after .pg-btn {
+    width: 100%;
+  }
+}

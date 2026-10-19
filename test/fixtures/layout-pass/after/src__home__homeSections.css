@@ -1,0 +1,189 @@
+/* The boxes under the home page's floor plan. Stands on its own: nothing here depends on the old index.css rules. */
+.hs {
+  display: grid;
+  gap: 24px;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 56px 24px;
+}
+.hs__top {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.hs__card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 32px;
+  background: #fff;
+  color: var(--sf-ink, #0e1530);
+  border: 2px solid var(--sf-border-strong, var(--sf-navy-700, #14306a));
+  border-radius: 10px;
+  box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6);
+}
+.hs__card--panel {
+  background: var(--sf-star, #dce6ff);
+}
+.hs__label {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-blue, #1f6fa8);
+}
+.hs__labelrow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.hs__soon {
+  background: #fdf0c8;
+  color: #6b4a00;
+  border-color: #e6c35a;
+}
+.hs__title {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 2rem;
+  line-height: 1.2;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.hs__title--small {
+  font-size: 1.375rem;
+}
+.hs__title--school {
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  font-size: 1.875rem;
+}
+.hs__when {
+  margin: 0;
+  font-weight: 700;
+}
+.hs__text {
+  margin: 0;
+  line-height: 1.6;
+  color: var(--sf-muted, #5b6585);
+}
+.hs__text--large {
+  font-size: 1.125rem;
+  color: var(--sf-ink, #0e1530);
+}
+.hs__membership .hs__text {
+  color: var(--sf-ink, #0e1530);
+}
+.hs__tagline {
+  margin: 0;
+  font-family: var(--sf-hand, 'Caveat', cursive);
+  font-size: 1.25rem;
+  color: var(--sf-muted, #5b6585);
+}
+.hs__meta {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.hs__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.hs__buttons .pg-btn,
+.hs__full {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.hs__full {
+  width: 100%;
+}
+.hs__full:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.hs__room {
+  grid-template-columns: 360px 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.hs__roompic {
+  display: grid;
+  justify-items: center;
+  gap: 12px;
+  padding: 24px;
+  background: var(--sf-star, #dce6ff);
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 6px;
+}
+.hs__plaque {
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-size: 1.5rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.hs__roomtext {
+  display: grid;
+  gap: 16px;
+}
+.hs__post {
+  grid-template-columns: 520px 1fr;
+  gap: 40px;
+  align-items: center;
+}
+.hs__postimg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  background: var(--sf-star, #dce6ff);
+}
+.hs__postimg--empty {
+  display: grid;
+  place-items: center;
+}
+.hs__posttext {
+  display: grid;
+  gap: 16px;
+}
+@media (max-width: 960px) {
+  /* a tablet: the same boxes, a little smaller, still side by side */
+  .hs {
+    padding: 32px 16px;
+  }
+  .hs__top {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .hs__room {
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+  }
+  .hs__post {
+    grid-template-columns: 320px 1fr;
+    gap: 24px;
+  }
+  .hs__card {
+    padding: 24px;
+  }
+}
+@media (max-width: 720px) {
+  /* a phone: one box under another */
+  .hs__top,
+  .hs__room,
+  .hs__post {
+    grid-template-columns: 1fr;
+  }
+  .hs__title {
+    font-size: 1.625rem;
+  }
+  .hs__buttons .pg-btn {
+    width: 100%;
+  }
+}

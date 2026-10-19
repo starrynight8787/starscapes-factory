@@ -2,6 +2,9 @@
 .rp.en {
   max-width: 1232px;
 }
+.container:has(> .rp.en) {
+  max-width: 1272px; /* the page column is only 720 pixels wide otherwise, however wide the page inside it wants to be */
+}
 .en__cols {
   display: grid;
   grid-template-columns: minmax(0, 836fr) minmax(0, 332fr);
@@ -176,6 +179,7 @@
   .en__cols {
     display: flex;
     flex-direction: column;
+    align-items: stretch; /* the wide-screen rule lines the boxes up at the top, which would leave each box only as wide as its words */
     gap: 24px;
   }
   .en__left,
@@ -183,7 +187,7 @@
     display: contents; /* so the boxes of both columns can be put in one order on a phone */
   }
   .en__grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* a tablet: two to a row */
   }
   .en__grid:not(.is-expanded) .en__item:nth-child(n + 5) {
     display: none;
@@ -201,5 +205,10 @@
   }
   .en__card .pg-btn {
     width: 100%;
+  }
+}
+@media (max-width: 720px) {
+  .en__grid {
+    grid-template-columns: 1fr; /* a phone: one under another */
   }
 }

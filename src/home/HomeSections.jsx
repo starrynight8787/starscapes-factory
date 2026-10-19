@@ -92,7 +92,7 @@ export function LatestPostBox({ post }) {
       {post.image_url ? (
         <img className="hs__postimg" src={post.image_url} alt="" loading="lazy" />
       ) : (
-        <div className="hs__postimg hs__postimg--empty"><StarMark width={72} color="#DCE6FF" /></div>
+        <div className="hs__postimg hs__postimg--empty"><StarMark width={72} color="#8AA2DA" /></div>
       )}
       <div className="hs__posttext">
         <p className="hs__label">Latest post</p>

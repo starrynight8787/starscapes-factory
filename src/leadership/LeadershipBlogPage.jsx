@@ -53,7 +53,7 @@ export default function LeadershipBlogPage() {
         <div className="lb__left">
           {featured && (
             <section className="lb__card lb__featured lb__o1" aria-labelledby="lb-featured-title">
-              {picture ? <img className="lb__img" src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} /> : <div className="lb__img lb__img--empty"><StarMark width={72} color="#DCE6FF" /></div>}
+              {picture ? <img className="lb__img" src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} /> : <div className="lb__img lb__img--empty"><StarMark width={72} color="#8AA2DA" /></div>}
               <p className="lb__meta"><span className="pg-chip">Featured</span> {formatDate(featured.created_at)}</p>
               <h2 id="lb-featured-title" className="lb__title">{featured.title}</h2>
               <div className="lb__buttons"><Link className="pg-btn fm-btn--primary" to={`/post/${featured.id}`} state={{ from }}>Read the post</Link></div>

@@ -13,7 +13,7 @@ function Picture({ post, className }) {
   const src = safeImage(post.image_url)
   return src
     ? <img className={className} src={src} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
-    : <div className={`${className} en__img--empty`}><StarMark width={72} color="#DCE6FF" /></div>
+    : <div className={`${className} en__img--empty`}><StarMark width={72} color="#8AA2DA" /></div>
 }
 
 // The entry template (Figma: "Archive Entry / Author's Notebook"): the latest entry big, the pinned entry beside it, a grid of the rest, and an optional extra

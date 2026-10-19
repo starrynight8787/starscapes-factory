@@ -181,6 +181,8 @@ const CHECKS = [
   ['Doors: the permission lines', 'sql/doors.sql', /grant select on public\.doors/, 'the doors fix (the add-doors-fix script)'],
   ['Doors: the page shows the real reason', 'src/admin/OpenDoors.jsx', /od-code/, 'the doors fix (the add-doors-fix script)'],
   ['Doors: the loader keeps the reason', 'src/doors/useDoors.js', /reason/, 'the doors fix (the add-doors-fix script)'],
+  ['Layout: the wider page column', 'src/components/pagebanner.css', /container:has\(> \.rp > \.pb\)/, 'the layout pass (the add-layout-pass script)'],
+  ['Layout: tablet layouts for Home', 'src/home/homeSections.css', /a tablet: the same boxes/, 'the layout pass (the add-layout-pass script)'],
   ['Pages: the app tells them whether you are the owner', 'src/App.jsx', /<StaticPage owner=/, 'the footer and pages update (the add-footer-pages script)'],
 ]
 

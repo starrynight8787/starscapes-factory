@@ -212,14 +212,12 @@ a.lb__block:focus-visible,
   .lb__cols {
     display: flex;
     flex-direction: column;
+    align-items: stretch; /* the wide-screen rule lines the boxes up at the top, which would leave each box only as wide as its words */
     gap: 24px;
   }
   .lb__left,
   .lb__right {
     display: contents; /* so the boxes of both columns can be put in one order on a phone */
-  }
-  .lb__boxes {
-    grid-template-columns: 1fr;
   }
   .lb__card .pg-btn,
   .lb__box .pg-btn {
@@ -230,5 +228,10 @@ a.lb__block:focus-visible,
   }
   .lb__h2 {
     font-size: 1.625rem;
+  }
+}
+@media (max-width: 720px) {
+  .lb__boxes {
+    grid-template-columns: 1fr; /* a tablet keeps the three boxes in a row; a phone stacks them */
   }
 }

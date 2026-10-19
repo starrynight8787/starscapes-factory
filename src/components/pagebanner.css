@@ -3,6 +3,10 @@
 .rp:has(> .pb) {
   max-width: 1232px;
 }
+/* ...and the page column that holds it: every page sits in a .container that is only 720 pixels wide, which no page inside it can outgrow. 1272 is 1232 plus the 20 pixels of padding each side. */
+.container:has(> .rp > .pb) {
+  max-width: 1272px;
+}
 .pb {
   box-sizing: border-box;
   width: 100%; /* stretch across the page; without this the banner shrinks to fit its contents */

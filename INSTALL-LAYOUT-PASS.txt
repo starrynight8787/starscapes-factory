@@ -1,0 +1,41 @@
+The layout pass (page width, stretching cards, the invisible star, and tablets): starscapes-layout-pass-19oct.zip   (no SQL)
+
+HOW THIS WAS FOUND: for the first time I could photograph your real pages in a real browser (I got one working in my workspace), at desktop, laptop, tablet and phone widths, and
+LOOK at them instead of reading the styles. It found problems I had missed, and one I had got WRONG:
+
+  1. THE WIDE PAGES WERE SQUEEZED INTO A NARROW STRIP. Your Leadership Blog, YouTube, Writing in Transit, Archive Entries and Story Ledger pages are drawn 1200 pixels wide, but the whole
+     site puts every page inside a column only 720 pixels wide, and no page inside it can grow past it. My earlier "banner stretches" fix only widened the page INSIDE that column, so it
+     could not work. (That is why your screenshot still looked wrong.) The column is now lifted for exactly these pages.
+  2. ON A TABLET OR PHONE, CARDS SHRANK TO THE WIDTH OF THEIR WORDS (Leadership Blog, Writing in Transit, Archive Entries): each at a different width, left-aligned. A wide-screen rule was
+     leaking into the narrow layout. Every card now stretches across.
+  3. THE PLACEHOLDER STAR WAS INVISIBLE where a post has no picture (Home's latest post, the Leadership Blog's featured post, the entry pages): the same pale blue as its panel.
+  4. THE STORY LEDGER'S "LATEST VIDEO" STAR SAT IN THE CORNER instead of the middle.
+  5. THE LEGAL PAGES WERE CRAMPED the same way: drawn up to 960 pixels wide (a contents list beside the text) but squeezed into the 720 pixel column, so the Privacy
+     policy's table had its last column cut off. The column is lifted for them (not for the narrow accessibility statement).
+  6. TABLETS GOT A PHONE LAYOUT. They now get their own (see below).
+
+WHAT A TABLET (721 to 960 pixels wide) NOW GETS
+  * HOME: Next event beside Membership; the Featured room and the Latest post each in two columns.
+  * YOUTUBE and the ENTRY PAGES (Writing in Transit, Archive Entries): two videos or entries to a row.
+  * LEADERSHIP BLOG: the three "More ways in" boxes stay in a row; the rest is one tidy column.
+  * STORY LEDGER: the boxes stay side by side, as on a computer, with the Mosaic 24 squares across.
+  A phone (720 pixels and under) still gets one box under another, and the Mosaic 16 across.
+These tablet layouts are MY decisions (only desktop and phone were drawn in Figma). Tell me if you want any of them different, or want them drawn first.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-layout-pass-19oct.zip
+3. python3 tools/add-layout-pass.py          (it checks all ten files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2     (all 179 checks should pass)
+5. npm run build                             (must finish without errors)
+6. git add .
+   git status                                (no files ending .before- should be listed)
+   git commit -m "Layout pass: page width, stretching cards, the star, and tablets"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK at /leadership-lounge/blog on a computer: the navy banner should reach across the page with the Lounge picture on the RIGHT of the words, and the two columns below it.
+(I could only photograph with stand-in text, no real logo and no real pictures, and with the browser's plain fonts instead of yours, so spacing can differ a little. Send me a
+screenshot of anything that still looks different from Figma.)
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

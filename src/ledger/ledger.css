@@ -2,6 +2,9 @@
 .rp.sl {
   max-width: 1232px; /* 1200 pixels of content, as in the design */
 }
+.container:has(> .rp.sl) {
+  max-width: 1272px; /* the page column is only 720 pixels wide otherwise, however wide the page inside it wants to be */
+}
 .sl__sr {
   position: absolute;
   width: 1px;
@@ -255,6 +258,10 @@
   color: var(--sf-muted, #5b6585);
   font-size: 0.95rem;
 }
+.sl__video.sl__img--empty {
+  display: grid; /* the star in the middle of the picture panel (the rule below would make it a plain block, with the star in the corner) */
+  place-items: center;
+}
 .sl__video {
   display: block;
   width: 100%;
@@ -289,10 +296,7 @@
   text-decoration: none;
 }
 @media (max-width: 960px) {
-  .sl__row--wide,
-  .sl__row--even {
-    grid-template-columns: minmax(0, 1fr);
-  }
+  /* a tablet: the same boxes side by side, a little tighter */
   .sl__hero {
     padding: 24px 16px;
   }
@@ -305,6 +309,13 @@
   }
   .sl__h2 {
     font-size: 1.625rem;
+  }
+}
+@media (max-width: 720px) {
+  /* a phone: one box under another */
+  .sl__row--wide,
+  .sl__row--even {
+    grid-template-columns: minmax(0, 1fr);
   }
   .sl__types {
     grid-template-columns: minmax(0, 1fr);

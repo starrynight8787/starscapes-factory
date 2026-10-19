@@ -1,0 +1,47 @@
+/* Tables and quotes in the text pages (the legal pages). Stands on its own: nothing here depends on the old index.css rules. */
+.md-tablewrap {
+  margin: 0 0 16px;
+  overflow-x: auto; /* a wide table scrolls inside its own box on a phone, instead of pushing the page sideways */
+}
+.md-tablewrap table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1rem;
+  line-height: 1.5;
+}
+.md-tablewrap th,
+.md-tablewrap td {
+  padding: 10px 12px;
+  text-align: left;
+  vertical-align: top;
+  border: 1px solid var(--sf-border, #dde3f0);
+}
+.md-tablewrap th {
+  background: var(--sf-star, #dce6ff);
+  color: var(--sf-navy-700, #14306a);
+}
+blockquote {
+  margin: 0 0 16px;
+  padding: 12px 16px;
+  background: var(--sf-page, #f6f8fc);
+  border-left: 4px solid var(--sf-navy-700, #14306a);
+  border-radius: 0 8px 8px 0;
+}
+blockquote p {
+  margin: 0;
+}
+.lg-intro {
+  max-width: 760px;
+  margin: 0 0 24px;
+  font-size: 1.125rem;
+  line-height: 1.6;
+}
+.lg-intro p {
+  margin: 0 0 12px;
+}
+
+/* The legal pages are drawn wider than the 720 pixel page column every page sits in, so the contents list and the text had only about 650 pixels between them and a table was
+   squeezed. 1000 is the legal page's 960 plus the 20 pixels of padding each side. (The accessibility statement is drawn narrow, so it is left as it is.) */
+.container:has(> .lg:not(.lg--narrow)) {
+  max-width: 1000px;
+}

@@ -153,17 +153,32 @@
   gap: 16px;
 }
 @media (max-width: 960px) {
+  /* a tablet: the same boxes, a little smaller, still side by side */
   .hs {
     padding: 32px 16px;
   }
-  .hs__top,
-  .hs__room,
+  .hs__top {
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+  }
+  .hs__room {
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+  }
   .hs__post {
-    grid-template-columns: 1fr;
+    grid-template-columns: 320px 1fr;
     gap: 24px;
   }
   .hs__card {
     padding: 24px;
+  }
+}
+@media (max-width: 720px) {
+  /* a phone: one box under another */
+  .hs__top,
+  .hs__room,
+  .hs__post {
+    grid-template-columns: 1fr;
   }
   .hs__title {
     font-size: 1.625rem;

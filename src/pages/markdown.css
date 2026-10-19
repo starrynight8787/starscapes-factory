@@ -39,3 +39,9 @@ blockquote p {
 .lg-intro p {
   margin: 0 0 12px;
 }
+
+/* The legal pages are drawn wider than the 720 pixel page column every page sits in, so the contents list and the text had only about 650 pixels between them and a table was
+   squeezed. 1000 is the legal page's 960 plus the 20 pixels of padding each side. (The accessibility statement is drawn narrow, so it is left as it is.) */
+.container:has(> .lg:not(.lg--narrow)) {
+  max-width: 1000px;
+}
