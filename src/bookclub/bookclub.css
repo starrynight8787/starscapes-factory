@@ -2,15 +2,7 @@
 .bc section { margin: 32px 0; }
 .bc h2 { margin: 0 0 12px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); color: var(--sf-navy-700, #14306a); }
 .bc__muted { margin: 0 0 8px; color: var(--sf-muted, #5b6585); line-height: 1.5; }
-.bc__live { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
 .bc__come { display: inline-flex; align-items: center; text-decoration: none; }
-.bc__live-note { color: var(--sf-muted, #5b6585); }
-.bc__genres { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
-.bc__genre { display: grid; gap: 2px; padding: 14px 16px; background: #fff; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; color: var(--sf-navy-700, #14306a); text-decoration: none; }
-.bc__genre:hover { background: var(--sf-star, #dce6ff); }
-.bc__genre:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
-.bc__genre-name { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.25rem; }
-.bc__genre-count { color: var(--sf-muted, #5b6585); font-size: 0.95rem; }
 .bc__theme { padding: 20px 22px; background: var(--sf-star, #dce6ff); border-radius: 12px; }
 .bc__theme h2 { margin: 8px 0; }
 .bc__theme p { margin: 0 0 12px; line-height: 1.6; }
@@ -72,3 +64,83 @@
 .bc__bar-fill--p90 { width: 90%; }
 .bc__bar-fill--p95 { width: 95%; }
 .bc__bar-fill--p100 { width: 100%; }
+
+/* ---- Book Club v3 (Figma: "Book Club v3") ---- */
+.bc__box { display: grid; gap: 14px; align-content: start; padding: 24px; background: #fff; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 10px; box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6); }
+.bc__box--star { background: var(--sf-star, #dce6ff); }
+.bc__box p { margin: 0; line-height: 1.6; }
+.bc__label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-family: var(--sf-body, 'Inter', sans-serif); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sf-navy-700, #14306a); }
+.bc h2.bc__label { margin: 0; font-size: 0.875rem; }
+.bc h2.bc__big { margin: 0; font-size: 2rem; line-height: 1.25; }
+.bc h2.bc__script { margin: 0; font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.75rem; line-height: 1.25; }
+.bc h2.bc__h3 { margin: 0; font-size: 1.5rem; line-height: 1.25; }
+.bc__soonchip { padding: 2px 10px; border-radius: 999px; background: #ffe27a; color: #0e1530; font-size: 0.875rem; letter-spacing: 0.04em; text-transform: none; }
+.bc__intro { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 24px 0; }
+.bc__welcome { grid-template-columns: 1fr; align-items: center; gap: 20px; }
+.bc__welcometext { display: grid; gap: 10px; }
+.bc__video { display: grid; place-items: center; align-content: center; gap: 6px; position: relative; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 1px solid var(--sf-border, #dde3f0); border-radius: 8px; background: var(--sf-star, #dce6ff); color: var(--sf-navy-700, #14306a); overflow: hidden; }
+.bc__video--poster { cursor: pointer; }
+.bc__video--poster:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bc__play { position: relative; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 999px; background: var(--sf-navy-700, #14306a); color: #fff; font-size: 1.5rem; }
+.bc__benefits { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.bc__benefits li { line-height: 1.5; }
+.bc__wide { display: inline-flex; justify-content: center; align-items: center; width: 100%; text-decoration: none; }
+.bc__soon { opacity: 1; background: #8fb1d6; border-color: #8fb1d6; color: #0e1530; cursor: not-allowed; }
+.bc__grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 24px 0; }
+.bc__grid > * { min-width: 0; }
+.bc__theme .pg-btn, .bc__comecard .pg-btn { justify-self: start; display: inline-flex; align-items: center; text-decoration: none; }
+.bc__now .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__reading .bc__now, .bc__next .bc__queue { margin: 0; }
+.bc__reading .bc__now { padding: 0; border: 0; background: transparent; }
+.bc__queue { display: grid; gap: 10px; padding: 0; list-style: none; }
+.bc__queued { padding: 10px 12px; background: #f6f8fc; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; font-weight: 700; color: var(--sf-navy-700, #14306a); overflow-wrap: anywhere; }
+.bc__tiles { display: grid; gap: 14px; }
+.bc__ledge { display: grid; }
+.bc__tilerow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+.bc__tile { display: grid; gap: 2px; place-content: center; text-align: center; min-height: 84px; padding: 12px 10px; border: 0; border-radius: 6px 6px 0 0; background: var(--sf-navy-700, #14306a); color: #fff; font: inherit; cursor: pointer; }
+.bc__tile[aria-pressed='true'] { background: var(--sf-blue, #1f6fa8); color: #fff; outline: 3px solid var(--sf-navy-700, #14306a); outline-offset: -3px; }
+.bc__tile:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__tile--empty { background: transparent; border: 2px dashed var(--sf-navy-700, #14306a); color: var(--sf-navy-700, #14306a); cursor: default; }
+.bc__tile-year { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.5rem; line-height: 1.2; }
+.bc__tile-note { font-size: 0.875rem; }
+.bc__ledge-plank { height: 10px; background: var(--sf-navy-700, #14306a); border-radius: 0 0 4px 4px; }
+.bc__genres .bc__muted, .bc__shelfcard .bc__muted { margin: 0; }
+.bc__spines { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: end; margin: 0; padding: 0; list-style: none; }
+.bc__book { display: grid; gap: 4px; align-content: center; justify-items: center; text-align: center; min-height: var(--h, 210px); padding: 24px 12px 16px; border-radius: 8px 8px 0 0; text-decoration: none; }
+.bc__book::before { content: ''; width: 60px; height: 4px; border-radius: 2px; background: currentColor; opacity: 0.5; }
+.bc__book:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__book:hover { filter: brightness(1.08); }
+.bc__book-name { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.5rem; line-height: 1.2; overflow-wrap: anywhere; }
+.bc__book-count { font-size: 0.875rem; }
+.bc__bookitem--0 .bc__book { --h: 210px; background: var(--sf-navy-700, #14306a); color: #fff; }
+.bc__bookitem--1 .bc__book { --h: 240px; background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__bookitem--2 .bc__book { --h: 196px; background: var(--sf-star, #dce6ff); color: var(--sf-navy-700, #14306a); border: 2px solid var(--sf-navy-700, #14306a); border-bottom: 0; }
+.bc__bookitem--3 .bc__book { --h: 226px; background: var(--sf-navy-700, #14306a); color: #fff; }
+.bc__bookitem--4 .bc__book { --h: 204px; background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__yearshelf { margin: 32px 0; }
+/* the older rule that spaces every section out must not add to the gaps between the cards */
+.bc section.bc__box { margin: 0; }
+.bc section.bc__genres, .bc section.bc__reviews { margin: 24px 0; }
+@media (min-width: 980px) {
+  .bc__intro { grid-template-columns: 2fr 1fr; }
+  .bc__welcome { grid-template-columns: 380px 1fr; }
+  .bc__grid { grid-template-columns: 1fr 1fr 392px; grid-template-areas: 'theme theme come' 'read next shelf'; }
+  .bc__theme { grid-area: theme; }
+  .bc__comecard { grid-area: come; }
+  .bc__reading { grid-area: read; }
+  .bc__next { grid-area: next; }
+  .bc__shelfcard { grid-area: shelf; }
+}
+/* on a phone the books lie flat in a pile, so the names stay readable */
+@media (max-width: 700px) {
+  .bc__spines { grid-template-columns: 1fr; gap: 0; }
+  .bc__bookitem { margin-left: 0; }
+  .bc__bookitem--1 { margin-left: 14px; }
+  .bc__bookitem--2 { margin-left: 4px; }
+  .bc__bookitem--3 { margin-left: 18px; }
+  .bc__bookitem--4 { margin-left: 8px; }
+  .bc__book { grid-template-columns: 1fr auto; justify-items: start; text-align: left; min-height: 0; padding: 12px 16px; border-radius: 8px 4px 4px 8px; }
+  .bc__book::before { display: none; }
+  .bc__bookitem--2 .bc__book { border-bottom: 2px solid var(--sf-navy-700, #14306a); }
+}

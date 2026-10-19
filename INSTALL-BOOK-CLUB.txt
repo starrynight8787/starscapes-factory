@@ -1,45 +1,37 @@
-Book Club: starscapes-book-club-17oct.zip  (task SFW-196, the last door)
+The Book Club page: starscapes-book-club-19oct.zip   (NO Supabase step, nothing to do in Stripe or Vercel)
 
-WHAT IT ADDS: THE BOOK CLUB PAGE (/knowledge-nook/book-club), behind the Nook's Book Club door, which stays CLOSED until you open it in Admin, Open a door.
-It is a creative reading tracker, built from your Figma design plus what we agreed since:
-  * COME READ WITH ME: a button at the top that opens your Drafting Desk YouTube channel (@thedraftingdesk) in a new tab, for the live reading sessions.
-  * CHOOSE A GENRE: Leadership, Fiction, Memoir, Self-growth, Children's. Each is a link to the posts with that tag, and says how many Book Club notes it has.
-  * THIS YEAR'S THEME: "Theme for 2026: to be chosen" until you set one (in Admin, Books).
-  * READING NOW: the book you are reading, with a short note and a link to your notes.
-  * UP NEXT: the books you have queued, and the box where READERS SUGGEST AND VOTE on the next book (the shared box, switched on in Admin, Suggestions).
-  * THE SHELF: a drawn bookshelf of the books you have finished, a spine for each, coloured by genre and in the order you finished them. A year switcher, and your
-    reading goal as words and a bar ("7 of 24 books read in 2026"). Press a spine to see the book's card: cover, author, rating, when you finished it, your note,
-    and a link to your review.
-  * REVIEWS AND CONVERSATIONS: your Nook posts tagged "book-club".
-AND THE BOOKS TOOL IN ADMIN (/admin/books): add a book (title, author, genre, reading now / read / up next, dates, rating, cover picture address, a link to your
-review post, a short note), change or delete one, and set each year's reading goal and theme.
+WHAT IT DOES
+Rebuilds the Book Club page to your new design (Figma: "Book Club v3"), on top of the books, reading goals, suggest-and-vote box and reviews you already have:
+   * a banner with the "Members" chip
+   * a WELCOME card (a video, or "Welcome video coming soon" until you add one) beside the MEMBERSHIP card ("Into the Nebula", with a Coming soon chip and a button that does nothing until memberships open; once
+     you set open to true in src/data/membership.js it becomes "Choose your passes", linking to /membership)
+   * This year's theme (with "Join the conversation"), the COME READ card ("Read along with me", with the "Come read with me" button to your live sessions), Reading now, Up next (with the suggest-and-vote box),
+     and THE SHELF: a tile for each year (oldest first, with how many books), and a dashed empty tile for the year to come
+   * the genres drawn as five BOOKS ON A BOOKSHELF (each one links to the notes with that tag); on a phone they lie flat in a pile so the names stay readable
+   * the chosen year's shelf of spines, goal bar and book card (it was the old "The shelf" section) now sits under the genres and follows whichever year tile you press
+   * Reviews and conversations, full width (the pass labels appear on these cards too, once the pass labels package is installed)
+On a phone the cards come in the order of your phone design.
 
-ONE THING THAT NEEDS YOU: the database. Run sql/books.sql once in Supabase (below). Until you do, the page still works but shows an empty shelf and "Nothing on
-the go at the moment", and Admin, Books cannot save.
+WORDS YOU CAN CHANGE (src/bookclub/bookClubData.js; they are my placeholders in your voice):
+   WELCOME.title and WELCOME.text      the message in the welcome card
+   WELCOME.videoId                     paste the 11 characters after v= in a YouTube address (for example abc123DEF45) and the card becomes a video. It only loads from YouTube when it is pressed.
+   MEMBER_BENEFITS                     the three lines in the membership card
+   COME_READ.note                      the line in the Come Read card (this is also in the Figma design, which I will match)
+Nothing else changes: the books and goals tool in Admin works exactly as before.
 
-NEEDS: the ebook and YouTube update (starscapes-ebook-youtube-17oct.zip) installed first. The script stops and says so if it is not there.
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-book-club-19oct.zip
+    (this also replaces one older test file with an updated version)
+ 3. python3 tools/add-book-club-v3.py         (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (every check should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Book Club: the new design"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
 
-INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
-1. unzip -o ~/Downloads/starscapes-book-club-17oct.zip
-   (this also replaces five test files with updated versions)
-2. python3 tools/add-book-club.py            (it checks all five files first; if anything is unexpected it changes nothing)
-3. node tools/health-check.mjs                (all 120 checks should pass)
-4. npm run build                              (must finish without errors)
-5. git add .
-   git status                                 (no files ending .before- should be listed)
-   git commit -m "SFW-196 Book Club page and the Books admin tool"
-   git push
-6. Wait for Vercel to say Ready.
-
-THEN, IN SUPABASE (Terminal first, then Supabase: two different places. Paste the LINES inside the file, never its name)
-   a. In Terminal, in the project folder:   pbcopy < sql/books.sql       (it copies the contents and prints nothing)
-   b. In Supabase's SQL editor: clear the box, press Cmd+V. The first line should read "-- BOOK CLUB TRACKER: run this once in the Supabase SQL editor."
-   c. Press Run. It should say "Success. No rows returned."
-   d. To check, run:   select tablename, policyname, cmd from pg_policies where tablename in ('books', 'reading_goals') order by tablename, policyname;
-      It should list 4 rows.
-   If Supabase shows a red error, send me its first line.
-
-THEN TRY IT
-   1. Admin, Books: set this year's goal and theme, add a book you are reading, and one you have finished (it needs the finishing date).
-   2. Look at /knowledge-nook/book-club (you can see it as the owner while its door is closed). Press a spine.
-   3. Admin, Suggestions: switch the Book Club box on, to see the next-book box.
+HOW TO SEE IT (after it is Ready): open the Knowledge Nook, then the Book Club door (it is the door you opened for yourself): starscapesfactory.com/knowledge-nook/book-club
+ Check on your phone too. Press a year tile (for example 2025): the shelf below the genres should change to that year.

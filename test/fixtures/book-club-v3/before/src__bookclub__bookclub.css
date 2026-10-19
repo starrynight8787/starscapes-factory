@@ -1,0 +1,74 @@
+/* The Book Club page. Stands on its own: nothing here depends on the old index.css rules. */
+.bc section { margin: 32px 0; }
+.bc h2 { margin: 0 0 12px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); color: var(--sf-navy-700, #14306a); }
+.bc__muted { margin: 0 0 8px; color: var(--sf-muted, #5b6585); line-height: 1.5; }
+.bc__live { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 16px; margin-top: 12px; }
+.bc__come { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__live-note { color: var(--sf-muted, #5b6585); }
+.bc__genres { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; margin: 0; padding: 0; list-style: none; }
+.bc__genre { display: grid; gap: 2px; padding: 14px 16px; background: #fff; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; color: var(--sf-navy-700, #14306a); text-decoration: none; }
+.bc__genre:hover { background: var(--sf-star, #dce6ff); }
+.bc__genre:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__genre-name { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.25rem; }
+.bc__genre-count { color: var(--sf-muted, #5b6585); font-size: 0.95rem; }
+.bc__theme { padding: 20px 22px; background: var(--sf-star, #dce6ff); border-radius: 12px; }
+.bc__theme h2 { margin: 8px 0; }
+.bc__theme p { margin: 0 0 12px; line-height: 1.6; }
+.bc__theme .pg-btn, .bc__now .pg-btn, .bc__card .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__now, .bc__card { display: grid; grid-template-columns: 110px 1fr; gap: 20px; align-items: start; padding: 18px; background: #fff; border: 1px solid var(--sf-border, #dde3f0); border-radius: 12px; }
+@media (max-width: 560px) { .bc__now, .bc__card { grid-template-columns: 1fr; }
+}
+.bc__now-chip { background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__now-title { margin: 8px 0 4px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: 1.5rem; color: var(--sf-navy-700, #14306a); overflow-wrap: anywhere; }
+.bc__cover { display: block; width: 110px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; border: 1px solid var(--sf-border, #dde3f0); background: var(--sf-star, #dce6ff); }
+.bc__cover--blank { display: grid; place-items: center; padding: 8px; background: var(--sf-navy-700, #14306a); color: #fff; text-align: center; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: 0.95rem; font-weight: 700; line-height: 1.2; overflow: hidden; }
+.bc__queue { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.bc__goal { margin: 4px 0 16px; }
+.bc__goal-text { margin: 0 0 6px; font-weight: 700; color: var(--sf-navy-700, #14306a); }
+.bc__bar { height: 14px; max-width: 480px; background: var(--sf-star, #dce6ff); border: 2px solid var(--sf-navy-700, #14306a); border-radius: 999px; overflow: hidden; }
+.bc__bar-fill { display: block; height: 100%; background: var(--sf-blue, #1f6fa8); }
+.bc__shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; min-height: 60px; margin: 16px 0 0; padding: 0 12px; list-style: none; }
+.bc__spine { display: flex; align-items: center; justify-content: center; width: 48px; padding: 8px 4px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 4px 4px 0 0; cursor: pointer; font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1rem; line-height: 1.1; }
+.bc__spine span { writing-mode: vertical-rl; transform: rotate(180deg); max-height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc__spine[aria-pressed='true'] { outline: 3px solid var(--sf-blue, #1f6fa8); outline-offset: 2px; transform: translateY(-6px); }
+.bc__spine:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__spine--none { background: #dce6ff; color: #14306a; }
+.bc__spine--leadership { background: #14306a; color: #fff; }
+.bc__spine--fiction { background: #b8ccf5; color: #14306a; }
+.bc__spine--memoir { background: #ffa6cb; color: #14306a; }
+.bc__spine--self-growth { background: #8fd694; color: #0e1530; }
+.bc__spine--childrens { background: #ffe27a; color: #0e1530; }
+.bc__spine--h0 { height: 150px; }
+.bc__spine--h1 { height: 160px; }
+.bc__spine--h2 { height: 170px; }
+.bc__spine--h3 { height: 180px; }
+.bc__spine--h4 { height: 190px; }
+.bc__spine--h5 { height: 200px; }
+.bc__spine--h6 { height: 210px; }
+.bc__plank { height: 14px; background: #c9a070; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 4px; }
+.bc__detail { margin-top: 16px; min-height: 8px; }
+.bc__stars { margin: 0 0 8px; font-size: 1.125rem; color: var(--sf-navy-700, #14306a); }
+@media (prefers-reduced-motion: reduce) { .bc__spine[aria-pressed='true'] { transform: none; }
+}
+/* the progress bar, in steps of 5 per cent */
+.bc__bar-fill--p0 { width: 0%; }
+.bc__bar-fill--p5 { width: 5%; }
+.bc__bar-fill--p10 { width: 10%; }
+.bc__bar-fill--p15 { width: 15%; }
+.bc__bar-fill--p20 { width: 20%; }
+.bc__bar-fill--p25 { width: 25%; }
+.bc__bar-fill--p30 { width: 30%; }
+.bc__bar-fill--p35 { width: 35%; }
+.bc__bar-fill--p40 { width: 40%; }
+.bc__bar-fill--p45 { width: 45%; }
+.bc__bar-fill--p50 { width: 50%; }
+.bc__bar-fill--p55 { width: 55%; }
+.bc__bar-fill--p60 { width: 60%; }
+.bc__bar-fill--p65 { width: 65%; }
+.bc__bar-fill--p70 { width: 70%; }
+.bc__bar-fill--p75 { width: 75%; }
+.bc__bar-fill--p80 { width: 80%; }
+.bc__bar-fill--p85 { width: 85%; }
+.bc__bar-fill--p90 { width: 90%; }
+.bc__bar-fill--p95 { width: 95%; }
+.bc__bar-fill--p100 { width: 100%; }
