@@ -5,6 +5,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { PAGES, IMAGES, SITE_URL, HOME_TITLE, fullTitleFor, urlFor, imageUrlFor } from '../src/data/pageMeta'
 import { staticPages } from '../src/data/staticPages'
+import { LEGAL_PAGES } from '../src/data/legalPages'
 
 const entries = Object.entries(PAGES)
 const indexable = entries.filter(([, p]) => p.index !== false)
@@ -86,5 +87,8 @@ describe('the share pictures', () => {
 describe('the old starter pages', () => {
   it('every one of them is in the table, so a new one cannot be forgotten', () => {
     for (const s of staticPages) expect(PAGES[`/page/${s.slug}`], s.slug).toBeTruthy()
+    for (const l of LEGAL_PAGES) expect(PAGES[`/page/${l.slug}`], l.slug).toBeTruthy() // the legal pages too
+    expect(PAGES['/page/accessibility']).toBeTruthy()
+    for (const slug of [...staticPages.map((s) => s.slug), ...LEGAL_PAGES.map((l) => l.slug), 'accessibility']) expect(PAGES[`/page/${slug}`].index, `${slug} is kept out of search results`).toBe(false)
   })
 })

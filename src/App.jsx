@@ -16,6 +16,7 @@ import ChannelPage from './pages/ChannelPage'
 import StaticPage from './pages/StaticPage'
 import TestersPage from './testers/TestersPage'
 import Footer from './components/Footer'
+import { useOwnerCheck } from './admin/useIsOwner'
 import ProductGallery from './pages/ProductGallery'
 import ProductPage from './pages/ProductPage'
 import NewProduct from './pages/NewProduct'
@@ -39,6 +40,7 @@ import ErrorBoundary from './components/ErrorBoundary'
 export default function App() {
   const [session, setSession] = useState(null)
   const [loading, setLoading] = useState(true)
+  const { owner } = useOwnerCheck(session) // the owner sees unfinished pages as drafts, and the footer links to them
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -67,7 +69,7 @@ export default function App() {
 <Route path="/blog" element={<Home />} /> 
 <Route path="/channel/:slug" element={<ChannelPage />} />
 <Route path="/post/:id" element={<PostPage session={session} />} />
-<Route path="/page/:slug" element={<StaticPage />} /> 
+<Route path="/page/:slug" element={<StaticPage owner={owner} />} /> 
 <Route path="/testers" element={<TestersPage />} />
 <Route path="/products" element={<ProductGallery />} /> 
 <Route path="/products/:id" element={<ProductPage />} /> 
@@ -111,7 +113,7 @@ export default function App() {
         </Routes>
         </ErrorBoundary>
       </div>
-<Footer /> 
+<Footer owner={owner} /> 
     </>
   )
 }

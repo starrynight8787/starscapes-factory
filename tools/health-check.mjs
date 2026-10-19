@@ -168,6 +168,13 @@ const CHECKS = [
   ['Archive Entries: the Notebook box', 'src/entries/NotebookTeaser.jsx', /en-notebook-title/, 'the Archive Entries update'],
   ['Archive Entries: the Drafting Desk uses it', 'src/draftingdesk/DraftingDeskRoutes.jsx', /ArchiveEntriesPage/, 'the Archive Entries update (the add-archive-entries script)'],
   ['Archive Entries: the template works for any room', 'src/entries/EntryPage.jsx', /belongs/, 'the Archive Entries update (the add-archive-entries script)'],
+  ['Footer: the new footer with the company details', 'src/components/Footer.jsx', /ft__company/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Footer: its styles', 'src/components/footer.css', /ft__cols/, 'the footer and pages update'],
+  ['Pages: the owner-only preview', 'src/pages/StaticPage.jsx', /DraftBanner/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Pages: the text renderer', 'src/pages/simpleMarkdown.jsx', /export function renderMarkdown/, 'the footer and pages update'],
+  ['Pages: where each page lives, and whether it is ready', 'src/data/staticPages.js', /export function resolvePage/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Pages: the Terms as a legal page', 'src/data/legalPages.js', /slug: 'terms'/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Pages: the app tells them whether you are the owner', 'src/App.jsx', /<StaticPage owner=/, 'the footer and pages update (the add-footer-pages script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

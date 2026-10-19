@@ -14,15 +14,21 @@ const app = readFileSync(join(process.cwd(), 'src/App.jsx'), 'utf8')
 const renderFooter = (props) => render(<MemoryRouter><Footer {...props} /></MemoryRouter>)
 
 describe('footer', () => {
-  it('keeps every existing link', () => {
+  it('links every room, the shop and help pages, and each legal page only once it is ready', () => {
     renderFooter({ social: [] })
-    const nav = screen.getByRole('navigation', { name: 'Footer' })
-    // only a page that is ready is linked: Contact now, the other four once they have their real words (staticPages.js, ready: true)
-    for (const [name, slug] of [['About', 'about'], ['Contact', 'contact'], ['Terms & Conditions', 'terms'], ['Privacy Policy', 'privacy'], ['AI Policy', 'ai-policy']]) {
-      if (pageIsReady(slug)) expect(within(nav).getByRole('link', { name })).toBeInTheDocument()
-      else expect(within(nav).queryByRole('link', { name })).toBeNull()
+    const rooms = screen.getByRole('navigation', { name: 'Rooms' })
+    expect(within(rooms).getAllByRole('link').map((l) => l.textContent)).toEqual(['The Drafting Desk', "Sarah Jr.'s Den", 'The Art Loft', "Explorer's Bay", 'The Factory Floor', 'Leadership Lounge', 'The Idea Hatchery', 'Knowledge Nook'])
+    const help = screen.getByRole('navigation', { name: 'Shop and help' })
+    expect(within(help).getByRole('link', { name: 'Art Loft prints' })).toHaveAttribute('href', '/art-loft')
+    expect(within(help).getByRole('link', { name: 'Cart' })).toHaveAttribute('href', '/cart')
+    expect(within(help).getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/page/contact')
+    for (const [name, slug] of [['Delivery and returns', 'delivery']]) {
+      if (pageIsReady(slug)) expect(within(help).getByRole('link', { name })).toBeInTheDocument()
+      else expect(within(help).queryByRole('link', { name })).toBeNull()
     }
-    expect(within(nav).getByRole('link', { name: 'Contact' })).toHaveAttribute('href', '/page/contact')
+    const legal = ['terms', 'privacy', 'returns', 'ai-policy', 'accessibility'].filter(pageIsReady)
+    if (legal.length === 0) expect(screen.queryByRole('navigation', { name: 'Legal' })).toBeNull()
+    else expect(within(screen.getByRole('navigation', { name: 'Legal' })).getAllByRole('link')).toHaveLength(legal.length)
   })
   it('shows no Follow links until an address is filled in', () => {
     renderFooter({ social: [{ name: 'YouTube', url: '' }, { name: 'TikTok', url: '   ' }] })

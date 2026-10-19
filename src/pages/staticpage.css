@@ -1,0 +1,50 @@
+/* Text pages: the legal pages, delivery, accessibility, contact. Stands on its own: nothing here depends on the old index.css rules. */
+.sp {
+  max-width: 760px;
+}
+.sp__draftwrap {
+  max-width: 820px;
+  margin: 8px auto 0;
+  padding: 0 16px;
+  box-sizing: border-box;
+}
+.sp__draft {
+  margin: 8px 0 16px;
+  padding: 12px 16px;
+  background: #fdf0c8;
+  color: #3d2c00;
+  border: 2px solid #e6c35a;
+  border-radius: 10px;
+  line-height: 1.5;
+}
+.sp__body {
+  font-size: 1.0625rem;
+  line-height: 1.65;
+  overflow-wrap: anywhere;
+}
+.sp__body h2 {
+  margin: 32px 0 8px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.5rem;
+  color: var(--sf-navy-700, #14306a);
+  scroll-margin-top: 24px;
+}
+.sp__body h3 {
+  margin: 24px 0 6px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.2rem;
+  color: var(--sf-navy-700, #14306a);
+  scroll-margin-top: 24px;
+}
+.sp__body p,
+.sp__body ul,
+.sp__body ol {
+  margin: 0 0 14px;
+}
+.sp__body ul,
+.sp__body ol {
+  padding-left: 1.5rem;
+}
+.sp__body li {
+  margin-bottom: 6px;
+}

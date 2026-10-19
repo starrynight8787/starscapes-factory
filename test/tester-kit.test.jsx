@@ -91,9 +91,9 @@ describe('the four pages that are not ready', () => {
     expect(screen.getByRole('link', { name: /Back home/ })).toHaveAttribute('href', '/')
   })
   it('are not in the footer: only Contact is', () => {
-    render(<MemoryRouter><Footer social={[]} /></MemoryRouter>)
-    const nav = screen.getByRole('navigation', { name: 'Footer' })
-    expect(within(nav).getAllByRole('link').map((a) => a.textContent)).toEqual(['Contact'])
+    const { container } = render(<MemoryRouter><Footer social={[]} /></MemoryRouter>)
+    const pageLinks = [...container.querySelectorAll('a[href^="/page/"]')].map((a) => a.textContent)
+    expect(pageLinks).toEqual(['Contact'])
   })
   it('are not in the menu on a computer or a phone: no About link', async () => {
     const { container } = render(<MemoryRouter><Navbar session={null} /></MemoryRouter>)

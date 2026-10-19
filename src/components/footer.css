@@ -1,0 +1,71 @@
+/* The footer's four columns and company details (Figma: the footer on every page). Sits on the dark footer set up in site.css. */
+.ft__top {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 32px 48px;
+}
+.ft__brand {
+  display: grid;
+  gap: 12px;
+  max-width: 340px;
+}
+.ft__script {
+  margin: 0;
+  font-family: var(--sf-script);
+  font-size: 2rem;
+  line-height: 1.1;
+  color: rgba(255, 255, 255, 0.88);
+}
+.ft__cols {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(130px, auto));
+  gap: 24px 48px;
+}
+.ft__head {
+  margin: 0 0 12px;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.7);
+}
+.ft__col ul {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.ft__col a {
+  color: rgba(255, 255, 255, 0.82);
+  font-size: 0.875rem;
+  text-decoration: none;
+}
+.ft__col a:hover {
+  color: #fff;
+  text-decoration: underline;
+}
+.ft__draft {
+  font-size: 0.875rem;
+  color: #f2c14e; /* a warm yellow: 8 to 1 against the dark footer */
+}
+.ft__company {
+  display: grid;
+  gap: 6px;
+}
+.ft__company p {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.7);
+}
+@media (max-width: 900px) {
+  .ft__cols {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .ft__script {
+    font-size: 1.75rem;
+  }
+}

@@ -18,7 +18,7 @@ afterAll(() => style.remove())
 
 const navs = () => {
   render(<MemoryRouter><Footer /></MemoryRouter>)
-  return [screen.getByRole('navigation', { name: 'Footer' }), screen.getByRole('navigation', { name: 'Follow us' })]
+  return [screen.getByRole('navigation', { name: 'Rooms' }), screen.getByRole('navigation', { name: 'Shop and help' }), screen.getByRole('navigation', { name: 'Follow us' })]
 }
 const clear = (v) => v === 'transparent' || v === 'rgba(0, 0, 0, 0)' || v === ''
 
@@ -33,9 +33,10 @@ describe('the footer links on the dark footer', () => {
     }
   })
   it('keep their links in the footer, so the rule that clears the box reaches them', () => {
-    const [pages, follow] = navs()
-    for (const nav of [pages, follow]) expect(nav.closest('.sf-footer')).not.toBeNull()
-    expect(within(pages).getAllByRole('link').length).toBeGreaterThanOrEqual(1) // only the pages that are ready are linked (staticPages.js)
+    const [rooms, help, follow] = navs()
+    for (const nav of [rooms, help, follow]) expect(nav.closest('.sf-footer')).not.toBeNull()
+    expect(within(rooms).getAllByRole('link')).toHaveLength(8)
+    expect(within(help).getAllByRole('link').length).toBeGreaterThanOrEqual(3) // only the pages that are ready are linked (staticPages.js)
     expect(within(follow).getAllByRole('link').length).toBeGreaterThanOrEqual(3)
   })
   it('say so in the stylesheet, in a rule that is after the old one and is more specific', () => {
@@ -48,15 +49,14 @@ describe('the footer links on the dark footer', () => {
   })
 })
 
-describe('the footer shows the three social links with no heading word', () => {
-  it('has just the links in the Follow list, with no visible "Follow" label', () => {
-    const [, follow] = navs()
+describe('the footer\u2019s Follow column', () => {
+  it('has the heading from the design, and the accounts that have an address', () => {
+    const [, , follow] = navs()
+    expect(within(follow).getByRole('heading', { level: 2, name: 'Follow' })).toBeInTheDocument()
     expect(within(follow).getAllByRole('link')).toHaveLength(3)
-    expect(follow.textContent).not.toMatch(/follow/i)
-    expect(follow.querySelector('.sf-footer__follow-label')).toBeNull()
   })
-  it('still names the list for screen reader users, who cannot see a heading', () => {
-    const [, follow] = navs()
+  it('still names the list for screen reader users', () => {
+    const [, , follow] = navs()
     expect(follow).toHaveAttribute('aria-label', 'Follow us')
   })
   it('leaves no unused label style behind', () => {

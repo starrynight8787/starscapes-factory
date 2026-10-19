@@ -1,0 +1,55 @@
+The footer and the pages behind it, with the owner-only preview: starscapes-footer-pages-19oct.zip   (no SQL)
+
+WHAT IT BUILDS
+  * THE FOOTER FROM YOUR DESIGN: the logo and "You're only limited by your own imagination.", four columns (ROOMS: all eight; SHOP AND HELP: Art Loft prints, Cart,
+    Delivery and returns, Contact; LEGAL; FOLLOW), and at the bottom the company details, from ONE file (src/data/company.js):
+    "Starscapes Factory Ltd. Company number 14173440. Registered office: 71-75 Shelton Street, Covent Garden, London WC2H 9JQ. Registered in England and Wales.
+    VAT number GB445903680." and "Prints are made to order by Printspace Studios Limited."
+    A visitor sees a page link only once that page is READY, and the Legal column does not appear at all until a legal page is ready (no empty heading).
+  * THE OWNER-ONLY PREVIEW: signed in as the owner, you see every page that exists but is not ready, in the footer marked "(draft)", and when you open one it sits
+    under a yellow banner: "Draft: only you can see this page. N gaps in [square brackets] still to fill. Visitors see 'not ready yet' until you switch it on."
+    Visitors and testers see no difference: they still get "not ready yet", and nothing unfinished reaches them.
+  * THE PAGES BEHIND THE LINKS, using the layouts you already designed (they were built earlier but not connected to anything):
+      - LEGAL PAGES (the layout with "On this page" and numbered sections): TERMS AND CONDITIONS is the first, from your draft in Linear, all 15 sections, in your words,
+        not published. (Privacy, Returns and refunds and the AI policy come in the next update.)
+      - THE ACCESSIBILITY STATEMENT (the page already built): connected at /page/accessibility.
+      - DELIVERY AND RETURNS: a new short help page (draft), written from what the site already says.
+
+HOW YOU SWITCH A PAGE ON (when you are happy with its words)
+  * A TEXT page (About, Delivery and returns, Privacy, AI policy for now): in src/data/staticPages.js change  ready: false  to  ready: true.
+  * A LEGAL page (Terms): in src/data/legalPages.js put the real date in  updated  (it is [date] now) and change  ready: false  to  ready: true.
+  * THE ACCESSIBILITY STATEMENT: it switches itself on once its three gaps are filled in src/data/accessibilityStatement.js (the date reviewed, what is not yet right,
+    where a complaint can go), as it was designed to.
+
+THINGS I MUST TELL YOU (please read)
+  1. TERMS, SECTION 5, CONFLICTS WITH WHAT THE PRINT SERVICE TOLD YOU. Your draft says "Every order is sent with tracked delivery" and "6 to 10 working days" AFTER posting.
+     Their help article says postal orders do not include detailed tracking, and their reply says 6 to 10 working days covers production AND delivery together. I have NOT
+     changed your wording. It is marked in the data file. Wait for their answer to your follow-up email, then section 5 (and the shop's delivery estimate) must be corrected.
+     My new Delivery and returns page says "Not every order is tracked", so the two pages disagree until you decide.
+  2. YOUR COMPANY DETAILS were already in your Terms draft, so the footer uses the same ones. Still please check them: the name against the Companies House record
+     (I could not look it up from here), and the VAT number on HMRC's checker (SFW-185).
+  3. About, Privacy and the AI policy are still the old placeholder pages (hidden). The Returns and refunds page does not exist yet, so it is not linked, even for you.
+  4. The footer's heading now reads "Follow", as in your design. (It had been taken out of the old footer.)
+
+NEEDS: the Archive Entries update (it is the same project, and the health check in this package checks for its files). Install that FIRST.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-footer-pages-19oct.zip
+   (this also replaces seven test files with updated versions)
+3. python3 tools/add-footer-pages.py          (it checks all eight files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 170 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Footer, legal pages and the owner-only preview"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, and SEND ME A SCREENSHOT (I cannot see the live page):
+   1. SIGNED OUT (or in a private window): the footer has Rooms, Shop and help (Art Loft prints, Cart, Contact) and Follow; the company details at the bottom; NO Legal column.
+   2. SIGNED IN AS OWNER: the footer also shows "Delivery and returns (draft)", "Terms and conditions (draft)" and "Accessibility (draft)".
+   3. Open /page/terms: the legal layout, the yellow draft banner, all 15 sections, the company details; signed out you should see only "not ready yet".
+   4. Open /page/delivery and /page/accessibility the same way.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

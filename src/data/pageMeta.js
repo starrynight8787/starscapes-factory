@@ -86,6 +86,8 @@ export const PAGES = {
   '/page/terms': { title: 'Terms & Conditions', description: 'The terms that apply to everything bought on Starscapes Factory.', image: 'site', index: false, client: true },
   '/page/privacy': { title: 'Privacy Policy', description: 'How Starscapes Factory uses your information.', image: 'site', index: false, client: true },
   '/page/ai-policy': { title: 'AI Policy', description: 'How Starscapes Factory uses AI tools.', image: 'site', index: false, client: true },
+  '/page/delivery': { title: 'Delivery and returns', description: 'How delivery works, and what to do if something goes wrong.', image: 'site', index: false, client: true },
+  '/page/accessibility': { title: 'Accessibility statement', description: 'How Starscapes Factory aims to be easy for everyone to use.', image: 'site', index: false, client: true },
 }
 
 // The address a page is found at, written out in full

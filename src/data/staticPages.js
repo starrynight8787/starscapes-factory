@@ -1,3 +1,7 @@
+import { LEGAL_PAGES } from './legalPages'
+import { ACCESSIBILITY_STATEMENT } from './accessibilityStatement'
+import { CONTACT_EMAIL, ACCESSIBILITY_REPLY_DAYS } from './contact'
+
 export const staticPages = [
   {
     slug: 'about',
@@ -15,31 +19,6 @@ export const staticPages = [
     content: `Want to get in touch? I read every message myself, and I will reply as soon as I can.
 
 Email is the best way to reach me. If it is about an order, please put your order number in the message, so I can find it quickly.`,
-  },
-  {
-    slug: 'terms',
-    ready: false,
-    title: 'Terms & Conditions',
-    content: `Last updated: [date]
-
-Welcome to Starscapes Factory. By using this website, you agree to the following terms.
-
-1. Use of this site
-[Describe what visitors can and can't do on your site — e.g. no copying content without permission, no misuse of purchased digital downloads.]
-
-2. Purchases
-[Once you're selling products, describe your policies: payment terms, delivery, refunds/returns, digital download licensing.]
-
-3. Content ownership
-All original writing, artwork, and creative content on this site is owned by Gill Bennet unless otherwise stated, and may not be reproduced without permission.
-
-4. Limitation of liability
-[Standard disclaimer language — worth having a lawyer or a solid template service review this section once you start taking payments.]
-
-5. Changes to these terms
-These terms may be updated from time to time. Continued use of the site means you accept any changes.
-
-Contact: imagine@starscapesfactory.com`,
   },
   {
     slug: 'privacy',
@@ -82,11 +61,44 @@ This policy will be updated as tools and practices evolve.
 
 Contact: imagine@starscapesfactory.com`,
   },
+  {
+    slug: 'delivery',
+    ready: false,
+    title: 'Delivery and returns',
+    content: `Last updated: [date].
+
+## Delivery
+
+Each print is made to order by our printing partner, Printspace Studios Limited, and posted straight to you in plain packaging. Delivery is free to the United Kingdom, Ireland, Germany, France, the United States and Canada. [Delivery to other countries: to be confirmed.]
+
+## How long it takes
+
+The estimate for your print and your country is shown on the print page, and again in your order confirmation email. They are estimates, not promises: making your print takes a few working days, and then the post takes the rest.
+
+## Tracking
+
+We email you when your order has been posted. If your parcel has a tracking number, it is in that email. Not every order is tracked: some go by standard post.
+
+## If something goes wrong
+
+If your print arrives damaged, is not what you ordered, or has not arrived when you expected it, please write to us at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) and we will look into it. Your rights to cancel an order and to return a print are explained on the [Returns and refunds](/page/returns) page.`,
+  },
 ]
 
+// ---- Where each page lives, and whether it is ready ----
 // A page is only shown, and only linked from the footer and the menu, once "ready" is true. Set it to true when the page has its real words.
-// (Until then the address shows a plain "not ready yet" message, never the placeholder text.)
-export const pageIsReady = (slug) => {
-  const page = staticPages.find((p) => p.slug === slug)
-  return Boolean(page && page.ready === true)
+// A text page is in the list above. A legal page (Terms, Privacy, Returns and refunds, AI policy) is in legalPages.js. The accessibility statement has its own words in
+// accessibilityStatement.js and is ready only when every gap in it is filled in. A page is only shown to visitors, and only linked from the footer and the menu, once it
+// is ready; until then the address shows a plain "not ready yet" message, never placeholder text, and only the owner sees it, as a draft.
+export const accessibilityGaps = (statement = ACCESSIBILITY_STATEMENT) => ['lastReviewed', 'notYetRight', 'complaint'].filter((key) => !statement[key])
+const accessibilityReady = () => accessibilityGaps().length === 0 && Boolean(CONTACT_EMAIL && ACCESSIBILITY_REPLY_DAYS)
+
+export function resolvePage(slug) {
+  const legal = LEGAL_PAGES.find((p) => p.slug === slug)
+  if (legal) return { kind: 'legal', slug, title: legal.title, ready: legal.ready === true, legal }
+  if (slug === 'accessibility') return { kind: 'accessibility', slug, title: 'Accessibility statement', ready: accessibilityReady() }
+  const text = staticPages.find((p) => p.slug === slug)
+  return text ? { kind: 'text', slug, title: text.title, ready: text.ready === true, text } : null
 }
+export const pageIsReady = (slug) => Boolean((resolvePage(slug) || {}).ready)
+export const pageExists = (slug) => resolvePage(slug) !== null

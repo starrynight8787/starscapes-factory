@@ -1,4 +1,5 @@
 import { COMPANY } from '../data/company'
+import { renderMarkdown } from './simpleMarkdown'
 import useTitle from './useTitle'
 import './systempages.css'
 
@@ -10,6 +11,7 @@ export function CompanyCard({ company = COMPANY }) {
   if (company.number) parts.push(`Company number ${company.number}.`)
   if (company.registeredOffice) parts.push(`Registered office: ${company.registeredOffice}.`)
   if (company.registeredIn) parts.push(`Registered in ${company.registeredIn}.`)
+  if (company.vat) parts.push(`VAT number ${company.vat}.`)
   return (
     <div className="lg-company">
       <strong>{company.name}</strong>
@@ -45,9 +47,7 @@ export default function LegalPage({ page, company }) {
               <h2 id={`${s.id}-heading`}>
                 {i + 1}. {s.title}
               </h2>
-              {s.paragraphs.map((p, j) => (
-                <p key={j}>{p}</p>
-              ))}
+              {renderMarkdown(s.paragraphs.join('\n\n')).nodes}
             </section>
           ))}
           <CompanyCard company={company} />
