@@ -352,3 +352,70 @@
     justify-self: stretch;
   }
 }
+
+/* the welcome page: where each pass opens (Figma: 13 Membership, welcome) */
+.mb__w {
+  box-sizing: border-box;
+  max-width: 760px;
+  margin: 0 auto;
+  padding: 64px 24px 72px;
+}
+.mb__w h1 {
+  margin: 14px 0 12px;
+  font-family: var(--sf-head, 'Inter', system-ui, sans-serif);
+  font-size: clamp(1.75rem, 4vw, 2.5rem);
+  line-height: 1.15;
+  color: var(--sf-navy-700, #14306a);
+}
+.mb__wlist {
+  display: grid;
+  gap: 16px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.mb__wcard {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  gap: 16px;
+  align-items: start;
+  padding: 17px;
+  border: 1.5px solid #9fb4e8;
+  border-radius: 14px;
+  background: #fff;
+}
+.mb__wname {
+  margin: 0 0 4px;
+  font-family: var(--sf-head, 'Inter', system-ui, sans-serif);
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+}
+.mb__wtext p {
+  margin: 0 0 12px;
+  color: var(--sf-muted, #5b6585);
+}
+.mb__wbtn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  padding: 8px 22px;
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--sf-navy-700, #14306a);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: none;
+  cursor: pointer;
+}
+.mb__wbtn:hover {
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.mb__wbtn:focus-visible {
+  outline: 3px solid var(--sf-blue, #1f6fa8);
+  outline-offset: 2px;
+}

@@ -80,6 +80,7 @@ export const PAGES = {
   '/admin/suggestions': { title: 'Suggestions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin': { title: 'Manage prints', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin/originals': { title: 'Manage originals', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/membership/welcome': { title: 'Welcome', description: 'Your passes are open.', image: 'site', index: false, client: true },
   '/membership': { title: 'Choose your passes', description: 'Open the parts of the story you want with one pass or several.', image: 'site', index: false, client: true },
   '/testers': { title: 'For testers', description: 'A private page for the people testing Starscapes Factory.', image: 'site', index: false, client: true },
   '/page/about': { title: 'About Me', description: 'About the person behind Starscapes Factory.', image: 'site', index: false, client: true },

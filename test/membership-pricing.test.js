@@ -2,7 +2,7 @@
 // The price rules (src/membership/pricing.js). The page shows them and the payment server will charge them, so they are checked to the penny.
 import { describe, it, expect } from 'vitest'
 import { monthlyPence, yearlyPence, offerPence, formatPounds, priceFor, ladderRows, ladderKey, LAUNCH_OFFER, YEARLY_MONTHS } from '../src/membership/pricing'
-import { PASSES, PASS_IDS, cleanPassIds, CONSENT_TEXT } from '../src/membership/passes'
+import { PASSES, PASS_IDS, cleanPassIds, CONSENT_TEXT, FREE_TEXT } from '../src/membership/passes'
 
 describe('what passes cost (Gill, 17 October 2026)', () => {
   it('is 5, 7, 10 and 12 pounds a month for one, two, three and four passes', () => {
@@ -68,19 +68,33 @@ describe('the "the more passes you take" table', () => {
 })
 
 describe('the passes', () => {
-  it('are the four Gill named, in the order drawn, each in a room that exists', () => {
-    expect(PASSES.map((p) => p.name)).toEqual(["The Author's Notebook", 'Early drafts and book background', 'Blueprints', 'Book Club'])
-    expect(PASSES.map((p) => p.room)).toEqual(['drafting-desk', 'drafting-desk', 'factory-floor', 'knowledge-nook'])
+  it('are the five Gill named, in the order drawn (grouped by room), each in a room that exists', () => {
+    expect(PASSES.map((p) => p.name)).toEqual(["The Author's Notebook", 'Early drafts and book background', 'Come Write With Me', 'Blueprints', 'Book Club'])
+    expect(PASSES.map((p) => p.room)).toEqual(['drafting-desk', 'drafting-desk', 'drafting-desk', 'factory-floor', 'knowledge-nook'])
   })
   it('have ids that are unique and safe to store (they go in the database and Stripe, so they never change)', () => {
-    expect(new Set(PASS_IDS).size).toBe(4)
+    expect(new Set(PASS_IDS).size).toBe(5)
     for (const id of PASS_IDS) expect(id).toMatch(/^[a-z]+(-[a-z]+)*$/)
-    expect(PASS_IDS).toEqual(['authors-notebook', 'early-drafts', 'blueprints', 'book-club'])
+    expect(PASS_IDS).toEqual(['authors-notebook', 'early-drafts', 'come-write-with-me', 'blueprints', 'book-club'])
   })
   it('are cleaned to real passes only, once each, in the order drawn (the payment server will use this to throw away anything made up)', () => {
     expect(cleanPassIds(['book-club', 'nonsense', 'authors-notebook', 'book-club'])).toEqual(['authors-notebook', 'book-club'])
     expect(cleanPassIds('blueprints')).toEqual([])
     expect(cleanPassIds(undefined)).toEqual([])
+  })
+})
+
+describe('Come Write With Me, the fifth pass (added 19 October 2026)', () => {
+  const pass = PASSES.find((p) => p.id === 'come-write-with-me')
+  it('uses Gill\u2019s own words for what it is (only the apostrophe and one comma were added)', () => {
+    expect(pass.name).toBe('Come Write With Me'); expect(pass.blurb).toBe("Let's write a story together. I write, you decide. Where the story goes will be decided by you."); expect(pass.room).toBe('drafting-desk')
+  })
+  it('costs the same as any other pass: five passes still stay at 12 pounds (four or more)', () => {
+    expect(monthlyPence(5)).toBe(1200); expect(yearlyPence(5)).toBe(12000); expect(ladderKey(5)).toBe('everything')
+    expect(cleanPassIds(PASS_IDS)).toEqual(PASS_IDS)
+  })
+  it('is mentioned, with its three free sessions, in the line under "Free, always"', () => {
+    expect(FREE_TEXT).toMatch(/first three Come Write With Me sessions are free to join/)
   })
 })
 

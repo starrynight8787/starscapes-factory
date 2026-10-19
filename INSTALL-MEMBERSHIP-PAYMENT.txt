@@ -1,0 +1,62 @@
+Membership, step 4: starscapes-membership-payment-19oct.zip
+(the payment in Stripe's TEST mode, the welcome page, and the fifth pass, Come Write With Me)
+
+WHAT THIS ADDS
+  * COME WRITE WITH ME is now a pass, in your words: "Let's write a story together. I write, you decide. Where the story goes will be decided by you." (I added only the
+    apostrophe in "Let's" and a comma.) It sits with the Drafting Desk's other two. The page says "Your passes: 3 of 5". The price ladder is unchanged (four or more is £12), as you chose.
+    The line under "Free, always" now also says the first three Come Write With Me sessions are free to join. Your Figma design has the fifth card on every screen.
+  * THE PAYMENT. "Continue to payment" now takes a LOGGED-IN person to Stripe's own checkout page, for a subscription to the passes they ticked. It sends only the passes, monthly or yearly,
+    the tick-box agreement and a promo code; the server works out the price itself, so no price can be changed from a browser.
+      - The launch offer (half price for the first year) is applied automatically as a Stripe discount. A promo code from Stripe REPLACES it (Stripe allows one discount at a time), and the page says so.
+      - What the customer agreed to, and when, is written on the Stripe subscription AND in your database (new columns), as your record.
+      - Someone who already holds passes is told to change them instead (that page is step 5).
+      - Not logged in? The page asks them to log in or sign up, and keeps their choices for when they come back (but never the tick box: that has to be done fresh).
+  * THE WELCOME PAGE (/membership/welcome): Stripe sends people back to it after paying. It waits for the payment to be recorded (up to about 18 seconds), then shows "Welcome. Your passes are open."
+    with one card per pass and a button into its room.
+  * A NEW LISTENER for Stripe's membership messages (/api/membership-webhook), with its own secret, kept apart from the shop's. It records each membership by asking Stripe for the CURRENT state, so a
+    late or repeated message cannot undo a cancellation. The shop's own listener now IGNORES membership payments, so a pass can never become a print order.
+
+WHAT IT DOES NOT DO YET (and what keeps it safe)
+  * It takes NO REAL MONEY: a live Stripe key is refused outright. Real payments wait for the welcome email and the Terms (step 8).
+  * Visitors still see "Memberships are not open yet". Only YOU can start a payment (the server checks), until MEMBERSHIP_OPEN is set to yes in Vercel. Do NOT set it yet.
+  * No "My passes", change or cancel pages yet (step 5), no locked posts yet (step 6), no emails yet (step 8).
+
+I COULD NOT TRY IT AGAINST STRIPE (my workspace cannot reach it). Every request is tested against a pretend Stripe, so the first real try may show something small; if so, tell me exactly what you see.
+
+STEPS FOR YOU, IN THIS ORDER
+ 1. INSTALL the code (below) and push it. Wait for Vercel to say Ready.
+ 2. SUPABASE: add the two new columns that record the agreement. In the SQL editor, clear it, paste these two lines, make sure nothing is highlighted, press Run ("Success. No rows returned."):
+        alter table public.memberships add column if not exists consent_at timestamptz;
+        alter table public.memberships add column if not exists consent_text text;
+ 3. STRIPE, in TEST MODE (the "Test mode" switch on, top right): Developers, then Webhooks, then Add endpoint.
+        Endpoint URL:  https://starscapesfactory.com/api/membership-webhook
+        Events to send (choose these four):  checkout.session.completed,  customer.subscription.created,  customer.subscription.updated,  customer.subscription.deleted
+    Add it. On the endpoint's page, click to reveal its "Signing secret" (it starts whsec_) and copy it. Leave your existing shop endpoint exactly as it is.
+ 4. VERCEL: Settings, then Environment Variables. Add a new one:  Name  STRIPE_MEMBERSHIP_WEBHOOK_SECRET   Value  (the whsec_ secret you just copied)   for Production. Save.
+    Then Deployments, the latest one, the three dots, Redeploy (an environment variable only takes effect after a redeploy).
+    Check that STRIPE_SECRET_KEY there starts sk_test_ (it already should, for the shop). Do NOT add MEMBERSHIP_OPEN.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-membership-payment-19oct.zip
+ 3. python3 tools/add-membership-payment.py    (it checks the seven existing files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2      (all 193 checks should pass)
+ 5. npm run build                              (must finish without errors)
+ 6. git add .
+    git status                                 (no files ending .before- should be listed)
+    git commit -m "Membership: Stripe test payment, the welcome page, and the Come Write With Me pass"
+    git push
+ 7. Wait for Vercel to say Ready, then do steps 2 to 4 above.
+
+HOW TO TRY A TEST PURCHASE (signed in as you, with your email confirmed)
+ 1. Go to starscapesfactory.com/membership. Tick, say, three passes, tick the box, press Continue to payment.
+ 2. Stripe's page should say "Starscapes Factory passes: 3 passes", list the passes, and show the launch discount (£5 a month for the first year, then £10).
+ 3. Pay with Stripe's test card:  4242 4242 4242 4242,  any future date,  any three digits,  any name and postcode.
+ 4. You should land on "Welcome. Your passes are open." with a card for each pass. (If it says it is still confirming for more than a minute, step 3 or 4 above was missed.)
+ 5. LOOK in Supabase (Table Editor, memberships): one row, status active, your passes, consent_at filled in. And in Stripe (test mode): Customers, your subscription, with the discount.
+ More to try:  the card 4000 0000 0000 0002 is declined (you stay on Stripe's page);  trying to buy again says you already have passes;  to try again, cancel the subscription in Stripe (the row becomes canceled).
+ A PROMO CODE: in Stripe (test mode) make a coupon (say 20% off, repeating, 3 months) and a promotion code WELCOME for it. On the page type WELCOME and press Apply: it should say "Code WELCOME applied: 20% off for 3 months".
+ Continue to payment: Stripe should show that discount INSTEAD of the launch offer.
+
+IF SOMETHING GOES WRONG: Vercel, Logs, shows what the server said. In Stripe (test mode): Developers, Webhooks, your endpoint, "Attempts" shows what the site answered to each message. Send me the words.
+IF YOU WANT IT ALL BACK NOW: git revert HEAD, then git push (the Stripe endpoint is harmless to leave).

@@ -15,6 +15,7 @@ import ChannelDirectory from './pages/ChannelDirectory'
 import ChannelPage from './pages/ChannelPage'
 import StaticPage from './pages/StaticPage'
 import MembershipPage from './membership/MembershipPage'
+import WelcomePage from './membership/WelcomePage'
 import TestersPage from './testers/TestersPage'
 import Footer from './components/Footer'
 import { useOwnerCheck } from './admin/useIsOwner'
@@ -72,7 +73,8 @@ export default function App() {
 <Route path="/post/:id" element={<PostPage session={session} />} />
 <Route path="/page/:slug" element={<StaticPage owner={owner} />} /> 
 <Route path="/testers" element={<TestersPage />} />
-<Route path="/membership" element={<MembershipPage owner={owner} />} />
+<Route path="/membership" element={<MembershipPage owner={owner} session={session} />} />
+<Route path="/membership/welcome" element={ <ProtectedRoute session={session}> <WelcomePage /> </ProtectedRoute> } />
 <Route path="/products" element={<ProductGallery />} /> 
 <Route path="/products/:id" element={<ProductPage />} /> 
 <Route path="/new-product" element={ <ProtectedRoute session={session}> <NewProduct session={session} /> </ProtectedRoute> } />

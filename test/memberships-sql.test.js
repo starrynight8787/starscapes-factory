@@ -14,6 +14,10 @@ describe('the memberships table', () => {
   it('keeps the Stripe references, which passes, how they pay, when it renews and whether it is cancelled', () => {
     for (const col of ['stripe_customer_id text unique', 'stripe_subscription_id text unique', "passes text[] not null default '{}'", "billing_interval text check (billing_interval in ('month', 'year'))", 'current_period_end timestamptz', 'cancel_at_period_end boolean not null default false', 'offer_ends_at timestamptz']) expect(code, col).toContain(col)
   })
+  it('keeps the record of what the customer agreed to at checkout (the tick box wording, and when), and adds those columns to a table made earlier too', () => {
+    expect(code).toMatch(/consent_at timestamptz,\s*consent_text text,/)
+    expect(code).toMatch(/alter table public\.memberships add column if not exists consent_at timestamptz;/); expect(code).toMatch(/alter table public\.memberships add column if not exists consent_text text;/)
+  })
   it('only allows the payment states Stripe uses', () => {
     expect(code).toMatch(/check \(status in \('incomplete', 'active', 'trialing', 'past_due', 'unpaid', 'canceled'\)\)/)
   })

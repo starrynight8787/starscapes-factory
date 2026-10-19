@@ -154,6 +154,8 @@ export async function POST(request) {
   if (!event || !WANTED.has(event.type)) return reply(200, { ok: true, ignored: event && event.type })
   const session = event.data && event.data.object
   if (!session || typeof session.id !== 'string') return reply(400, { ok: false, message: 'That message had no payment in it.' })
+  // A membership (a subscription) is not a print order: the membership listener deals with it, and this one must never make an order from it.
+  if (session.mode === 'subscription') return reply(200, { ok: true, ignored: 'membership' })
   if (session.payment_status !== 'paid') return reply(200, { ok: true, ignored: 'not paid yet' })
 
   try {

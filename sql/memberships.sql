@@ -23,9 +23,15 @@ create table if not exists public.memberships (
   current_period_end timestamptz,
   cancel_at_period_end boolean not null default false,
   offer_ends_at timestamptz,
+  consent_at timestamptz,
+  consent_text text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+
+-- the record of what the customer agreed to at checkout (the tick box wording, and when). Added separately too, so running this file again on a table made earlier adds them.
+alter table public.memberships add column if not exists consent_at timestamptz;
+alter table public.memberships add column if not exists consent_text text;
 
 alter table public.memberships enable row level security;
 

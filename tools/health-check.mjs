@@ -190,6 +190,14 @@ const CHECKS = [
   ['Membership: the page styles', 'src/membership/membership.css', /\.mb__hero/, 'the membership page update (the add-membership-page script)'],
   ['Membership: the page is on the site', 'src/App.jsx', /MembershipPage/, 'the membership page update (the add-membership-page script)'],
   ['Membership: the database file', 'sql/memberships.sql', /founding_members/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the payment function', 'api/membership-checkout.js', /MEMBERSHIP_OPEN/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the membership webhook', 'api/membership-webhook.js', /STRIPE_MEMBERSHIP_WEBHOOK_SECRET/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the shop webhook ignores memberships', 'api/stripe-webhook.js', /ignored: 'membership'/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the Stripe helpers', 'lib/membershipStripe.js', /membershipRowFromSubscription/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the who-is-asking check', 'lib/userGuard.js', /requireUser/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the welcome page', 'src/membership/WelcomePage.jsx', /Welcome. Your passes are open/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the page talks to the server', 'src/membership/membershipApi.js', /startMembershipCheckout/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: Come Write With Me is a pass', 'src/membership/passes.js', /come-write-with-me/, 'the membership payment update (the add-membership-payment script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {
