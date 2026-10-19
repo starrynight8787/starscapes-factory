@@ -10,7 +10,7 @@ const USER = { id: '11111111-2222-4333-8444-555555555555', email: 'reader@exampl
 const OWNER = { id: '99999999-2222-4333-8444-555555555555', email: 'gill@example.com', email_confirmed_at: '2026-10-01T00:00:00Z' }
 const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
 
-function network({ user = USER, member = null, promo = null, couponExists = false, stripeDown = false, couponFails = false } = {}) {
+function network({ user = USER, member = null, promo = null, couponExists = false, stripeDown = false, couponFails = false, customers = [], subsByCustomer = {}, lookupFails = false } = {}) {
   const calls = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url)
@@ -22,6 +22,8 @@ function network({ user = USER, member = null, promo = null, couponExists = fals
       return json({}, 401)
     }
     if (u.includes('/rest/v1/memberships')) return json(member ? [member] : [])
+    if (u.startsWith('https://api.stripe.com/v1/customers')) return lookupFails ? json({ error: { message: 'Stripe is having a moment.' } }, 500) : json({ data: customers })
+    if (u.startsWith('https://api.stripe.com/v1/subscriptions')) return json({ data: subsByCustomer[new URL(u).searchParams.get('customer')] || [] })
     if (u.startsWith('https://api.stripe.com/v1/coupons')) {
       if (couponFails) return json({ error: { code: 'api_error' } }, 500)
       return couponExists ? json({ error: { code: 'resource_already_exists' } }, 400) : json({ id: 'made' })
@@ -195,6 +197,52 @@ describe('the Stripe checkout it asks for', () => {
   it('uses the address the request came from, if it is one of ours (a preview site, say), for where Stripe sends people back', async () => {
     process.env.VERCEL_URL = 'preview-abc.vercel.app'; const fn = withNetwork(); await call({ body: good, origin: 'https://preview-abc.vercel.app' })
     expect(sessionForm(fn).get('success_url')).toMatch(/^https:\/\/preview-abc\.vercel\.app\/membership\/welcome/)
+  })
+})
+
+const heldSub = (over = {}) => ({ id: 'sub_held', customer: 'cus_1', status: 'active', cancel_at_period_end: false, current_period_end: 1800000000, start_date: 1760000000, items: { data: [{ price: { recurring: { interval: 'month' } } }] }, metadata: { user_id: USER.id, passes: 'blueprints', interval: 'month' }, ...over })
+const memberSaves = (fn) => fn.calls.filter((c) => c.url.includes('/rest/v1/memberships') && c.init.method === 'POST')
+
+describe('asking Stripe before a second purchase', () => {
+  it('refuses a second purchase if Stripe says this person already holds passes, even though our own table does not know yet, and puts our record right', async () => {
+    const fn = withNetwork({ customers: [{ id: 'cus_1' }], subsByCustomer: { cus_1: [heldSub()] } })
+    const r = await call({ body: good })
+    expect([r.status, r.body.reason]).toEqual([409, 'already_member']); expect(r.body.message).toMatch(/give it a minute/)
+    expect(fn.calls.some((c) => c.url.endsWith('/v1/checkout/sessions'))).toBe(false)
+    const saved = memberSaves(fn); expect(saved).toHaveLength(1)
+    expect(JSON.parse(saved[0].init.body)).toMatchObject({ user_id: USER.id, stripe_subscription_id: 'sub_held', status: 'active', passes: ['blueprints'] })
+  })
+  it('looks the customer up by their email, safely written into the address, and then reads that customer\u2019s subscriptions', async () => {
+    const fn = withNetwork({ user: { ...USER, email: 'a+b@example.com' }, customers: [{ id: 'cus_1' }] }); await call({ body: good })
+    const urls = fn.calls.map((c) => c.url)
+    expect(urls.some((u) => u.startsWith('https://api.stripe.com/v1/customers?email=a%2Bb%40example.com'))).toBe(true); expect(urls.some((u) => u.startsWith('https://api.stripe.com/v1/subscriptions?customer=cus_1&status=all'))).toBe(true)
+  })
+  it('carries on to checkout when the subscriptions Stripe finds are not holding passes, or are not this person\u2019s', async () => {
+    for (const subs of [[heldSub({ status: 'canceled' })], [heldSub({ status: 'incomplete' })], [heldSub({ status: 'incomplete_expired' })], [heldSub({ metadata: { user_id: '99999999-2222-4333-8444-555555555555', passes: 'blueprints', interval: 'month' } })], [heldSub({ metadata: {} })], []]) {
+      const fn = withNetwork({ customers: [{ id: 'cus_1' }], subsByCustomer: { cus_1: subs } }); const r = await call({ body: good })
+      expect(r.status, JSON.stringify(subs[0] && subs[0].status)).toBe(200); expect(memberSaves(fn)).toHaveLength(0)
+    }
+  })
+  it('refuses for each state in which someone still holds passes (active, trialing, past due, unpaid)', async () => {
+    for (const status of ['active', 'trialing', 'past_due', 'unpaid']) {
+      const fn = withNetwork({ customers: [{ id: 'cus_1' }], subsByCustomer: { cus_1: [heldSub({ status })] } }); expect((await call({ body: good })).status, status).toBe(409); expect(fn.calls.some((c) => c.url.endsWith('/v1/checkout/sessions'))).toBe(false)
+    }
+  })
+  it('finds a subscription under a second customer record of the same email', async () => {
+    withNetwork({ customers: [{ id: 'cus_old' }, { id: 'cus_1' }], subsByCustomer: { cus_old: [], cus_1: [heldSub()] } }); expect((await call({ body: good })).status).toBe(409)
+  })
+  it('does not start a payment, and says so kindly, if Stripe cannot be asked (it would rather wait than risk a second payment), and logs why', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fn = withNetwork({ lookupFails: true }); const r = await call({ body: good })
+    expect(r.status).toBe(502); expect(r.body.message).toBe("We couldn't check your account just now. Please try again in a moment."); expect(fn.calls.some((c) => c.url.endsWith('/v1/checkout/sessions'))).toBe(false)
+    expect(spy.mock.calls.map((c) => String(c[0])).join('\n')).toContain('[membership] looking for an existing subscription: stripe could not look for your customer record (500): Stripe is having a moment.'); spy.mockRestore()
+  })
+  it('does not even ask Stripe when our own table already says they hold passes', async () => {
+    const fn = withNetwork({ member: { status: 'active', stripe_customer_id: 'cus_1' } }); expect((await call({ body: good })).status).toBe(409)
+    expect(fn.calls.some((c) => c.url.startsWith('https://api.stripe.com/v1/customers'))).toBe(false)
+  })
+  it('still takes the payment from someone with no customer record at all (a first-time buyer)', async () => {
+    withNetwork(); expect((await call({ body: good })).status).toBe(200)
   })
 })
 

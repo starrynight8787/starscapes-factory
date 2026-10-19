@@ -207,6 +207,10 @@ const CHECKS = [
   ['Membership: the Subscribe button goes to the passes page', 'src/components/Navbar.jsx', /MEMBERSHIP\.open/, 'the account pages update (the add-membership-account script)'],
   ['Membership: changes are priced under an active product', 'lib/membershipStripe.js', /PRODUCT_ID/, 'the change fix (the fix-change-passes script)'],
   ['Membership: failures are written to the log', 'lib/membershipStripe.js', /logProblem/, 'the change fix (the fix-change-passes script)'],
+  ['Membership: a second purchase is checked with Stripe', 'lib/membershipStripe.js', /findHeldSubscription/, 'the clean-up update (the add-cleanup script)'],
+  ['Server tables: orders lets the server key in', 'sql/orders.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
+  ['Server tables: sign-ups let the server key in', 'sql/ebook-signups.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
+  ['Server tables: memberships let the server key in', 'sql/memberships.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

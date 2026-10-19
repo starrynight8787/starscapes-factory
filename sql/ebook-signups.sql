@@ -16,6 +16,9 @@ create table if not exists public.ebook_signups (
 alter table public.ebook_signups enable row level security;
 revoke all on public.ebook_signups from anon, authenticated;
 
+-- Only the SERVER's key (service_role) reads and writes sign-ups, and a table made in the SQL editor gives that key no permission until it is granted.
+grant select, insert, update, delete on public.ebook_signups to service_role;
+
 -- To confirm it worked, run this. It should list 0 policies (that is right: no visitor can touch the table):
 --   select count(*) from pg_policies where tablename = 'ebook_signups';
 

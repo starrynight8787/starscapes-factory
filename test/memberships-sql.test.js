@@ -30,7 +30,8 @@ describe('the memberships table', () => {
   })
   it('can be READ by a signed-in member, and cannot be written from a browser at all', () => {
     expect(code).toMatch(/^grant select on public\.memberships to authenticated;$/m)
-    expect(code).not.toMatch(/grant [a-z, ]*(insert|update|delete|all)[a-z, ]* on public\.memberships/i)
+    expect(code).not.toMatch(/grant [a-z, ]*(insert|update|delete|all)[a-z, ]* on public\.memberships to [^;]*\b(anon|authenticated)\b/i) // only the server's own key may write (service_role, below)
+    expect(code).toMatch(/^grant select, insert, update, delete on public\.memberships to service_role;$/m)
     expect(code).not.toMatch(/on public\.memberships for (insert|update|delete)/)
     expect(code).not.toMatch(/grant [^;]* on public\.memberships to [^;]*anon/i)
   })
@@ -55,7 +56,8 @@ describe('the founding members table', () => {
   })
   it('gives nobody the right to add or delete founders from a browser', () => {
     expect(code).not.toMatch(/on public\.founding_members for (insert|delete)/)
-    expect(code).not.toMatch(/grant [a-z, ]*(insert|delete|all)[a-z, ]* on public\.founding_members/i)
+    expect(code).not.toMatch(/grant [a-z, ]*(insert|delete|all)[a-z, ]* on public\.founding_members to [^;]*\b(anon|authenticated)\b/i) // only the server's own key may add or delete founders
+    expect(code).toMatch(/^grant select, insert, update, delete on public\.founding_members to service_role;/m)
   })
 })
 

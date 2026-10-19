@@ -19,7 +19,8 @@ import { serviceFetch } from '../lib/serviceKey.js'
 import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
 import { handleAccount, isAccountRequest } from '../lib/membershipAccount.js'
-import { STRIPE, stripeMode, stripeHeaders, logProblem, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
+import { saveMembership } from './membership-webhook.js'
+import { STRIPE, stripeMode, stripeHeaders, logProblem, findHeldSubscription, membershipRowFromSubscription, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
 
 const SITE = 'https://starscapesfactory.com'
 const MAX_BODY = 4000
@@ -141,6 +142,25 @@ export default async function handler(req, res) {
   }
   if (existing && ['active', 'trialing', 'past_due', 'unpaid'].includes(existing.status)) {
     return say(res, 409, 'You already have passes. You can change them from your account instead.', { reason: 'already_member' })
+  }
+
+  // Our own table might not have caught up (a payment made but not yet recorded). So ask STRIPE too: if this person already holds passes there, do not take a second payment,
+  // and put their membership right in our table while we are about it.
+  let heldInStripe = null
+  try {
+    heldInStripe = await findHeldSubscription(who.user.id, who.user.email, k.key)
+  } catch (e) {
+    logProblem('looking for an existing subscription', e)
+    return say(res, 502, "We couldn't check your account just now. Please try again in a moment.")
+  }
+  if (heldInStripe) {
+    try {
+      const row = membershipRowFromSubscription(heldInStripe)
+      if (row) await saveMembership(row)
+    } catch (e) {
+      logProblem('putting a membership right', e)
+    }
+    return say(res, 409, 'You already have passes. If they have not shown on your account yet, give it a minute and refresh the page.', { reason: 'already_member' })
   }
 
   try {

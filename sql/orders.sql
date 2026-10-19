@@ -21,3 +21,7 @@ create table if not exists public.orders (
 -- Row level security on, and NO policies: nobody using the public key can read or write orders.
 -- Only your server (with the service key kept in Vercel) can.
 alter table public.orders enable row level security;
+
+-- The SERVER's key (service_role) is the only thing that reads and writes orders (the Stripe listener saves them, the orders list shows them). A table made in the SQL editor gives that key
+-- no permission until it is granted. Visitors and signed-in people get nothing: there is no grant for them, and no rule that lets them in.
+grant select, insert, update, delete on public.orders to service_role;

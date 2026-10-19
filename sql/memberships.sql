@@ -42,6 +42,9 @@ drop policy if exists "see your own membership" on public.memberships;
 create policy "see your own membership" on public.memberships for select to authenticated using (user_id = auth.uid());
 
 grant select on public.memberships to authenticated;
+-- The SERVER's key (service_role) writes memberships (when Stripe says someone paid, changed or cancelled) and reads them (to stop a second purchase). Without this line the site cannot even
+-- check whether a person already holds passes. A table made in the SQL editor gives that key no permission until it is granted.
+grant select, insert, update, delete on public.memberships to service_role;
 
 create table if not exists public.founding_members (
   user_id uuid primary key references auth.users (id) on delete cascade,
@@ -64,6 +67,7 @@ create policy "choose whether your name shows" on public.founding_members for up
 
 grant select (display_name, show_name, created_at) on public.founding_members to anon, authenticated;
 grant update (display_name, show_name) on public.founding_members to authenticated;
+grant select, insert, update, delete on public.founding_members to service_role; -- the server adds and manages founding members
 
 -- To confirm it worked, run these. The first should list 4 rows, the second should show SELECT for authenticated on memberships:
 --   select tablename, policyname, cmd from pg_policies where tablename in ('memberships', 'founding_members') order by tablename, policyname;

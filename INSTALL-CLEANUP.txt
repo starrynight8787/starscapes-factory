@@ -1,0 +1,56 @@
+The clean-up package: starscapes-cleanup-19oct.zip   (one small SQL step in Supabase; nothing in Stripe or Vercel)
+
+TWO JOBS, BOTH FROM WHAT WENT WRONG TONIGHT
+
+1. THE SERVER'S KEY NOW HAS ITS PERMISSION LINES IN THE DATABASE FILES
+   Three tables are read and written only by the SERVER, with its own key (service_role): orders, memberships and ebook_signups (and founding_members, which the server will manage). A table made in the Supabase
+   SQL editor gives that key no permission until it is granted, and without it the site failed quietly ("We couldn't check your account", and a membership that was paid for but never recorded).
+   You fixed memberships and founding_members by hand tonight. The database FILES now contain the permission lines for all of them, so a fresh setup can never hit this. A new test also checks, by looking at what
+   the server actually touches, that every such table has its line, so a new table cannot be forgotten.
+   YOU STILL NEED TO RUN THE LINES ONCE for orders and ebook_signups, because those two tables already exist in your database. See "THE ONE SQL STEP" below.
+
+2. THE SITE ASKS STRIPE BEFORE IT ALLOWS A SECOND PURCHASE
+   Tonight you bought twice, because the site only looked in its OWN table, and the first purchase had not been recorded there. Now, when someone presses "Continue to payment", the site also asks Stripe whether
+   that person already holds a subscription (it finds their customer record by email, then looks for a subscription that carries THEIR user id and is still holding passes). If it finds one:
+     - no second payment is started, and the person is told "You already have passes. If they have not shown on your account yet, give it a minute and refresh the page."
+     - and if our own table was missing their membership, the site puts it right straight away (so a payment that was made but not recorded mends itself).
+   It does not count cancelled or unfinished subscriptions, or anyone else's. If Stripe cannot be asked, no payment is started at all (it would rather make someone wait than risk a second payment),
+   and the real reason is written to Vercel's Logs.
+
+THE ONE SQL STEP (in Supabase: SQL editor, clear it, PASTE THE SQL ITSELF, make sure nothing is highlighted, press Run; it says "Success. No rows returned.")
+   It gives the server's key its permission on the four tables, and only touches ones that exist, so it is safe to run again:
+
+do $$
+declare t text;
+begin
+  foreach t in array array['memberships', 'founding_members', 'orders', 'ebook_signups'] loop
+    if to_regclass('public.' || t) is not null then
+      execute format('grant select, insert, update, delete on public.%I to service_role', t);
+    end if;
+  end loop;
+end $$;
+
+   To CHECK it (it should now list DELETE, INSERT, SELECT and UPDATE beside each table that exists):
+
+select table_name, privilege_type from information_schema.role_table_grants where table_schema = 'public' and grantee = 'service_role' and table_name in ('memberships', 'founding_members', 'orders', 'ebook_signups') order by table_name, privilege_type;
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-cleanup-19oct.zip
+ 3. python3 tools/add-cleanup.py              (it checks the six files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 206 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Server-key permission lines, and ask Stripe before a second purchase"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+ 9. Run the SQL step above (before or after, it makes no difference).
+
+HOW TO TRY THE SECOND-PURCHASE CHECK (you already hold passes in the test account)
+ Delete your row from the memberships table in Supabase (Table Editor), so the site's own record is empty, then go to /membership, tick a pass and the box, and press Continue to payment.
+ You should see "You already have passes. If they have not shown on your account yet, give it a minute and refresh the page." Then open /membership/passes: your passes are back (the site put the row right).
+ No new payment should appear in Stripe.
+
+NEXT: step 6, locking the posts and sessions behind the passes.
