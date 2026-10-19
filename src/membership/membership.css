@@ -461,3 +461,26 @@
   background: var(--sf-blue, #1f6fa8);
   border-color: var(--sf-blue, #1f6fa8); /* an open pass has its box filled in, as on the other pages (there is no real checkbox here to do it) */
 }
+
+/* what a visitor sees in place of the words of a locked post */
+.mb__gate {
+  display: grid;
+  gap: 10px;
+  justify-items: start;
+  margin: 8px 0 24px;
+  padding: 20px;
+  border: 1.5px solid #9fb4e8;
+  border-radius: 14px;
+  background: var(--sf-star, #dce6ff);
+  line-height: 1.5;
+}
+.mb__gate p {
+  margin: 0;
+}
+.mb__gatetitle {
+  margin: 0;
+  font-family: var(--sf-head, 'Inter', system-ui, sans-serif);
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+}

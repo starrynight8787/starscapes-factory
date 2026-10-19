@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { Field, ErrorSummary, FailureMessage } from '../components/FormMessages'
 import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
+import { PASS_CHOICES, canUsePasses, cleanPass, saveLockedBody } from '../membership/lockedPosts'
 import '../styles/pages.css'
 import '../styles/forms.css'
 
@@ -18,7 +19,17 @@ export default function NewPost({ session }) {
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({}) // a plain-words problem under each field that needs fixing
   const [saving, setSaving] = useState(false)
+  const [canPass, setCanPass] = useState(false) // has the database been given the pass column yet
+  const [pass, setPass] = useState('') // '' means free for everyone
   const navigate = useNavigate()
+
+  useEffect(() => {
+    let stopped = false
+    canUsePasses().then((yes) => !stopped && setCanPass(yes))
+    return () => {
+      stopped = true
+    }
+  }, [])
 
   async function handleSubmit(e) {
     e.preventDefault()
@@ -56,17 +67,34 @@ export default function NewPost({ session }) {
         .map((t) => t.trim())
         .filter((t) => t.length > 0)
 
-      const { error: insertError } = await supabase.from('posts').insert({
-        title,
-        content,
-        image_url: imageUrl,
-        author_id: session.user.id,
-        published: true,
-        tags: tagsArray,
-        channel: channel || null,
-      })
+      const lockedPass = canPass ? cleanPass(pass) : ''
+      if (lockedPass) {
+        // a post for a pass: the post is made WITHOUT its words, and the words are kept in the protected table. If keeping them fails, the empty post is taken away again.
+        const { data: made, error: insertError } = await supabase
+          .from('posts')
+          .insert({ title, content: '', image_url: imageUrl, author_id: session.user.id, published: true, tags: tagsArray, channel: channel || null, pass: lockedPass })
+          .select('id')
+          .single()
+        if (insertError) throw insertError
+        try {
+          await saveLockedBody(made.id, content)
+        } catch (bodyError) {
+          await supabase.from('posts').delete().eq('id', made.id)
+          throw bodyError
+        }
+      } else {
+        const { error: insertError } = await supabase.from('posts').insert({
+          title,
+          content,
+          image_url: imageUrl,
+          author_id: session.user.id,
+          published: true,
+          tags: tagsArray,
+          channel: channel || null,
+        })
 
-      if (insertError) throw insertError
+        if (insertError) throw insertError
+      }
 
       navigate('/')
     } catch (err) {
@@ -105,6 +133,20 @@ export default function NewPost({ session }) {
             )}
           </Field>
         </div>
+        {canPass && (
+          <Field id="np-pass" label="Pass" help="Leave this as Free for everyone for an ordinary post. Choose a pass to keep the words of this post for people who hold it (the first three posts in each pass stay free to read).">
+            {(p) => (
+              <select {...p} value={pass} onChange={(e) => setPass(e.target.value)}>
+                <option value="">Free for everyone</option>
+                {PASS_CHOICES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
         <Field id="np-file" label={`Header picture (optional, up to ${MAX_PICTURE_MB} MB)`} error={errors.file}>
           {(p) => <input {...p} type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0] || null)} />}
         </Field>

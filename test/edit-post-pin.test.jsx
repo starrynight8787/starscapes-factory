@@ -224,7 +224,7 @@ describe('the switch styling', () => {
 describe('the live page file', () => {
   const src = readFileSync(join(process.cwd(), 'src/pages/EditPost.jsx'), 'utf8')
   it('asks for pinned_in with a fallback, and only saves it when the column exists', () => {
-    expect(src).toMatch(/\/pinned_in\/i\.test/)
+    expect(src).toMatch(/\/pinned_in\|\\bpass\\b\/i\.test/) // it asks for pinned_in and pass together, then without each one the database does not have yet
     expect(src).toMatch(/if \(canPin\)/)
   })
 })

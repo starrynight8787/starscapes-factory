@@ -5,6 +5,8 @@ import BackToPosts from '../components/BackToPosts'
 import { channels } from '../data/channels'
 import { safeImage } from '../rooms/postRules'
 import useTitle from './useTitle'
+import PostGate from '../membership/PostGate'
+import { cleanPass, hasPassColumn, loadLockedBody } from '../membership/lockedPosts'
 import '../styles/articles.css'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -16,20 +18,31 @@ export default function PostPage({ session }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [body, setBody] = useState(null) // the words of a locked post, if this person may read them
+  const [gated, setGated] = useState(false) // a locked post this person may not read
   useTitle(post ? post.title : 'Post') // the tab, and a search result, say which post this is
 
   useEffect(() => {
     async function fetchPost() {
-      const { data, error } = await supabase
-        .from('posts')
-        .select('id, title, content, image_url, created_at, author_id, tags, channel')
-        .eq('id', id)
-        .single()
+      const columns = 'id, title, content, image_url, created_at, author_id, tags, channel'
+      // the database may not have been given the pass column yet: carry on without it, and every post is free
+      let { data, error } = await supabase.from('posts').select(columns + ', pass').eq('id', id).single()
+      if (error && /\bpass\b/i.test(String(error.message || ''))) ({ data, error } = await supabase.from('posts').select(columns).eq('id', id).single())
 
       if (error) {
         setError(error.message)
       } else {
         setPost(data)
+        // A post that belongs to a pass keeps its words in a separate table that the database only opens for the right people
+        if (hasPassColumn(data) && cleanPass(data.pass)) {
+          try {
+            const words = await loadLockedBody(id)
+            if (words === null) setGated(true)
+            else setBody(words)
+          } catch (e) {
+            setError('We could not load this post just now. Please try again in a moment.')
+          }
+        }
       }
       setLoading(false)
     }
@@ -83,7 +96,7 @@ export default function PostPage({ session }) {
           }}
         />
       )}
-      <div className="pg-post__body">{post.content}</div>
+      {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
 
       {post.tags && post.tags.length > 0 && (
         <div className="pg-tags">

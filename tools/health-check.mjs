@@ -211,6 +211,12 @@ const CHECKS = [
   ['Server tables: orders lets the server key in', 'sql/orders.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
   ['Server tables: sign-ups let the server key in', 'sql/ebook-signups.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
   ['Server tables: memberships let the server key in', 'sql/memberships.sql', /to service_role/, 'the clean-up update (the add-cleanup script)'],
+  ['Locked posts: the database file', 'sql/locked-posts.sql', /can_read_post_body/, 'the locked posts update (the add-locked-posts script)'],
+  ['Locked posts: the helpers', 'src/membership/lockedPosts.js', /loadLockedBody/, 'the locked posts update (the add-locked-posts script)'],
+  ['Locked posts: the gate', 'src/membership/PostGate.jsx', /This is part of the/, 'the locked posts update (the add-locked-posts script)'],
+  ['Locked posts: the post page uses the gate', 'src/pages/PostPage.jsx', /PostGate/, 'the locked posts update (the add-locked-posts script)'],
+  ['Locked posts: the New post form has the Pass choice', 'src/pages/NewPost.jsx', /PASS_CHOICES/, 'the locked posts update (the add-locked-posts script)'],
+  ['Locked posts: the Edit post form has the Pass choice', 'src/pages/EditPost.jsx', /PASS_CHOICES/, 'the locked posts update (the add-locked-posts script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

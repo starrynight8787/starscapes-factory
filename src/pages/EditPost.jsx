@@ -6,6 +6,7 @@ import { FACTORY, SECTIONS, kindOf } from '../factoryfloor/factoryData'
 import './pinswitch.css'
 import { Field, ErrorSummary } from '../components/FormMessages'
 import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
+import { PASS_CHOICES, cleanPass, hasPassColumn, loadLockedBody, removeLockedBody, saveLockedBody } from '../membership/lockedPosts'
 import '../styles/pages.css'
 import '../styles/forms.css'
 
@@ -28,17 +29,22 @@ export default function EditPost({ session }) {
   const [canPin, setCanPin] = useState(false)
   const [pinned, setPinned] = useState(false)
   const [otherPinned, setOtherPinned] = useState(null)
+  // Passes: does the database have the pass column yet, which pass is this post in ('' means free for everyone), and was it locked when it was loaded
+  const [canPass, setCanPass] = useState(false)
+  const [pass, setPass] = useState('')
+  const [wasLocked, setWasLocked] = useState(false)
 
   useEffect(() => {
     async function fetchPost() {
       const columns = 'id, title, content, image_url, author_id, tags, channel'
-      let { data, error } = await supabase.from('posts').select(columns + ', pinned_in').eq('id', id).single()
-      let hasPinColumn = true
-      // the database may not have been given the pinned_in column yet: carry on without it
-      if (error && /pinned_in/i.test(String(error.message || ''))) {
-        hasPinColumn = false
-        ;({ data, error } = await supabase.from('posts').select(columns).eq('id', id).single())
+      // the database may not have been given the pinned_in or the pass column yet: ask with both, then with just pinned_in, then with neither, and carry on with whatever it has
+      let data, error, used
+      for (const asked of [columns + ', pinned_in, pass', columns + ', pinned_in', columns]) {
+        used = asked
+        ;({ data, error } = await supabase.from('posts').select(asked).eq('id', id).single())
+        if (!error || !/pinned_in|\bpass\b/i.test(String(error.message || ''))) break
       }
+      const hasPinColumn = /pinned_in/.test(used)
 
       if (error) {
         setError(error.message)
@@ -52,8 +58,23 @@ export default function EditPost({ session }) {
         return
       }
 
+      // A post that belongs to a pass keeps its words in a protected table: fetch them, because the post itself has none
+      const lockedPass = hasPassColumn(data) ? cleanPass(data.pass) : ''
+      let words = data.content
+      if (lockedPass) {
+        try {
+          words = (await loadLockedBody(id)) || ''
+        } catch (e) {
+          setError('We could not load the words of this post just now. Please try again in a moment.')
+          setLoading(false)
+          return
+        }
+      }
+      setCanPass(hasPassColumn(data))
+      setPass(lockedPass)
+      setWasLocked(Boolean(lockedPass))
       setTitle(data.title)
-      setContent(data.content)
+      setContent(words)
       setImageUrl(data.image_url)
       setTags((data.tags || []).join(', '))
       setChannel(data.channel || '')
@@ -132,6 +153,18 @@ export default function EditPost({ session }) {
         channel: channel || null,
       }
 
+      // A post for a pass: its words go into the protected table FIRST (so they are safe), and the post itself is left with none. A post made free again gets its words back.
+      const wantPass = canPass ? cleanPass(pass) : ''
+      if (canPass) {
+        if (wantPass) {
+          await saveLockedBody(id, content)
+          changes.content = ''
+          changes.pass = wantPass
+        } else {
+          changes.pass = null
+        }
+      }
+
       if (canPin) {
         const pinHere = pinnable && pinned
         if (pinHere) {
@@ -148,6 +181,8 @@ export default function EditPost({ session }) {
         .eq('id', id)
 
       if (updateError) throw updateError
+
+      if (canPass && !wantPass && wasLocked) await removeLockedBody(id)
 
       navigate(`/post/${id}`)
     } catch (err) {
@@ -188,6 +223,20 @@ export default function EditPost({ session }) {
             )}
           </Field>
         </div>
+        {canPass && (
+          <Field id="ep-pass" label="Pass" help="Free for everyone is an ordinary post. Choose a pass to keep the words of this post for people who hold it (the first three posts in each pass stay free to read). Changing it moves the words in or out of the protected store for you.">
+            {(p) => (
+              <select {...p} value={pass} onChange={(e) => setPass(e.target.value)}>
+                <option value="">Free for everyone</option>
+                {PASS_CHOICES.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+              </select>
+            )}
+          </Field>
+        )}
         {pinnable && (
           <fieldset className="pin-box">
             <legend>Pin to the top</legend>

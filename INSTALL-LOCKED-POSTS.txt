@@ -1,0 +1,58 @@
+Step 6, locked posts: starscapes-locked-posts-19oct.zip   (and ONE SQL file to run in Supabase)
+
+WHAT THIS DOES
+A post can now belong to a pass. When it does, its WORDS are kept in a separate protected table (post_bodies), and the DATABASE decides who may read them (so it cannot be got round from the website):
+   * YOU (the owner) can always read everything;
+   * anyone who HOLDS that post's pass can read it;
+   * anyone at all can read the FIRST THREE posts of each pass (the three OLDEST published posts with that pass);
+   * everyone else gets nothing back, and the post's page shows a gate instead: "This is part of the Blueprints pass. The first three posts in every pass are free to read. This isn't one of them,
+     so it opens with the Blueprints pass." with links to log in and choose passes (or, while memberships are closed, "Passes aren't open yet").
+The title, picture, date and room of a locked post stay public (that is what makes people want the pass). Only the words are protected.
+
+NOTHING CHANGES UNTIL YOU CHOOSE A PASS ON A POST. Every post stays public as it is.
+
+HOW YOU USE IT
+ * New post and Edit post each have a new choice called "Pass". "Free for everyone" is an ordinary post. Choose a pass to keep the words of that post for people who hold it.
+ * Choosing a pass on an existing post and saving moves its words into the protected store FIRST (so they can never be lost), then leaves the post itself without words.
+ * Changing a post back to "Free for everyone" puts the words back into the post and clears the protected copy.
+ * Until the SQL has been run, the Pass choice does not show at all, and everything works as before. So installing the code first, then the SQL, is safe.
+
+THREE THINGS I DECIDED FOR YOU (tell me if you want any different)
+ 1. A membership whose payment has FAILED (Stripe is still retrying) keeps its passes open. They close if the membership becomes unpaid or ends. A membership you have cancelled keeps its passes until the end of what was paid for.
+ 2. "The first three" means the three OLDEST published posts of that pass (so Blueprints 1, 2 and 3 stay free if they are your oldest Blueprints). Posts are counted per pass.
+ 3. The gate (the box that replaces the words) is not in your Figma designs: it is my own design. Please look at it and tell me what you would change.
+
+NOT HERE YET: lists of posts do not yet show which pass a post belongs to (only the post's own page does); the Book Club and Come Write With Me pages are not built, so those two passes have no content to lock yet;
+the Author's Notebook, Early drafts and Blueprints posts only lock once you set their pass.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-locked-posts-19oct.zip
+    (this also replaces one older test file with an updated version)
+ 3. python3 tools/add-locked-posts.py         (it checks the five files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 212 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Locked posts: a post can belong to a pass"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+THE ONE SQL STEP (in Supabase: SQL editor, clear it, PASTE THE SQL ITSELF, not the file name, make sure nothing is highlighted, press Run; it says "Success. No rows returned."; safe to run twice)
+   Easiest from the project folder, after the unzip:   pbcopy < sql/locked-posts.sql     then paste (Cmd+V) into Supabase.
+   To check it (it should list 4 policies):
+      select policyname, cmd from pg_policies where tablename = 'post_bodies' order by policyname;
+
+HOW TO TRY IT
+ Because YOU are the owner, you can always read everything, so you cannot see the gate while signed in as yourself. To see it:
+ 1. Make FOUR small test posts with the pass "Book Club" (New post, Pass: Book Club). The first three are free to read; the FOURTH is locked.
+ 2. Open the fourth one in a PRIVATE window (not signed in): you should see the gate, and none of its words. Open the first one the same way: you should see its words.
+ 3. As yourself, all four show their words.
+ 4. In Supabase's Table Editor, look at the posts table: a post with a pass has an EMPTY content, and its words are in post_bodies.
+ 5. To see a pass holder get in, you would need a second test account that has bought a Book Club pass in test mode (optional; tell me if you want to do that).
+ 6. Delete the test posts when you are done (deleting a post removes its protected words too).
+
+TO LOCK AN EXISTING POST (for example your Blueprints posts): Edit post, Pass: Blueprints, Save. Remember the three oldest Blueprints posts stay free to read.
+
+IF YOU WANT IT ALL BACK: first put any locked posts back to "Free for everyone" with Edit post; then the undo lines at the top of sql/locked-posts.sql; then git revert HEAD and git push.
