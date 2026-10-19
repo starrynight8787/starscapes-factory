@@ -1,0 +1,56 @@
+Membership, step 5: starscapes-membership-account-19oct.zip
+(My passes, Change my passes, cancelling and starting again, and the Subscribe button)
+
+WHAT THIS ADDS
+  * MY PASSES, at /membership/passes. For someone holding passes it shows how many, what they pay (with the launch offer and its end date, or a promo code's discount by name), when the next payment is,
+    the card ending, and two lists: "Open now" and "Not open". Buttons: "Change my passes", and "Manage payment or cancel", which opens STRIPE'S OWN PAGE (change card, receipts, cancel).
+    It also has the other views in your design: "My membership" for a free member ("Want to open more of the story?"), and the Cancelled view ("Your passes are cancelled. They stay open until 16 November 2026,
+    and you will not be charged again.") with "Start again", which takes the cancellation back.
+    TWO VIEWS ARE MINE, NOT DRAWN: "Ended" (passes that have run out, with a way to choose again) and "Payment needed" (a payment failed; it opens Stripe so they can fix their card).
+  * CHANGE MY PASSES, at /membership/change: the passes they hold are ticked; tick or untick; it shows "From £7 a month to £10 a month" and says what is being added or removed; Save, or Cancel.
+  * THE SUBSCRIBE BUTTON in the menu goes to the passes page once memberships are open (until then it still goes to ordinary sign-up, as now).
+  * One quiet safety change: every message to Stripe now asks for one fixed version of Stripe's interface, so what Stripe sends back cannot change shape underneath us.
+
+A DECISION FOR YOU: HOW A CHANGE IS CHARGED (I picked the simplest, and your design said something different)
+  Your design said "Stripe works out any small adjustment for today, and shows it to you before you pay". Showing that adjustment first needs something I cannot test from here, so I built this instead, and
+  I changed the words in your design to match:
+     "The change starts today. Your new price applies from your next payment. Nothing is charged today, and nothing is refunded for a pass you take away."
+  So adding a pass opens it straight away and costs more from the NEXT payment; removing one closes it straight away and costs less from the next payment. It is easy for people to understand, and it never
+  surprises a card. The cost to you: someone could add a pass, use it, and remove it before the next payment without paying for it. If you would rather charge the difference today, tell me and I will change it.
+  ALSO ADDED TO YOUR DESIGN: when someone ADDS a pass it opens straight away, so (as at checkout) they must tick "Open my passes now. I understand that once they open, I lose my 14-day right to cancel and get a refund."
+  A tick box now sits above "Save my passes" on both Change my passes screens. Removing a pass needs no tick.
+
+NOT HERE YET: no locked posts (step 6), no emails (step 8), and still no real money (a live Stripe key is refused).
+
+STEPS FOR YOU, IN THIS ORDER
+ 1. INSTALL the code (below) and push it. Wait for Vercel to say Ready.
+ 2. SUPABASE: in the SQL editor, clear it, paste this ONE line, make sure nothing is highlighted, press Run ("Success. No rows returned."):
+        alter table public.memberships add column if not exists offer_note text;
+ 3. STRIPE, in TEST MODE: switch on the page where customers manage their own card and cancel. In Stripe, search for "customer portal" (it is under Settings, then Billing). Turn ON: customers can update their
+    payment method; customers can see their invoice history; customers can cancel subscriptions, set to cancel AT THE END OF THE BILLING PERIOD. Leave OFF: anything about switching plans or changing quantity
+    (this site does that itself). Save. (Without this, "Manage payment or cancel" shows a kind message saying it is not switched on yet.)
+    You do not need to change the webhook: it already hears about cancellations and changes.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-membership-account-19oct.zip
+ 3. python3 tools/add-membership-account.py    (it checks the nine existing files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2      (all 199 checks should pass)
+ 5. npm run build                              (must finish without errors)
+ 6. git add .
+    git status                                 (no files ending .before- should be listed)
+    git commit -m "Membership: My passes, Change my passes, cancelling, and the Subscribe button"
+    git push
+ 7. Wait for Vercel to say Ready, then do steps 2 and 3 above.
+
+HOW TO TRY IT (signed in as you, after your test purchase)
+ 1. Go to starscapesfactory.com/membership/passes. It should show your passes, the price (with the launch offer and its end date), the next payment, and "Card ending 4242".
+ 2. CHANGE MY PASSES: add a pass, tick the box, Save. You should land back on My passes with "Your passes are changed". Check in Supabase (memberships) that passes has changed, and in Stripe (test mode)
+    that the subscription's price changed and NO new charge was made. Then remove a pass the same way (no tick needed).
+ 3. MANAGE PAYMENT OR CANCEL: it should open Stripe's page. Cancel there, and come back: My passes should now say "Your passes are cancelled. They stay open until ...". Press "Start again": it should go back to normal.
+ 4. ENDED: in Stripe (test mode), open the subscription and choose to cancel it immediately. After a moment My passes should say "Your passes ended on ...", with a way to choose passes again.
+ 5. A FREE MEMBER: sign in as someone who has not bought anything: /membership/passes should say "My membership" and "Free member".
+ Tell me what you see, especially if any page says something I did not describe.
+
+IF SOMETHING GOES WRONG: Vercel, Logs, shows what the server said; and in Stripe (test mode) the webhook's "Attempts" shows what the site answered. Send me the words.
+IF YOU WANT IT ALL BACK NOW: git revert HEAD, then git push.

@@ -25,6 +25,7 @@ create table if not exists public.memberships (
   offer_ends_at timestamptz,
   consent_at timestamptz,
   consent_text text,
+  offer_note text,
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
@@ -32,6 +33,8 @@ create table if not exists public.memberships (
 -- the record of what the customer agreed to at checkout (the tick box wording, and when). Added separately too, so running this file again on a table made earlier adds them.
 alter table public.memberships add column if not exists consent_at timestamptz;
 alter table public.memberships add column if not exists consent_text text;
+-- what a promo code gave this member ("20% off for 3 months"), so My passes can say so. Empty for the launch offer, which has its own date (offer_ends_at).
+alter table public.memberships add column if not exists offer_note text;
 
 alter table public.memberships enable row level security;
 

@@ -18,6 +18,9 @@ describe('the memberships table', () => {
     expect(code).toMatch(/consent_at timestamptz,\s*consent_text text,/)
     expect(code).toMatch(/alter table public\.memberships add column if not exists consent_at timestamptz;/); expect(code).toMatch(/alter table public\.memberships add column if not exists consent_text text;/)
   })
+  it('keeps what a promo code gave a member (so My passes can name the discount), and adds that column to a table made earlier too', () => {
+    expect(code).toMatch(/offer_note text,/); expect(code).toMatch(/alter table public\.memberships add column if not exists offer_note text;/)
+  })
   it('only allows the payment states Stripe uses', () => {
     expect(code).toMatch(/check \(status in \('incomplete', 'active', 'trialing', 'past_due', 'unpaid', 'canceled'\)\)/)
   })

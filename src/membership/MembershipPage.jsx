@@ -41,7 +41,7 @@ export default function MembershipPage({ owner = false, session = null }) {
   return <Chooser draft={!open} signedIn={Boolean(session)} />
 }
 
-function NotOpen() {
+export function NotOpen() {
   return (
     <main className="mb mb--closed">
       <div className="mb__body mb__body--narrow">

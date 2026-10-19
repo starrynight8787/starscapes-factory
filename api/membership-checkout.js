@@ -18,7 +18,7 @@ import { requireUser } from '../lib/userGuard.js'
 import { serviceFetch } from '../lib/serviceKey.js'
 import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
-import { STRIPE, stripeMode, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
+import { STRIPE, stripeMode, stripeHeaders, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
 
 const SITE = 'https://starscapesfactory.com'
 const MAX_BODY = 4000
@@ -140,10 +140,12 @@ export default async function handler(req, res) {
 
   try {
     let promotionCodeId = null
+    let offerNote = ''
     if (parsed.code) {
       const found = await findPromotionCode(parsed.code, k.key)
       if (!found) return say(res, 400, 'That code is not valid, or it has ended.')
       promotionCodeId = found.id
+      offerNote = found.summary // kept on the subscription, so My passes can say what discount someone has
     }
     const launch = Boolean(LAUNCH_OFFER.active) && !promotionCodeId
     if (launch) await ensureLaunchCoupon(parsed.interval, k.key)
@@ -154,13 +156,14 @@ export default async function handler(req, res) {
       interval: parsed.interval,
       promotionCodeId,
       launch,
+      offerNote,
       consentAt: new Date().toISOString(),
       returnTo,
       customerId: existing && existing.stripe_customer_id ? existing.stripe_customer_id : null,
     })
     const response = await fetch(`${STRIPE}/v1/checkout/sessions`, {
       method: 'POST',
-      headers: { Authorization: `Bearer ${k.key}`, 'Content-Type': 'application/x-www-form-urlencoded' },
+      headers: stripeHeaders(k.key, { 'Content-Type': 'application/x-www-form-urlencoded' }),
       body: form.toString(),
       signal: AbortSignal.timeout(15000),
     })

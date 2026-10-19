@@ -419,3 +419,45 @@
   outline: 3px solid var(--sf-blue, #1f6fa8);
   outline-offset: 2px;
 }
+
+/* My passes (Figma: 13 Membership, my passes), and the free member and cancelled views */
+.mb__sum {
+  display: grid;
+  gap: 8px;
+  justify-items: start;
+  margin: 0 0 24px;
+  padding: 20px;
+  border: 1.5px solid #9fb4e8;
+  border-radius: 14px;
+  background: var(--sf-star, #dce6ff);
+}
+.mb__sum p {
+  margin: 0;
+}
+.mb__sum--plain {
+  background: #fff;
+}
+.mb__wbtns {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 8px;
+}
+.mb__wbtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.mb__plist {
+  display: grid;
+  gap: 12px;
+  margin: 0 0 28px;
+  padding: 0;
+  list-style: none;
+}
+.mb__pass--static {
+  cursor: default;
+}
+.mb__pass--static.is-on .mb__box {
+  background: var(--sf-blue, #1f6fa8);
+  border-color: var(--sf-blue, #1f6fa8); /* an open pass has its box filled in, as on the other pages (there is no real checkbox here to do it) */
+}

@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
 import { pageIsReady } from '../data/staticPages'
 import { roomPath } from '../data/roomImages'
+import { MEMBERSHIP } from '../data/membership'
 import Logo from './Logo'
 import RoomIcon from './RoomIcon'
 import '../styles/site.css'
@@ -150,7 +151,7 @@ export default function Navbar({ session }) {
                 <Link to="/login" className="sf-link">
                   Log in
                 </Link>
-                <Link to="/signup" className="sf-cta">
+                <Link to={MEMBERSHIP.open ? '/membership' : '/signup'} className="sf-cta">
                   Subscribe
                 </Link>
               </>
@@ -211,7 +212,7 @@ export default function Navbar({ session }) {
                 <Link to="/login" className="sf-btn" onClick={closeMenu}>
                   Log in
                 </Link>
-                <Link to="/signup" className="sf-btn sf-btn--solid" onClick={closeMenu}>
+                <Link to={MEMBERSHIP.open ? '/membership' : '/signup'} className="sf-btn sf-btn--solid" onClick={closeMenu}>
                   Subscribe
                 </Link>
               </>

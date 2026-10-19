@@ -198,6 +198,12 @@ const CHECKS = [
   ['Membership: the welcome page', 'src/membership/WelcomePage.jsx', /Welcome. Your passes are open/, 'the membership payment update (the add-membership-payment script)'],
   ['Membership: the page talks to the server', 'src/membership/membershipApi.js', /startMembershipCheckout/, 'the membership payment update (the add-membership-payment script)'],
   ['Membership: Come Write With Me is a pass', 'src/membership/passes.js', /come-write-with-me/, 'the membership payment update (the add-membership-payment script)'],
+  ['Membership: the account function', 'api/membership-account.js', /action === 'change'/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: the account helpers', 'src/membership/account.js', /accountView/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: the My passes page', 'src/membership/MyPassesPage.jsx', /Manage payment or cancel/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: the Change my passes page', 'src/membership/ChangePassesPage.jsx', /CHANGE_TERMS/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: the Stripe version is pinned', 'lib/membershipStripe.js', /STRIPE_VERSION/, 'the account pages update (the add-membership-account script)'],
+  ['Membership: the Subscribe button goes to the passes page', 'src/components/Navbar.jsx', /MEMBERSHIP\.open/, 'the account pages update (the add-membership-account script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

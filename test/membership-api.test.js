@@ -9,7 +9,7 @@ vi.mock('../src/supabaseClient', () => ({
   },
 }))
 
-import { startMembershipCheckout, checkPromoCode, fetchMyMembership } from '../src/membership/membershipApi'
+import { startMembershipCheckout, checkPromoCode, fetchMyMembership, fetchAccount, openBillingPortal, resumePasses, changePasses } from '../src/membership/membershipApi'
 
 const reply = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
 beforeEach(() => { db.token = 'tok'; db.row = null; db.error = null })
@@ -71,11 +71,38 @@ describe('reading your own membership', () => {
   it('asks only for the columns it needs, from the memberships table', async () => {
     db.row = { status: 'active', passes: ['blueprints'] }
     await expect(fetchMyMembership()).resolves.toEqual({ status: 'active', passes: ['blueprints'] })
-    expect(db.selected.table).toBe('memberships'); expect(db.selected.cols).toBe('status, passes, billing_interval, current_period_end, cancel_at_period_end, offer_ends_at')
+    expect(db.selected.table).toBe('memberships'); expect(db.selected.cols).toBe('status, passes, billing_interval, current_period_end, cancel_at_period_end, offer_ends_at, offer_note')
     expect(db.selected.cols).not.toMatch(/stripe|user_id|consent/)
   })
   it('gives null for someone with no membership, and an error with a safe message if the database says no', async () => {
     db.row = null; await expect(fetchMyMembership()).resolves.toBeNull()
     db.error = { message: 'permission denied' }; await expect(fetchMyMembership()).rejects.toThrow('permission denied')
+  })
+})
+
+describe('the account calls', () => {
+  it('reads the card, and never throws if it cannot', async () => {
+    stub(async () => reply({ ok: true, card: { brand: 'visa', last4: '4242' } })); await expect(fetchAccount()).resolves.toEqual({ card: { brand: 'visa', last4: '4242' } })
+    stub(async () => reply({ ok: true, card: { brand: 'visa', last4: '42' } })); await expect(fetchAccount()).resolves.toEqual({ card: null })
+    stub(async () => { throw new Error('offline') }); await expect(fetchAccount()).resolves.toEqual({ card: null })
+    stub(async () => ({ ok: false, status: 500, json: async () => { throw new Error('x') } })); await expect(fetchAccount()).resolves.toEqual({ card: null })
+  })
+  it('opens only a Stripe billing address, and asks with the person\u2019s sign-in', async () => {
+    const f = stub(async () => reply({ ok: true, url: 'https://billing.stripe.com/p/session/x' }))
+    await expect(openBillingPortal()).resolves.toBe('https://billing.stripe.com/p/session/x')
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ action: 'portal' }); expect(f.mock.calls[0][1].headers.Authorization).toBe('Bearer tok')
+    for (const url of ['https://evil.example/', 'http://billing.stripe.com/x', 'https://billing.stripe.com.evil.example/', undefined]) { stub(async () => reply({ ok: true, url })); await expect(openBillingPortal(), String(url)).rejects.toThrow(/could not open that page/) }
+  })
+  it('passes on the server\u2019s kind message when it says no', async () => {
+    stub(async () => reply({ ok: false, message: "The page for changing your card isn't switched on yet." }, 503)); await expect(openBillingPortal()).rejects.toThrow("isn't switched on yet")
+    stub(async () => { throw new Error('offline') }); await expect(resumePasses()).rejects.toThrow(/could not reach the site/)
+  })
+  it('takes back a cancellation', async () => {
+    const f = stub(async () => reply({ ok: true })); await expect(resumePasses()).resolves.toEqual({ ok: true }); expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ action: 'resume' })
+  })
+  it('changes passes by sending ONLY the passes and the agreement, which is only ever true when exactly true', async () => {
+    const f = stub(async () => reply({ ok: true })); await changePasses({ passes: ['blueprints'], consent: true, price: 1, amount: 1 })
+    expect(JSON.parse(f.mock.calls[0][1].body)).toEqual({ action: 'change', passes: ['blueprints'], consent: true })
+    await changePasses({ passes: ['blueprints'], consent: 'yes' }); expect(JSON.parse(f.mock.calls[1][1].body).consent).toBe(false)
   })
 })
