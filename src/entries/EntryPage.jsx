@@ -8,6 +8,7 @@ import '../rooms/roompages.css'
 import '../styles/pages.css'
 import '../styles/forms.css'
 import './entries.css'
+import PassChip from '../membership/PassChip'
 
 function Picture({ post, className }) {
   const src = safeImage(post.image_url)
@@ -70,6 +71,7 @@ export default function EntryPage({ title, blurb, backTo, backLabel, load, belon
                     <Link className="en__itemlink" to={`/post/${p.id}`} state={{ from }}>
                       <Picture post={p} className="en__itemimg" />
                       <span className="en__itemtitle">{p.title}</span>
+                      <PassChip postId={p.id} />
                       {formatDate(p.created_at) && <span className="en__itemdate">{formatDate(p.created_at)}</span>}
                     </Link>
                   </li>

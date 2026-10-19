@@ -11,6 +11,7 @@ import { featuredRoomSlug, formatEventWhen, icsHref, isYouTube, makeIcs } from '
 import '../styles/pages.css'
 import '../styles/forms.css'
 import './homeSections.css'
+import PassChip from '../membership/PassChip'
 
 // The boxes under the floor plan on the home page, from the Figma design "Row: Home v2": Next event and Membership side by side, the Featured room,
 // and the Latest post. Each takes what it shows as a plain prop, so it can be tested without a database.
@@ -98,6 +99,7 @@ export function LatestPostBox({ post }) {
         <p className="hs__label">Latest post</p>
         <h2 id="hs-post-title" className="hs__title hs__title--school">{post.title}</h2>
         <p className="hs__meta">{[room ? room.name : 'Blog', date].filter(Boolean).join(' · ')}</p>
+        <PassChip postId={post.id} />
         <div className="hs__buttons">
           <Link className="pg-btn fm-btn--primary" to={`/post/${post.id}`}>Read the post</Link>
           <Link className="pg-btn" to="/blog">See all posts</Link>

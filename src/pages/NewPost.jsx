@@ -7,6 +7,7 @@ import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
 import { PASS_CHOICES, canUsePasses, cleanPass, saveLockedBody } from '../membership/lockedPosts'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import { resetPassIndex } from '../membership/passIndex'
 
 const IDS = { title: 'np-title', content: 'np-content', file: 'np-file' }
 
@@ -96,6 +97,7 @@ export default function NewPost({ session }) {
         if (insertError) throw insertError
       }
 
+      resetPassIndex()
       navigate('/')
     } catch (err) {
       setError(err.message)

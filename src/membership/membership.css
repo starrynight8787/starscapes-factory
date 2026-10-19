@@ -484,3 +484,11 @@
   line-height: 1.25;
   color: var(--sf-navy-700, #14306a);
 }
+
+/* the label on a post card that belongs to a pass */
+.mb__passchip {
+  display: inline-block;
+  align-self: flex-start;
+  margin-top: 6px;
+  font-size: 0.875rem;
+}

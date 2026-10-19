@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatDate, safeImage } from './draftingData'
+import PassChip from '../membership/PassChip'
 
 // One post on an area page: its picture (if it has one) across the top, then its title and date.
 // "from" is the page the reader came from, remembered so the post's Back link can return to it.
@@ -20,6 +21,7 @@ export default function EntryCard({ post, from }) {
         />
       )}
       <span className="dd-entry__title">{post.title}</span>
+      <PassChip postId={post.id} />
       {date && <span className="dd-entry__date">{date}</span>}
     </Link>
   )

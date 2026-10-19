@@ -1,5 +1,6 @@
 import { Link, useLocation } from 'react-router-dom'
 import { SECTIONS, NOTE_COLOURS, kindOf, noteTilt, formatDate, isPinned } from './factoryData'
+import PassChip from '../membership/PassChip'
 
 // One post, as a post-it note stuck to the blueprint.
 export default function PostNote({ post, index = 0, isNew = false }) {
@@ -15,6 +16,7 @@ export default function PostNote({ post, index = 0, isNew = false }) {
         {pinned && <span className="ff-vh">Pinned post: </span>}
         {post.title}
       </span>
+      <PassChip postId={post.id} />
       {date && <span className="ff-note__date">{date}</span>}
     </Link>
   )

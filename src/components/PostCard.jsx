@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import '../styles/articles.css'
+import PassChip from '../membership/PassChip'
 
 export default function PostCard({ post, variant = 'feed' }) {
   const excerpt =
@@ -16,6 +17,7 @@ export default function PostCard({ post, variant = 'feed' }) {
           />
         )}
         <h3 className="sf-article-title" style={{ margin: '10px 0 4px', fontSize: 18 }}>{post.title}</h3>
+        <PassChip postId={post.id} />
         <p className="muted" style={{ fontSize: 14, margin: 0 }}>
           {excerpt}
         </p>
@@ -63,6 +65,7 @@ export default function PostCard({ post, variant = 'feed' }) {
           />
         )}
         <h2 className="sf-article-title" style={{ margin: '0 0 8px', fontSize: 28 }}>{post.title}</h2>
+        <PassChip postId={post.id} />
         <p className="muted" style={{ margin: '0 0 8px' }}>
           {new Date(post.created_at).toLocaleDateString()}
         </p>
@@ -92,6 +95,7 @@ export default function PostCard({ post, variant = 'feed' }) {
       )}
       <div>
         <h3 className="sf-article-title" style={{ margin: '0 0 4px', fontSize: 20 }}>{post.title}</h3>
+        <PassChip postId={post.id} />
         <p className="muted" style={{ fontSize: 14, margin: '0 0 6px' }}>
           {new Date(post.created_at).toLocaleDateString()}
         </p>

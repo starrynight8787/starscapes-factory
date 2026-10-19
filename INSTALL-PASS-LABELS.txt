@@ -1,0 +1,29 @@
+The pass labels: starscapes-pass-labels-19oct.zip   (NO Supabase step, nothing to do in Stripe or Vercel)
+
+WHAT IT DOES
+Every post card now carries a small label when the post belongs to a pass:
+   * "Blueprints pass"                    for a post that needs the pass
+   * "Blueprints pass: free to read"      for one of the FIRST THREE of that pass (the three oldest published posts: exactly the ones the database lets anyone read)
+An ordinary post gets no label. So visitors can SEE which posts they can read free and which need a pass, before they click.
+The label appears on: the Factory Floor's notes, the Drafting Desk's entry cards, the entry pages' grids (Writing in Transit, Archive Entries), a room's entries, the Home page's latest post and post list, and the three
+styles of the blog's card.
+It costs ONE small request for the whole visit (the site asks once which posts belong to a pass, and remembers). It only uses things that are public anyway (a post's pass, its date, whether it is published).
+If that request ever fails, there are simply no labels; nothing breaks. Saving a post (New post or Edit post) makes the site ask again, so the labels are right straight away.
+The Leadership Blog's lists are not included (those are free posts).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-pass-labels-19oct.zip
+ 3. python3 tools/add-pass-labels.py          (it checks the eleven files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 217 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "A pass label on post cards, and free to read on the first three"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+HOW TO SEE IT (after it is Ready)
+ If you made the four Book Club test posts: open the Drafting Desk or Knowledge Nook list that shows them. The first three should say "Book Club pass: free to read" and the fourth just "Book Club pass".
+ (If you have not made them: New post, Pass: Book Club, four times. The labels appear on whichever lists show those posts.)

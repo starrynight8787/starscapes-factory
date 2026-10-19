@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { formatDate, safeImage } from './postRules'
+import PassChip from '../membership/PassChip'
 
 // One post on an area page. In a gallery it shows its picture across the top; in a list it is a compact rectangle with no picture.
 // "from" is the page the reader came from, remembered so the post's Back link can return to it.
@@ -20,6 +21,7 @@ export default function RoomEntry({ post, from, picture }) {
         />
       )}
       <span className="rp-entry__title">{post.title}</span>
+      <PassChip postId={post.id} />
       {date && <span className="rp-entry__date">{date}</span>}
     </Link>
   )

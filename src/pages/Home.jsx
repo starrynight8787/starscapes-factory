@@ -5,6 +5,7 @@ import { formatDate } from '../rooms/postRules'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import '../styles/articles.css'
+import PassChip from '../membership/PassChip'
 
 // Every published post from every room, newest first, at /blog. The tags found on the posts become the filter above the list.
 // The rows are the same cards as on the room pages (roompages.css), with the whole row a link.
@@ -75,6 +76,7 @@ export default function Home() {
                     {post.title}
                   </Link>
                 </h2>
+                <PassChip postId={post.id} />
                 {date && <span className="rp-entry__date">{date}</span>}
               </article>
             </li>

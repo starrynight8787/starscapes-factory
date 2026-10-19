@@ -9,6 +9,7 @@ import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
 import { PASS_CHOICES, cleanPass, hasPassColumn, loadLockedBody, removeLockedBody, saveLockedBody } from '../membership/lockedPosts'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import { resetPassIndex } from '../membership/passIndex'
 
 const IDS = { title: 'ep-title', content: 'ep-content', file: 'ep-file' }
 
@@ -184,6 +185,7 @@ export default function EditPost({ session }) {
 
       if (canPass && !wantPass && wasLocked) await removeLockedBody(id)
 
+      resetPassIndex()
       navigate(`/post/${id}`)
     } catch (err) {
       setError(err.message)
