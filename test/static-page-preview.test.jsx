@@ -56,6 +56,17 @@ describe('the renderer', () => {
     const { container } = md('Last updated: \\[DATE\\]. And [a gap].')
     expect(container.textContent).toBe('Last updated: [DATE]. And [a gap].')
   })
+  it('makes real tables, with column headings that say which column they head, inside a box that scrolls on a phone', () => {
+    const { container } = md('| What | Why |\n| -- | -- |\n| A **thing** | [Link](/x) |\n| Another | Reason |')
+    expect([...container.querySelectorAll('th')].map((h) => h.textContent)).toEqual(['What', 'Why']); for (const th of container.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
+    expect(container.querySelectorAll('tbody tr')).toHaveLength(2); expect(container.querySelector('tbody strong').textContent).toBe('thing'); expect(container.querySelector('tbody a')).toHaveAttribute('href', '/x')
+    expect(container.querySelector('.md-tablewrap > table')).toBeTruthy()
+  })
+  it('makes quotes from lines that start with >, joining their lines', () => {
+    const { container } = md('Before\n\n> first line\n> second **line**\n\nAfter')
+    expect(container.querySelector('blockquote').textContent).toBe('first line second line'); expect(container.querySelector('blockquote strong')).toBeTruthy()
+    expect([...container.querySelectorAll('p')].map((p) => p.textContent)).toEqual(['Before', 'first line second line', 'After'])
+  })
   it('copes with empty text', () => { expect(renderMarkdown('').nodes).toEqual([]); expect(renderMarkdown(null).nodes).toEqual([]); expect(inline('')).toEqual([]) })
   it('counts the gaps in [square brackets], not counting links', () => {
     expect(countGaps('A [gap], \\[DATE\\] and [two words]. A [link](/x) is not one.')).toBe(3); expect(countGaps('Nothing here')).toBe(0); expect(countGaps(null)).toBe(0)

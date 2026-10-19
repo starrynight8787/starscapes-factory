@@ -21,47 +21,6 @@ export const staticPages = [
 Email is the best way to reach me. If it is about an order, please put your order number in the message, so I can find it quickly.`,
   },
   {
-    slug: 'privacy',
-    ready: false,
-    title: 'Privacy Policy',
-    content: `Last updated: [date]
-
-This Privacy Policy explains how Starscapes Factory collects, uses, and protects your information.
-
-1. Information we collect
-- Account information (email, when you sign up)
-- Information you provide when purchasing products or subscribing
-- Basic usage data (via standard web analytics, if enabled)
-
-2. How we use your information
-[Describe: to provide the service, process payments, send updates you've opted into, etc.]
-
-3. Third-party services
-This site uses Supabase (database/authentication/storage), Stripe (payments, once live), and Vercel (hosting). Each of these providers has its own privacy policy governing how they handle data.
-
-4. Your rights
-You can request access to, correction of, or deletion of your personal data at any time by contacting imagine@starscapesfactory.com.
-
-5. Changes to this policy
-This policy may be updated from time to time.
-
-Contact: imagine@starscapesfactory.com`,
-  },
-  {
-    slug: 'ai-policy',
-    ready: false,
-    title: 'AI Policy',
-    content: `Last updated: [date]
-
-Starscapes Factory is built and maintained with the help of AI tools, including for parts of the website's code and, where noted, editorial assistance.
-
-[Add your own stance here: e.g. which content is AI-assisted vs fully human-written, how you use AI in your creative process, and what visitors should expect.]
-
-This policy will be updated as tools and practices evolve.
-
-Contact: imagine@starscapesfactory.com`,
-  },
-  {
     slug: 'delivery',
     ready: false,
     title: 'Delivery and returns',

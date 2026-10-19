@@ -1,0 +1,51 @@
+The other three legal pages: starscapes-legal-pages-19oct.zip   (no SQL)
+
+WHAT IT ADDS (your drafts from Linear, in your words, in the legal page layout; none of them is published)
+  * PRIVACY POLICY (12 sections, with the table of what you collect and why), RETURNS AND REFUNDS (7 sections, with the cancellation form), and the AI POLICY (6 sections, with
+    the table of where AI helps). With the Terms already in, every link in the footer's Legal column now leads to a real page, and Returns appears in your footer.
+  * Each page shows its INTRODUCTION under the date. (I had left the Terms introduction out last time: "These terms apply to everything you buy on this website...". It is back.)
+  * The text pages can now show TABLES (with proper column headings, scrolling inside their own box on a phone) and QUOTES.
+  * The old placeholder Privacy and AI policy text pages are gone (these replace them).
+  * Visitors still see "not ready yet" for all four. Only you see them, under the yellow draft banner, with a count of the gaps left.
+
+THE GAPS LEFT IN [SQUARE BRACKETS] (the banner counts them)
+  * [date] at the top of every page: put the real date in when you publish.
+  * [2 years] in the Privacy policy (how long emails and messages are kept): your decision (SFW-185).
+  * [RETURN ADDRESS] in Returns section 1. Decided 17 October: your registered office (71-75 Shelton Street...), a forwarding address. It goes in once the large-print courier
+    figures are in (SFW-185), as agreed, so I have left it.
+
+THINGS I MUST FLAG (I have NOT changed your wording; they are noted at the top of src/data/legalPages.js)
+  1. TRACKING AND DELIVERY TIMES. Terms section 5 and Returns section 4 say "Every order is sent with tracked delivery", and Terms section 5 gives 6 to 10 working days AFTER posting.
+     The print service's help article says postal orders do not include detailed tracking, and their reply says 6 to 10 working days covers production AND delivery together.
+     Wait for their answer to your follow-up email (SFW-17), then correct those two sections and the shop's delivery estimate.
+  2. THE PRIVACY POLICY IS OLDER THAN THE SITE. It says the site uses only sign-in and cart storage, and "We don't send marketing emails". Since it was written the site has gained:
+     the FREE EBOOK SIGN-UP (an email address and when the person agreed), the SUGGEST AND VOTE boxes (a signed-in person's suggestions and votes are stored; who voted is never
+     shown) and the YOUTUBE PLAYER (nothing loads from YouTube until a visitor presses play; YouTube may then set its own cookies). The policy needs a line for each, and
+     the free ebook door must stay closed until it has them. A newsletter, when you add one, would need its own section.
+  3. RETURNS SECTION 3 says the print studio takes photos before an order is packed. Please check that with the print service.
+  4. TWO SMALL CHANGES I MADE TO THE WORDING, for the page to work: the cancellation form's blanks are written in (round brackets) instead of [square brackets], so they are not
+     counted as gaps (they are blanks for the customer to fill in); and the link to the Information Commissioner's Office is https://ico.org.uk (the draft had http).
+
+NEEDS: the footer and pages update (the script stops and says so if it is not there). It is already on your live site.
+
+TO PUBLISH A PAGE LATER: in src/data/legalPages.js put the real date in  updated  and change  ready: false  to  ready: true  for that page.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-legal-pages-19oct.zip
+   (this also replaces one test file with an updated version)
+3. python3 tools/add-legal-pages.py           (it checks all five files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 174 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Privacy policy, Returns and refunds and AI policy pages"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, signed in as the owner, and SEND ME A SCREENSHOT of /page/privacy (the table) and /page/returns (the numbered steps and the quoted form):
+   1. The footer's Legal column lists Terms, Privacy, Returns, AI policy and Accessibility, each "(draft)".
+   2. Each page: the yellow banner, the date line, the introduction, the contents list down the side, and the numbered sections.
+   3. Signed out (or a private window): each of the four says only "not ready yet".
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom'
+import './markdown.css'
 
-// A small, safe way to show the legal pages' text: headings (## and ###), paragraphs, bullet and numbered lists, **bold**, and [links](address). Nothing else
+// A small, safe way to show the legal pages' text: headings (## and ###), paragraphs, bullet and numbered lists, quotes (> text), tables (| a | b |), **bold**, and [links](address). Nothing else
 // is understood and no HTML is ever let through. A link is only made for an address on this site (starting /), an https:// address, or a mailto: address;
 // anything else is shown as plain words. A backslash before [ or ] shows the bracket itself (\[DATE\]), and plain [square brackets] stay as they are.
 export const slugify = (text) => String(text).toLowerCase().replace(/&/g, ' and ').replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || 'section'
@@ -43,6 +44,8 @@ export function renderMarkdown(text) {
   const used = new Set()
   let para = []
   let list = null
+  let quote = []
+  let table = []
   const flushPara = () => { if (para.length) { nodes.push(<p key={`p${nodes.length}`}>{inline(para.join(' '), `p${nodes.length}`)}</p>); para = [] } }
   const flushList = () => {
     if (!list) return
@@ -50,12 +53,32 @@ export function renderMarkdown(text) {
     nodes.push(list.ordered ? <ol key={`l${nodes.length}`}>{items}</ol> : <ul key={`l${nodes.length}`}>{items}</ul>)
     list = null
   }
+  const flushQuote = () => { if (quote.length) { nodes.push(<blockquote key={`q${nodes.length}`}><p>{inline(quote.join(' '), `q${nodes.length}`)}</p></blockquote>); quote = [] } }
+  const cells = (row) => row.trim().replace(/^\|/, '').replace(/\|$/, '').split('|').map((c) => c.trim())
+  const flushTable = () => {
+    if (!table.length) return
+    const [head, ...rest] = table
+    const body = rest.filter((r) => !/^\|[\s|:-]+\|?$/.test(r.trim()))
+    nodes.push(
+      <div key={`t${nodes.length}`} className="md-tablewrap">
+        <table>
+          <thead><tr>{cells(head).map((c, k) => <th key={k} scope="col">{inline(c, `th${nodes.length}-${k}`)}</th>)}</tr></thead>
+          <tbody>{body.map((r, i) => <tr key={i}>{cells(r).map((c, k) => <td key={k}>{inline(c, `td${nodes.length}-${i}-${k}`)}</td>)}</tr>)}</tbody>
+        </table>
+      </div>,
+    )
+    table = []
+  }
   for (const raw of lines) {
     const line = raw.trimEnd()
     const heading = /^(#{2,3})\s+(.+)$/.exec(line)
     const bullet = /^[-*]\s+(.+)$/.exec(line)
     const numbered = /^\d+\.\s+(.+)$/.exec(line)
-    if (!line.trim()) { flushPara(); flushList(); continue }
+    if (!line.trim()) { flushPara(); flushList(); flushQuote(); flushTable(); continue }
+    if (line.startsWith('|')) { flushPara(); flushList(); flushQuote(); table.push(line); continue }
+    flushTable()
+    if (/^>\s?/.test(line)) { flushPara(); flushList(); quote.push(line.replace(/^>\s?/, '').trim()); continue }
+    flushQuote()
     if (heading) {
       flushPara(); flushList()
       const level = heading[1].length
@@ -78,7 +101,7 @@ export function renderMarkdown(text) {
     flushList()
     para.push(line.trim())
   }
-  flushPara(); flushList()
+  flushPara(); flushList(); flushQuote(); flushTable()
   return { nodes }
 }
 

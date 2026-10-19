@@ -28,6 +28,7 @@ export default function LegalPage({ page, company }) {
     <main className="lg">
       <h1>{page.title}</h1>
       {page.updated && <p className="lg-updated">Last updated: {page.updated}</p>}
+      {page.intro && page.intro.length > 0 && <div className="lg-intro">{renderMarkdown(page.intro.join('\n\n')).nodes}</div>}
       <div className="lg-body">
         <nav className="lg-toc" aria-label="On this page">
           <p className="lg-toc__title">On this page</p>

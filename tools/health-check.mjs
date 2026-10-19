@@ -173,7 +173,11 @@ const CHECKS = [
   ['Pages: the owner-only preview', 'src/pages/StaticPage.jsx', /DraftBanner/, 'the footer and pages update (the add-footer-pages script)'],
   ['Pages: the text renderer', 'src/pages/simpleMarkdown.jsx', /export function renderMarkdown/, 'the footer and pages update'],
   ['Pages: where each page lives, and whether it is ready', 'src/data/staticPages.js', /export function resolvePage/, 'the footer and pages update (the add-footer-pages script)'],
-  ['Pages: the Terms as a legal page', 'src/data/legalPages.js', /slug: 'terms'/, 'the footer and pages update (the add-footer-pages script)'],
+  ['Pages: the Terms as a legal page', 'src/data/legalPages.js', /"slug": "terms"/, 'the legal pages update (the add-legal-pages script)'],
+  ['Pages: Privacy, Returns and the AI policy', 'src/data/legalPages.js', /"slug": "returns"/, 'the legal pages update (the add-legal-pages script)'],
+  ['Pages: the legal page shows its introduction', 'src/pages/LegalPage.jsx', /lg-intro/, 'the legal pages update (the add-legal-pages script)'],
+  ['Pages: tables and quotes in the text renderer', 'src/pages/simpleMarkdown.jsx', /md-tablewrap/, 'the legal pages update (the add-legal-pages script)'],
+  ['Pages: the table and quote styles', 'src/pages/markdown.css', /md-tablewrap/, 'the legal pages update'],
   ['Pages: the app tells them whether you are the owner', 'src/App.jsx', /<StaticPage owner=/, 'the footer and pages update (the add-footer-pages script)'],
 ]
 
