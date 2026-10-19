@@ -146,6 +146,32 @@
 .en__morebtn--always {
   display: inline-flex !important;
 }
+/* The Author's Notebook box under the pinned entry on Archive Entries */
+.en__notebook {
+  background: var(--sf-star, #dce6ff);
+}
+.en__notebooktitle {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.375rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.en__text {
+  margin: 0;
+  line-height: 1.55;
+}
+.en__caption {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.en__notebook button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.en__notebook .pg-btn {
+  width: 100%;
+}
 @media (max-width: 960px) {
   .en__cols {
     display: flex;

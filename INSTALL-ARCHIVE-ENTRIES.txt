@@ -1,0 +1,40 @@
+Archive Entries on the entry template, with the Author's Notebook box: starscapes-archive-entries-19oct.zip   (no SQL)
+
+A CORRECTION FIRST: I told you the Drafting Desk was not built in the code. That was WRONG: it is built (src/draftingdesk), with Archive Entries and a locked Author's
+Notebook page. I had only looked in the room and door data. This update puts the entry template where it belongs.
+
+WHAT IT CHANGES (from your Figma design "Archive Entry / Author's Notebook")
+  * ARCHIVE ENTRIES (/drafting-desk/archive-entries) is now the entry template instead of a plain list: the latest entry big on the left, the pinned entry on the right,
+    the grid of the rest under the latest entry, and UNDER THE PINNED ENTRY THE AUTHOR'S NOTEBOOK BOX as you drew it: a "Members only" chip, "Behind the scenes",
+    "Early drafts, notes and the thinking behind the stories, straight from my notebook.", a button that says "Coming soon" and cannot be pressed while memberships are
+    not open (once MEMBERSHIP.open is true in src/data/membership.js it becomes a "Find out more" link to the Notebook page), and "Part of Into the Nebula."
+  * The box shows NO Notebook entry titles: there is no way to check who has paid yet, so none is ever listed. (The drawing's three locked titles are not built, on purpose.)
+  * The posts for Archive Entries still come from the Drafting Desk's own posts tagged  archive-entries  (or  archive-entry  ), as always. Notebook posts never appear.
+  * How you choose (the same as Writing in Transit): LATEST is the newest; PINNED is the newest tagged  pinned  , otherwise the OLDEST ("Start from the beginning").
+  * The template itself now works for any room (it is told its title, line, back link, how to fetch the posts and which belong). Writing in Transit looks and behaves
+    exactly as before.
+  * The Author's Notebook PAGE (/drafting-desk/authors-notebook, "Paid members only") is unchanged.
+
+NOT IN THIS UPDATE: the Notebook's own locked and paid states in the new layout (they need memberships), and a banner (the drawing has none).
+
+NEEDS: the entry template update (the script stops and says so if it is not there). It is already on your live site.
+
+INSTALL (from the project folder, in this order; ONLY run git add . at the very end)
+1. cd ~/Website/supabase-blog-starter
+2. unzip -o ~/Downloads/starscapes-archive-entries-19oct.zip
+   (this also replaces the entry template test file with an updated version)
+3. python3 tools/add-archive-entries.py       (it checks all four files first; if anything is unexpected it changes nothing)
+4. node tools/health-check.mjs | tail -2      (all 163 checks should pass)
+5. npm run build                              (must finish without errors)
+6. git add .
+   git status                                 (no files ending .before- should be listed)
+   git commit -m "Archive Entries on the entry template, with the Notebook box"
+   git push
+7. Wait for Vercel to say Ready, then hard-refresh (Cmd+Shift+R).
+
+THEN LOOK, and SEND ME A SCREENSHOT (I cannot see the live page), at /drafting-desk/archive-entries
+   1. The latest entry on the left, the pinned entry on the right with the Notebook box under it, the grid under the latest entry.
+   2. The Notebook button is greyed out and cannot be pressed.
+   3. /explorers-bay/writing-in-transit still looks the way it did.
+
+IF SOMETHING LOOKS WRONG AND YOU WANT IT BACK NOW: git revert HEAD, then git push.

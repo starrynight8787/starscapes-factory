@@ -164,6 +164,10 @@ const CHECKS = [
   ['Story Ledger: the words for Currently watching', 'src/ledger/ledgerData.js', /export const CURRENTLY/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
   ['Story Ledger: the new page', 'src/ledger/StoryLedgerPage.jsx', /sl-subscribe/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
   ['Story Ledger: the new styles', 'src/ledger/ledger.css', /sl__row--wide/, 'the Story Ledger update (the add-story-ledger-v2 script)'],
+  ['Archive Entries: the page', 'src/entries/ArchiveEntriesPage.jsx', /NotebookTeaser/, 'the Archive Entries update'],
+  ['Archive Entries: the Notebook box', 'src/entries/NotebookTeaser.jsx', /en-notebook-title/, 'the Archive Entries update'],
+  ['Archive Entries: the Drafting Desk uses it', 'src/draftingdesk/DraftingDeskRoutes.jsx', /ArchiveEntriesPage/, 'the Archive Entries update (the add-archive-entries script)'],
+  ['Archive Entries: the template works for any room', 'src/entries/EntryPage.jsx', /belongs/, 'the Archive Entries update (the add-archive-entries script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

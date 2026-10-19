@@ -20,6 +20,8 @@ const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
 let n = 0
 const entry = (title, day, tags = [], extra = {}) => ({ id: `e${++n}`, title, created_at: `2026-10-${String(day).padStart(2, '0')}T10:00:00Z`, tags: ['writing-in-transit', ...tags], channel: 'explorers-bay', published: true, image_url: null, ...extra })
 const many = (count) => Array.from({ length: count }, (_, i) => entry(`Entry ${i + 1}`, i + 1)) // Entry 1 is the oldest
+const load = async () => h.posts
+const belongs = (p) => Array.isArray(p.tags) && p.tags.includes('writing-in-transit')
 const page = (ui = <WritingInTransitPage />) => render(<MemoryRouter initialEntries={['/explorers-bay/writing-in-transit']}>{ui}</MemoryRouter>)
 beforeEach(() => { n = 0; Object.assign(h, { posts: [], fail: false }) })
 
@@ -131,12 +133,19 @@ describe('the page', () => {
     await screen.findByRole('heading', { level: 2, name: 'No picture' })
     expect(second.container.querySelector('.en__latest img')).toBeNull()
   })
-  it('puts an extra box under the pinned entry when one is given (for the Notebook later), and nothing when not', async () => {
+  it('puts an extra box under the pinned entry when one is given, and nothing when not', async () => {
     h.posts = many(4); const plain = page()
     await screen.findByRole('heading', { level: 2, name: 'Entry 4' })
     expect(plain.container.querySelector('.en__o4')).toBeNull(); plain.unmount()
-    const extra = page(<EntryPage room="explorers-bay" area="writing-in-transit" aside={<p>An extra box</p>} />)
+    const extra = page(<EntryPage title="T" blurb="B" backTo="/explorers-bay" backLabel="Back" load={load} belongs={belongs} aside={<p>An extra box</p>} />)
     expect(await extra.findByText('An extra box')).toBeInTheDocument(); expect(extra.container.querySelector('.en__right .en__o4')).toBeTruthy()
+  })
+  it('works for any room: it is told its title, line, back link, how to fetch the posts and which belong', async () => {
+    const mine = [{ id: 'm1', title: 'Mine', created_at: '2026-10-04T10:00:00Z', tags: ['x'], image_url: null }, { id: 'm2', title: 'Not mine', created_at: '2026-10-05T10:00:00Z', tags: [], image_url: null }]
+    const own = page(<EntryPage title="Another page" blurb="Another line." backTo="/somewhere" backLabel="Back to Somewhere" load={async () => mine} belongs={(p) => p.tags.includes('x')} />)
+    expect(await own.findByRole('heading', { level: 1, name: 'Another page' })).toBeInTheDocument(); expect(own.getByText('Another line.')).toBeInTheDocument()
+    expect(own.getByRole('link', { name: /Back to Somewhere/ })).toHaveAttribute('href', '/somewhere')
+    expect(await own.findByRole('heading', { level: 2, name: 'Mine' })).toBeInTheDocument(); expect(own.queryByText('Not mine')).toBeNull()
   })
 })
 
@@ -147,10 +156,9 @@ describe('how it is wired in', () => {
     expect(await screen.findByRole('heading', { level: 2, name: 'Entry 3' })).toBeInTheDocument()
     expect(read('src/rooms/RoomRoutes.jsx')).toMatch(/'explorers-bay\/writing-in-transit': WritingInTransitPage/)
   })
-  it('takes its title, line and tag from the room\u2019s own data, not from copies', () => {
-    const src = read('src/entries/EntryPage.jsx')
-    expect(src).toMatch(/ROOMS\[room\]/); expect(src).toMatch(/config\.areas\[area\]/); expect(src).toMatch(/inArea\(page, p\)/)
-    expect(read('src/entries/WritingInTransitPage.jsx')).not.toMatch(/Words written on the move/)
+  it('takes Writing in Transit\u2019s title, line, back link and tag from the room\u2019s own data, not from copies', () => {
+    const src = read('src/entries/WritingInTransitPage.jsx')
+    expect(src).toMatch(/ROOMS\[ROOM\]\.areas\['writing-in-transit'\]/); expect(src).toMatch(/inArea\(PAGE, post\)/); expect(src).not.toMatch(/Words written on the move/)
   })
   it('orders the boxes latest, pinned, grid, extra box on a phone, and turns the two columns into one', () => {
     const jsx = read('src/entries/EntryPage.jsx'), css = read('src/entries/entries.css')

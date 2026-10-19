@@ -1,6 +1,6 @@
 import { Routes, Route, Link } from 'react-router-dom'
 import DraftingDeskHome from './DraftingDeskHome'
-import AreaPage from './AreaPage'
+import ArchiveEntriesPage from '../entries/ArchiveEntriesPage'
 import NotebookPage from './NotebookPage'
 import './draftingdesk.css'
 
@@ -9,7 +9,7 @@ export default function DraftingDeskRoutes() {
   return (
     <Routes>
       <Route index element={<DraftingDeskHome />} />
-      <Route path="archive-entries" element={<AreaPage area="archive-entries" />} />
+      <Route path="archive-entries" element={<ArchiveEntriesPage />} />
       <Route path="authors-notebook" element={<NotebookPage />} />
       <Route
         path="*"
