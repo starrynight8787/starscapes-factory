@@ -1,0 +1,39 @@
+The Come Write With Me page: starscapes-come-write-19oct.zip   (NO Supabase step, nothing to do in Stripe or Vercel)
+
+WHAT IT DOES
+The Come Write With Me paper on the Drafting Desk is no longer "locked, starting soon". It opens a real page (starscapesfactory.com/drafting-desk/come-write-with-me), built to your sketch and the Den's YouTube page layout:
+   * a banner with a "Subscribe on YouTube" button
+   * the PINNED video (the newest session, labelled "Latest session", or one you choose, labelled "Start here") beside a NEWSLETTER card
+   * a grid of the other sessions (seven on a computer; four on a phone with "Show more sessions"), and a link to the whole channel
+Videos load from YouTube only when someone presses play (until then they are pictures passed along by this site), and play in YouTube's privacy-friendly player.
+The paper's drawing on the desk lost its hazard tape and padlock, and the traffic cone beside it is gone too (copies of the old drawings are kept next to them as .before-come-write), so it now looks open: a page, a speech bubble and a pencil.
+The health check keeps a fingerprint of every picture, so this package updates those two fingerprints and drops the one check that insisted on the old tape. Nothing else about the health check changes.
+
+THE NEWSLETTER CARD is honest: "The newsletter is on its way. It is not open yet." with a Coming soon button that does nothing. It is not a sign-up box, because the newsletter needs a mailing tool and an updated Privacy policy first.
+
+THE SESSIONS COME FROM ONE YOUTUBE PLAYLIST, so the channel's other videos stay off the page.
+   YOUR JOB, once you have recorded or planned a session:
+    1. On YouTube, make a playlist called Come Write With Me (it can be Public or Unlisted: a Private playlist cannot be read).
+    2. Open the playlist. In the address bar, copy the part after  list=   (it starts with PL, for example PLabc123...).
+    3. In the project, open  src/draftingdesk/comeWriteData.js  and paste it between the quotes:   export const PLAYLIST_ID = 'PLabc123...'
+    4. Save, then git add ., commit and push as usual. Add each session to that playlist and it appears on the page within about fifteen minutes.
+   Until you do this, the page says "The first session is on its way." and shows the newsletter card. Nothing is faked.
+   Optional: to pin a particular video as "Start here", paste its 11 characters (the part after v=) as INTRO_ID in the same file. It should be a video in the playlist.
+
+NO NEW SERVER FUNCTION: your free Vercel plan allows 12. The existing YouTube function (api/youtube-series.js) now has a second job: with ?list=come-write-with-me it reads the playlist. A browser can only ask
+for that one list by its name; it can never send a playlist id of its own. The Den's YouTube page works exactly as before.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-come-write-19oct.zip
+ 3. python3 tools/add-come-write.py           (it checks the ten files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (every check should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Come Write With Me: the page on the Drafting Desk"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+HOW TO SEE IT (after it is Ready): open the Drafting Desk (starscapesfactory.com/drafting-desk): the Come Write With Me paper should have no tape or padlock, and pressing it opens the page.

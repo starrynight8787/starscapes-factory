@@ -10,10 +10,10 @@ import '../styles/pages.css'
 import '../styles/forms.css'
 import './youtube.css'
 
-const when = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) }
+export const when = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) }
 
 // One video that only loads from YouTube when it is pressed: until then it is a picture passed along by this site, so a visitor's browser never contacts YouTube.
-function Player({ video, big, playing, onPlay }) {
+export function Player({ video, big, playing, onPlay }) {
   if (playing) return <iframe className={`yt__frame${big ? ' yt__frame--big' : ''}`} title={video.title} src={`https://www.youtube-nocookie.com/embed/${video.id}?autoplay=1&rel=0`} allow="autoplay; encrypted-media; picture-in-picture" allowFullScreen />
   return (
     <button type="button" className={`yt__play${big ? ' yt__play--big' : ''}`} onClick={onPlay} aria-label={`Play: ${video.title}`}>

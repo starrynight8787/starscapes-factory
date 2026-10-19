@@ -25,7 +25,7 @@ export const SHEETS = [
   { id: 'overthink-archive', name: 'Overthink Archive', blurb: 'Where the overthinking lives, on Substack.', kind: 'external', cx: 262, cy: 300, w: 270, h: 340, rot: -9 },
   { id: 'archive-entries', name: 'Archive Entries', blurb: 'The ongoing story, entry by entry.', kind: 'page', to: '/drafting-desk/archive-entries', cx: 612, cy: 252, w: 250, h: 330, rot: 5 },
   { id: 'authors-notebook', name: "Author's Notebook", blurb: 'Behind the scenes, straight from my notebook.', kind: 'page', to: '/drafting-desk/authors-notebook', lock: 'paid', cx: 952, cy: 322, w: 270, h: 340, rot: 8, labelTop: 48 },
-  { id: 'come-write-with-me', name: 'Come Write With Me', blurb: 'Join me on YouTube while I write. Starting soon.', kind: 'locked', lock: 'not started yet', cx: 470, cy: 612, w: 320, h: 235, rot: -4 },
+  { id: 'come-write-with-me', name: 'Come Write With Me', blurb: 'Join me on YouTube while I write.', kind: 'page', to: '/drafting-desk/come-write-with-me', cx: 470, cy: 612, w: 320, h: 235, rot: -4 },
 ]
 
 // The room as the scene needs it

@@ -1,0 +1,12 @@
+/* The Come Write With Me page. It uses the Den's YouTube page styles (../den/youtube.css) and adds only the pinned-intro-beside-newsletter row. */
+.cw__top { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 24px 0; }
+.cw__top > * { min-width: 0; }
+.cw__top .yt__intro { margin: 0; }
+.cw__newsletter { display: grid; gap: 14px; align-content: start; padding: 24px; background: var(--sf-star, #dce6ff); border: 2px solid var(--sf-navy-700, #14306a); border-radius: 10px; box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6); }
+.cw__newsletter p { margin: 0; line-height: 1.6; }
+.cw__label { font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sf-navy-700, #14306a); }
+.cw .cw__title { margin: 0; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: 1.5rem; line-height: 1.25; color: var(--sf-navy-700, #14306a); }
+.cw__soon { justify-self: start; background: #8fb1d6; border-color: #8fb1d6; color: #0e1530; cursor: not-allowed; opacity: 1; }
+@media (min-width: 980px) {
+  .cw__top { grid-template-columns: 2fr 1fr; }
+}

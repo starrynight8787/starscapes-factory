@@ -33,7 +33,6 @@ const CHECKS = [
   ['Tape on the Idea Hatchery\'s closed beaker', 'public/scenes/idea-hatchery/item-come-study-with-me.svg', /data-tape-group/, 'the closed objects tape update'],
   ['Tape on the Leadership Lounge\'s Free Ebook', 'public/scenes/leadership-lounge/item-free-ebook.svg', /data-tape-group/, 'the closed objects tape update'],
   ['Tape on Explorer\'s Bay\'s Something New', 'public/scenes/explorers-bay/item-coming-soon.svg', /data-tape-group/, 'the closed objects tape update'],
-  ['Tape on the Drafting Desk\'s Come Write With Me', 'public/scenes/drafting-desk/sheet-come-write-with-me.svg', /data-tape-group/, 'the closed objects tape update'],
   ['Knowledge Nook picture: the bookcase', 'public/scenes/knowledge-nook/base.svg', /viewBox="0 0 1200 840"/, 'the Knowledge Nook update'],
   ['Form messages: the failure box', 'src/components/FormMessages.jsx', /export function FailureMessage/, 'the form messages update'],
   ['Log in form: the new messages', 'src/pages/Login.jsx', /ErrorSummary/, 'the form messages update'],
