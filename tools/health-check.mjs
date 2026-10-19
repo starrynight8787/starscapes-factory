@@ -217,6 +217,7 @@ const CHECKS = [
   ['Locked posts: the post page uses the gate', 'src/pages/PostPage.jsx', /PostGate/, 'the locked posts update (the add-locked-posts script)'],
   ['Locked posts: the New post form has the Pass choice', 'src/pages/NewPost.jsx', /PASS_CHOICES/, 'the locked posts update (the add-locked-posts script)'],
   ['Locked posts: the Edit post form has the Pass choice', 'src/pages/EditPost.jsx', /PASS_CHOICES/, 'the locked posts update (the add-locked-posts script)'],
+  ['Membership: the webhook follows the current subscription', 'api/membership-webhook.js', /not the current subscription/, 'the webhook tidy-up (the fix-webhook-current script)'],
 ]
 
 const results = CHECKS.map(([what, file, pattern, from]) => {

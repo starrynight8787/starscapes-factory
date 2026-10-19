@@ -11,7 +11,7 @@
 
 import { signatureIsGood } from './stripe-webhook.js'
 import { serviceFetch } from '../lib/serviceKey.js'
-import { fetchSubscription, membershipRowFromSubscription, stripeMode, logProblem } from '../lib/membershipStripe.js'
+import { fetchSubscription, membershipRowFromSubscription, stripeMode, logProblem, isHolding } from '../lib/membershipStripe.js'
 
 export const config = { maxDuration: 30 }
 
@@ -26,6 +26,14 @@ export async function saveMembership(row) {
     body: JSON.stringify(row),
   })
   if (!response.ok) throw new Error(`database answered ${response.status}`)
+}
+
+// What our table already holds for this person (one row each), so news about a DIFFERENT subscription cannot overwrite it
+async function currentRecord(userId) {
+  const response = await serviceFetch(`/rest/v1/memberships?user_id=eq.${encodeURIComponent(userId)}&select=stripe_subscription_id,status`, { headers: { Accept: 'application/json' } })
+  if (!response.ok) throw new Error(`database answered ${response.status}`)
+  const rows = await response.json()
+  return Array.isArray(rows) && rows[0] ? rows[0] : null
 }
 
 export function GET() {
@@ -69,6 +77,18 @@ export async function POST(request) {
     const sub = await fetchSubscription(subscriptionId, key)
     const row = membershipRowFromSubscription(sub)
     if (!row) return reply(200, { ok: true, ignored: 'not from our checkout' })
+
+    // One row per person, so the row must follow the person's CURRENT subscription. If this news is about a DIFFERENT subscription from the one we hold, it must not overwrite it while the one
+    // we hold is still going (an old subscription ending, or a second one bought by mistake, must not lock out someone whose current passes are fine). We check with Stripe that the one we
+    // hold really is still going, because our own record might be out of date; if it is not, this subscription takes over (a new purchase after the old passes ended).
+    const held = await currentRecord(row.user_id)
+    if (held && held.stripe_subscription_id && held.stripe_subscription_id !== row.stripe_subscription_id && isHolding(held.status)) {
+      const current = await fetchSubscription(held.stripe_subscription_id, key)
+      if (isHolding(current.status)) {
+        if (isHolding(row.status)) logProblem('a second subscription is holding passes for the same person', new Error(`kept ${held.stripe_subscription_id}, ignored ${row.stripe_subscription_id}: one of them needs cancelling in Stripe`))
+        return reply(200, { ok: true, ignored: 'not the current subscription' })
+      }
+    }
     await saveMembership(row)
     return reply(200, { ok: true, membership: row.status })
   } catch (e) {

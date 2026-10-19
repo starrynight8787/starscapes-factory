@@ -1,0 +1,33 @@
+The webhook tidy-up: starscapes-webhook-fix-19oct.zip   (NO Supabase step, nothing to do in Stripe or Vercel)
+
+THE PROBLEM
+The site keeps ONE membership record per person. Tonight you had two subscriptions for the same account. News that the OLD one had ended (or was still going) could overwrite the record of the CURRENT one, and
+wrongly lock someone out of passes they had paid for. The check you proved earlier makes a second purchase very unlikely for real customers, but the webhook must not be fooled either way.
+
+THE FIX
+When Stripe tells the site about a subscription, and the site already holds a DIFFERENT subscription for that person which is still going, the site asks Stripe whether the one it holds really is still going
+(its own record might be out of date). If it is, the news is IGNORED: the record stays on the current subscription. If the held one has really ended, the new one takes over (a fresh purchase after the old
+passes ended). Cases:
+   * no record yet, or the news is about the very subscription we hold  ->  saved as before
+   * news that an old subscription has ended, while the held one is going  ->  ignored (nobody is locked out)
+   * a second subscription that is also going  ->  ignored, and a line goes to Vercel's Logs naming both ("a second subscription is holding passes for the same person: kept sub_..., ignored sub_..."), so you know one needs cancelling in Stripe
+   * the held subscription has really ended in Stripe, or the record already says ended  ->  the new subscription takes over
+   * if Stripe or the database cannot be asked  ->  nothing is saved, and Stripe is told to try again later
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-webhook-fix-19oct.zip
+    (this also replaces one test file with an updated version)
+ 3. python3 tools/fix-webhook-current.py      (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (all 213 checks should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Webhook: follow only the person's current subscription"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+HOW TO CHECK IT (optional; it needs your two test subscriptions)
+ In Stripe (test mode), Membership destination, Event deliveries: Resend the events of your OLDER subscription (the 8:26pm one). Each should answer 200 and say "not the current subscription" (the reply is in the
+ delivery's Response). Then open /membership/passes: your passes should be unchanged, still on the newer subscription. In Vercel's Logs, search for  [membership]  to see the line naming both subscriptions.

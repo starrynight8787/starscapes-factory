@@ -17,19 +17,26 @@ const request = (event, { secret = SECRET, signature } = {}) => {
 const subscription = (over = {}) => ({ id: 'sub_1', customer: 'cus_1', status: 'active', cancel_at_period_end: false, current_period_end: 1800000000, start_date: 1760000000, items: { data: [{ price: { recurring: { interval: 'month' } } }] }, metadata: { user_id: USER_ID, passes: 'blueprints,book-club', interval: 'month', launch_offer: 'yes' }, ...over })
 const eventOf = (type, object, livemode = false) => ({ id: 'evt_1', type, livemode, data: { object } })
 
-function network({ current = subscription(), stripeFails = false, dbFails = false } = {}) {
+function network({ current = subscription(), stripeFails = false, dbFails = false, existing = null, subsById = {}, existingFetchFails = false } = {}) {
   const calls = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url)
     calls.push({ url: u, init })
-    if (u.startsWith('https://api.stripe.com/v1/subscriptions/')) return stripeFails ? json({}, 500) : json(current)
-    if (u.includes('/rest/v1/memberships')) return dbFails ? json({ message: 'db down' }, 500) : json(null, 201)
+    if (u.startsWith('https://api.stripe.com/v1/subscriptions/')) {
+      const id = decodeURIComponent(u.split('/v1/subscriptions/')[1])
+      if (existingFetchFails && existing && id === existing.stripe_subscription_id) return json({}, 500)
+      return stripeFails ? json({}, 500) : json(subsById[id] || current)
+    }
+    if (u.includes('/rest/v1/memberships')) {
+      if (dbFails) return json({ message: 'db down' }, 500)
+      return init.method === 'POST' ? json(null, 201) : json(existing ? [existing] : [])
+    }
     throw new Error(`unexpected request: ${u}`)
   })
   fn.calls = calls
   return fn
 }
-const saved = (fn) => fn.calls.filter((c) => c.url.includes('/rest/v1/memberships'))
+const saved = (fn) => fn.calls.filter((c) => c.url.includes('/rest/v1/memberships') && c.init.method === 'POST')
 const stripeReads = (fn) => fn.calls.filter((c) => c.url.startsWith('https://api.stripe.com'))
 
 beforeEach(() => {
@@ -88,6 +95,50 @@ describe('recording a membership', () => {
     const fn = withNetwork(); const e = eventOf('customer.subscription.updated', subscription())
     await POST(request(e)); await POST(request(e))
     const [a, b] = saved(fn).map((c) => { const row = JSON.parse(c.init.body); delete row.updated_at; return row }); expect(a).toEqual(b)
+  })
+})
+
+describe('following the person\u2019s CURRENT subscription (one row each)', () => {
+  const NEW_SUB = (over = {}) => subscription({ id: 'sub_new', ...over })
+  const held = (over = {}) => ({ stripe_subscription_id: 'sub_old', status: 'active', ...over })
+  const send = (fn, sub, type = 'customer.subscription.updated') => POST(request(eventOf(type, sub)))
+  it('records the first subscription of a person who has no row yet, and updates a row that holds the SAME subscription', async () => {
+    let fn = withNetwork({ current: NEW_SUB() }); expect((await send(fn, NEW_SUB())).status).toBe(200); expect(saved(fn)).toHaveLength(1)
+    fn = withNetwork({ current: subscription(), existing: held({ stripe_subscription_id: 'sub_1' }) }); await send(fn, subscription()); expect(saved(fn)).toHaveLength(1)
+    fn = withNetwork({ current: NEW_SUB(), existing: held({ stripe_subscription_id: null }) }); await send(fn, NEW_SUB()); expect(saved(fn)).toHaveLength(1)
+  })
+  it('ignores news that an OLD subscription has ended, while the one we hold is still going (so the person is not locked out)', async () => {
+    const fn = withNetwork({ current: NEW_SUB({ id: 'sub_old2', status: 'canceled' }), existing: held(), subsById: { sub_old: subscription({ id: 'sub_old', status: 'active' }) } })
+    const r = await send(fn, NEW_SUB({ id: 'sub_old2', status: 'canceled' }), 'customer.subscription.deleted')
+    expect(r.status).toBe(200); expect(await r.json()).toMatchObject({ ignored: 'not the current subscription' }); expect(saved(fn)).toHaveLength(0)
+  })
+  it('ignores a SECOND subscription that is also going, keeps the one we hold, and writes a line in the log naming both so one can be cancelled', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {})
+    const fn = withNetwork({ current: NEW_SUB(), existing: held(), subsById: { sub_old: subscription({ id: 'sub_old', status: 'active' }) } })
+    const r = await send(fn, NEW_SUB())
+    expect(r.status).toBe(200); expect(saved(fn)).toHaveLength(0)
+    const logged = spy.mock.calls.map((c) => String(c[0])).join('\n'); expect(logged).toContain('[membership] a second subscription is holding passes for the same person: kept sub_old, ignored sub_new'); spy.mockRestore()
+  })
+  it('lets a NEW subscription take over when the one we hold has really ended in Stripe (our own record was out of date)', async () => {
+    const fn = withNetwork({ current: NEW_SUB(), existing: held(), subsById: { sub_old: subscription({ id: 'sub_old', status: 'canceled' }) } })
+    await send(fn, NEW_SUB()); expect(saved(fn)).toHaveLength(1); expect(JSON.parse(saved(fn)[0].init.body)).toMatchObject({ stripe_subscription_id: 'sub_new', status: 'active' })
+  })
+  it('lets a new purchase take over from a row that is already marked ended, without even asking Stripe about the old one', async () => {
+    for (const status of ['canceled', 'incomplete']) {
+      const fn = withNetwork({ current: NEW_SUB(), existing: held({ status }) }); await send(fn, NEW_SUB())
+      expect(saved(fn), status).toHaveLength(1); expect(stripeReads(fn).map((c) => c.url)).toEqual(['https://api.stripe.com/v1/subscriptions/sub_new'])
+    }
+  })
+  it('records the ENDING of the subscription we hold when the news really is about that one', async () => {
+    const fn = withNetwork({ current: subscription({ status: 'canceled' }), existing: held({ stripe_subscription_id: 'sub_1' }) })
+    await send(fn, subscription(), 'customer.subscription.deleted'); expect(JSON.parse(saved(fn)[0].init.body)).toMatchObject({ stripe_subscription_id: 'sub_1', status: 'canceled' })
+  })
+  it('does not save, and asks Stripe to try again, if it cannot check the subscription we hold', async () => {
+    const fn = withNetwork({ current: NEW_SUB(), existing: held(), existingFetchFails: true }); const r = await send(fn, NEW_SUB())
+    expect(r.status).toBe(500); expect(saved(fn)).toHaveLength(0)
+  })
+  it('does not save, and asks Stripe to try again, if it cannot read what we hold', async () => {
+    const fn = withNetwork({ current: NEW_SUB(), dbFails: true }); expect((await send(fn, NEW_SUB())).status).toBe(500); expect(saved(fn)).toHaveLength(0)
   })
 })
 
