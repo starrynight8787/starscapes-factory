@@ -32,6 +32,7 @@ export const IMAGES = {
   'explorers-bay': { file: 'explorers-bay.png', alt: 'A night harbour with a sailboat, a wooden pier, a suitcase and a line of pegged photographs.' },
   'knowledge-nook': { file: 'knowledge-nook.png', alt: 'A bookcase of coloured books with genre names on the spines, and a little television.' },
   'sarah-jrs-den': { file: 'sarah-jrs-den.png', alt: 'A sitting room with a blue sofa, a bookcase, a wardrobe and a striped rug.' },
+  'story-ledger': { file: 'story-ledger.png', alt: 'Story Ledger: a glowing neon television logo on a dark purple background.' },
   'drafting-desk': { file: 'drafting-desk.png', alt: 'A desk seen from above, covered in papers, a mug, a pencil and a paperclip.' },
   'art-loft': { file: 'art-loft.png', alt: 'A string of stars above an easel, a stack of rolled prints and a little market stall.' },
   'factory-floor': { file: 'factory-floor.png', alt: 'A pale blueprint with a protractor and a rolled blueprint tied with a ribbon and a padlock.' },
@@ -56,6 +57,7 @@ export const PAGES = {
   '/explorers-bay': room('explorers-bay', 'Stories and pictures from the road: writing in transit and travel photography, from the pier.'),
   '/knowledge-nook': room('knowledge-nook', 'Reading, learning and personal growth. A bookcase of what I am reading and learning.'),
   '/sarah-jrs-den': room('sarah-jrs-den', "Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl."),
+  '/knowledge-nook/story-ledger': { title: 'Story Ledger', description: 'A ledger of the stories I watch and read, with a focus on 90s TV shows.', image: 'story-ledger' },
 
   '/art-loft': { title: ART_LOFT.name, description: 'Where colour meets imagination. Art prints in five collections: calm colour, space, the sea, dance and one-offs.', image: 'art-loft' },
   '/art-loft/prints': { title: 'Digital Prints', description: 'Every art print in the Art Loft, with its sizes and frames. Each one is made to order.', image: 'art-loft' },

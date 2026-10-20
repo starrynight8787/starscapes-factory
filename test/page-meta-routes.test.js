@@ -26,7 +26,7 @@ describe('the app\u2019s pages and the table', () => {
     for (const c of CHANGING) expect(routes, c).toContain(c)
     const fixed = new Set(routes.filter((r) => !r.includes(':') && !r.includes('*')))
     const fronts = new Set(routes.filter((r) => r.endsWith('/*')).map((r) => r.slice(0, -2)))
-    const inside = ['/art-loft/prints', '/art-loft/originals', '/art-loft/admin', '/art-loft/admin/originals', '/factory-floor/floor', '/factory-floor/blueprints', '/drafting-desk/archive-entries', '/drafting-desk/come-write-with-me', '/idea-hatchery/lets-write-a-story', '/drafting-desk/authors-notebook']
+    const inside = ['/art-loft/prints', '/art-loft/originals', '/art-loft/admin', '/art-loft/admin/originals', '/factory-floor/floor', '/factory-floor/blueprints', '/drafting-desk/archive-entries', '/drafting-desk/come-write-with-me', '/idea-hatchery/lets-write-a-story', '/drafting-desk/authors-notebook', '/knowledge-nook/story-ledger']
     for (const p of Object.keys(PAGES)) {
       const known = fixed.has(p) || fronts.has(p) || inside.includes(p) || p.startsWith('/page/')
       expect(known, `${p} is in the table but is not a page in App.jsx`).toBe(true)
