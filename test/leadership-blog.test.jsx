@@ -159,7 +159,7 @@ describe('the banner on this page', () => {
     expect(within(banner).getByText('Leading from the Middle')).toBeInTheDocument(); expect(within(banner).getByRole('heading', { level: 1, name: 'Leadership Blog' })).toBeInTheDocument()
     expect(within(banner).getByText('Notes on leading from where you are.')).toBeInTheDocument()
     expect(banner).toHaveClass('pb--starry') // the starry banner draws its own mountain, so it has no picture file
-    expect(banner.querySelector('svg.pb__art')).not.toBeNull()
+    expect(banner).toHaveClass('pb--room-leadership-lounge'); expect(banner.querySelector('svg.pb__art')).toBeNull()
   })
   it('has a "Start with Building Block 1" button that goes to that post, once the first block exists', async () => {
     h.posts = [post('Block one title', 2, ['building-block-1']), post('Other', 5)]; const { container } = page()

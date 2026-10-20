@@ -31,8 +31,7 @@ export default function PageBanner({ chip, title, subtitle, picture, art, room, 
         {subtitle && <p className="pb__subtitle">{subtitle}</p>}
         {children && <div className="pb__buttons">{children}</div>}
       </div>
-      {art && !shelf && !inRoom && <BannerPicture art={art} />}
-      {shelf && <ShelfBooks />}
+            {shelf && <ShelfBooks />}
       {!art && !shelf && !inRoom && picture && (
         <div className="pb__picture">
           <img src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
