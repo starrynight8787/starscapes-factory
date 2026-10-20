@@ -1,0 +1,35 @@
+SO THAT THE TESTS CAN RUN ON YOUR COMPUTER   starscapes-test-tools-20oct.zip   (SFW-244)
+(No Supabase step. Nothing to do in Stripe or Vercel. The live site does not change.)
+
+WHAT WAS MISSING
+The project has more than 1,400 tests, but it had NO test tools in it: no vitest, no testing library, no test setting in package.json. So not one test could run on your computer (npx offered to fetch vitest, but the other tools were not there, so every
+page test failed to start). All the test results I have reported so far were run in my own workspace, which has the tools set up. This package puts the same setup into the project, so  npm test  works for you.
+
+WHAT IT DOES
+ * package.json: adds an "npm test" command and the test tools as DEVELOPMENT tools only (they are never part of the live site): vitest, jsdom (a pretend browser), and the Testing Library packages. Versions are chosen to work with
+   the site's version of Vite and with any Node that Vite 5 already needs.
+ * vitest.config.js and vitest.setup.js (new): how the tests run. THE TESTS NEVER USE YOUR REAL SUPABASE: the config gives them a fake address and key, even if your .env files hold the real ones (checked: a pretend real .env.local is ignored).
+ * test/test-setup.test.js (new): 7 tests that fail if the tools or those safety rules ever go missing.
+ * package-lock.json will change a lot when you run npm install. That is expected: commit it with the rest.
+
+WHAT YOU WILL SEE WHEN YOU RUN IT
+About 1,400 tests, taking one to a few minutes. Today the result should be exactly SIX failures (everything else passes):
+   4 in test/room-pages.test.jsx   (tests of the old room page design: SFW-244)
+   1 in test/hatchery-colours.test.js   (the yellow tape on the "coming soon" beaker, still to be allowed)
+   1 in test/contact-email-single-source.test.js   (waiting for the legal review)
+If you see more than six, or a different six, copy the list to me.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. node -v                                   (it should say v18 or higher; if it is lower, tell me before going on)
+ 3. unzip -o ~/Downloads/starscapes-test-tools-20oct.zip
+ 4. python3 tools/add-test-tools.py            (it checks package.json first; if anything is unexpected it changes nothing)
+ 5. npm install                                (about 20 seconds to a minute; it adds the test tools and updates package-lock.json)
+ 6. npm test                                   (the first run is the longest; see "what you will see" above)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                        (it should still print 12)
+ 9. git add .
+    git status                                 (package.json and package-lock.json changed; vitest.config.js, vitest.setup.js, test/test-setup.test.js and INSTALL-TEST-TOOLS.txt new; nothing ending .before-)
+    git commit -m "Add the test tools to the project so npm test works"
+    git push
+10. Wait for Vercel to say READY (it installs the tools too, which takes a little longer, but the live site is unchanged).
