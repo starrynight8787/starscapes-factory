@@ -1,0 +1,35 @@
+TIDY-UP: RETIRE THE OLD INSTALLER TESTS AND BACKUPS, MEND THE STALE TESTS   starscapes-tidy-20oct.zip   (SFW-243, SFW-244)
+(No Supabase step. Nothing to do in Stripe or Vercel.)
+
+WHAT IT DOES
+1. DELETES 53 TESTS THAT GUARD NOTHING: test/rooms-patch.test.js, test/nook-patch.test.js and test/den-patch.test.js tested one-off installers from the very first packages against fixture files (test/fixtures/desk)
+   that were never in the repository, so they could only fail. (The old installer scripts in scripts/ are left alone.)
+2. DELETES 26 BACKUP FILES that were committed to the repository by accident (src/App.jsx.before-cart and the like: the copies the installers keep of a file as it was). Nothing uses them.
+3. MENDS A REAL SMALL DEFECT, with its tests: in the Rooms dropdown and the room list on phones, a room's name and its line ran together with no space between them ("The Art LoftPrints and originals."),
+   which a screen reader can read as one word. There is now a real space. It looks exactly the same. (src/components/Navbar.jsx, src/pages/ChannelDirectory.jsx)
+4. BRINGS TWO STALE TESTS UP TO DATE: the Rooms dropdown test now expects each room's own page (/idea-hatchery, not /channel/idea-hatchery: the rooms each have one now), and the Open a door test takes the room
+   names from the rooms' own data, so renaming a room (Den to Clubhouse) can never make it stale again. A comment in src/data/roomImages.js that said most rooms use the general page is corrected.
+
+RESULT: the suite goes from 62 failing tests to 5 failing tests and 3 files that cannot load. THOSE ARE THE ITEMS THAT NEED YOUR DECISION (SFW-244), left alone on purpose:
+  * test/room-pages.test.jsx, test/originals.test.jsx, test/home-link-artloft.test.jsx cannot load: they need a helper file, test/fakeDb.js, that is not on GitHub. Please run  ls test/fakeDb*  and tell me what it says.
+  * test/hatchery-colours.test.js: the Idea Hatchery picture now has a red (#E5484D) the test does not allow. Is it meant?
+  * test/rooms-data.test.jsx (3 tests): the room pages no longer give phones the list of links the test expects. What should phones see?
+  * test/contact-email-single-source.test.js: the contact address is typed by hand in the legal pages (about a dozen places) and the shipping/returns page. Best fixed AFTER the free-advice review of the legal pages,
+    so we do not retype text that may still change.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-tidy-20oct.zip
+ 3. python3 tools/add-tidy.py                  (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. git rm -q test/rooms-patch.test.js test/nook-patch.test.js test/den-patch.test.js
+ 5. git rm -q $(git ls-files | grep -E '^src/.*\.before-')
+        (4 and 5 remove the old tests and the backup files; they list what they remove. If you run them a second time they simply say there is nothing to remove.)
+ 6. node tools/health-check.mjs | tail -2
+ 7. npm run build
+ 8. ls api/*.js | wc -l                        (it should still print 12)
+ 9. git add .
+    git status                                 (you should see 29 deleted files, 3 changed source files, 2 changed tests, and nothing ending .before- that is new)
+    git commit -m "Tidy: retire the old installer tests and backup files, space between room name and line, update stale tests"
+    git push
+
+(The unzip replaces two existing test files, navbar-room-icons.test.jsx and open-doors-admin.test.jsx.)

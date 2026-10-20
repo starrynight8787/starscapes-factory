@@ -17,6 +17,7 @@ vi.mock('../src/admin/useIsOwner', () => ({ useOwnerCheck: () => store.owner, de
 import OpenDoors from '../src/admin/OpenDoors'
 import { forgetDoors } from '../src/doors/useDoors'
 import { DOORS } from '../src/doors/doorsData'
+import { ROOMS } from '../src/rooms/roomsData'
 
 const show = async () => {
   const view = render(<MemoryRouter><OpenDoors session={{ access_token: 'x' }} /></MemoryRouter>)
@@ -30,8 +31,10 @@ describe('the Open a door tool', () => {
     await show()
     // The page sets the rooms out in two columns (the Nook and the Hatchery on the left; the Den, the Lounge and the Bay on the right), so that is the order they read in
     const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
-    expect(headings).toEqual(['Knowledge Nook', 'The Idea Hatchery', "Sarah Jr.'s Den", 'Leadership Lounge', "Explorer's Bay"])
-    expect([...headings].sort()).toEqual(['Knowledge Nook', 'The Idea Hatchery', 'Leadership Lounge', "Explorer's Bay", "Sarah Jr.'s Den"].sort()) // every one of the five, once each
+    // (the names come from the rooms' own data, so renaming a room can never make this test stale again)
+    const COLUMN_ORDER = ['knowledge-nook', 'idea-hatchery', 'sarah-jrs-den', 'leadership-lounge', 'explorers-bay'].map((room) => ROOMS[room].name)
+    expect(headings).toEqual(COLUMN_ORDER)
+    expect([...headings].sort()).toEqual(['idea-hatchery', 'knowledge-nook', 'leadership-lounge', 'explorers-bay', 'sarah-jrs-den'].map((room) => ROOMS[room].name).sort()) // every one of the five, once each
     expect(screen.getAllByRole('listitem').filter((li) => li.classList.contains('ad-door'))).toHaveLength(DOORS.length)
     expect(screen.getAllByText('Closed')).toHaveLength(DOORS.length)
     expect(screen.queryByText('Open to visitors')).toBeNull()

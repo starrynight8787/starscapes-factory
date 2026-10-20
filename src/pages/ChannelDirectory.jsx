@@ -167,7 +167,7 @@ export default function ChannelDirectory() {
             <Link key={c.slug} to={roomPath(c.slug)} className="sf-roomcard">
               <RoomIcon room={c.slug} size={64} />
               <span>
-                <span className="sf-roomcard__name">{c.name}</span>
+                <span className="sf-roomcard__name">{c.name}</span>{' '}
                 <span className="sf-roomcard__tag">{c.tagline}</span>
               </span>
             </Link>

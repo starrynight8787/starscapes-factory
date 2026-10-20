@@ -2,11 +2,14 @@ import { useEffect, useRef, useState } from 'react'
 import { Link, useLocation, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
+import { pageIsReady } from '../data/staticPages'
 import { roomPath } from '../data/roomImages'
+import { MEMBERSHIP } from '../data/membership'
 import Logo from './Logo'
-import RoomTile from './RoomTile'
+import RoomIcon from './RoomIcon'
 import '../styles/site.css'
 import CartNavLink from '../cart/CartNavLink'
+import useIsOwner from '../admin/useIsOwner'
 
 const iconProps = {
   width: 24,
@@ -36,6 +39,7 @@ const CloseIcon = () => (
 )
 
 export default function Navbar({ session }) {
+  const isOwner = useIsOwner(session)
   const navigate = useNavigate()
   const location = useLocation()
   const [roomsOpen, setRoomsOpen] = useState(false)
@@ -107,7 +111,7 @@ export default function Navbar({ session }) {
                   <div className="sf-rooms__grid">
                     {channels.map((c) => (
                       <Link key={c.slug} to={roomPath(c.slug)} className="sf-rooms__item">
-                        <RoomTile slug={c.slug} size={48} />
+                        <RoomIcon room={c.slug} size={44} />
                         <span>
                           <span className="sf-rooms__name">{c.name}</span>
                           <span className="sf-rooms__tag">{c.tagline}</span>
@@ -122,21 +126,22 @@ export default function Navbar({ session }) {
                 </div>
               )}
             </div>
+            {pageIsReady('about') && (
+              <Link to="/page/about" className="sf-link">
+                About
+              </Link>
+            )}
             <CartNavLink className="sf-link" />
-            <Link to="/page/about" className="sf-link">
-              About
-            </Link>
           </div>
 
           <div className="sf-nav__actions">
             {session ? (
               <>
-                <Link to="/new" className="sf-link">
-                  New post
-                </Link>
-                <Link to="/new-product" className="sf-link">
-                  New product
-                </Link>
+                {isOwner && (
+                  <Link to="/admin" className="sf-link sf-admin-btn">
+                    Admin
+                  </Link>
+                )}
                 <button type="button" className="sf-link" onClick={handleLogout}>
                   Log out
                 </button>
@@ -146,7 +151,7 @@ export default function Navbar({ session }) {
                 <Link to="/login" className="sf-link">
                   Log in
                 </Link>
-                <Link to="/signup" className="sf-cta">
+                <Link to={MEMBERSHIP.open ? '/membership' : '/signup'} className="sf-cta">
                   Subscribe
                 </Link>
               </>
@@ -181,23 +186,20 @@ export default function Navbar({ session }) {
           <div className="sf-menu__list">
             {channels.map((c) => (
               <Link key={c.slug} to={roomPath(c.slug)} className="sf-menu__item" onClick={closeMenu}>
-                <RoomTile slug={c.slug} size={40} />
+                <RoomIcon room={c.slug} size={40} />
                 {c.name}
               </Link>
             ))}
+            {pageIsReady('about') && (
+              <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
+                About
+              </Link>
+            )}
             <CartNavLink className="sf-menu__item sf-menu__item--plain" onClick={closeMenu} />
-            <Link to="/page/about" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-              About
-            </Link>
-            {session && (
-              <>
-                <Link to="/new" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-                  New post
-                </Link>
-                <Link to="/new-product" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
-                  New product
-                </Link>
-              </>
+            {isOwner && (
+              <Link to="/admin" className="sf-menu__item sf-menu__item--plain" onClick={closeMenu}>
+                Admin
+              </Link>
             )}
           </div>
           <div className="sf-menu__actions">
@@ -210,7 +212,7 @@ export default function Navbar({ session }) {
                 <Link to="/login" className="sf-btn" onClick={closeMenu}>
                   Log in
                 </Link>
-                <Link to="/signup" className="sf-btn sf-btn--solid" onClick={closeMenu}>
+                <Link to={MEMBERSHIP.open ? '/membership' : '/signup'} className="sf-btn sf-btn--solid" onClick={closeMenu}>
                   Subscribe
                 </Link>
               </>

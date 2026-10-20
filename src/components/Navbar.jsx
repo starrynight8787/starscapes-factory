@@ -113,7 +113,7 @@ export default function Navbar({ session }) {
                       <Link key={c.slug} to={roomPath(c.slug)} className="sf-rooms__item">
                         <RoomIcon room={c.slug} size={44} />
                         <span>
-                          <span className="sf-rooms__name">{c.name}</span>
+                          <span className="sf-rooms__name">{c.name}</span>{' '}
                           <span className="sf-rooms__tag">{c.tagline}</span>
                         </span>
                       </Link>

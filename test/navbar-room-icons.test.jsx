@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter } from 'react-router-dom'
+import { roomPath } from '../src/data/roomImages'
 
 // the eight rooms, written out here so this test does not depend on the live list
 vi.mock('../src/data/channels', () => ({
@@ -43,12 +44,17 @@ describe('the Rooms dropdown', () => {
     expect(screen.getByRole('link', { name: 'The Art Loft Prints and originals.' })).toBeTruthy()
     expect(screen.getByRole('link', { name: "Sarah Jr.'s Den A little world." })).toBeTruthy()
   })
-  it('still goes to the same pages: the Art Loft and the Factory Floor have their own, the rest the general room page', async () => {
+  it('goes to each room\u2019s own page (the rooms each have one now), the same address the rest of the site uses for it', async () => {
     show()
     await userEvent.click(screen.getByRole('button', { name: /rooms/i }))
     expect(screen.getByRole('link', { name: /^The Art Loft/ }).getAttribute('href')).toBe('/art-loft')
     expect(screen.getByRole('link', { name: /^The Factory Floor/ }).getAttribute('href')).toBe('/factory-floor')
-    expect(screen.getByRole('link', { name: /^The Idea Hatchery/ }).getAttribute('href')).toBe('/channel/idea-hatchery')
+    expect(screen.getByRole('link', { name: /^The Idea Hatchery/ }).getAttribute('href')).toBe('/idea-hatchery')
+    expect(screen.getByRole('link', { name: /^Leadership Lounge/ }).getAttribute('href')).toBe('/leadership-lounge')
+    expect(screen.getByRole('link', { name: /^Knowledge Nook/ }).getAttribute('href')).toBe('/knowledge-nook')
+    for (const slug of ['art-loft', 'factory-floor', 'idea-hatchery', 'leadership-lounge', 'knowledge-nook', 'sarah-jrs-den', 'drafting-desk', 'explorers-bay']) {
+      expect(roomPath(slug), slug).toBe(`/${slug}`)
+    }
   })
 })
 
