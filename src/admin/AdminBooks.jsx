@@ -4,15 +4,15 @@ import PageLoading from '../components/PageLoading'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
 import useTitle from '../pages/useTitle'
 import { useOwnerCheck } from './useIsOwner'
-import { GENRES, STATUSES, charactersToText, cleanBook, cleanGoal } from '../bookclub/bookRules'
+import { GENRES, MAX_GENRES, STATUSES, genresOf, charactersToText, cleanBook, cleanGoal } from '../bookclub/bookRules'
 import { fetchBooks, fetchGoals, removeBook, saveBook, saveGoal } from '../bookclub/bookApi'
 import '../styles/pages.css'
 import './admin.css'
 import './adminv2.css'
 import AdminBanner from './AdminBanner'
 
-const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '', about: '', yearPublished: '', themeBook: false, characters: '', fullReview: '', quote: '', quotePage: '', seriesName: '', seriesNumber: '', seriesTotal: '' }
-const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '', about: b.about || '', yearPublished: b.year_published ? String(b.year_published) : '', themeBook: b.theme_book === true, characters: charactersToText(b.characters), fullReview: b.review || '', quote: b.quote || '', quotePage: b.quote_page || '', seriesName: b.series_name || '', seriesNumber: b.series_number ? String(b.series_number) : '', seriesTotal: b.series_total ? String(b.series_total) : '' })
+const BLANK = { title: '', author: '', genres: [], status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '', about: '', yearPublished: '', themeBook: false, characters: '', fullReview: '', quote: '', quotePage: '', seriesName: '', seriesNumber: '', seriesTotal: '' }
+const toForm = (b) => ({ title: b.title || '', author: b.author || '', genres: genresOf(b), status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '', about: b.about || '', yearPublished: b.year_published ? String(b.year_published) : '', themeBook: b.theme_book === true, characters: charactersToText(b.characters), fullReview: b.review || '', quote: b.quote || '', quotePage: b.quote_page || '', seriesName: b.series_name || '', seriesNumber: b.series_number ? String(b.series_number) : '', seriesTotal: b.series_total ? String(b.series_total) : '' })
 
 // The owner's tool at /admin/books: add the books you are reading, have read, or will read next, and set each year's reading goal and theme. The Book Club
 // page shows them. The database only lets the owner's account change anything.
@@ -102,7 +102,21 @@ export default function AdminBooks({ session }) {
           <ErrorSummary errors={summary(errors)} />
           <Field id="ab-title" label="Title" error={errors.title}>{(p) => <input {...p} type="text" value={form.title} onChange={set('title')} />}</Field>
           <Field id="ab-author" label="Author" error={errors.author}>{(p) => <input {...p} type="text" value={form.author} onChange={set('author')} />}</Field>
-          <Field id="ab-genre" label="Genre" error={errors.genre}>{(p) => <select {...p} value={form.genre} onChange={set('genre')}><option value="">None</option>{GENRES.map((g) => <option key={g.key} value={g.key}>{g.label}</option>)}</select>}</Field>
+          <fieldset className="ab__genres" aria-describedby="ab-genre-help">
+            <legend>Genres</legend>
+            <p id="ab-genre-help" className="ab__help">Tick up to {MAX_GENRES}. Some books cross two or three genres, and the book appears on each of their shelves. The first one you tick is its main genre (it colours the spine).</p>
+            <div className="ab__genrelist">
+              {GENRES.map((g) => {
+                const on = form.genres.includes(g.key)
+                return (
+                  <label key={g.key} className="ab__check">
+                    <input type="checkbox" checked={on} disabled={!on && form.genres.length >= MAX_GENRES} onChange={() => setForm((f) => ({ ...f, genres: f.genres.includes(g.key) ? f.genres.filter((k) => k !== g.key) : [...f.genres, g.key].slice(0, MAX_GENRES) }))} /> {g.label}
+                  </label>
+                )
+              })}
+            </div>
+            {errors.genre && <p className="ab__error" role="alert">{errors.genre}</p>}
+          </fieldset>
           <Field id="ab-status" label="Where is it?" error={errors.status}>{(p) => <select {...p} value={form.status} onChange={set('status')}>{STATUSES.map((s) => <option key={s.key} value={s.key}>{s.label}</option>)}</select>}</Field>
           <Field id="ab-started" label="Started (optional)" error={errors.started}>{(p) => <input {...p} type="date" value={form.started} onChange={set('started')} />}</Field>
           <Field id="ab-finished" label="Finished (needed once you have read it)" help="It decides which year's shelf the book sits on." error={errors.finished}>{(p) => <input {...p} type="date" value={form.finished} onChange={set('finished')} />}</Field>

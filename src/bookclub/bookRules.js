@@ -14,7 +14,8 @@ export const GENRES = [
   { key: 'mindset', label: 'Mindset & Psychology' },
   { key: 'biography', label: 'Biography' },
   { key: 'fantasy', label: 'Fantasy' },
-  { key: 'mystery', label: 'Mystery & Thriller' },
+  { key: 'mystery', label: 'Mystery' },
+  { key: 'thriller', label: 'Thriller' },
   { key: 'romance', label: 'Romance' },
   { key: 'sci-fi', label: 'Sci-Fi' },
   { key: 'historical-fiction', label: 'Historical Fiction' },
@@ -22,7 +23,14 @@ export const GENRES = [
   { key: 'picture-books', label: 'Picture Books' },
   { key: 'history', label: 'History' },
   { key: 'poetry', label: 'Poetry' },
+  { key: 'translated', label: 'Translated Literature' },
 ]
+
+// The genres shown on the Book Club page under "Choose a genre" (the rest are still real genres: they have shelves on the bookshelf page and can be chosen in Admin).
+export const FEATURED_GENRES = ['mystery', 'thriller', 'romance', 'sci-fi', 'fantasy', 'fiction', 'classics', 'translated']
+// A book can sit in up to three genres (it crosses genres: a historical mystery is both). The book's own genre column keeps the first of them, for older pages.
+export const MAX_GENRES = 3
+export const genresOf = (book) => (book && Array.isArray(book.genres) && book.genres.length ? book.genres : book && book.genre ? [book.genre] : [])
 export const STATUSES = [
   { key: 'reading', label: 'Reading now' },
   { key: 'read', label: 'Read' },
@@ -79,9 +87,9 @@ export const matchesSearch = (book, query) => {
 export function genreShelves(books, query = '') {
   const have = (Array.isArray(books) ? books : []).filter((b) => b && (b.status === 'read' || b.status === 'reading') && matchesSearch(b, query))
   const known = new Set(GENRES.map((g) => g.key))
-  const shelves = GENRES.map((g) => ({ ...g, books: have.filter((b) => b.genre === g.key) }))
+  const shelves = GENRES.map((g) => ({ ...g, books: have.filter((b) => genresOf(b).includes(g.key)) }))
   // A book with no genre (or one the shelves do not know) would vanish, so it goes on a last shelf of its own, shown only when there is one
-  const other = have.filter((b) => !known.has(b.genre))
+  const other = have.filter((b) => !genresOf(b).some((k) => known.has(k)))
   return other.length ? [...shelves, { key: 'other', label: 'No genre yet', books: other, other: true }] : shelves
 }
 
@@ -92,7 +100,7 @@ export function cleanBook(input) {
   const errors = {}
   const title = tidy(i.title)
   const author = tidy(i.author)
-  const genre = tidy(i.genre)
+  const genreList = [...new Set((Array.isArray(i.genres) ? i.genres : i.genre ? [i.genre] : []).map(tidy).filter(Boolean))]
   const status = tidy(i.status) || 'read'
   const started = tidy(i.started)
   const finished = tidy(i.finished)
@@ -113,7 +121,8 @@ export function cleanBook(input) {
   if (!title) errors.title = 'Write the book\u2019s title.'
   else if (title.length > LIMITS.title) errors.title = `Keep the title to ${LIMITS.title} characters or fewer.`
   if (author.length > LIMITS.author) errors.author = `Keep the author to ${LIMITS.author} characters or fewer.`
-  if (genre && !GENRES.some((g) => g.key === genre)) errors.genre = 'Choose one of the genres, or none.'
+  if (genreList.some((k) => !GENRES.some((g) => g.key === k))) errors.genre = 'Choose from the genres in the list, or none.'
+  else if (genreList.length > MAX_GENRES) errors.genre = `Choose up to ${MAX_GENRES} genres.`
   if (!STATUSES.some((s) => s.key === status)) errors.status = 'Choose reading now, read, or up next.'
   if (started && !isDate(started)) errors.started = 'Write the date as year-month-day, for example 2026-10-03.'
   if (finished && !isDate(finished)) errors.finished = 'Write the date as year-month-day, for example 2026-10-03.'
@@ -140,7 +149,8 @@ export function cleanBook(input) {
     value: {
       title,
       author: author || null,
-      genre: genre || null,
+      genre: genreList[0] || null,
+      genres: genreList,
       status,
       started: started || null,
       finished: finished || null,

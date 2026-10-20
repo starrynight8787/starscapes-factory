@@ -6,7 +6,7 @@ import useUser from '../suggest/useUser'
 import { formatDate } from '../rooms/postRules'
 import { MEMBERSHIP } from '../data/membership'
 import { addComment, canComment, fetchBooks, fetchComments, fetchGoals, removeComment } from './bookApi'
-import { BOOK_CLUB_PATH, GENRES, STATUSES, aboutParagraphs, bookPath, safeCover, seriesTiles, shelfPath } from './bookRules'
+import { BOOK_CLUB_PATH, GENRES, genresOf, STATUSES, aboutParagraphs, bookPath, safeCover, seriesTiles, shelfPath } from './bookRules'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './bookclub.css'
@@ -41,14 +41,14 @@ export default function BookPage() {
 
   const year = String(book.finished || book.started || '').slice(0, 4)
   const theme = year && goals[Number(year)] && goals[Number(year)].theme
-  const genre = genreOf(book.genre)
+  const genreList = genresOf(book).map(genreOf).filter(Boolean)
   const cover = safeCover(book.cover_url)
   const characters = Array.isArray(book.characters) ? book.characters.filter((c) => c && c.name) : []
   const summary = aboutParagraphs(book.about)
   const review = aboutParagraphs(book.review)
   const facts = [
     ['Year published', book.year_published ? String(book.year_published) : 'Not added yet'],
-    ['Genre', genre ? genre.label : 'No genre chosen yet'],
+    [genreList.length > 1 ? 'Genres' : 'Genre', genreList.length ? genreList.map((g) => g.label).join(', ') : 'No genre chosen yet'],
     ['Started reading', book.started ? formatDate(book.started) : 'Not recorded'],
     ['Finished', book.finished ? formatDate(book.finished) : (book.status === 'read' ? 'Not recorded' : 'Not finished yet')],
     ['Year shelf', year || 'Not on a shelf yet'],
@@ -69,7 +69,7 @@ export default function BookPage() {
           : <div className="bk__cover bk__cover--blank" aria-hidden="true">{book.title}</div>}
         <div className="bk__info">
           <div className="bk__chips">
-            {genre && <Link className="bk__chip" to={shelfPath(genre.key)}>{genre.label} shelf</Link>}
+            {genreList.map((g) => <Link key={g.key} className="bk__chip" to={shelfPath(g.key)}>{g.label} shelf</Link>)}
             {statusOf(book.status) && <span className="bk__chip bk__chip--dark">{statusOf(book.status)}</span>}
             {book.theme_book && <span className="bk__chip bk__chip--gold">★ Part of the {year || ''} theme</span>}
           </div>

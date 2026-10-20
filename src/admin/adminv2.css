@@ -384,3 +384,12 @@ body .container:has(> .al-v2) {
 .ah__picname { flex: 1 1 140px; font-weight: 600; }
 .ah__choose { position: relative; overflow: hidden; cursor: pointer; }
 .ah__file { position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; }
+
+/* The genre tick boxes in Admin > Books (a book can sit in up to three genres) */
+.ab__genres { margin: 0; padding: 0; border: 0; min-width: 0; }
+.ab__genres legend { padding: 0; font-weight: 600; }
+.ab__help { margin: 4px 0 10px; color: var(--sf-muted, #5b6585); font-size: 0.95rem; }
+.ab__genrelist { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 8px 16px; }
+.ab__check { display: flex; align-items: center; gap: 8px; min-height: 36px; }
+.ab__check input { width: 20px; height: 20px; }
+.ab__error { margin: 8px 0 0; color: #b3261e; font-weight: 600; }

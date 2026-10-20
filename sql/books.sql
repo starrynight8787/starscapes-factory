@@ -13,7 +13,7 @@ create table if not exists public.books (
   id uuid primary key default gen_random_uuid(),
   title text not null check (char_length(btrim(title)) between 1 and 150),
   author text check (author is null or char_length(author) <= 100),
-  genre text check (genre is null or genre in ('leadership', 'fiction', 'memoir', 'self-growth', 'childrens', 'business', 'creativity', 'productivity', 'parenting', 'mindset', 'biography', 'fantasy', 'mystery', 'romance', 'sci-fi', 'historical-fiction', 'classics', 'picture-books', 'history', 'poetry')),
+  genre text check (genre is null or genre in ('leadership', 'fiction', 'memoir', 'self-growth', 'childrens', 'business', 'creativity', 'productivity', 'parenting', 'mindset', 'biography', 'fantasy', 'mystery', 'thriller', 'romance', 'sci-fi', 'historical-fiction', 'classics', 'picture-books', 'history', 'poetry', 'translated')),
   status text not null default 'read' check (status in ('reading', 'read', 'upnext')),
   started date,
   finished date,

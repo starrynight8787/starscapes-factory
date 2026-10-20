@@ -7,10 +7,10 @@ export async function fetchBooks() {
   const columns = 'id, title, author, genre, status, started, finished, rating, cover_url, review_post_id, note, created_at'
   const ask = (list) => supabase.from('books').select(list).order('finished', { ascending: false, nullsFirst: false })
   // Ask for the most, then fewer columns if the database has not had its extra steps yet (sql/books-about.sql, sql/book-details.sql), so the page never breaks
-  for (const extra of [`, about, ${DETAIL_COLUMNS}`, ', about', '']) {
+  for (const extra of [`, genres, about, ${DETAIL_COLUMNS}`, `, about, ${DETAIL_COLUMNS}`, ', about', '']) {
     const { data, error } = await ask(`${columns}${extra}`)
     if (!error) return Array.isArray(data) ? data : []
-    if (!/column|schema cache|does not exist|\b(about|year_published|series_name)\b/i.test(String(error.message || error))) throw new Error(plain(error))
+    if (!/column|schema cache|does not exist|\b(about|genres|year_published|series_name)\b/i.test(String(error.message || error))) throw new Error(plain(error))
   }
   throw new Error(plain(null))
 }
@@ -32,6 +32,7 @@ export async function saveBook(id, value) {
   // A save that includes "about" cannot work until sql/books-about.sql has been run in Supabase: say so plainly rather than a vague failure
   if (error && /\babout\b/i.test(String(error.message || error)) && value && value.about !== undefined) throw new Error('The "about" box needs one small step in Supabase first (run sql/books-about.sql). Nothing was saved.')
   if (error && /year_published|theme_book|characters|review|quote|series_/i.test(String(error.message || error)) && /column|schema cache/i.test(String(error.message || error))) throw new Error('The book page boxes need one small step in Supabase first (run sql/book-details.sql). Nothing was saved.')
+  if (error && /\bgenres\b/i.test(String(error.message || error))) throw new Error('Choosing more than one genre needs one small step in Supabase first (run sql/book-genres-multi.sql). Nothing was saved.')
   if (error) throw new Error(plain(error))
 }
 

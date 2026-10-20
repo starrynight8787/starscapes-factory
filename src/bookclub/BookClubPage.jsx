@@ -9,7 +9,7 @@ import { PROJECT_SOCIALS } from '../data/contact'
 import { MEMBERSHIP } from '../data/membership'
 import SuggestPanel from '../suggest/SuggestPanel'
 import { fetchBooks, fetchGoals } from './bookApi'
-import { GENRES, aboutParagraphs, bookPath, genreShelves, progress, safeCover, shelfFor, shelfPath, spineClass, starsText, yearsOf } from './bookRules'
+import { FEATURED_GENRES, GENRES, genresOf, aboutParagraphs, bookPath, genreShelves, progress, safeCover, shelfFor, shelfPath, spineClass, starsText, yearsOf } from './bookRules'
 import { COME_READ, GENRES_INTRO, MEMBER_BENEFITS, SHELF_INTRO, SUBTITLE, THEME_FALLBACK, THEME_INTRO, VIDEO_ID, WELCOME } from './bookClubData'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -25,6 +25,7 @@ export default function BookClubPage({ now = new Date() }) {
   useTitle('Book Club')
   const thisYear = now.getFullYear()
   const [books, setBooks] = useState([])
+  const [allGenres, setAllGenres] = useState(false)
   const [goals, setGoals] = useState({})
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
@@ -166,7 +167,7 @@ export default function BookClubPage({ now = new Date() }) {
         <p><Link className="pg-btn" to={shelfPath()}>See the whole bookshelf</Link></p>
         <div className="bc__bookshelf">
           <ul className="bc__spines">
-            {GENRES.map((g, i) => {
+            {(allGenres ? GENRES : GENRES.filter((g) => FEATURED_GENRES.includes(g.key))).map((g, i) => {
               const n = (genreShelves(books).find((x) => x.key === g.key) || { books: [] }).books.length
               return (
                 <li key={g.key} className={`bc__bookitem bc__bookitem--${i % 5}`}>
@@ -180,6 +181,7 @@ export default function BookClubPage({ now = new Date() }) {
           </ul>
           <div className="bc__ledge-plank" aria-hidden="true" />
         </div>
+        <p><button type="button" className="pg-btn" aria-expanded={allGenres} onClick={() => setAllGenres((v) => !v)}>{allGenres ? 'Show fewer genres' : 'More genres'}</button></p>
       </section>
 
       <section className="bc__yearshelf" aria-labelledby="bc-shelf">
@@ -206,7 +208,7 @@ export default function BookClubPage({ now = new Date() }) {
               <div>
                 <h3 className="bc__now-title">{open.title}</h3>
                 {open.author && <p className="bc__muted">{open.author}</p>}
-                {genreOf(open.genre) && <span className="pg-chip">{genreOf(open.genre).label}</span>}
+                {genresOf(open).map(genreOf).filter(Boolean).map((g) => <span key={g.key} className="pg-chip">{g.label}</span>)}
                 {open.rating && <p className="bc__stars">{starsText(open.rating)}</p>}
                 {open.finished && <p className="bc__muted">Finished {formatDate(open.finished)}</p>}
                 {open.note && <p>{open.note}</p>}
