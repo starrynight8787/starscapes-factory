@@ -226,6 +226,7 @@ export default function AdminPrints() {
       )}
 
       {groups.length === 0 && <p className="al-note">There are no prints to manage.</p>}
+      <div className="al-v2__groups">
       {groups.map((g) => {
         const off = g.items.filter((p) => !p.published).map((p) => p.id)
         const on = g.items.filter((p) => p.published).map((p) => p.id)
@@ -269,6 +270,7 @@ export default function AdminPrints() {
           </section>
         )
       })}
+      </div>
     </main>
   )
 }

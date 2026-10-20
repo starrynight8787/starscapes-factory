@@ -78,3 +78,44 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The collections: cards side by side in two even columns, each card as tall as it needs with no gaps (they can differ a lot in length). */
+.al-v2.al-admin > .al-v2__groups {
+  grid-column: 1 / -1;
+  column-count: 2;
+  column-gap: 18px;
+}
+.al-v2__groups > .al-admin__group {
+  break-inside: avoid;
+  margin: 0 0 18px;
+  display: inline-block;
+  width: 100%;
+  box-sizing: border-box;
+}
+.al-v2 .al-admin__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.al-v2 .al-admin__list li {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 12px;
+}
+.al-v2 .al-admin__list li > a {
+  flex: 1 1 140px;
+  min-width: 0;
+}
+.al-v2 .al-admin__select {
+  flex: 1 1 170px;
+  min-width: 0;
+  max-width: 100%;
+}
+@media (max-width: 900px) {
+  .al-v2.al-admin > .al-v2__groups {
+    column-count: 1;
+  }
+}
