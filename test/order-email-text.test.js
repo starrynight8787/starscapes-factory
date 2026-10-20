@@ -79,7 +79,7 @@ describe('promises it must not make', () => {
   })
   it('does not link to a page that is not published', () => {
     expect(Object.values(PAGES).every((p) => p === '' || p.startsWith(`${SITE}/`))).toBe(true)
-    if (Object.values(PAGES).every((p) => p === '')) expect(text).not.toMatch(/https?:\/\//)
+    if (Object.values(PAGES).every((p) => p === '')) expect(text.replace(/View or print your invoice: \S+/, '')).not.toMatch(/https?:\/\//) // the invoice page is published, so its link is allowed
   })
 })
 

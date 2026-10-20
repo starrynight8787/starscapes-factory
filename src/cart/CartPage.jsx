@@ -7,6 +7,7 @@ import { redirectTo } from './redirect'
 import { LAUNCH_COUNTRIES } from './launchCountries'
 import { KINDS, setQty, removeItem, clearCart } from './cartStore'
 import { formatMoney } from './money'
+import PageBanner from '../components/PageBanner'
 
 // "United Kingdom, Ireland and Canada"
 function countryList(codes) {
@@ -56,9 +57,19 @@ export default function CartPage() {
     )
   }
 
+  const vat = Math.round((subtotal * 100) / 6) / 100 // prices already include UK VAT at 20%
   return (
-    <main className="cart legacy">
-      <h1>Your cart</h1>
+    <main className="cart legacy cart--v2">
+      <PageBanner
+        art="plain"
+        chip="Your cart"
+        title="Nearly there"
+        subtitle="Check your order, then pay safely on Stripe. Your receipt arrives by email straight away."
+      />
+      <div className="cart-body">
+      <div className="cart-main">
+      <section className="cart-card" aria-label="Your order">
+      <h2 className="cart-card__title">Your order</h2>
       <p className="cart-count" role="status">
         {count} {count === 1 ? 'item' : 'items'}
       </p>
@@ -96,16 +107,32 @@ export default function CartPage() {
           )
         })}
       </ul>
+      </section>
+      <p className="cart-more"><Link to="/art-loft">← Keep browsing the Art Loft</Link></p>
+      </div>
 
       <section className="cart-summary" aria-label="Order summary">
+        <h2 className="cart-card__title">Order summary</h2>
+        <p className="cart-summary__line">
+          <span>Subtotal ({count} {count === 1 ? 'item' : 'items'})</span>
+          <span>{formatMoney(subtotal)}</span>
+        </p>
+        <p className="cart-summary__line">
+          <span>Delivery</span>
+          <span>Free</span>
+        </p>
+        <p className="cart-summary__line">
+          <span>VAT included (20%)</span>
+          <span>{formatMoney(vat)}</span>
+        </p>
         <p className="cart-summary__row">
-          <span>Subtotal</span>
+          <span>Total due today</span>
           <strong>{formatMoney(subtotal)}</strong>
         </p>
         <p className="cart-summary__note">Delivery is free to {countryList(LAUNCH_COUNTRIES)}. You'll choose your address on the next page.</p>
         {!printsOnly && <p className="cart-summary__note" role="status">Checkout only handles prints for now. Please remove anything else to pay.</p>}
         <button type="button" className="cart-checkout" disabled={paying.busy || !printsOnly || !canPay} onClick={handleCheckout}>
-          {paying.busy ? 'Taking you to the payment page…' : gate.ready && !canPay ? 'Checkout opens soon' : 'Checkout'}
+          {paying.busy ? 'Taking you to the payment page…' : gate.ready && !canPay ? 'Checkout opens soon' : `Pay ${formatMoney(subtotal)} securely`}
         </button>
         {gate.ready && !canPay && <p className="cart-summary__note" role="status">Your cart is saved on this device until checkout opens.</p>}
         {gate.ready && !gate.open && gate.can_test && <p className="cart-summary__note" role="status">Checkout is closed to visitors. You can test it because you are signed in as the owner.</p>}
@@ -115,8 +142,7 @@ export default function CartPage() {
           <button type="button" onClick={clearCart}>Empty cart</button>
         </p>
       </section>
-
-      <p className="cart-more"><Link to="/art-loft">← Keep browsing the Art Loft</Link></p>
+      </div>
     </main>
   )
 }

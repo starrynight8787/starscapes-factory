@@ -25,6 +25,7 @@ export default function CheckoutSuccess() {
       <h1>Thank you</h1>
       <p role="status">Your payment went through. You'll get a receipt by email from Stripe.</p>
       <p>Each print is made to order and posted straight to you from the print studio.</p>
+      <p><Link to={`/invoice?session_id=${encodeURIComponent(sessionId)}`}>View or print your invoice</Link></p>
       <p><Link to="/art-loft">Back to the Art Loft</Link></p>
     </main>
   )

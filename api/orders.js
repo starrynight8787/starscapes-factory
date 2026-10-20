@@ -1,6 +1,7 @@
 // Vercel serverless function: the owner's list of orders, for the publish page. Locked to the shop owner.
 import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
+import { buildInvoice, isSessionId } from '../lib/invoiceData.js'
 
 const COLUMNS = 'id,created_at,status,livemode,customer_name,customer_email,shipping,amount_total,currency,items,creativehub_order_id,creativehub_status,note'
 // Added later (sql/orders-creativehub.sql). If that has not been run yet, the list is read without them rather than not at all.
@@ -10,8 +11,26 @@ const CONFIRMATION = 'confirmation_status,confirmation_note,confirmation_sent_at
 // And the "your order has been posted" email (sql/orders-dispatch.sql).
 const DISPATCH = 'dispatch_status,dispatch_note,dispatch_sent_at,tracking_url,tracking_number'
 
+// A customer's own invoice, found by the Stripe session id from their thank-you page or confirmation email. Open to anyone holding that id (it cannot be guessed),
+// and it only ever returns what belongs on an invoice.
+async function invoice(req, res) {
+  const id = String(req.query && req.query.invoice ? req.query.invoice : '')
+  if (!isSessionId(id)) return res.status(400).json({ ok: false, message: 'That is not an invoice link.' })
+  if (!databaseUrl() || serviceKeys().length === 0) return res.status(503).json({ ok: false, message: 'Invoices are not available just now. Please try again soon.' })
+  try {
+    const response = await serviceFetch(`/rest/v1/orders?stripe_session_id=eq.${encodeURIComponent(id)}&select=stripe_session_id,created_at,livemode,customer_name,customer_email,shipping,amount_total,currency,items&limit=1`, { headers: { Accept: 'application/json' } })
+    if (!response.ok) return res.status(502).json({ ok: false, message: 'Invoices are not available just now. Please try again soon.' })
+    const rows = await response.json()
+    if (!Array.isArray(rows) || !rows[0]) return res.status(404).json({ ok: false, message: 'We have not found this order yet. It can take a minute after paying: refresh in a moment.' })
+    return res.status(200).json({ ok: true, invoice: buildInvoice(rows[0]) })
+  } catch (e) {
+    return res.status(502).json({ ok: false, message: 'Invoices are not available just now. Please try again soon.' })
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')
+  if (req.method === 'GET' && req.query && req.query.invoice) return invoice(req, res)
   const who = await requireOwner(req)
   if (!who.ok) return sendDenied(res, who)
   if (req.method !== 'GET') return res.status(405).json({ ok: false, message: 'Orders can only be looked at here.' })

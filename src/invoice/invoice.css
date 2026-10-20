@@ -1,0 +1,267 @@
+/* The invoice page (the Figma "Invoice page" design): a paper with a starry header, a PAID bar, the items and the totals. It prints cleanly. */
+.container:has(> .inv) {
+  max-width: 900px;
+  margin-left: auto;
+  margin-right: auto;
+}
+.inv {
+  padding: 24px 0 72px;
+  font-family: var(--sf-body, system-ui, sans-serif);
+  color: var(--sf-ink, #0e1530);
+}
+.inv-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  max-width: 794px;
+  margin: 0 auto 20px;
+}
+.inv-title {
+  flex: 1 1 260px;
+  margin: 0;
+  font-family: var(--sf-head, sans-serif);
+  color: var(--sf-navy-700, #14306a);
+  font-size: 1.7rem;
+}
+.inv-btn {
+  min-height: 48px;
+  padding: 0 24px;
+  border: 2px solid var(--sf-blue, #1f6fa8);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #1f6fa8, #2e8fd0);
+  color: #fff;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.inv-btn--ghost {
+  background: #fff;
+  color: var(--sf-blue, #1f6fa8);
+}
+.inv-btn:focus-visible {
+  outline: 3px solid var(--sf-navy-700, #14306a);
+  outline-offset: 2px;
+}
+.inv-paper {
+  max-width: 794px;
+  margin: 0 auto;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 8px;
+  overflow: hidden;
+  box-shadow: 0 8px 28px rgba(13, 15, 64, 0.14);
+}
+.inv-paper__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 28px 56px;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(120deg, #14306a 0%, #1a3a86 55%, #2a4fb0 100%);
+}
+.inv-paper__head > * {
+  position: relative;
+  z-index: 1;
+}
+.inv-paper__brand {
+  margin: 0;
+  font-family: var(--sf-head, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.16em;
+  font-size: 1.1rem;
+}
+.inv-paper__tag {
+  margin: 4px 0 0;
+  color: var(--sf-star, #dce6ff);
+  font-size: 0.875rem;
+}
+.inv-paper__word {
+  margin: 0;
+  font-family: var(--sf-head, sans-serif);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  font-size: 1.9rem;
+}
+.inv-paper__body {
+  padding: 56px;
+  display: flex;
+  flex-direction: column;
+  gap: 28px;
+}
+.inv-meta {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 32px;
+}
+.inv-meta p {
+  margin: 4px 0 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+.inv-meta .inv-strong {
+  color: var(--sf-ink, #0e1530);
+}
+.inv-label {
+  margin: 0;
+  font-family: var(--sf-body, sans-serif);
+  font-size: 0.875rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--sf-blue, #1f6fa8);
+}
+.inv-strong {
+  font-weight: 600;
+}
+.inv-sub {
+  display: block;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.875rem;
+  font-weight: 400;
+  margin-top: 2px;
+}
+.inv-details {
+  display: grid;
+  grid-template-columns: auto auto;
+  gap: 4px 12px;
+  margin: 4px 0 0;
+  font-size: 0.9rem;
+}
+.inv-details dt {
+  color: var(--sf-muted, #5b6585);
+}
+.inv-details dd {
+  margin: 0;
+  font-weight: 600;
+  text-align: right;
+}
+.inv-paid {
+  margin: 0;
+  padding: 10px 14px;
+  border-radius: 10px;
+  background: #e3f5ec;
+  color: #14633f;
+}
+.inv-test {
+  margin: 0;
+  padding: 12px;
+  border: 2px solid #b3261e;
+  color: #b3261e;
+  font-weight: 700;
+}
+.inv-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.inv-table th {
+  text-align: left;
+  padding: 10px 12px;
+  background: var(--sf-star, #dce6ff);
+  color: var(--sf-navy-700, #14306a);
+  font-size: 0.875rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.inv-table td {
+  padding: 16px 12px;
+  border-bottom: 1px solid var(--sf-border, #dde3f0);
+  vertical-align: top;
+}
+.inv-num {
+  text-align: right !important;
+  white-space: nowrap;
+}
+.inv-totals {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 8px 24px;
+  width: 300px;
+  margin: 0 0 0 auto;
+}
+.inv-totals dt {
+  color: var(--sf-muted, #5b6585);
+}
+.inv-totals dd {
+  margin: 0;
+  text-align: right;
+  font-weight: 600;
+}
+.inv-totals .inv-grand {
+  margin-top: 4px;
+  padding-top: 10px;
+  border-top: 1px solid var(--sf-border, #dde3f0);
+  color: var(--sf-ink, #0e1530);
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.inv-note {
+  padding: 16px;
+  border-radius: 10px;
+  background: var(--sf-page, #f6f8fc);
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.92rem;
+}
+.inv-note p {
+  margin: 0 0 6px;
+}
+.inv-note .inv-strong {
+  color: var(--sf-navy-700, #14306a);
+}
+
+@media (max-width: 720px) {
+  .inv-paper__head {
+    padding: 22px 20px;
+  }
+  .inv-paper__word {
+    font-size: 1.15rem;
+  }
+  .inv-paper__brand {
+    font-size: 0.8rem;
+    letter-spacing: 0.08em;
+  }
+  .inv-paper__body {
+    padding: 20px;
+  }
+  .inv-meta {
+    grid-template-columns: minmax(0, 1fr);
+    gap: 20px;
+  }
+  .inv-totals {
+    width: 100%;
+  }
+  .inv-table th:nth-child(2),
+  .inv-table td:nth-child(2),
+  .inv-table th:nth-child(3),
+  .inv-table td:nth-child(3) {
+    display: none;
+  }
+}
+
+@media print {
+  body.sf-print-invoice nav,
+  body.sf-print-invoice footer,
+  body.sf-print-invoice .skip-link,
+  .inv-actions {
+    display: none !important;
+  }
+  .inv {
+    padding: 0;
+  }
+  .inv-paper {
+    border: 0;
+    box-shadow: none;
+  }
+  .inv-paper__head,
+  .inv-table th,
+  .inv-paid {
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}

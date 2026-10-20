@@ -255,3 +255,106 @@
 .cart-summary__clear button {
   padding: 4px 0;
 }
+
+/* ---- The checkout page, from the Figma "23 Checkout and invoice" designs: starry banner, an order card, and an order summary card ---- */
+.container:has(> .cart--v2) {
+  max-width: 1232px;
+}
+.cart--v2 .pb {
+  margin-bottom: 32px;
+}
+.cart-body {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 400px;
+  gap: 32px;
+  align-items: start;
+}
+.cart-main {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.cart-card,
+.cart--v2 .cart-summary {
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 16px;
+  padding: 28px;
+}
+.cart--v2 .cart-summary {
+  max-width: none;
+  margin: 0;
+  position: sticky;
+  top: 24px;
+  box-shadow: 0 8px 24px rgba(13, 15, 64, 0.12);
+}
+.cart-card__title {
+  font-family: var(--sf-head, sans-serif);
+  color: var(--sf-navy-700, #14306a);
+  font-size: 1.5rem;
+  margin: 0 0 6px;
+}
+.cart--v2 .cart-lines {
+  margin: 12px 0 0;
+}
+.cart--v2 .cart-line:last-child {
+  border-bottom: 0;
+}
+.cart--v2 .cart-line__thumb {
+  border-radius: 12px;
+}
+.cart--v2 .cart-line__kind {
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: var(--sf-blue, #1f6fa8);
+}
+.cart-summary__line {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 0 0 8px;
+  color: var(--sf-muted, #5b6585);
+}
+.cart--v2 .cart-summary__row {
+  margin: 12px 0 14px;
+  padding-top: 14px;
+  border-top: 1px solid var(--sf-border, #dde3f0);
+}
+.cart--v2 .cart-summary__row span {
+  font-weight: 700;
+  font-size: 1.25rem;
+}
+.cart--v2 .cart-summary__row strong {
+  font-size: 1.4rem;
+}
+.cart--v2 .cart-checkout {
+  min-height: 56px;
+  font-size: 1.05rem;
+  border: 0;
+  background: linear-gradient(90deg, #1f6fa8, #2e8fd0);
+}
+.cart--v2 .cart-checkout:hover:not(:disabled) {
+  background: linear-gradient(90deg, #14306a, #1f6fa8);
+}
+.cart--v2 .cart-checkout:disabled {
+  border: 2px dashed var(--sf-border, #dde3f0);
+  background: #eef2fa;
+}
+.cart--v2 .cart-summary__note {
+  text-align: center;
+}
+@media (max-width: 900px) {
+  .cart-body {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .cart--v2 .cart-summary {
+    position: static;
+  }
+}
+@media (max-width: 720px) {
+  .cart-card,
+  .cart--v2 .cart-summary {
+    padding: 18px;
+  }
+}

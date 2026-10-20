@@ -37,6 +37,7 @@ import ResetPassword from './pages/ResetPassword'
 import FactoryFloorRoutes from './factoryfloor/FactoryFloorRoutes'
 import CartPage from './cart/CartPage'
 import CheckoutSuccess from './cart/CheckoutSuccess'
+import InvoicePage from './invoice/InvoicePage'
 import DraftingDeskRoutes from './draftingdesk/DraftingDeskRoutes'
 import RoomRoutes from './rooms/RoomRoutes'
 import NotFound from './pages/NotFound'
@@ -115,6 +116,7 @@ export default function App() {
           <Route path="/factory-floor/*" element={<FactoryFloorRoutes />} />
           <Route path="/cart" element={<CartPage />} />
           <Route path="/checkout/success" element={<CheckoutSuccess />} />
+          <Route path="/invoice" element={<InvoicePage />} />
           <Route path="/drafting-desk/*" element={<DraftingDeskRoutes />} />
           <Route path="/idea-hatchery/*" element={<RoomRoutes room="idea-hatchery" />} />
           <Route path="/leadership-lounge/*" element={<RoomRoutes room="leadership-lounge" />} />
