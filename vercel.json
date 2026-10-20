@@ -1,4 +1,10 @@
 {
+  "crons": [
+    {
+      "path": "/api/membership-checkout?reminders=1",
+      "schedule": "0 8 * * *"
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!api/.*).*)",

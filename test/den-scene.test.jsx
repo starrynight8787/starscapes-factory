@@ -16,7 +16,7 @@ const TAPE = { blog: [250, -12], 'daryls-adventures': [530, -6], books: [200, -1
 
 describe('Sarah Jr.\u2019s Den: what it says', () => {
   it('is in the words of the design: a curious little bear and her pet dinosaur, Daryl', () => {
-    expect(den.name).toBe("Sarah Jr.'s Den")
+    expect(den.name).toBe("Sarah Junior's Clubhouse")
     expect(den.tagline).toBe("Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl.")
     expect(den.blurb).toBe('Pick a door.')
   })
@@ -43,7 +43,7 @@ describe('the Den page', () => {
     const main = container.querySelector('main.rs')
     expect(main.getAttribute('data-room')).toBe('sarah-jrs-den')
     expect([...main.children].map((c) => c.className.split(' ')[0])).toEqual(['rs-home', 'rs-head', 'rs-stage', 'rs-list'])
-    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Sarah Jr.'s Den")
+    expect(screen.getByRole('heading', { level: 1 }).textContent).toBe("Sarah Junior's Clubhouse")
   })
   it('shows all four doors as closed, each read out as locked, and none of them as a link', () => {
     const { container } = show()

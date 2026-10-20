@@ -1,0 +1,51 @@
+RENEWAL REMINDER EMAILS   starscapes-reminders-20oct.zip   (SFW-237)
+(ONE Supabase step and ONE Vercel setting, below. Nothing to do in Stripe. Memberships stay closed to visitors.)
+
+WHAT IT DOES
+Once a day, a job looks for members whose next payment is coming up, asks Stripe what will REALLY be taken and what was taken last time, and emails them a reminder. There are two kinds:
+  * "Your Starscapes Factory passes renew on 16 November 2026": the date, which passes, the amount (the price includes VAT), that it renews by itself, and how to cancel (My passes, "Manage payment or cancel").
+  * "The price of your Starscapes Factory passes changes on 16 November 2026": the same, plus the old price, the new price and how much more. This is the promise in the Terms: "we will email you before the price changes",
+    for when the launch offer (half price for the first year) ends.
+WHEN (working rules, in src/membership/reminderRules.js, to be revisited when the government publishes its guidance for the new subscription law starting January 2027):
+  * a price change: 14 days before (monthly members too);   * a yearly renewal: 14 days before;   * a monthly member: about once every six months, 7 days before a payment;
+  * ONE reminder for each renewal date, never two;   * nobody who has cancelled, whose payment failed, or who has no open passes.
+WHO REALLY GETS ONE, AND THE RAIL: the wording in lib/reminderEmailText.js starts as "NOT approved". Until you have read it and said yes, a reminder is only ever sent to YOU (the site owner), never to a real member, and it carries a
+"DRAFT WORDING" line. To approve it, tell me and I change one word (WORDING_APPROVED) in lib/reminderEmailText.js.
+THE SAFEGUARDS: each renewal date is written to the database BEFORE the email goes, so a member cannot be sent two however often the job runs (a failed one is tried again next day); Resend is given a key that is the same
+every time for the same member and date; the job only runs for the scheduler or for you, because it needs a secret; it never shows an email address in its answer (a dry run shows only counts and the first 8 letters of an id);
+and it cannot add a 13th function (the free Vercel plan allows 12): it runs inside the existing payment function.
+
+STEP 1: SUPABASE (before installing). Open Supabase, then SQL editor, then New query. Paste ALL the SQL in sql/membership-notices.sql (the SQL itself, not the file name; it is given in full in the chat) and press Run.
+It says "Success. No rows returned." It is safe to run more than once. To check it worked, run:
+    select tablename, rowsecurity from pg_tables where schemaname = 'public' and tablename = 'membership_notices';
+It should give one row with rowsecurity = true.
+
+STEP 2: VERCEL: ONE NEW SETTING. Vercel, your project, Settings, Environment Variables. Add   CRON_SECRET   for the Production environment, set to a long random string (about 40 letters and numbers: use a password
+generator, or in a terminal run   openssl rand -hex 24  ). Do NOT share it with anyone, and do not paste it into chat. Vercel's scheduler sends it with each daily request automatically. After adding it, the site must be
+redeployed for it to count: installing this package does that. (Without CRON_SECRET the job refuses to run, on purpose.)
+
+STEP 3: INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-reminders-20oct.zip
+ 3. python3 tools/add-reminders.py            (it checks the two files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Renewal reminder emails: a daily job, one reminder for each renewal date, only to the owner until the wording is approved"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then, in Vercel, Settings, Cron Jobs, you should see one job: /api/membership-checkout?reminders=1, once a day at 08:00 UTC.
+
+STEP 4: LOOK AT THE EMAILS (this is how you approve the wording). In a terminal, replace YOUR_SECRET with your CRON_SECRET (type it in the terminal only):
+    curl -s -H "Authorization: Bearer YOUR_SECRET" "https://starscapesfactory.com/api/membership-checkout?reminders=1&sample=renewal"
+    curl -s -H "Authorization: Bearer YOUR_SECRET" "https://starscapesfactory.com/api/membership-checkout?reminders=1&sample=price-change"
+Each emails YOU one sample, marked [SAMPLE], with made-up passes and amounts (nothing goes to any member, nothing is recorded). Read them, and tell me what to change.
+To see who the job WOULD email right now, and send nothing:
+    curl -s -H "Authorization: Bearer YOUR_SECRET" "https://starscapesfactory.com/api/membership-checkout?reminders=1&dry=1"
+While there are no members within 14 days of a payment it answers  "checked":0 . That is correct. (The same sample test also checks that your Resend key is set up: if it says the sample could not be sent, that is why.)
+
+NOT IN THIS PACKAGE (still SFW-237): the notice when the discount ends and the 14-day cooling-off notice after the first full-price payment (the new law's other notices), and a plain Cancel button on My passes. They wait for the
+government's regulations. Also check in Stripe that the customer receipts and Stripe's own renewal emails are switched OFF or ON as you want, so a member is not told twice by two systems: Stripe, Settings, Billing, Customer emails.
+
+(The unzip also adds four test files: membership-reminder-rules, -email, -job and -setup.)

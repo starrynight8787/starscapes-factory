@@ -65,7 +65,7 @@ describe('the page', () => {
     expect(sub).toHaveAttribute('href', SOCIAL_LINKS.youtube); expect(sub).toHaveAttribute('target', '_blank'); expect(sub.getAttribute('rel')).toMatch(/noopener/)
     expect(banner).toHaveClass('pb--starry') // the starry banner has stars, and Sarah Jr.'s patchwork bear on the right
     const bear = banner.querySelector('img'); expect(bear).toHaveAttribute('src', '/sarah-jr/bear.png'); expect(bear).toHaveAttribute('alt', '')
-    expect(screen.getByRole('link', { name: /Back to Sarah Jr.'s Den/ })).toHaveAttribute('href', '/sarah-jrs-den')
+    expect(screen.getByRole('link', { name: /Back to Sarah Junior's Clubhouse/ })).toHaveAttribute('href', '/sarah-jrs-den')
   })
   it('pins the newest video at the top, with "Start here", its date, and a link to watch it on YouTube', async () => {
     h.videos = many(3); page()

@@ -17,7 +17,7 @@ describe('footer', () => {
   it('links every room, the shop and help pages, and each legal page only once it is ready', () => {
     renderFooter({ social: [] })
     const rooms = screen.getByRole('navigation', { name: 'Rooms' })
-    expect(within(rooms).getAllByRole('link').map((l) => l.textContent)).toEqual(['The Drafting Desk', "Sarah Jr.'s Den", 'The Art Loft', "Explorer's Bay", 'The Factory Floor', 'Leadership Lounge', 'The Idea Hatchery', 'Knowledge Nook'])
+    expect(within(rooms).getAllByRole('link').map((l) => l.textContent)).toEqual(['The Drafting Desk', "Sarah Junior's Clubhouse", 'The Art Loft', "Explorer's Bay", 'The Factory Floor', 'Leadership Lounge', 'The Idea Hatchery', 'Knowledge Nook'])
     const help = screen.getByRole('navigation', { name: 'Shop and help' })
     expect(within(help).getByRole('link', { name: 'Art Loft prints' })).toHaveAttribute('href', '/art-loft')
     expect(within(help).getByRole('link', { name: 'Cart' })).toHaveAttribute('href', '/cart')

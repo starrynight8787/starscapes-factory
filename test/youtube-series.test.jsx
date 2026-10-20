@@ -102,7 +102,7 @@ describe('the page', () => {
     show()
     expect(screen.getByRole('heading', { level: 1, name: 'YouTube Series' })).toBeInTheDocument()
     expect(screen.getByText('come write with me, come read with me, come study with me')).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /Back to Sarah Jr.'s Den/ })).toHaveAttribute('href', '/sarah-jrs-den')
+    expect(screen.getByRole('link', { name: /Back to Sarah Junior's Clubhouse/ })).toHaveAttribute('href', '/sarah-jrs-den')
     const sub = screen.getByRole('link', { name: /Subscribe on YouTube/ })
     expect(sub).toHaveAttribute('href', SOCIAL_LINKS.youtube); expect(sub).toHaveAttribute('target', '_blank'); expect(sub.getAttribute('rel')).toMatch(/noopener/)
     await screen.findByText('Episode one')

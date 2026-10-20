@@ -122,7 +122,7 @@ describe('the home page', () => {
     h.event = EVENT; h.featured = 'sarah-jrs-den'; h.post = POST
     const { container } = wrap(<ChannelDirectory />)
     expect(await screen.findByText('Come read with me, live')).toBeInTheDocument()
-    expect(await screen.findByRole('heading', { level: 2, name: "Sarah Jr.'s Den" })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: "Sarah Junior's Clubhouse" })).toBeInTheDocument()
     expect(await screen.findByRole('heading', { level: 2, name: 'Claude and I had a fight' })).toBeInTheDocument()
     const order = [...container.querySelectorAll('.hs section')].map((s) => s.getAttribute('aria-labelledby'))
     expect(order).toEqual(['hs-event-title', 'hs-membership-title', 'hs-room-title', 'hs-post-title'])

@@ -31,7 +31,7 @@ beforeEach(() => { forgetDoors(); Object.assign(world, { open: {}, loadFails: fa
 describe('the Den\u2019s front page', () => {
   it('shows every door taped off when nothing is open: none of them a link', async () => {
     const { container } = visit('/sarah-jrs-den')
-    await screen.findByRole('heading', { level: 1, name: "Sarah Jr.'s Den" })
+    await screen.findByRole('heading', { level: 1, name: "Sarah Junior's Clubhouse" })
     await vi.waitFor(() => expect(container.querySelectorAll('.rs-stage .rs-item.is-locked')).toHaveLength(4))
     expect(container.querySelectorAll('.rs-stage a')).toHaveLength(0)
   })
