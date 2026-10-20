@@ -1,0 +1,25 @@
+THE MISSING TEST HELPER, REBUILT   starscapes-fakedb-20oct.zip   (SFW-244)
+(Two test files only. No site change, no build needed, nothing to do in Supabase, Stripe or Vercel.)
+
+WHAT WAS WRONG
+Three test files (test/room-pages.test.jsx, test/originals.test.jsx, test/home-link-artloft.test.jsx) need a helper called test/fakeDb.js, a small PRETEND database. It was never committed to GitHub (it is not in any of the 151 commits)
+and does not exist on your computer either, so those three files could never run for you: about 110 tests for the room pages, the originals tool and the Art Loft were protecting nothing.
+
+WHAT THIS DOES
+Adds test/fakeDb.js, written again from what those tests ask of it (an early copy found in the build notes covered only the prints; the rest was rebuilt). The pretend database keeps the same rules as the real one:
+visitors see only published things, the owner also sees their own drafts, only the owner can change or delete their own products, photos go to (and can be removed from) a pretend storage bucket, and the tests can switch on faults.
+Also adds test/fakeDb.test.js, 11 tests for the helper itself, so it cannot quietly drift away from the real database's rules.
+
+RESULT: 106 of the 111 tests in those three files PASS. The other 5 are all in test/room-pages.test.jsx and are tests of the OLD room page design: since your redesign, a list page shows a "Featured / Latest entry" card instead of the list the tests look for,
+and /leadership-lounge/free-ebook is now a real page (the free ebook), not "Page not found". Those need a decision about what the room pages should show (the same question as the 3 tests in test/rooms-data.test.jsx), so they are left failing on purpose
+and listed on SFW-244.
+
+INSTALL (from the project folder)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-fakedb-20oct.zip
+ 3. npx vitest run test/fakeDb.test.js test/home-link-artloft.test.jsx test/originals.test.jsx test/room-pages.test.jsx
+        (it should say 5 failed, all in room-pages, and everything else passed)
+ 4. git add .
+    git status                                 (you should see test/fakeDb.js, test/fakeDb.test.js and INSTALL-FAKEDB.txt as new files)
+    git commit -m "Add the missing pretend-database test helper, so three test files can run"
+    git push
