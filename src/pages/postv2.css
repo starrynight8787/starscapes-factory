@@ -95,9 +95,11 @@
       radial-gradient(circle at 92% 0%, rgba(128, 160, 255, 0.4), transparent 45%),
       linear-gradient(120deg, #14306a 0%, #1a3a86 55%, #2a4fb0 100%);
   }
+  /* (the banner's own scatter of stars and its slow shimmer are switched off here: they are measured in percentages of the height, so on a long post they spread out and the shimmer
+     becomes a huge streak. The star tile below does the stars instead, at the same size however long the post is.) */
   .pg-post--v2 .pg-post__hero::before,
   .pg-post--v2 .pg-post__hero::after {
-    display: block;
+    display: none;
   }
   /* the banner is now only the heading: no panel of its own, and the same 880-pixel width as the text block so the two line up */
   .pg-post--v2 .pg-post__hero > .pb--post {
@@ -169,13 +171,24 @@
   .pg-post--v2.pg-post--idea-hatchery .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/idea-hatchery-m.webp'); background-size: cover; background-position: center; }
   .pg-post--v2.pg-post--knowledge-nook .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/knowledge-nook-m.webp'); background-size: cover; background-position: center; }
 }
+/* Computer: the room's picture behind the heading, made to hold its shape however long the post is. The picture (public/banners/<room>-post-d.webp) is the room banner,
+   darkened a little so the title stays easy to read, with its bottom edge fading out into the night sky. It is always as wide as the page and as tall as its own shape
+   (never stretched or cropped), and sits at the top. Below it the sky is plain deep blue with a tile of stars (stars-tile.webp) repeating down, so a short post and a very
+   long one look the same at the top and carry on seamlessly underneath. */
 @media (min-width: 721px) {
-  .pg-post--v2.pg-post--drafting-desk .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/drafting-desk-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--sarah-jrs-den .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/sarah-jrs-den-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--art-loft .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/art-loft-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--explorers-bay .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/explorers-bay-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--factory-floor .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/factory-floor-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--leadership-lounge .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/leadership-lounge-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--idea-hatchery .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/idea-hatchery-d.webp'); background-size: cover; background-position: center top; }
-  .pg-post--v2.pg-post--knowledge-nook .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/knowledge-nook-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2[class*='pg-post--'] .pg-post__hero.pb--starry {
+    background-color: #0b214f;
+    background-image: var(--post-room-bg, none), url('/banners/stars-tile.webp');
+    background-size: 100% auto, 1200px 1200px;
+    background-position: center top, center top;
+    background-repeat: no-repeat, repeat;
+  }
+  .pg-post--v2.pg-post--drafting-desk { --post-room-bg: url('/banners/drafting-desk-post-d.webp'); }
+  .pg-post--v2.pg-post--sarah-jrs-den { --post-room-bg: url('/banners/sarah-jrs-den-post-d.webp'); }
+  .pg-post--v2.pg-post--art-loft { --post-room-bg: url('/banners/art-loft-post-d.webp'); }
+  .pg-post--v2.pg-post--explorers-bay { --post-room-bg: url('/banners/explorers-bay-post-d.webp'); }
+  .pg-post--v2.pg-post--factory-floor { --post-room-bg: url('/banners/factory-floor-post-d.webp'); }
+  .pg-post--v2.pg-post--leadership-lounge { --post-room-bg: url('/banners/leadership-lounge-post-d.webp'); }
+  .pg-post--v2.pg-post--idea-hatchery { --post-room-bg: url('/banners/idea-hatchery-post-d.webp'); }
+  .pg-post--v2.pg-post--knowledge-nook { --post-room-bg: url('/banners/knowledge-nook-post-d.webp'); }
 }
