@@ -173,6 +173,10 @@ export default function ChannelDirectory() {
         </div>
       </section>
 
+      {/* ---------- Everything under the hero sits on a second copy of the same backdrop ---------- */}
+      <div className="sf-lower">
+      <HeroArt />
+
       {/* ---------- Room list (phones and small screens) ---------- */}
       <section className="sf-roomlist-wrap" aria-label="All rooms">
         <div className="sf-roomlist">
@@ -190,6 +194,7 @@ export default function ChannelDirectory() {
 
       {/* ---------- Next event, membership, the featured room and the latest post ---------- */}
       <HomeSections event={extras.event} featured={extras.featured} post={extras.post} pictures={extras.pictures} />
+      </div>
     </div>
   )
 }

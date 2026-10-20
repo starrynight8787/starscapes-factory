@@ -1211,3 +1211,29 @@ html body h3 {
 .sf-planet { bottom: clamp(36px, 13%, 110px); }
 .sf-moon { bottom: 19%; }
 .sf-goldstar { bottom: 12%; }
+
+/* The lower half of the home page: a second copy of the hero's backdrop (nebula, orbits, constellations, planet, moon, shooting stars) behind the boxes */
+.sf-lower {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  padding-bottom: 96px; /* room under the boxes for the planet and stars to show */
+}
+.sf-lower > .sf-hero__art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 14%, #000 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, #000 24%, #000 100%);
+}
+.sf-lower > *:not(.sf-hero__art) {
+  position: relative;
+  z-index: 1;
+}
+/* the planet sits at the bottom of this copy, just above the footer */
+.sf-lower .sf-planet { bottom: clamp(24px, 5%, 70px); }
+.sf-lower .sf-moon { bottom: 12%; }
+.sf-lower .sf-goldstar { bottom: 6%; }
+/* the shooting stars belong at the top of the hero only */
+.sf-lower .sf-shoot { display: none; }
