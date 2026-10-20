@@ -8,7 +8,7 @@ export const ADMIN_TOOLS = [
   { group: 'Shop', name: 'Prints, orders and Creative Hub', to: '/art-loft/admin', blurb: 'Switch prints on, sort them into collections, write descriptions, sync with Creative Hub, and see your orders.', icon: 'hub' },
   { group: 'Shop', name: 'Originals', to: '/art-loft/admin/originals', blurb: 'Add your original paintings, mark them sold, and switch them on.', icon: 'originals' },
   { group: 'Members', name: 'Passes and members', to: '/admin/members', blurb: 'The five passes, who has them, when each member pays next, and what the passes cost.', icon: 'passes' },
-  { group: 'Members', name: 'Promotions', blurb: 'Discount codes for passes and prints, and the half-price first year.', icon: 'promo' },
+  { group: 'Members', name: 'Promotions', to: '/admin/promotions', blurb: 'The half-price first year, and discount codes for passes: make one, see how often it is used, and switch it off.', icon: 'promo' },
   { group: 'Rooms', name: 'Open a door', to: '/admin/doors', blurb: 'Choose which closed doors in each room are open to visitors.', icon: 'door' },
   { group: 'Rooms', name: 'Home page', to: '/admin/home', blurb: 'Choose the featured room, and add the next event, for the boxes under the floor plan on the home page.', icon: 'home' },
   { group: 'Rooms', name: 'Books', to: '/admin/books', blurb: 'Add the books you are reading, have read, or will read next, and set the year\'s reading goal and theme.', icon: 'books' },

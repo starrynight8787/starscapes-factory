@@ -55,7 +55,7 @@ describe('the admin console, for the owner', () => {
       const item = screen.getByText(tool.name).closest('li')
       expect(within(item).getByText('Coming soon')).toBeTruthy()
     }
-    expect(screen.getAllByText('Coming soon')).toHaveLength(soon.length)
+    expect(screen.queryAllByText('Coming soon')).toHaveLength(soon.length) // none at all, once every tool has been built
   })
   it('lists each tool as a list item, so a screen reader can count them', () => {
     const { container } = show()

@@ -33,6 +33,7 @@ import AdminStories from './admin/AdminStories'
 import AdminPosts from './admin/AdminPosts'
 import AdminHome from './admin/AdminHome'
 import AdminMembers from './admin/AdminMembers'
+import AdminPromotions from './admin/AdminPromotions'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -96,6 +97,7 @@ export default function App() {
 <Route path="/admin/posts" element={ <ProtectedRoute session={session}> <AdminPosts session={session} /> </ProtectedRoute> } />
 <Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />
 <Route path="/admin/members" element={ <ProtectedRoute session={session}> <AdminMembers session={session} /> </ProtectedRoute> } />
+<Route path="/admin/promotions" element={ <ProtectedRoute session={session}> <AdminPromotions session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"
             element={

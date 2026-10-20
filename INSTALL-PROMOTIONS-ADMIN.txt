@@ -1,0 +1,42 @@
+ADMIN: THE "PROMOTIONS" PAGE   starscapes-promotions-admin-20oct.zip   (SFW-248)
+(No Supabase step. Nothing to set in Vercel: it uses the Stripe key and owner email already there. INSTALL THE PASSES AND MEMBERS PACKAGE FIRST: this one builds on its server file.)
+
+WHAT IT DOES
+The "Promotions" box in Admin (it said "Coming soon") now links to /admin/promotions, a page for you only, with three parts:
+ 1. THE HALF-PRICE FIRST YEAR: explained, and looked at, not changed (the Terms, the reminder emails and every member's price depend on it). It says a code REPLACES it.
+ 2. MAKE A CODE: the text members type (SPRING20); whether it takes off a percentage (1 to 100) or an amount of money (1p to £120); how long (the first payment only, a number of months from 1 to 36, or for as long as they keep their passes);
+    optionally how many people can use it, and the last day it works. As you fill it in, a sentence says exactly what the code will do ("SPRING20 gives 20% off for 3 months. Up to 10 people can use it. It stops working after 31 December 2026...") and warns if
+    it would make the passes free. Mistakes are shown next to the box, in words, with the cursor put in the box.
+ 3. YOUR CODES: every code in Stripe: whether it is Working, Switched off or Finished (ended, run out, or past its last day), what it gives (in the very words a member is shown), how many times it has been used, and until when. Switch one off or back on with a button.
+ * Codes are for PASSES only (the print shop does not take codes). A code replaces the launch offer for whoever uses it, as checkout already does.
+ * A banner says whether Stripe is in TEST or LIVE mode. Stripe keeps codes separately for each, so codes made while testing must be made again when the shop is live.
+
+HOW IT IS KEPT SAFE (it makes discounts on a payment system, so this matters)
+ * Only the owner (OWNER_EMAIL, confirmed address) can look at, make or switch codes: the check happens before anything is sent to Stripe.
+ * Everything you type is checked with ONE set of rules, in the page (as you type) and again on the server, before Stripe hears of it. A box cannot be used to slip extra settings to Stripe, and a switch only ever touches an id that really looks like a promotion code.
+ * If Stripe makes the coupon but then cannot make the code (for example the name is taken), the half-made coupon is tidied away. If anything fails, you are told in plain words that nothing was made: Stripe's own words and the key are never shown.
+ * The words the page shows are tested to be EXACTLY the words checkout shows a member for the same code.
+ * No 13th server function: it is handled inside the membership function, so the free Vercel plan limit of 12 is respected.
+ * ALSO IN THIS PACKAGE (tests only): the two Book Club shelf tests are rewritten to check what must always be true (each book links to its own genre's shelf, in order, and the five looks repeat in order) instead of a fixed number of genres, because the Book Club page has changed between five and all twenty genres more than once today.
+ * 78 new tests, and 16 deliberate breakages (owner check removed, server stops checking, any id passed to Stripe, Stripe's words shown, coupons left behind, dollars instead of pounds, the wrong last day in summer, an unprotected route...): all caught.
+
+DEFAULTS I USED (say if you want any different): passes only; percentage or fixed amount; the three lengths above; a code replaces the half-price year; the last day means the end of that day in London; codes cannot be deleted (Stripe does not allow it), only switched off.
+
+HOW TO TRY IT (in Stripe test mode, which is where the site is now)
+ 1. Admin, Promotions: make a code SPRING20, 20%, the first payment only.
+ 2. Go to the passes page, choose a pass, type SPRING20 in the promo code box: it should say "20% off your first payment" (the same words as the preview).
+ 3. Back on Promotions, switch SPRING20 off. Try the code again on the passes page: it should say the code is not valid.
+ 4. Switch it on again, and try once more.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-promotions-admin-20oct.zip
+ 3. python3 tools/add-promotions-admin.py       (it checks four files first; if anything is unexpected it changes nothing)
+ 4. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it must still print 12)
+ 7. find . -name "*.before-promotions-admin" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (4 changed source files, 5 new source files, 3 new tests, 2 changed tests, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Admin: build the Promotions page (discount codes)"
+    git push

@@ -1,0 +1,37 @@
+/* The owner's page of discount codes (/admin/promotions). Stands on its own: nothing here depends on the old index.css rules. */
+.pm__section { margin: 0 0 20px; }
+.pm__section > h2 { margin-top: 0; }
+.pm__mode { margin: 0 0 16px; padding: 10px 14px; border-radius: 10px; border: 2px solid var(--sf-navy-700, #14306a); background: #fff; color: var(--sf-ink, #0e1530); }
+.pm__mode--test { background: #ffe27a; border-color: #0e1530; }
+.pm__help { margin: 12px 0 0; font-size: 0.9375rem; color: var(--sf-muted, #5b6585); line-height: 1.5; }
+.pm__form { display: grid; gap: 14px; max-width: 640px; }
+.pm__field { display: grid; gap: 4px; min-width: 0; margin: 0; padding: 0; border: 0; }
+.pm__field label, .pm__field legend { font-weight: 700; color: var(--sf-navy-700, #14306a); padding: 0; }
+.pm__control { box-sizing: border-box; width: 100%; min-width: 0; font: inherit; font-weight: 400; padding: 8px 10px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 8px; background: #fff; color: var(--sf-ink, #0e1530); }
+.pm__control:focus-visible, .pm__radio-input:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.pm__control[aria-invalid="true"] { border-color: #8f1d1d; background: #fff1f1; }
+.pm__hint { margin: 0; font-size: 0.9375rem; color: var(--sf-muted, #5b6585); }
+.pm__error { margin: 0; font-weight: 700; color: #8f1d1d; }
+.pm__error::before { content: "! "; }
+.pm__summary { margin: 0; padding: 10px 14px; border-radius: 10px; border: 2px solid #8f1d1d; background: #fff1f1; color: #5c0f0f; font-weight: 700; }
+.pm__radios { gap: 8px; }
+.pm__radio { display: flex; align-items: center; gap: 8px; font-weight: 400 !important; color: var(--sf-ink, #0e1530) !important; min-height: 44px; }
+.pm__radio-input { width: 20px; height: 20px; }
+.pm__preview { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--sf-star, #dce6ff); color: var(--sf-ink, #0e1530); line-height: 1.5; }
+.pm__buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: start; }
+.pm__note { margin: 0 0 12px; padding: 10px 14px; border-radius: 10px; border: 2px solid var(--sf-navy-700, #14306a); background: #fff; color: var(--sf-ink, #0e1530); }
+.pm__note--error { border-color: #8f1d1d; background: #fff1f1; }
+.pm__count { margin: 0 0 12px; font-weight: 700; color: var(--sf-navy-700, #14306a); }
+.pm__list { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.pm__row { display: grid; grid-template-columns: 1fr; gap: 12px; padding: 14px 16px; background: #fff; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; }
+.pm__main { display: grid; gap: 6px; min-width: 0; }
+.pm__main p { margin: 0; line-height: 1.5; }
+.pm__codeline { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.pm__code { font-weight: 700; font-size: 1.125rem; letter-spacing: 0.04em; overflow-wrap: anywhere; }
+.pm__chip { display: inline-block; padding: 2px 10px; border-radius: 999px; background: var(--sf-navy-700, #14306a); color: #fff; font-size: 0.875rem; font-weight: 700; }
+.pm__chip--off { background: #ffe27a; color: #0e1530; }
+.pm__chip--finished { background: #4a5170; color: #fff; }
+.pm__meta { color: var(--sf-muted, #5b6585); font-size: 0.9375rem; }
+@media (min-width: 700px) {
+  .pm__row { grid-template-columns: 1fr auto; align-items: start; }
+}
