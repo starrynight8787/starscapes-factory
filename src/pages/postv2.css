@@ -1,0 +1,45 @@
+/* A single post in the starry style: the room's banner with the title, then the writing on a white card. Used for every room's posts. */
+.pg-post--v2 .pb {
+  margin-top: 4px;
+}
+.pg-post--v2 .pb .pg-post__meta {
+  margin: 0 0 10px;
+}
+.pg-post--v2 .pb .pg-chip {
+  background: transparent;
+  border: 1.5px solid #f5c842;
+  color: #f5c842;
+}
+.pg-post--v2 .pb .pg-post__date {
+  color: #dce6ff;
+}
+.pg-post--v2 .pb .sf-article-title {
+  margin: 0;
+  color: #fff;
+  font-size: clamp(30px, 4.5vw, 46px);
+  line-height: 1.15;
+}
+.pg-post--v2 .pg-post__card {
+  box-sizing: border-box;
+  max-width: 880px;
+  margin: 22px auto 0;
+  padding: 28px 32px 32px;
+  border: 1.5px solid #dce6ff;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(20, 48, 106, 0.08);
+}
+.pg-post--v2 .pg-post__card .pg-post__image {
+  margin: 0 0 24px;
+}
+.pg-post--v2 .pg-tags,
+.pg-post--v2 .pg-actions {
+  max-width: 880px;
+  margin-left: auto;
+  margin-right: auto;
+}
+@media (max-width: 640px) {
+  .pg-post--v2 .pg-post__card {
+    padding: 20px 18px 24px;
+  }
+}

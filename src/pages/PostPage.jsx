@@ -10,6 +10,12 @@ import { cleanPass, hasPassColumn, loadLockedBody } from '../membership/lockedPo
 import '../styles/articles.css'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
+import '../components/pagebanner.css'
+import './postv2.css'
+import BannerArt from '../components/BannerArt'
+
+// The picture on the banner changes with the room the post belongs to, so a reader can tell which room they are in.
+const ROOM_ART = { 'drafting-desk': 'notebook', 'sarah-jrs-den': 'blog', 'art-loft': 'plain', 'explorers-bay': 'blog', 'factory-floor': 'blog', 'idea-hatchery': 'story', 'leadership-lounge': 'mountain', 'knowledge-nook': 'nook' }
 
 export default function PostPage({ session }) {
   const { id } = useParams()
@@ -77,26 +83,33 @@ export default function PostPage({ session }) {
   const date = Number.isNaN(when.getTime()) ? '' : when.toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' })
 
   return (
-    <main className="pg pg-post">
+    <main className={`pg pg-post pg-post--v2 pg-post--${post.channel || 'room'}`}>
       <p className="rp-back">
         <BackToPosts />
       </p>
-      <div className="pg-post__meta">
-        {room && <span className="pg-chip">{room.name}</span>}
-        {date && <time className="pg-post__date" dateTime={when.toISOString()}>{date}</time>}
-      </div>
-      <h1 className="sf-article-title">{post.title}</h1>
-      {picture && (
-        <img
-          className="pg-post__image"
-          src={picture}
-          alt=""
-          onError={(e) => {
-            e.currentTarget.style.display = 'none' // a picture that will not load leaves the page tidy, not broken
-          }}
-        />
-      )}
+      <header className="pb pb--starry pb--post">
+        <div className="pb__text">
+          <div className="pg-post__meta">
+            {room && <span className="pg-chip">{room.name}</span>}
+            {date && <time className="pg-post__date" dateTime={when.toISOString()}>{date}</time>}
+          </div>
+          <h1 className="sf-article-title pb__title">{post.title}</h1>
+        </div>
+        <BannerArt name={ROOM_ART[post.channel] || 'blog'} />
+      </header>
+      <article className="pg-post__card">
+        {picture && (
+          <img
+            className="pg-post__image"
+            src={picture}
+            alt=""
+            onError={(e) => {
+              e.currentTarget.style.display = 'none' // a picture that will not load leaves the page tidy, not broken
+            }}
+          />
+        )}
       {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
+      </article>
 
       {post.tags && post.tags.length > 0 && (
         <div className="pg-tags">
