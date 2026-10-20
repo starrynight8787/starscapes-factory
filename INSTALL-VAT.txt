@@ -1,0 +1,37 @@
+VAT SHOWN ON ITS OWN LINE AT CHECKOUT   starscapes-vat-checkout-20oct.zip
+(NO Supabase step. One thing to check in Stripe afterwards, below. Memberships stay closed to visitors; only you can start a checkout.)
+
+WHAT IT DOES (Gill's decision, 20 October 2026)
+ * The price on the site stays the price the member pays: £5 is £5. It INCLUDES VAT. At checkout Stripe now shows the VAT on its own line, as a breakdown of that same price, never added on top.
+   At 20 percent: £5 = £4.17 + £0.83 VAT, £7 = £5.83 + £1.17, £10 = £8.33 + £1.67, £12 = £10.00 + £2.00. A year (ten months): £50 = £41.67 + £8.33 ... £120 = £100.00 + £20.00.
+   The launch offer (half price) works the same way: VAT is worked out on what is actually paid.
+ * The VAT also goes onto the subscription, so every renewal carries it, and changing passes keeps it.
+ * A checkout is NEVER started without the VAT rate: if Stripe cannot give it, the member sees "We couldn't start the payment just now" and nothing is taken.
+ * The first time anyone starts a checkout in a Stripe mode (test, then live), the site makes ONE tax rate in Stripe named VAT (20 percent, included in the price, tagged as ours) and reuses it after that.
+ * The choose-your-passes page says: "Prices include VAT, which is shown separately at checkout. Passes are for customers in the UK for now."
+   (UK customers only is the plan until you decide otherwise: VAT on digital services is due where the customer lives, so selling to the EU would mean registering there.)
+
+NOT CHANGED: nothing about what a pass costs; the Terms (the subscription terms come next); the change-of-passes rule (waiting for your answer).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-vat-checkout-20oct.zip
+ 3. python3 tools/add-vat-checkout.py         (it checks the four files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Passes: VAT included in the price, shown on its own line at checkout"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words.
+
+THEN CHECK IT IN STRIPE'S TEST MODE (about five minutes; nothing real is charged)
+ A. Make sure Vercel's STRIPE_SECRET_KEY for Production starts sk_test_ (not sk_live_). Do not paste the key anywhere.
+ B. Signed in as the owner, open starscapesfactory.com/membership, choose a pass, tick the box and press Continue to payment. Pay with Stripe's test card 4242 4242 4242 4242, any future date, any three numbers.
+ C. On Stripe's checkout page you should see the VAT on its own line, with the total unchanged (for one pass at the launch offer: £2.50 in total, which includes £0.42 VAT).
+    I could not check exactly how Stripe words an included VAT line on the checkout page, so tell me what you see (a screenshot is ideal) and I will check it matches what we promised.
+ D. In Stripe (test mode), Product catalogue, Tax rates: there should now be ONE rate named VAT, described "UK VAT 20%, included in the price". Open the payment's receipt or invoice: it should show the VAT.
+ E. While you are in Stripe: add your VAT number (GB445903680) to your account's tax details, so it can appear on invoices. (I have not checked the exact menu path in Stripe's settings: look under your business or invoice settings.)
+
+(The unzip also replaces three existing test files, membership-server.test.js, membership-account-lib.test.js and membership-page.test.jsx, and adds membership-vat.test.js.)

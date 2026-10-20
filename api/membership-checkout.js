@@ -21,7 +21,7 @@ import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
 import { handleAccount, isAccountRequest } from '../lib/membershipAccount.js'
 import { saveMembership } from './membership-webhook.js'
-import { STRIPE, stripeMode, stripeHeaders, logProblem, findHeldSubscription, membershipRowFromSubscription, buildCheckoutForm, ensureLaunchCoupon, findPromotionCode } from '../lib/membershipStripe.js'
+import { STRIPE, stripeMode, stripeHeaders, logProblem, findHeldSubscription, membershipRowFromSubscription, buildCheckoutForm, ensureLaunchCoupon, ensureVatRate, findPromotionCode } from '../lib/membershipStripe.js'
 
 const SITE = 'https://starscapesfactory.com'
 const MAX_BODY = 4000
@@ -177,6 +177,7 @@ export default async function handler(req, res) {
     }
     const launch = Boolean(LAUNCH_OFFER.active) && !promotionCodeId
     if (launch) await ensureLaunchCoupon(parsed.interval, k.key)
+    const vatRateId = await ensureVatRate(k.key) // VAT shown on its own line at checkout; if Stripe cannot give it, no checkout starts
 
     const form = buildCheckoutForm({
       user: who.user,
@@ -188,6 +189,7 @@ export default async function handler(req, res) {
       consentAt: new Date().toISOString(),
       returnTo,
       customerId: existing && existing.stripe_customer_id ? existing.stripe_customer_id : null,
+      vatRateId,
     })
     const response = await fetch(`${STRIPE}/v1/checkout/sessions`, {
       method: 'POST',

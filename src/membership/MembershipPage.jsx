@@ -5,7 +5,7 @@ import RoomIcon from '../components/RoomIcon'
 import { channels } from '../data/channels'
 import { MEMBERSHIP } from '../data/membership'
 import { redirectTo } from '../cart/redirect'
-import { PASSES, PASS_IDS, cleanPassIds, CONSENT_TEXT, FREE_TEXT, STRIPE_NOTE } from './passes'
+import { PASSES, PASS_IDS, cleanPassIds, CONSENT_TEXT, FREE_TEXT, STRIPE_NOTE, VAT_NOTE } from './passes'
 import { LAUNCH_OFFER, priceFor, formatPounds, ladderRows, ladderKey, YEARLY_MONTHS } from './pricing'
 import { startMembershipCheckout, checkPromoCode } from './membershipApi'
 import './membership.css'
@@ -246,6 +246,7 @@ function Chooser({ draft, signedIn }) {
             </p>
           )}
           <p className="mb__stripe">{STRIPE_NOTE}</p>
+          <p className="mb__stripe">{VAT_NOTE}</p>
           </div>
 
           <section className="mb__ladder" aria-label="Prices">

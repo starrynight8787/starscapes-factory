@@ -26,4 +26,5 @@ export function cleanPassIds(ids) {
 export const CONSENT_TEXT = 'Open my passes now. I understand that once they open, I lose my 14-day right to cancel and get a refund.'
 
 export const FREE_TEXT = 'Read every public entry and the latest posts, and get the free ebook. The first three posts in every pass are free to read too, and the first three Come Write With Me sessions are free to join.'
+export const VAT_NOTE = 'Prices include VAT, which is shown separately at checkout. Passes are for customers in the UK for now.'
 export const STRIPE_NOTE = 'You pay on Stripe, by card. Cancel any time. You keep your passes until the end of what you have paid for.'

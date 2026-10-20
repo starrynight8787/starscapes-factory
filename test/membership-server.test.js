@@ -2,7 +2,7 @@
 // The membership payment functions (api/membership-checkout.js, lib/membershipStripe.js), against a pretend Stripe and a pretend database.
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
 import handler from '../api/membership-checkout.js'
-import { couponIdFor, launchPercentOff, chargePence, describeCoupon, membershipRowFromSubscription, ensureLaunchCoupon, findPromotionCode, buildCheckoutForm } from '../lib/membershipStripe.js'
+import { couponIdFor, launchPercentOff, chargePence, describeCoupon, membershipRowFromSubscription, ensureLaunchCoupon, ensureVatRate, findPromotionCode, buildCheckoutForm } from '../lib/membershipStripe.js'
 import { CONSENT_TEXT } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
 
@@ -10,7 +10,8 @@ const USER = { id: '11111111-2222-4333-8444-555555555555', email: 'reader@exampl
 const OWNER = { id: '99999999-2222-4333-8444-555555555555', email: 'gill@example.com', email_confirmed_at: '2026-10-01T00:00:00Z' }
 const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
 
-function network({ user = USER, member = null, promo = null, couponExists = false, stripeDown = false, couponFails = false, customers = [], subsByCustomer = {}, lookupFails = false } = {}) {
+const VAT_RATE = { id: 'txr_existing1', active: true, inclusive: true, percentage: 20, display_name: 'VAT', metadata: { starscapes_vat: 'uk-20-inclusive' } }
+function network({ user = USER, member = null, promo = null, couponExists = false, stripeDown = false, couponFails = false, customers = [], subsByCustomer = {}, lookupFails = false, vatRates = [VAT_RATE], vatFails = false } = {}) {
   const calls = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url)
@@ -27,6 +28,10 @@ function network({ user = USER, member = null, promo = null, couponExists = fals
     if (u.startsWith('https://api.stripe.com/v1/coupons')) {
       if (couponFails) return json({ error: { code: 'api_error' } }, 500)
       return couponExists ? json({ error: { code: 'resource_already_exists' } }, 400) : json({ id: 'made' })
+    }
+    if (u.startsWith('https://api.stripe.com/v1/tax_rates')) {
+      if (vatFails) return json({ error: { message: 'Stripe is having a moment.' } }, 500)
+      return (init.method || 'GET') === 'POST' ? json({ id: 'txr_made1' }) : json({ data: vatRates })
     }
     if (u.startsWith('https://api.stripe.com/v1/promotion_codes')) return json({ data: promo ? [promo] : [] })
     if (u.startsWith('https://api.stripe.com/v1/checkout/sessions')) return stripeDown ? json({ error: { message: 'boom' } }, 500) : json({ url: 'https://checkout.stripe.com/c/pay/test_123' })
@@ -288,7 +293,7 @@ describe('the helpers', () => {
     expect(chargePence(['blueprints'], 'month')).toBe(500); expect(chargePence(['authors-notebook', 'early-drafts', 'blueprints', 'book-club'], 'year')).toBe(12000); expect(chargePence(['x'], 'month')).toBe(0)
   })
   it('puts only ONE discount on a checkout: a promo code wins over the launch offer, even if both are asked for (Stripe would refuse two)', () => {
-    const base = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com' }
+    const base = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com', vatRateId: 'txr_test1' }
     const both = buildCheckoutForm({ ...base, promotionCodeId: 'promo_1', launch: true })
     expect(both.get('discounts[0][promotion_code]')).toBe('promo_1'); expect(both.get('discounts[0][coupon]')).toBeNull(); expect(both.get('metadata[launch_offer]')).toBe('no')
     const launchOnly = buildCheckoutForm({ ...base, launch: true })
@@ -339,5 +344,43 @@ describe('turning a Stripe subscription into a membership record', () => {
   })
   it('throws away made-up pass ids', () => {
     expect(membershipRowFromSubscription(sub({ metadata: { ...sub().metadata, passes: 'blueprints,free-everything' } })).passes).toEqual(['blueprints'])
+  })
+})
+
+describe('VAT on its own line at checkout (Gill, 20 October 2026)', () => {
+  it('puts our included UK VAT rate on the line at checkout, and on the subscription so every renewal carries it', async () => {
+    const fn = withNetwork(); const r = await call({ body: good, origin: 'https://starscapesfactory.com' }); expect(r.status).toBe(200)
+    const f = sessionForm(fn); expect(f.get('line_items[0][tax_rates][0]')).toBe('txr_existing1'); expect(f.get('subscription_data[default_tax_rates][0]')).toBe('txr_existing1')
+    expect(f.get('line_items[0][price_data][unit_amount]')).toBe('1000') // the price is still the price the member pays: VAT is a breakdown of it, never added on top
+  })
+  it('looks for the rate before it starts the payment, and reuses it (it does not make a new one each time)', async () => {
+    const fn = withNetwork(); await call({ body: good, origin: 'https://starscapesfactory.com' })
+    const urls = fn.calls.map((c) => c.url); const look = urls.findIndex((u) => u.startsWith('https://api.stripe.com/v1/tax_rates')); const session = urls.findIndex((u) => u.endsWith('/v1/checkout/sessions'))
+    expect(look).toBeGreaterThan(-1); expect(look).toBeLessThan(session); expect(fn.calls.some((c) => c.url.endsWith('/v1/tax_rates') && (c.init.method || 'GET') === 'POST')).toBe(false)
+    expect(fn.calls.find((c) => c.url.startsWith('https://api.stripe.com/v1/tax_rates')).url).toContain('inclusive=true')
+  })
+  it('makes the rate once if it is not there yet (20 percent, included, named VAT, tagged as ours), then uses it', async () => {
+    const fn = withNetwork({ vatRates: [] }); const r = await call({ body: good, origin: 'https://starscapesfactory.com' }); expect(r.status).toBe(200)
+    const made = new URLSearchParams(fn.calls.find((c) => c.url.endsWith('/v1/tax_rates') && (c.init.method || 'GET') === 'POST').init.body)
+    expect([made.get('display_name'), made.get('percentage'), made.get('inclusive'), made.get('jurisdiction'), made.get('tax_type'), made.get('metadata[starscapes_vat]')]).toEqual(['VAT', '20', 'true', 'GB', 'vat', 'uk-20-inclusive'])
+    expect(sessionForm(fn).get('line_items[0][tax_rates][0]')).toBe('txr_made1')
+  })
+  it('does not start a payment at all if Stripe cannot give the VAT rate: no VAT line means no payment', async () => {
+    const fn = withNetwork({ vatFails: true }); const r = await call({ body: good, origin: 'https://starscapesfactory.com' })
+    expect(r.status).toBe(502); expect(r.body.error || r.body.message || JSON.stringify(r.body)).toMatch(/couldn.t start the payment/); expect(sessionForm(fn)).toBeNull()
+  })
+  it('never picks a rate that is not exactly ours: not another percentage, not one added on top, not an archived one, not one without our tag', async () => {
+    const wrong = [{ ...VAT_RATE, id: 'txr_a', percentage: 5 }, { ...VAT_RATE, id: 'txr_b', inclusive: false }, { ...VAT_RATE, id: 'txr_c', active: false }, { ...VAT_RATE, id: 'txr_d', metadata: {} }, { ...VAT_RATE, id: 'txr_e', display_name: 'Sales tax' }]
+    const fn = withNetwork({ vatRates: wrong }); await call({ body: good, origin: 'https://starscapesfactory.com' }); expect(sessionForm(fn).get('line_items[0][tax_rates][0]')).toBe('txr_made1')
+  })
+  it('ensureVatRate says plainly when Stripe cannot be asked or will not make it', async () => {
+    await expect(ensureVatRate('sk_test_x', async () => json({ error: { message: 'no' } }, 500))).rejects.toThrow(/could not look for the VAT rate/)
+    await expect(ensureVatRate('sk_test_x', async (u, i = {}) => ((i.method || 'GET') === 'POST' ? json({ error: { message: 'no' } }, 400) : json({ data: [] })))).rejects.toThrow(/could not make the VAT rate/)
+    await expect(ensureVatRate('sk_test_x', async () => json({ data: 'odd' }, 200))).rejects.toThrow()
+  })
+  it('a checkout cannot be built without a real VAT rate id', () => {
+    const b = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com', vatRateId: 'txr_test1' }
+    for (const bad of [undefined, null, '', '  ', 'txr_', 'not-a-rate', 'price_123']) expect(() => buildCheckoutForm({ ...b, vatRateId: bad }), String(bad)).toThrow(/needs the VAT rate/)
+    expect(() => buildCheckoutForm(b)).not.toThrow()
   })
 })

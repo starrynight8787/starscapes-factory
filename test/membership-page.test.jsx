@@ -14,7 +14,7 @@ vi.mock('../src/data/membership', () => ({
 
 import MembershipPage from '../src/membership/MembershipPage'
 import { LAUNCH_OFFER } from '../src/membership/pricing'
-import { CONSENT_TEXT, FREE_TEXT, STRIPE_NOTE } from '../src/membership/passes'
+import { CONSENT_TEXT, FREE_TEXT, STRIPE_NOTE, VAT_NOTE } from '../src/membership/passes'
 import { channels } from '../src/data/channels'
 
 const SESSION = { access_token: 'tok' }
@@ -215,7 +215,7 @@ describe('the tick box and "Continue to payment"', () => {
   })
   it('says how you pay and that you can cancel', () => {
     show()
-    expect(screen.getByText(STRIPE_NOTE)).toBeInTheDocument()
+    expect(screen.getByText(STRIPE_NOTE)).toBeInTheDocument(); expect(screen.getByText(VAT_NOTE)).toBeInTheDocument()
   })
 })
 

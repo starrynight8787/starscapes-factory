@@ -69,6 +69,13 @@ describe('the Stripe request that changes a membership', () => {
     expect(f.get('items[0][price_data][unit_amount]')).toBe('700'); expect(f.get('items[0][price_data][recurring][interval]')).toBe('month')
     expect(f.get('proration_behavior')).toBe('none')
   })
+  it('keeps the VAT rate the subscription already has, so changing passes can never drop the VAT line (the tax rates may be whole objects or just ids)', () => {
+    const withRate = buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ tax_rates: [{ id: 'txr_vat1', percentage: 20 }] })] } }) })
+    expect(withRate.get('items[0][tax_rates][0]')).toBe('txr_vat1'); expect(withRate.get('items[0][tax_rates][1]')).toBeNull()
+    const asIds = buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ tax_rates: ['txr_vat1', 'txr_vat2'] })] } }) }); expect([asIds.get('items[0][tax_rates][0]'), asIds.get('items[0][tax_rates][1]')]).toEqual(['txr_vat1', 'txr_vat2'])
+    expect([...buildChangeForm(base).keys()].some((k) => k.includes('tax_rates'))).toBe(false) // an item with no rate is left as it is, not given one
+    expect(buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ tax_rates: [null, {}, 5] })] } }) }).toString()).not.toContain('tax_rates')
+  })
   it('keeps the way of paying a year, and prices a year as ten months', () => {
     const f = buildChangeForm({ ...base, subscription: subscription({ items: { data: [item({ price: { product: 'prod_1', recurring: { interval: 'year' } } })] } }) })
     expect(f.get('items[0][price_data][recurring][interval]')).toBe('year'); expect(f.get('items[0][price_data][unit_amount]')).toBe('7000')
@@ -140,7 +147,7 @@ describe('the discount a member has', () => {
     expect(membershipRowFromSubscription({ id: 's', customer: 'c', status: 'active', items: { data: [] }, metadata: { ...md, offer_note: undefined } }).offer_note).toBeNull()
   })
   it('writes the note on the checkout ONLY with a promo code', () => {
-    const base = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com', offerNote: '20% off for 3 months' }
+    const base = { user: USER, passes: ['blueprints'], interval: 'month', consentAt: '2026-10-19T10:00:00.000Z', returnTo: 'https://starscapesfactory.com', offerNote: '20% off for 3 months', vatRateId: 'txr_test1' }
     expect(buildCheckoutForm({ ...base, promotionCodeId: 'promo_1' }).get('subscription_data[metadata][offer_note]')).toBe('20% off for 3 months')
     expect(buildCheckoutForm({ ...base, launch: true }).get('subscription_data[metadata][offer_note]')).toBeNull()
   })
