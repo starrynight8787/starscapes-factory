@@ -5,6 +5,7 @@ import useTitle from './useTitle'
 import PostNote from './PostNote'
 import PostFilter from './PostFilter'
 import { fetchFactoryPosts } from './factoryApi'
+import { fetchReads, pickMostRead } from '../entries/readsApi'
 import { SECTIONS, kindOf, tagsOf, filterPosts, isPinned } from './factoryData'
 
 // Every post of one kind: the story (/factory-floor/floor) or the Blueprints (/factory-floor/blueprints),
@@ -14,6 +15,7 @@ export default function SectionPage({ kind }) {
   useTitle(section.name)
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
+  const [reads, setReads] = useState({})
   const [params, setParams] = useSearchParams()
 
   useEffect(() => {
@@ -26,6 +28,13 @@ export default function SectionPage({ kind }) {
     }
   }, [kind])
 
+  useEffect(() => {
+    if (posts.length === 0) return undefined
+    let alive = true
+    fetchReads(posts.map((p) => p.id)).then((r) => alive && setReads(r))
+    return () => { alive = false }
+  }, [posts])
+
   const q = params.get('q') || ''
   const tag = params.get('tag') || ''
   const sort = params.get('sort') === 'oldest' ? 'oldest' : 'newest'
@@ -35,6 +44,7 @@ export default function SectionPage({ kind }) {
   // The other posts flow across the left, and the numbers in the filter count only those.
   const pinnedPost = useMemo(() => posts.find(isPinned) || null, [posts])
   const rest = useMemo(() => shown.filter((p) => !isPinned(p)), [shown])
+  const mostRead = useMemo(() => pickMostRead(posts, reads), [posts, reads])
   const restTotal = pinnedPost ? posts.length - 1 : posts.length
 
   function change(patch) {
@@ -60,7 +70,7 @@ export default function SectionPage({ kind }) {
         {status === 'ready' && posts.length === 0 && <p className="ff-msg">Nothing here yet.</p>}
 
         <div className="ff-split">
-          {/* the right-hand column: the search first, then the pinned post */}
+          {/* the right-hand column: the search first, then the pinned post, then the most read */}
           <aside className="ff-side" aria-label="Search, and the pinned post">
             {status === 'ready' && restTotal > 0 && (
               <PostFilter q={q} tag={tag} sort={sort} tags={tags} total={restTotal} shown={rest.length} onChange={change} />
@@ -68,6 +78,11 @@ export default function SectionPage({ kind }) {
             {status === 'ready' && pinnedPost && (
               <div className="ff-side__pinned">
                 <PostNote post={pinnedPost} index={0} />
+              </div>
+            )}
+            {status === 'ready' && mostRead && (
+              <div className="ff-side__pinned">
+                <PostNote post={mostRead} index={2} label="Most read" />
               </div>
             )}
           </aside>
