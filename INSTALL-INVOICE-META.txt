@@ -1,0 +1,21 @@
+THE INVOICE PAGE GETS A NAME   starscapes-invoice-meta-20oct.zip
+(No Supabase step. Nothing to do in Stripe or Vercel.)
+
+WHAT IT DOES
+The new /invoice page (the order invoice a customer opens) was missing from the table of page names (src/data/pageMeta.js), so a test failed and the page had no tab title and no search instruction.
+It now has: the tab title "Your invoice | Starscapes Factory"; and, because it is a customer's own invoice, it is told NOT to appear in search results (noindex) and is left out of the sitemap, like the cart and the other private pages.
+One line added to the table; nothing else changes.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-invoice-meta-20oct.zip
+ 3. python3 tools/add-invoice-meta.py          (it checks the file first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                        (it should still print 12)
+ 7. git add .
+    git status                                 (no files ending .before- should be listed)
+    git commit -m "Give the invoice page a title and keep it out of search results"
+    git push
+
+(The unzip also adds one test file, page-meta-invoice.test.js.)

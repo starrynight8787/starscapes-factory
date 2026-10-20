@@ -74,6 +74,7 @@ export const PAGES = {
   '/forgot-password': { title: 'Forgot your password?', description: 'Get a link to choose a new password.', image: 'site', index: false, client: true },
   '/reset-password': { title: 'Choose a new password', description: 'Choose a new password for your account.', image: 'site', index: false, client: true },
   '/checkout/success': { title: 'Thank you', description: 'Your order has been received.', image: 'site', index: false, client: true },
+  '/invoice': { title: 'Your invoice', description: 'Your invoice for your order from Starscapes Factory.', image: 'site', index: false, client: true },
   '/products': { title: 'Shop', description: 'The original shop page.', image: 'site', index: false, client: true },
   '/new': { title: 'New post', description: 'Write a new post.', image: 'site', index: false, client: true },
   '/new-product': { title: 'New product', description: 'Add a product.', image: 'site', index: false, client: true },
