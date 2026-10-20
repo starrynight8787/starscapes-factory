@@ -11,10 +11,10 @@ const good = { title: '  The Culture Map ', author: 'Erin Meyer', genre: 'leader
 
 describe('a book', () => {
   it('is accepted when it is good, tidied up, and ready for the database', () => {
-    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.', about: null, ...EXTRA } })
+    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', genres: ['leadership'], status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.', about: null, ...EXTRA } })
   })
   it('keeps everything optional really optional, as nothing (null)', () => {
-    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null, about: null, ...EXTRA })
+    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, genres: [], status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null, about: null, ...EXTRA })
     // with no status given it counts as "read", which needs a finishing date, so a bare title is asked for the date
     const bare = cleanBook({ title: 'Dune' })
     expect(bare.ok).toBe(false)
@@ -29,6 +29,13 @@ describe('a book', () => {
     expect(cleanBook({ ...good, finished: '2026-02-30' }).errors.finished).toMatch(/year-month-day/)
     expect(cleanBook({ ...good, started: '3 Oct' }).errors.started).toMatch(/year-month-day/)
     expect(cleanBook({ ...good, started: '2026-10-05', finished: '2026-10-03' }).errors.finished).toMatch(/before the starting date/)
+  })
+  it('lets a book sit in up to three genres, the first being its main one', () => {
+    const v = cleanBook({ ...good, genres: ['mystery', 'thriller', 'fiction'] }).value
+    expect(v.genres).toEqual(['mystery', 'thriller', 'fiction']); expect(v.genre).toBe('mystery')
+    expect(cleanBook({ ...good, genres: ['mystery', 'mystery'] }).value.genres).toEqual(['mystery'])
+    expect(cleanBook({ ...good, genres: ['mystery', 'thriller', 'fiction', 'romance'] }).errors.genre).toBeTruthy()
+    expect(cleanBook({ ...good, genres: ['mystery', 'horror'] }).errors.genre).toBeTruthy()
   })
   it('only takes the genres and statuses that exist, and a rating of 1 to 5', () => {
     expect(cleanBook({ ...good, genre: 'horror' }).errors.genre).toBeTruthy()

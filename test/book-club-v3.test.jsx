@@ -15,7 +15,7 @@ vi.mock('../src/bookclub/bookClubData', async (original) => {
   return { ...m, WELCOME: { get videoId() { return h.videoId }, label: m.WELCOME.label, title: m.WELCOME.title, text: m.WELCOME.text, noVideo: m.WELCOME.noVideo } }
 })
 import BookClubPage from '../src/bookclub/BookClubPage'
-import { GENRES } from '../src/bookclub/bookRules'
+import { GENRES, FEATURED_GENRES } from '../src/bookclub/bookRules'
 
 const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
 const NOW = new Date('2026-10-17T12:00:00Z')
@@ -119,10 +119,9 @@ describe('the genres, as books on a bookshelf', () => {
     const links = await within(shelf).findAllByRole('link')
     const hrefs = links.map((l) => l.getAttribute('href'))
     expect(hrefs[0]).toBe('/knowledge-nook/book-club/shelf') // the link to every book comes first
-    const shown = hrefs.slice(1) // however many genres the page shows (the first five, or all of them), they are the first ones of the list, in order
-    expect(shown.length).toBeGreaterThanOrEqual(5); expect(shown.length).toBeLessThanOrEqual(GENRES.length)
-    expect(shown).toEqual(GENRES.slice(0, shown.length).map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`))
-    expect(links[1]).toHaveTextContent('Leadership'); expect(links[3]).toHaveTextContent('Memoir')
+    const shown = hrefs.slice(1) // only the eight featured genres show at first, in the order of the genre list
+    expect(shown).toEqual(GENRES.filter((g) => FEATURED_GENRES.includes(g.key)).map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`))
+    expect(shown).toHaveLength(8); expect(links[1]).toHaveTextContent(GENRES.find((g) => FEATURED_GENRES.includes(g.key)).label)
     expect(within(shelf).getByText('Every book on this shelf is a genre. Pick one to see my notes.')).toBeInTheDocument()
   })
   it('gives the books five looks between them, repeating in order along the shelf', () => {

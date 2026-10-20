@@ -23,6 +23,7 @@ const hasClasses = (source, classes) => [...source.matchAll(/className="([^"]*)"
 const INSIDE_ADMIN_PRINTS = ['src/artloft/DeliveryTools.jsx', 'src/artloft/DescriptionEditor.jsx', 'src/artloft/OrdersPanel.jsx', 'src/artloft/SyncPlan.jsx']
 // Files with a bare checkbox, radio or hidden box that the browser or a class on its label draws, so they need none of the old rules
 const BARE_INPUT_ONLY = {
+  'src/admin/AdminBooks.jsx': 'the genre tick boxes',
   'src/admin/AdminSuggestions.jsx': 'the on/off switch',
   'src/components/FormMessages.jsx': 'the tick box, drawn by .sf-check',
   'src/ebook/FreeEbookPage.jsx': 'the hidden box for robots',

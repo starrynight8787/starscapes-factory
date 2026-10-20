@@ -55,9 +55,12 @@ describe('the page, as designed', () => {
 })
 
 describe('the genres', () => {
-  it('lists the five genres, each a link to its own shelf on the bookshelf page', async () => {
+  it('shows the featured genres first, each a link to its own shelf on the bookshelf page, and the rest after "More genres"', async () => {
     h.posts = [post(1, ['book-club', 'leadership']), post(2, ['book-club', 'Leadership']), post(3, ['book-club', 'fiction']), post(4, ['leadership'])]
     page()
+    await screen.findByRole('link', { name: /Mystery/ })
+    expect(screen.queryByRole('link', { name: /Leadership/ })).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: 'More genres' }))
     const lead = await screen.findByRole('link', { name: /Leadership/ })
     expect(lead).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=leadership')
     expect(screen.getByRole('link', { name: /Self-growth/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=self-growth')
@@ -208,12 +211,12 @@ describe('the books tool in Admin', () => {
     expect(h.calls).toEqual([])
     fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'The Culture Map' } })
     fireEvent.change(screen.getByLabelText('Author'), { target: { value: 'Erin Meyer' } })
-    fireEvent.change(screen.getByLabelText('Genre'), { target: { value: 'leadership' } })
+    fireEvent.click(screen.getByLabelText('Leadership'))
     fireEvent.change(screen.getByLabelText(/^Finished/), { target: { value: '2026-10-03' } })
     fireEvent.change(screen.getByLabelText(/Your rating/), { target: { value: '4' } })
     fireEvent.click(screen.getByRole('button', { name: 'Add the book' }))
     expect(await screen.findByText('Added \u201cThe Culture Map\u201d.')).toBeInTheDocument()
-    expect(h.calls).toEqual([['saveBook', null, expect.objectContaining({ title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', finished: '2026-10-03', rating: 4 })]])
+    expect(h.calls).toEqual([['saveBook', null, expect.objectContaining({ title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', genres: ['leadership'], status: 'read', finished: '2026-10-03', rating: 4 })]])
   })
   it('asks for the finishing date of a book you have read, and not for one you are reading', async () => {
     tool()

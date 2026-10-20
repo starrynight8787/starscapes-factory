@@ -31,17 +31,17 @@ describe('reading the books', () => {
   it('asks for the about text along with the rest', async () => {
     sb.results = [{ data: [{ id: 'a', about: 'Words.' }], error: null }]
     await expect(fetchBooks()).resolves.toEqual([{ id: 'a', about: 'Words.' }])
-    expect(sb.seen[0]).toEqual(['books', 'select', `${COLUMNS}, about, ${DETAILS}`])
+    expect(sb.seen[0]).toEqual(['books', 'select', `${COLUMNS}, genres, about, ${DETAILS}`])
   })
   it('asks again without it if the database has no about column yet, so the Book Club page never breaks before the SQL has been run', async () => {
     sb.results = [{ data: null, error: { message: 'column books.about does not exist' } }, { data: [{ id: 'a' }], error: null }]
     await expect(fetchBooks()).resolves.toEqual([{ id: 'a' }])
-    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, about, ${DETAILS}`, `${COLUMNS}, about`])
+    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, genres, about, ${DETAILS}`, `${COLUMNS}, about, ${DETAILS}`])
   })
   it('asks for fewer columns again if the book page columns are not there yet (sql/book-details.sql), down to the plain list', async () => {
-    sb.results = [{ data: null, error: { message: 'column books.year_published does not exist' } }, { data: null, error: { message: 'column books.about does not exist' } }, { data: [{ id: 'a' }], error: null }]
+    sb.results = [{ data: null, error: { message: 'column books.genres does not exist' } }, { data: null, error: { message: 'column books.year_published does not exist' } }, { data: null, error: { message: 'column books.about does not exist' } }, { data: [{ id: 'a' }], error: null }]
     await expect(fetchBooks()).resolves.toEqual([{ id: 'a' }])
-    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, about, ${DETAILS}`, `${COLUMNS}, about`, COLUMNS])
+    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, genres, about, ${DETAILS}`, `${COLUMNS}, about, ${DETAILS}`, `${COLUMNS}, about`, COLUMNS])
   })
   it('does not ask again for any other trouble, and says it plainly', async () => {
     sb.results = [{ data: null, error: { message: 'boom' } }]
