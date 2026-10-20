@@ -140,3 +140,20 @@
 .pg-post--v2 .pb .pg-chip {
   white-space: nowrap;
 }
+
+/* A deeper blue for the post's sky (a shade darker than the other starry banners). Phone: the banner carries it; computer: the wrapper does. */
+.pg-post--v2 .pb--starry.pb--post {
+  background:
+    radial-gradient(ellipse 60% 120% at 12% 0%, rgba(60, 90, 190, 0.45), transparent 60%),
+    radial-gradient(circle at 92% 0%, rgba(90, 120, 220, 0.3), transparent 45%),
+    linear-gradient(120deg, #0a1d47 0%, #102a69 55%, #1a3a86 100%);
+}
+@media (min-width: 721px) {
+  .pg-post--v2 .pg-post__hero.pb--starry {
+    background:
+      radial-gradient(ellipse 60% 120% at 12% 0%, rgba(60, 90, 190, 0.45), transparent 60%),
+      radial-gradient(circle at 92% 0%, rgba(90, 120, 220, 0.3), transparent 45%),
+      linear-gradient(120deg, #0a1d47 0%, #102a69 55%, #1a3a86 100%);
+  }
+  .pg-post--v2 .pg-post__hero > .pb--starry.pb--post { background: none; }
+}
