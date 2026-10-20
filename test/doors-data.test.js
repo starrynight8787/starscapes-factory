@@ -61,7 +61,7 @@ describe('the list of doors', () => {
       'daryls-adventures': { name: "Daryl's Adventures", blurb: "Daryl's world, one adventure at a time.", layout: 'gallery', tags: ['daryls-adventures'] },
       books: { name: 'Books', blurb: 'Stories to read together.', layout: 'gallery', tags: ['books'] },
     })
-    expect(Object.keys(doorAreas('knowledge-nook'))).toEqual(['come-read-with-me', 'research', 'book-to-screen'])
+    expect(Object.keys(doorAreas('knowledge-nook'))).toEqual(['research', 'book-to-screen']) // Come Read With Me has its own page now (playlist), like the Book Club
     expect(doorAreas('leadership-lounge')).toEqual({})
     expect(doorAreas('the-moon')).toEqual({})
   })

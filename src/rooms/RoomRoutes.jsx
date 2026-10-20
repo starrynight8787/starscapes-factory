@@ -1,3 +1,4 @@
+import ComeReadWithMePage from '../draftingdesk/ComeReadWithMePage'
 import InstagramGallery from '../instagram/InstagramGallery'
 import { Routes, Route, Link, useParams } from 'react-router-dom'
 import RoomHome from './RoomHome'
@@ -43,6 +44,7 @@ const CUSTOM_PAGES = {
   'sarah-jrs-den/youtube-series': YouTubeSeriesPage,
   'leadership-lounge/free-ebook': FreeEbookPage,
   'knowledge-nook/book-club': BookClubPage,
+  'knowledge-nook/come-read-with-me': ComeReadWithMePage,
 }
 
 // Pages with their own design that are always open (not behind a door), by "room/page".

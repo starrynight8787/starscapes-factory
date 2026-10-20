@@ -40,7 +40,7 @@ describe('which pages of a room list posts, and how a post gets on them', () => 
     expect(pagesOfRoom('factory-floor')).toEqual([{ name: 'The Factory Floor', to: '/factory-floor', tags: null }])
   })
   it('the Knowledge Nook and Sarah Jr.\u2019s Den: the pages behind their doors, by the door\u2019s name as a tag, and the Book Club\u2019s reviews; not the pages with their own design', () => {
-    expect(names('knowledge-nook')).toEqual(expect.arrayContaining(['Come Read With Me', 'Research', 'Book to Screen', 'Book Club (reviews and conversations)', 'Story Ledger (audits)'])); expect(names('knowledge-nook')).not.toContain('Story Ledger'); expect(names('knowledge-nook')).not.toContain('Book Club')
+    expect(names('knowledge-nook')).toEqual(expect.arrayContaining(['Research', 'Book to Screen', 'Book Club (reviews and conversations)', 'Story Ledger (audits)'])); expect(names('knowledge-nook')).not.toContain('Story Ledger'); expect(names('knowledge-nook')).not.toContain('Come Read With Me'); expect(names('knowledge-nook')).not.toContain('Book Club')
     expect(pagesOfRoom('knowledge-nook').find((p) => p.name.startsWith('Story Ledger')).tags).toEqual(['story-ledger'])
     expect(pagesOfRoom('knowledge-nook').find((p) => p.name === 'Research').tags).toEqual(['research']); expect(pagesOfRoom('knowledge-nook').find((p) => p.name.startsWith('Book Club')).tags).toEqual(['book-club'])
     expect(names('sarah-jrs-den')).toEqual(expect.arrayContaining(['Blog', "Daryl's Adventures", 'Books'])); expect(names('sarah-jrs-den')).not.toContain('YouTube Series')
