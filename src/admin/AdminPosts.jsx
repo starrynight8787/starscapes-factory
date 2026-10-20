@@ -22,7 +22,7 @@ export default function AdminPosts({ session }) {
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
   const [room, setRoom] = useState('all')
-  const [show, setShow] = useState('published')
+  const [show, setShow] = useState('all')
   const [search, setSearch] = useState('')
 
   useEffect(() => {
