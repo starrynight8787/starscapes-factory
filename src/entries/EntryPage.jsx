@@ -9,6 +9,7 @@ import '../rooms/roompages.css'
 import '../styles/pages.css'
 import '../styles/forms.css'
 import './entries.css'
+import { fetchReads, pickMostRead } from './readsApi'
 import PassChip from '../membership/PassChip'
 
 function Picture({ post, className }) {
@@ -22,11 +23,12 @@ function Picture({ post, className }) {
 // box under the pinned one (for example the Author's Notebook for members). It works for any room: the page that uses it says what it is called, where "back"
 // goes, how to fetch the room's posts (load) and which of them belong on the page (belongs). Those two should be fixed functions (defined outside the page),
 // so the page does not fetch again on every redraw. On a phone: latest, pinned, the grid (four first), then the extra box.
-export default function EntryPage({ title, blurb, backTo, backLabel, load, belongs, aside = null, art = null, chip = null, room = null }) {
+export default function EntryPage({ title, blurb, backTo, backLabel, load, belongs, aside = null, art = null, chip = null, room = null, underAside = false }) {
   useTitle(title)
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
   const [expanded, setExpanded] = useState(false)
+  const [reads, setReads] = useState({})
   const here = useLocation()
   const from = here.pathname
 
@@ -36,9 +38,17 @@ export default function EntryPage({ title, blurb, backTo, backLabel, load, belon
     return () => { alive = false }
   }, [load, belongs])
 
+  useEffect(() => {
+    if (!underAside || posts.length === 0) return undefined
+    let alive = true
+    fetchReads(posts.map((p) => p.id)).then((r) => alive && setReads(r))
+    return () => { alive = false }
+  }, [posts, underAside])
+
   const latest = useMemo(() => pickLatest(posts), [posts])
   const pinned = useMemo(() => pickPinned(posts, latest), [posts, latest])
   const grid = useMemo(() => pickGrid(posts, latest, pinned), [posts, latest, pinned])
+  const mostRead = useMemo(() => (underAside ? pickMostRead(posts, reads) : null), [posts, reads, underAside])
   const beginning = pinnedIsBeginning(posts, pinned)
   const shown = expanded ? grid : grid.slice(0, GRID_COUNT)
   const moreOnComputer = grid.length > GRID_COUNT
@@ -87,7 +97,8 @@ export default function EntryPage({ title, blurb, backTo, backLabel, load, belon
           )}
         </div>
 
-        <div className="en__right">
+        <div className={`en__right${underAside ? ' en__right--under' : ''}`}>
+          {underAside && aside && <div className="en__o4">{aside}</div>}
           {pinned && (
             <section className="en__card en__pinned en__o2" aria-labelledby="en-pinned-title">
               <Picture post={pinned} className="en__img en__img--small" />
@@ -96,7 +107,15 @@ export default function EntryPage({ title, blurb, backTo, backLabel, load, belon
               <Link className="pg-btn" to={`/post/${pinned.id}`} state={{ from }}>{beginning ? 'Start from the beginning' : 'Read this entry'}</Link>
             </section>
           )}
-          {aside && <div className="en__o4">{aside}</div>}
+          {mostRead && (
+            <section className="en__card en__pinned en__mostread en__o2" aria-labelledby="en-mostread-title">
+              <Picture post={mostRead} className="en__img en__img--small" />
+              <p className="en__meta"><span className="pg-chip">Most read</span></p>
+              <h2 id="en-mostread-title" className="en__pinnedtitle">{mostRead.title}</h2>
+              <Link className="pg-btn" to={`/post/${mostRead.id}`} state={{ from }}>Read this entry</Link>
+            </section>
+          )}
+          {!underAside && aside && <div className="en__o4">{aside}</div>}
         </div>
       </div>
     </main>

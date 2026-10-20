@@ -175,6 +175,9 @@
 .en__notebook .pg-btn {
   width: 100%;
 }
+@media (min-width: 961px) {
+  .en__right--under > .en__o4 { order: 1; } /* the membership box first, then the pinned entry, then the most read (the pinned and most read keep their own order: 2) */
+}
 @media (max-width: 960px) {
   .en__cols {
     display: flex;

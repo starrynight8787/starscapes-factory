@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { recordRead } from '../entries/readsApi'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import BackToPosts from '../components/BackToPosts'
@@ -37,6 +38,7 @@ export default function PostPage({ session }) {
         setError(error.message)
       } else {
         setPost(data)
+        recordRead(id)
         // A post that belongs to a pass keeps its words in a separate table that the database only opens for the right people
         if (hasPassColumn(data) && cleanPass(data.pass)) {
           try {
