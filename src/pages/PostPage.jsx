@@ -85,6 +85,7 @@ export default function PostPage({ session }) {
       <p className="rp-back">
         <BackToPosts />
       </p>
+      <div className="pb--starry pg-post__hero">
       <header className="pb pb--starry pb--post">
         <div className="pb__text">
           <div className="pg-post__meta">
@@ -107,6 +108,7 @@ export default function PostPage({ session }) {
         )}
       {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
       </article>
+      </div>
 
       {post.tags && post.tags.length > 0 && (
         <div className="pg-tags">

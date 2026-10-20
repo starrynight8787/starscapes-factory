@@ -38,11 +38,6 @@
   margin-left: auto;
   margin-right: auto;
 }
-@media (max-width: 640px) {
-  .pg-post--v2 .pg-post__card {
-    padding: 20px 18px 24px;
-  }
-}
 
 /* Posts have no picture on the right: the title uses the full banner width. */
 .pg-post--v2 .pb--post {
@@ -50,4 +45,98 @@
 }
 .pg-post--v2 .pb--post .pb__text {
   max-width: none;
+}
+
+/* THE POST LAYOUT (Figma: "22 Blog post layouts").
+   On a computer (Option B): the starry banner is the background of the whole top of the post. The chip, date and title sit at the top, and the white text block rests on
+   top of it. The title starts and ends at the same edges as the text block (both are 880 pixels wide, centred).
+   On a phone or small tablet (Option A): the usual banner with the title, then the text block below it, both the full width of the page.
+   The wrapper carries the starry background only on a computer; on a phone the banner inside it carries it, as before. */
+.pg:has(> .pg-post__hero) {
+  max-width: 1232px;
+}
+.container:has(> .pg > .pg-post__hero) {
+  max-width: 1272px;
+}
+
+/* Phone and small tablet: the wrapper is invisible and the banner and text block behave exactly as two separate blocks. */
+.pg-post--v2 .pg-post__hero {
+  display: block;
+  background: none;
+  border-radius: 0;
+  overflow: visible;
+}
+.pg-post--v2 .pg-post__hero::before,
+.pg-post--v2 .pg-post__hero::after {
+  display: none;
+}
+@media (max-width: 720px) {
+  .pg-post--v2 .pb--post {
+    padding: 28px 24px 32px;
+  }
+  .pg-post--v2 .pg-post__card {
+    padding: 24px;
+  }
+}
+
+/* Computer: the wrapper takes the starry sky, and the banner inside it becomes just the heading. */
+@media (min-width: 721px) {
+  .pg-post--v2 .pg-post__hero {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 36px;
+    margin-top: 4px;
+    padding: 44px 48px 64px;
+    border-radius: 24px;
+    overflow: hidden;
+    background:
+      radial-gradient(ellipse 60% 120% at 12% 0%, rgba(96, 126, 230, 0.55), transparent 60%),
+      radial-gradient(circle at 92% 0%, rgba(128, 160, 255, 0.4), transparent 45%),
+      linear-gradient(120deg, #14306a 0%, #1a3a86 55%, #2a4fb0 100%);
+  }
+  .pg-post--v2 .pg-post__hero::before,
+  .pg-post--v2 .pg-post__hero::after {
+    display: block;
+  }
+  /* the banner is now only the heading: no panel of its own, and the same 880-pixel width as the text block so the two line up */
+  .pg-post--v2 .pg-post__hero > .pb--post {
+    position: relative;
+    z-index: 1;
+    box-sizing: border-box;
+    align-self: center; /* the plain banner stretches to the edges; here it must sit in the middle, over the text block */
+    width: 100%;
+    max-width: 880px;
+    margin: 0;
+    padding: 0;
+    background: none;
+    border-radius: 0;
+    overflow: visible;
+  }
+  .pg-post--v2 .pg-post__hero > .pb--post::before,
+  .pg-post--v2 .pg-post__hero > .pb--post::after {
+    display: none;
+  }
+  .pg-post--v2 .pb .sf-article-title {
+    font-size: clamp(34px, 4.2vw, 52px);
+    line-height: 1.2;
+  }
+  .pg-post--v2 .pg-post__hero > .pg-post__card {
+    position: relative;
+    z-index: 1;
+    width: 100%;
+    margin: 0;
+    padding: 48px;
+    border: 0;
+    box-shadow: 0 12px 32px rgba(13, 15, 64, 0.35);
+    border-radius: 20px;
+  }
+}
+
+/* On a narrow screen the chip stays on one line and the date drops below it, instead of the chip breaking into two lines. */
+.pg-post--v2 .pb .pg-post__meta {
+  flex-wrap: wrap;
+}
+.pg-post--v2 .pb .pg-chip {
+  white-space: nowrap;
 }
