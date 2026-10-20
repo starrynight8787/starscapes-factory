@@ -3,6 +3,7 @@ import DraftingDeskHome from './DraftingDeskHome'
 import ArchiveEntriesPage from '../entries/ArchiveEntriesPage'
 import NotebookPage from './NotebookPage'
 import ComeWriteWithMePage from './ComeWriteWithMePage'
+import DeskAreaEntriesPage from '../entries/DeskAreaEntriesPage'
 import './draftingdesk.css'
 
 // Everything under /drafting-desk lives here, so the main App only needs one line to know about it.
@@ -12,6 +13,8 @@ export default function DraftingDeskRoutes() {
       <Route index element={<DraftingDeskHome />} />
       <Route path="archive-entries" element={<ArchiveEntriesPage />} />
       <Route path="authors-notebook" element={<NotebookPage />} />
+      <Route path="writing-prompts" element={<DeskAreaEntriesPage area="writing-prompts" />} />
+      <Route path="poems" element={<DeskAreaEntriesPage area="poems" />} />
       <Route path="come-write-with-me" element={<ComeWriteWithMePage />} />
       <Route
         path="*"

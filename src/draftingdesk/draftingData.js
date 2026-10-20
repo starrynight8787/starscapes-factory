@@ -7,8 +7,7 @@ export const DESK = {
   channel: 'drafting-desk', // the room's name as saved on each post
 }
 
-// The address of your Substack, for the Overthink Archive sheet. It must start with https://
-// If it is ever emptied (or does not start with https://), the sheet shows as "Opening soon" and goes nowhere.
+// The address of your Substack. It no longer has a paper on the desk, but the address is kept here for when it is linked from somewhere else. It must start with https://
 export const OVERTHINK_ARCHIVE_URL = 'https://overthinkarchive.substack.com'
 
 export const SCENE_SIZE = { width: 1200, height: 840 }
@@ -17,19 +16,20 @@ export const PAD = 44 // room round each paper's own picture, for its shadow, th
 
 const art = (id) => `/scenes/drafting-desk/sheet-${id}.svg`
 
-// The four papers on the desk, one for each area. (cx, cy) is the middle of the paper on the 1200 by 840 desk, w and h its size, rot its tilt.
+// The five papers on the desk, one for each area. (cx, cy) is the middle of the paper on the 1200 by 840 desk, w and h its size, rot its tilt.
 // kind "page" opens a page here, "external" opens another site in a new tab, "locked" goes nowhere yet.
 // To change where a paper is, how it is tilted, or what it says, change it here.
 // (The papers are drawn in public/scenes/drafting-desk/. If you change a paper's size, its picture needs redrawing to match.)
 export const SHEETS = [
-  { id: 'overthink-archive', name: 'Overthink Archive', blurb: 'Where the overthinking lives, on Substack.', kind: 'external', cx: 262, cy: 300, w: 270, h: 340, rot: -9 },
-  { id: 'archive-entries', name: 'Archive Entries', blurb: 'The ongoing story, entry by entry.', kind: 'page', to: '/drafting-desk/archive-entries', cx: 612, cy: 252, w: 250, h: 330, rot: 5 },
-  { id: 'authors-notebook', name: "Author's Notebook", blurb: 'Behind the scenes, straight from my notebook.', kind: 'page', to: '/drafting-desk/authors-notebook', lock: 'paid', cx: 952, cy: 322, w: 270, h: 340, rot: 8, labelTop: 48 },
-  { id: 'come-write-with-me', name: 'Come Write With Me', blurb: 'Join me on YouTube while I write.', kind: 'page', to: '/drafting-desk/come-write-with-me', cx: 470, cy: 612, w: 320, h: 235, rot: -4 },
+  { id: 'archive-entries', name: 'Archive Entries', blurb: 'The ongoing story, entry by entry.', kind: 'page', to: '/drafting-desk/archive-entries', cx: 262, cy: 292, w: 250, h: 330, rot: -6 },
+  { id: 'authors-notebook', name: "Author's Notebook", blurb: 'Behind the scenes, straight from my notebook.', kind: 'page', to: '/drafting-desk/authors-notebook', lock: 'paid', cx: 612, cy: 262, w: 270, h: 340, rot: 4, labelTop: 48 },
+  { id: 'writing-prompts', name: 'Writing Prompts', blurb: 'A spark to start something of your own.', kind: 'page', to: '/drafting-desk/writing-prompts', cx: 952, cy: 322, w: 250, h: 330, rot: 8 },
+  { id: 'poems', name: 'Poems', blurb: 'Short pieces, line by line.', kind: 'page', to: '/drafting-desk/poems', cx: 300, cy: 624, w: 250, h: 240, rot: -4 },
+  { id: 'come-write-with-me', name: 'Come Write With Me', blurb: 'Join me on YouTube while I write.', kind: 'page', to: '/drafting-desk/come-write-with-me', cx: 700, cy: 636, w: 320, h: 235, rot: 3 },
 ]
 
 // The room as the scene needs it
-export function buildScene({ overthinkUrl = OVERTHINK_ARCHIVE_URL } = {}) {
+export function buildScene() {
   return {
     name: DESK.name,
     tagline: DESK.tagline,
@@ -37,7 +37,7 @@ export function buildScene({ overthinkUrl = OVERTHINK_ARCHIVE_URL } = {}) {
     width: SCENE_SIZE.width,
     height: SCENE_SIZE.height,
     base: BASE_PICTURE,
-    items: SHEETS.map((s) => ({ ...s, pad: PAD, art: art(s.id), ...(s.id === 'overthink-archive' ? { href: overthinkUrl } : {}) })),
+    items: SHEETS.map((s) => ({ ...s, pad: PAD, art: art(s.id) })),
   }
 }
 
@@ -48,6 +48,18 @@ export const AREAS = {
     name: 'Archive Entries',
     blurb: 'The ongoing story, entry by entry.',
     to: '/drafting-desk/archive-entries',
+  },
+  'writing-prompts': {
+    key: 'writing-prompts',
+    name: 'Writing Prompts',
+    blurb: 'A spark to start something of your own.',
+    to: '/drafting-desk/writing-prompts',
+  },
+  poems: {
+    key: 'poems',
+    name: 'Poems',
+    blurb: 'Short pieces, line by line.',
+    to: '/drafting-desk/poems',
   },
   'authors-notebook': {
     key: 'authors-notebook',
@@ -60,11 +72,15 @@ export const AREAS = {
 // Which area a post belongs to, from its tags. A post in this room with neither tag does not appear on a paper.
 //   Archive Entries:    tag "archive-entries" (or "archive-entry")
 //   Author's Notebook:  tag "authors-notebook" (or "notebook")
+//   Writing Prompts:    tag "writing-prompts" (or "writing-prompt")
+//   Poems:              tag "poems" (or "poem", "poetry")
 // Capitals and spaces do not matter, so "Archive Entries" and "archive-entries" mean the same.
 const tidy = (tag) => String(tag).trim().toLowerCase().replace(/['’]/g, '').replace(/\s+/g, '-')
 export function areaOf(post) {
   const tags = Array.isArray(post && post.tags) ? post.tags.map(tidy) : []
   if (tags.includes('authors-notebook') || tags.includes('notebook')) return 'authors-notebook'
+  if (tags.includes('writing-prompts') || tags.includes('writing-prompt')) return 'writing-prompts'
+  if (tags.includes('poems') || tags.includes('poem') || tags.includes('poetry')) return 'poems'
   if (tags.includes('archive-entries') || tags.includes('archive-entry')) return 'archive-entries'
   return null
 }

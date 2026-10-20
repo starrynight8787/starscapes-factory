@@ -49,9 +49,11 @@ export const PAGES = {
   '/drafting-desk': { title: DESK.name, description: 'Where the writing happens. Follow my books, drafts and notebook as they take shape, entry by entry.', image: 'drafting-desk' },
   '/drafting-desk/archive-entries': { title: AREAS['archive-entries'].name, description: 'The ongoing story, entry by entry: the public entries from the Drafting Desk, newest first.', image: 'drafting-desk' },
   '/drafting-desk/authors-notebook': { title: AREAS['authors-notebook'].name, description: 'Behind the scenes, straight from my notebook. A members-only page.', image: 'drafting-desk', index: false },
+  '/drafting-desk/writing-prompts': { title: AREAS['writing-prompts'].name, description: 'A spark to start something of your own: writing prompts from the Drafting Desk, newest first.', image: 'drafting-desk' },
+  '/drafting-desk/poems': { title: AREAS.poems.name, description: 'Short pieces, line by line: poems from the Drafting Desk, newest first.', image: 'drafting-desk' },
   '/drafting-desk/come-write-with-me': { title: 'Come Write With Me', description: 'Join me on YouTube while I write. Watch the sessions, newest first, and write along with me at your own desk.', image: 'drafting-desk' },
 
-  '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion, a story we write together and writing prompts: pick a beaker to see what I am working on.'),
+  '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion and a story we write together: pick a beaker to see what I am working on.'),
   '/idea-hatchery/lets-write-a-story': { title: 'Stories: let\u2019s write a story', description: 'A story we write together: I write each chapter, and members vote on where it goes next. The first three chapters are free to read.', image: 'idea-hatchery' },
   '/leadership-lounge': room('leadership-lounge', 'Leading from the middle. A blog, an audio course and an online course for people who lead without authority.'),
   '/explorers-bay': room('explorers-bay', 'Stories and pictures from the road: writing in transit and travel photography, from the pier.'),

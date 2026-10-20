@@ -18,6 +18,8 @@ export function pagesOfRoom(slug) {
     return [
       { name: 'Archive Entries', to: '/drafting-desk/archive-entries', tags: ['archive-entries', 'archive-entry'] },
       { name: 'Author\u2019s Notebook', to: '/drafting-desk/authors-notebook', tags: ['authors-notebook', 'notebook'] },
+      { name: 'Writing Prompts', to: '/drafting-desk/writing-prompts', tags: ['writing-prompts', 'writing-prompt'] },
+      { name: 'Poems', to: '/drafting-desk/poems', tags: ['poems', 'poem', 'poetry'] },
     ]
   }
   const pages = []

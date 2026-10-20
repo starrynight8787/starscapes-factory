@@ -25,6 +25,8 @@ export function targetFromPath(path) {
   if (pathname === '/drafting-desk') return { to: path, label: 'The Drafting Desk' }
   if (pathname === '/drafting-desk/archive-entries') return { to: path, label: 'Archive Entries' }
   if (pathname === '/drafting-desk/authors-notebook') return { to: path, label: "Author's Notebook" }
+  if (pathname === '/drafting-desk/writing-prompts') return { to: path, label: 'Writing Prompts' }
+  if (pathname === '/drafting-desk/poems') return { to: path, label: 'Poems' }
   const room = pathname.match(/^\/channel\/([^/]+)\/?$/)
   if (room) return { to: path, label: roomName(room[1]) || 'the room' }
   return null
