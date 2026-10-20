@@ -191,57 +191,50 @@ export default function OrdersPanel() {
       {state.phase === 'done' && state.orders.length === 0 && <p className="al-tools__result" role="status">No orders yet.</p>}
 
       {state.phase === 'done' && state.orders.length > 0 && (
-        <div className="al-tools__scroll">
-          <table className="al-tools__table">
-            <caption>The latest {state.orders.length} {state.orders.length === 1 ? 'order' : 'orders'}</caption>
-            <thead>
-              <tr>
-                <th scope="col">When</th>
-                <th scope="col">Customer</th>
-                <th scope="col">Delivering to</th>
-                <th scope="col">What</th>
-                <th scope="col">Total</th>
-                <th scope="col">Status</th>
-                <th scope="col">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {state.orders.map((o) => {
-                const address = o.shipping && o.shipping.address
-                const items = Array.isArray(o.items) ? o.items : []
-                const shown = isStuck(o) ? 'check_creativehub' : o.status
-                return (
-                  <tr key={o.id}>
-                    <th scope="row">{when(o.created_at)}{!o.livemode && <><br /><span className="al-tools__tag">TEST</span></>}</th>
-                    <td>{o.customer_name || 'No name'}<br />{o.customer_email || ''}</td>
-                    <td>{address ? [address.city, country(address.country)].filter(Boolean).join(', ') : 'No address'}</td>
-                    <td>{items.length === 0 ? 'Could not read' : items.map((i, n) => <span key={n} className="al-tools__line">{i.qty} × {i.title}{i.description ? ` (${i.description})` : ''}</span>)}</td>
-                    <td>{o.amount_total === null || o.amount_total === undefined ? '' : formatPrice(o.amount_total / 100)}</td>
-                    <td>
-                      <strong className={`al-tools__status is-${shown}`}>{STATUS[shown] || shown}</strong>
-                      {o.status === 'sent' && (
-                        <small className="al-tools__line">
-                          {o.creativehub_order_number ? `Order ${o.creativehub_order_number}` : o.creativehub_order_id ? 'Order number not recorded' : ''}
-                          {o.creativehub_status ? `, ${o.creativehub_status}` : ''}
-                          {o.creativehub_due ? `, due ${o.creativehub_due}` : ''}
-                        </small>
-                      )}
-                      {isStuck(o) && <><br /><small>This order was never marked as sent and its answer was lost. It may or may not be at Creative Hub.</small></>}
-                      {o.note && !isStuck(o) && <><br /><small>{o.note}</small></>}
-                      {o.confirmation_status && (
-                        <><br /><small>Confirmation email: <strong>{CONFIRMATION[o.confirmation_status] || o.confirmation_status}</strong>{o.confirmation_note && o.confirmation_status !== 'sent' ? `. ${o.confirmation_note}` : ''}</small></>
-                      )}
-                      {o.dispatch_status && (
-                        <><br /><small>Posted email: <strong>{DISPATCH[o.dispatch_status] || o.dispatch_status}</strong>{o.dispatch_note && o.dispatch_status !== 'sent' ? `. ${o.dispatch_note}` : ''}{o.dispatch_status === 'sent' && o.tracking_number ? `. Tracking number ${o.tracking_number}` : ''}</small></>
-                      )}
-                    </td>
-                    <td>{actions(o)}{confirmationButton(o)}{dispatchControl(o)}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
+        <>
+          <p className="al-orders__count">The latest {state.orders.length} {state.orders.length === 1 ? 'order' : 'orders'}</p>
+          <ul className="al-orders" aria-label="Orders, newest first">
+            {state.orders.map((o) => {
+              const address = o.shipping && o.shipping.address
+              const items = Array.isArray(o.items) ? o.items : []
+              const shown = isStuck(o) ? 'check_creativehub' : o.status
+              const total = o.amount_total === null || o.amount_total === undefined ? '' : formatPrice(o.amount_total / 100)
+              const buttons = [actions(o), confirmationButton(o), dispatchControl(o)]
+              return (
+                <li key={o.id} className="al-order">
+                  <div className="al-order__head">
+                    <h3 className="al-order__when">{when(o.created_at)}{!o.livemode && <span className="al-tools__tag">TEST</span>}</h3>
+                    {total && <p className="al-order__total">{total}</p>}
+                  </div>
+                  <dl className="al-order__facts">
+                    <div><dt>Customer</dt><dd>{o.customer_name || 'No name'}<br />{o.customer_email || ''}</dd></div>
+                    <div><dt>Delivering to</dt><dd>{address ? [address.city, country(address.country)].filter(Boolean).join(', ') : 'No address'}</dd></div>
+                    <div><dt>What</dt><dd>{items.length === 0 ? 'Could not read' : items.map((i, n) => <span key={n} className="al-tools__line">{i.qty} × {i.title}{i.description ? ` (${i.description})` : ''}</span>)}</dd></div>
+                  </dl>
+                  <div className="al-order__status">
+                    <strong className={`al-tools__status is-${shown}`}>{STATUS[shown] || shown}</strong>
+                    {o.status === 'sent' && (
+                      <small className="al-tools__line">
+                        {o.creativehub_order_number ? `Order ${o.creativehub_order_number}` : o.creativehub_order_id ? 'Order number not recorded' : ''}
+                        {o.creativehub_status ? `, ${o.creativehub_status}` : ''}
+                        {o.creativehub_due ? `, due ${o.creativehub_due}` : ''}
+                      </small>
+                    )}
+                    {isStuck(o) && <><br /><small>This order was never marked as sent and its answer was lost. It may or may not be at Creative Hub.</small></>}
+                    {o.note && !isStuck(o) && <><br /><small>{o.note}</small></>}
+                    {o.confirmation_status && (
+                      <><br /><small>Confirmation email: <strong>{CONFIRMATION[o.confirmation_status] || o.confirmation_status}</strong>{o.confirmation_note && o.confirmation_status !== 'sent' ? `. ${o.confirmation_note}` : ''}</small></>
+                    )}
+                    {o.dispatch_status && (
+                      <><br /><small>Posted email: <strong>{DISPATCH[o.dispatch_status] || o.dispatch_status}</strong>{o.dispatch_note && o.dispatch_status !== 'sent' ? `. ${o.dispatch_note}` : ''}{o.dispatch_status === 'sent' && o.tracking_number ? `. Tracking number ${o.tracking_number}` : ''}</small></>
+                    )}
+                  </div>
+                  {buttons.some(Boolean) && <div className="al-order__actions">{buttons[0]}{buttons[1]}{buttons[2]}</div>}
+                </li>
+              )
+            })}
+          </ul>
+        </>
       )}
     </section>
   )

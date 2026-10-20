@@ -705,6 +705,89 @@ a.al-object:focus-visible {
 .al-tools__table small {
   color: var(--sf-muted, #5b6585);
 }
+.al-orders__count {
+  margin: 8px 0 10px;
+  color: var(--sf-muted, #5b6585);
+}
+.al-orders {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.al-order {
+  display: grid;
+  gap: 12px;
+  padding: 14px 16px;
+  background: #fff;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+  font-size: 0.95rem;
+  line-height: 1.45;
+  color: var(--sf-ink, #0e1530);
+  min-width: 0;
+}
+.al-order__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--sf-border, #dde3f0);
+}
+.al-order__when {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  font-size: 1rem;
+}
+.al-order__total {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+}
+.al-order__facts {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(190px, 1fr));
+  gap: 12px 20px;
+  margin: 0;
+}
+.al-order__facts div {
+  min-width: 0;
+}
+.al-order__facts dt {
+  margin: 0 0 2px;
+  font-size: 0.875rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--sf-muted, #5b6585);
+}
+.al-order__facts dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.al-order__status {
+  padding: 10px 12px;
+  background: var(--sf-bg, #f7f8fd);
+  border-radius: 8px;
+  overflow-wrap: anywhere;
+}
+.al-order__status small {
+  color: var(--sf-muted, #5b6585);
+}
+.al-order__status .al-tools__line + br {
+  display: none;
+}
+.al-order__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+}
 .al-sync-plan h3 {
   margin: 14px 0 4px;
   font-size: 1rem;

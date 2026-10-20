@@ -1,0 +1,28 @@
+ORDERS AS CARDS, AND A TRUTHFUL "ENDED" DATE   starscapes-orders-cards-20oct.zip
+(No Supabase step. Nothing to do in Stripe or Vercel.)
+
+1. ADMIN, ART LOFT, ORDERS: EACH ORDER IS NOW A CARD
+   The Orders list was a seven-column table in a narrow column, so it ran off the right edge and the status was cut off. Each order is now a card:
+   the day and a TEST tag at the top left, the total at the top right; then Customer, Delivering to and What, in columns that wrap as room allows; then a shaded box with the status
+   (and, as before, where Creative Hub has got to, the notes, whether the confirmation and posted emails went); then the buttons for that order.
+   Nothing about what the buttons do has changed (Send to Creative Hub, Refresh status, Send confirmation email, Send posted email with its tracking boxes, Look for it at Creative Hub). Long names and email addresses wrap.
+   Checked in a browser at desktop and phone width: no sideways scrolling.
+
+2. MY PASSES: "ENDED ON" ONLY FOR A DATE THAT HAS PASSED
+   A member whose subscription was ended early (cancelled on the spot) still has their old renewal date on record, so My passes said "Your passes ended on 20 November 2026" on 20 October.
+   It now says "Your passes have ended." unless the date has really passed, in which case it still says "Your passes ended on <date>." (the case after a failed payment). 
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-orders-cards-20oct.zip
+ 3. python3 tools/add-orders-cards.py          (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                        (it should still print 12)
+ 7. git add .
+    git status                                 (no files ending .before- should be listed)
+    git commit -m "Orders as cards instead of a wide table; My passes only gives an end date that has passed"
+    git push
+ 8. Wait for Vercel to say READY, then open Admin, Art Loft, Orders, press Show recent orders, and look at it on your computer and your phone.
+
+(The unzip also replaces one existing test file, membership-mypasses.test.jsx, and adds orders-panel-cards.test.jsx.)

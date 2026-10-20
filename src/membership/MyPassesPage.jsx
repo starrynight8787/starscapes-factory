@@ -157,7 +157,7 @@ export default function MyPassesPage({ owner = false }) {
           <h1>My passes</h1>
           <section className="mb__sum">
             <span className="pg-chip">Ended</span>
-            <p className="mb__lead">{row.current_period_end ? `Your passes ended on ${formatDate(row.current_period_end)}.` : 'Your passes have ended.'} You can choose passes again whenever you like.</p>
+            <p className="mb__lead">{row.current_period_end && Date.parse(row.current_period_end) <= Date.now() ? `Your passes ended on ${formatDate(row.current_period_end)}.` : 'Your passes have ended.'} You can choose passes again whenever you like.</p>
             <Link className="mb__wbtn" to="/membership">
               Choose your passes
             </Link>

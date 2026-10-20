@@ -113,10 +113,19 @@ describe('the other views', () => {
     api.fetchMyMembership.mockResolvedValue(row({ status: 'incomplete' })); show()
     expect(await screen.findByRole('heading', { level: 1, name: 'My membership' })).toBeInTheDocument()
   })
-  it('says passes have ended, with the date, and offers to choose again', async () => {
-    api.fetchMyMembership.mockResolvedValue(row({ status: 'canceled' })); show()
-    expect(await screen.findByText('Ended')).toBeInTheDocument(); expect(screen.getByText(/Your passes ended on 16 November 2026\./)).toBeInTheDocument()
+  it('says passes have ended, with the date once that date has passed, and offers to choose again', async () => {
+    api.fetchMyMembership.mockResolvedValue(row({ status: 'canceled', current_period_end: '2026-09-16T10:00:00Z' })); show()
+    expect(await screen.findByText('Ended')).toBeInTheDocument(); expect(screen.getByText(/Your passes ended on 16 September 2026\./)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Choose your passes' })).toHaveAttribute('href', '/membership')
+  })
+  it('does not name a date in the future as the day passes ended (a subscription ended early still has its old renewal date on record)', async () => {
+    api.fetchMyMembership.mockResolvedValue(row({ status: 'canceled', current_period_end: future })); show()
+    expect(await screen.findByText('Ended')).toBeInTheDocument(); expect(screen.getByText(/Your passes have ended\./)).toBeInTheDocument(); expect(screen.queryByText(/ended on/)).toBeNull()
+    expect(screen.getByRole('link', { name: 'Choose your passes' })).toHaveAttribute('href', '/membership')
+  })
+  it('says only that they have ended when no date is on record', async () => {
+    api.fetchMyMembership.mockResolvedValue(row({ status: 'canceled', current_period_end: null })); show()
+    expect(await screen.findByText(/Your passes have ended\./)).toBeInTheDocument()
   })
   it('tells someone whose payment failed, and lets them fix their card on Stripe', async () => {
     for (const status of ['past_due', 'unpaid']) {
