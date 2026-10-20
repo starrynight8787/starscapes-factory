@@ -48,7 +48,7 @@
 .bk__cover { width: 240px; aspect-ratio: 240 / 350; object-fit: cover; border-radius: 6px; background: var(--sf-navy-700, #14306a); }
 .bk__cover--blank { display: flex; align-items: center; padding: 22px; box-sizing: border-box; color: #fff; font-family: var(--sf-heading, 'Josefin Sans', sans-serif); font-size: 1.75rem; font-weight: 700; }
 .bk__chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.bk__chip { padding: 5px 12px; border-radius: 999px; background: #dbe4ff; color: var(--sf-navy-700, #14306a); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.bk__chip { text-decoration: none; padding: 5px 12px; border-radius: 999px; background: #dbe4ff; color: var(--sf-navy-700, #14306a); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
 .bk__chip--dark { background: var(--sf-navy-700, #14306a); color: #fff; }
 .bk__chip--gold { background: #f2c94c; color: #0e1530; }
 .bk__title { margin: 0; font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.1; color: var(--sf-navy-700, #14306a); }

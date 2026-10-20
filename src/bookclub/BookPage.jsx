@@ -47,7 +47,7 @@ export default function BookPage() {
   const review = aboutParagraphs(book.review)
   const facts = [
     ['Year published', book.year_published ? String(book.year_published) : 'Not added yet'],
-    ['Genre', genre ? genre.label : 'Not chosen'],
+    ['Genre', genre ? genre.label : 'No genre chosen yet'],
     ['Started reading', book.started ? formatDate(book.started) : 'Not recorded'],
     ['Finished', book.finished ? formatDate(book.finished) : (book.status === 'read' ? 'Not recorded' : 'Not finished yet')],
     ['Year shelf', year || 'Not on a shelf yet'],
@@ -66,7 +66,7 @@ export default function BookPage() {
           : <div className="bk__cover bk__cover--blank" aria-hidden="true">{book.title}</div>}
         <div className="bk__info">
           <div className="bk__chips">
-            {genre && <span className="bk__chip">{genre.label}</span>}
+            {genre && <Link className="bk__chip" to={shelfPath(genre.key)}>{genre.label} shelf</Link>}
             {statusOf(book.status) && <span className="bk__chip bk__chip--dark">{statusOf(book.status)}</span>}
             {book.theme_book && <span className="bk__chip bk__chip--gold">★ Part of the {year || ''} theme</span>}
           </div>

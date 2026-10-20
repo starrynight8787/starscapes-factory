@@ -63,7 +63,11 @@ export const matchesSearch = (book, query) => {
 }
 export function genreShelves(books, query = '') {
   const have = (Array.isArray(books) ? books : []).filter((b) => b && (b.status === 'read' || b.status === 'reading') && matchesSearch(b, query))
-  return GENRES.map((g) => ({ ...g, books: have.filter((b) => b.genre === g.key) }))
+  const known = new Set(GENRES.map((g) => g.key))
+  const shelves = GENRES.map((g) => ({ ...g, books: have.filter((b) => b.genre === g.key) }))
+  // A book with no genre (or one the shelves do not know) would vanish, so it goes on a last shelf of its own, shown only when there is one
+  const other = have.filter((b) => !known.has(b.genre))
+  return other.length ? [...shelves, { key: 'other', label: 'No genre yet', books: other, other: true }] : shelves
 }
 
 // Cleans one book before it is saved.

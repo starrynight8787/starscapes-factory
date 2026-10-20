@@ -14,7 +14,7 @@ import './bookshelf.css'
 export default function BookShelfPage() {
   useTitle('The bookshelf')
   const [params, setParams] = useSearchParams()
-  const genre = GENRES.some((g) => g.key === params.get('genre')) ? params.get('genre') : ''
+  const genre = [...GENRES.map((g) => g.key), 'other'].includes(params.get('genre')) ? params.get('genre') : ''
   const query = params.get('q') || ''
   const [books, setBooks] = useState([])
   const [status, setStatus] = useState('loading')
@@ -58,7 +58,7 @@ export default function BookShelfPage() {
         <nav className="bs__jump" aria-label="Jump to a shelf">
           <span className="bs__jumplabel">Jump to a shelf</span>
           <div className="bs__tabs">
-            {GENRES.map((g) => (
+            {[...GENRES, ...(all.some((x) => x.other) ? [{ key: 'other', label: 'No genre yet' }] : [])].map((g) => (
               <button key={g.key} type="button" className="bs__tab" aria-pressed={genre === g.key} onClick={() => choose(g.key)}>
                 {g.label} <span className="bs__count">{countOf(g.key)}</span>
               </button>
@@ -68,7 +68,7 @@ export default function BookShelfPage() {
             <label htmlFor="bs-genre" className="bs__jumplabel">Jump to a shelf</label>
             <select id="bs-genre" className="bs__selectbox" value={genre} onChange={(e) => choose(e.target.value)}>
               <option value="">All shelves</option>
-              {GENRES.map((g) => <option key={g.key} value={g.key}>{g.label} · {countOf(g.key)} {countOf(g.key) === 1 ? 'book' : 'books'}</option>)}
+              {[...GENRES, ...(all.some((x) => x.other) ? [{ key: 'other', label: 'No genre yet' }] : [])].map((g) => <option key={g.key} value={g.key}>{g.label} · {countOf(g.key)} {countOf(g.key) === 1 ? 'book' : 'books'}</option>)}
             </select>
           </div>
         </nav>
