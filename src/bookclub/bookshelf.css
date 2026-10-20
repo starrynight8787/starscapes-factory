@@ -89,3 +89,19 @@
   .bk__facts { grid-template-columns: 1fr; }
   .bk__tile { width: 72px; height: 84px; }
 }
+
+/* Wider than the other room pages (980px): these two pages are drawn 1200px wide in Figma, and the book page felt cramped at 980. */
+.rp.bk, .rp.bs { max-width: 1200px; }
+.bk { gap: 32px; }
+.bk__hero { grid-template-columns: 300px 1fr; gap: 48px; padding: 36px; }
+.bk__cover { width: 300px; }
+.bk__info { display: grid; gap: 16px; align-content: start; }
+.bk .bc__box { padding: 32px; gap: 18px; }
+.bk__two { gap: 32px; }
+.bk__text p { font-size: 1.0625rem; line-height: 1.75; }
+.bk__facts { padding: 16px 24px; gap: 0 32px; }
+@media (max-width: 760px) {
+  .bk__hero { grid-template-columns: 1fr; padding: 24px; gap: 24px; }
+  .bk__cover { width: 200px; }
+  .bk .bc__box { padding: 20px; }
+}
