@@ -151,14 +151,15 @@ describe('the page', () => {
 })
 
 describe('the banner on this page', () => {
-  it('has the chip, the one heading, the line under it, and the Lounge\u2019s own picture', async () => {
+  it('has the chip, the one heading, the line under it, and the starry mountain picture', async () => {
     h.posts = [post('A post', 4)]; const { container } = page()
     await screen.findByRole('heading', { level: 2, name: 'A post' })
     expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1)
     const banner = container.querySelector('.pb')
     expect(within(banner).getByText('Leading from the Middle')).toBeInTheDocument(); expect(within(banner).getByRole('heading', { level: 1, name: 'Leadership Blog' })).toBeInTheDocument()
     expect(within(banner).getByText('Notes on leading from where you are.')).toBeInTheDocument()
-    expect(banner.querySelector('img')).toHaveAttribute('src', '/scenes/leadership-lounge/base.svg')
+    expect(banner).toHaveClass('pb--starry') // the starry banner draws its own mountain, so it has no picture file
+    expect(banner.querySelector('svg.pb__art')).not.toBeNull()
   })
   it('has a "Start with Building Block 1" button that goes to that post, once the first block exists', async () => {
     h.posts = [post('Block one title', 2, ['building-block-1']), post('Other', 5)]; const { container } = page()

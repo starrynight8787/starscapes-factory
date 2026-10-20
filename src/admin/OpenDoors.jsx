@@ -10,8 +10,12 @@ import { saveDoor } from '../doors/doorsApi'
 import { useOwnerCheck } from './useIsOwner'
 import './admin.css'
 import './opendoors.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 
 const ROOM_ORDER = ['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook', 'sarah-jrs-den']
+// Two columns that come out about the same height (6 doors each): Knowledge Nook and the Idea Hatchery on the left, the rest on the right.
+const ROOM_COLUMNS = [['knowledge-nook', 'idea-hatchery'], ['sarah-jrs-den', 'leadership-lounge', 'explorers-bay']]
 
 // The owner's tool for opening and closing the doors in the illustrated rooms, at /admin/doors.
 export default function OpenDoors({ session }) {
@@ -48,12 +52,8 @@ export default function OpenDoors({ session }) {
   }
 
   return (
-    <main className="ad">
-      <p className="ad-back">
-        <Link to="/admin">← Back to Admin</Link>
-      </p>
-      <h1>Open a door</h1>
-      <p className="ad-note">Every door starts closed. Visitors see it taped off and cannot reach its page. Open one when what is behind it is ready.</p>
+    <main className="ad ad--wide">
+      <AdminBanner chip="Doors" title="Open a door" subtitle="Every door starts closed. Visitors see it taped off and cannot reach its page. Open one when what is behind it is ready." icon="door" />
       {failed && (
         <FailureMessage title="I could not read the doors">
           <span className="od-fail">Every door is staying closed for now. The database said: &ldquo;{reason || 'no reason given'}&rdquo;.</span>
@@ -63,10 +63,13 @@ export default function OpenDoors({ session }) {
         </FailureMessage>
       )}
       {message && (message.ok ? <SuccessMessage title={message.text} /> : <FailureMessage title="That did not work">{message.text}</FailureMessage>)}
-      {ROOM_ORDER.map((room) => {
+      <div className="ad-cols">
+      {ROOM_COLUMNS.map((col, ci) => (
+        <div className="ad-col" key={ci}>
+          {col.map((room) => {
         const doors = DOORS.filter((d) => d.room === room)
         return (
-          <section key={room} className="ad-group" aria-labelledby={`od-${room}`}>
+          <section key={room} className="ad-group ad-card" aria-labelledby={`od-${room}`}>
             <h2 id={`od-${room}`}>{ROOMS[room].name}</h2>
             <ul className="ad-doors">
               {doors.map((door) => {
@@ -102,6 +105,9 @@ export default function OpenDoors({ session }) {
           </section>
         )
       })}
+        </div>
+      ))}
+      </div>
     </main>
   )
 }

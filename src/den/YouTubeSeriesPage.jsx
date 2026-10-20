@@ -46,7 +46,7 @@ export default function YouTubeSeriesPage() {
   return (
     <main className="rp yt">
       <p className="rp-back"><Link to="/sarah-jrs-den">← Back to Sarah Jr.&apos;s Den</Link></p>
-      <PageBanner title="YouTube Series" subtitle="Watch the adventures come to life." picture="/scenes/sarah-jrs-den/base.svg">
+      <PageBanner title="YouTube Series" subtitle="come write with me, come read with me, come study with me" art="plain">
         {channel && <a className="pg-btn fm-btn--primary" href={channel} target="_blank" rel="noopener noreferrer" aria-label="Subscribe on YouTube (opens in a new tab)">Subscribe on YouTube ↗</a>}
       </PageBanner>
       {state.status === 'loading' && <p className="rp-note">Loading…</p>}

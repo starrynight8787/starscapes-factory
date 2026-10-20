@@ -10,6 +10,8 @@ import { fetchAllPosts } from './postsAdminApi'
 import { countByRoom, filterPosts, pagesOfRoom, roomName, whereIs } from './postsAdminRules'
 import '../styles/pages.css'
 import './admin.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 import './adminposts.css'
 
 // The owner's list of every post at /admin/posts: from every room, newest first, with a filter for the room, for published or not, and a search of the titles. Under each post it says
@@ -40,12 +42,10 @@ export default function AdminPosts({ session }) {
 
   const help = room !== 'all' && room !== 'none' ? pagesOfRoom(room) : []
   return (
-    <main className="ad ap">
-      <p className="rp-back"><Link to="/admin">← Back to Admin</Link></p>
-      <h1>All posts</h1>
-      <p className="ad-note">Every post from every room. A post shows on a room&apos;s page only if it is in that room and has a tag that page uses; under each post it says where it appears.</p>
+    <main className="ad ad--wide ap">
+      <AdminBanner chip="All posts" title="All posts" subtitle="Every post from every room. A post shows on a room&apos;s page only if it is in that room and has a tag that page uses; under each post it says where it appears." icon="posts" />
 
-      <form className="ap__filters" onSubmit={(e) => e.preventDefault()}>
+      <form className="ap__filters ad-card" onSubmit={(e) => e.preventDefault()}>
         <label className="ap__field">Room
           <select className="ap__control" value={room} onChange={(e) => setRoom(e.target.value)}>
             <option value="all">All rooms ({counts.all})</option>

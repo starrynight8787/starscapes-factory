@@ -8,6 +8,8 @@ import { GENRES, STATUSES, cleanBook, cleanGoal } from '../bookclub/bookRules'
 import { fetchBooks, fetchGoals, removeBook, saveBook, saveGoal } from '../bookclub/bookApi'
 import '../styles/pages.css'
 import './admin.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 
 const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '' }
 const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '' })
@@ -56,14 +58,14 @@ export default function AdminBooks({ session }) {
   const pickYear = (value) => { const g = goals[Number(value)] || {}; setGoal({ year: value, goal: g.goal ? String(g.goal) : '', theme: g.theme || '' }) }
 
   return (
-    <main className="ad ab">
-      <p className="rp-back"><Link to="/admin">← Back to Admin</Link></p>
-      <h1>Books</h1>
-      <p className="ad-note">The books on the Book Club page: what you are reading, what you have read this year, and what is next.</p>
+    <main className="ad ad--wide ab">
+      <AdminBanner chip="Book Club" title="Books" subtitle="The books on the Book Club page: what you are reading, what you have read this year, and what is next." icon="books" />
       {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
       {saved && <SuccessMessage title={saved} />}
 
-      <section aria-labelledby="ab-goal-title">
+      <div className="ad-cols">
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ab-goal-title">
         <h2 id="ab-goal-title">Reading goal and theme</h2>
         <form className="ab__form" onSubmit={submitGoal} noValidate>
           <ErrorSummary errors={summary(goalErrors).map((e) => ({ ...e, id: `ab-goal-${e.id.slice(3)}` }))} />
@@ -73,8 +75,28 @@ export default function AdminBooks({ session }) {
           <button type="submit" className="pg-btn sg-btn--primary">Save goal and theme</button>
         </form>
       </section>
-
-      <section aria-labelledby="ab-book-title">
+      <section className="ad-card ad-group" aria-labelledby="ab-list-title">
+        <h2 id="ab-list-title">Your books ({books.length})</h2>
+        {status === 'loading' && <p className="rp-note">Loading…</p>}
+        {status === 'ready' && books.length === 0 && <p className="rp-note">No books yet.</p>}
+        <ul className="sg__rows">
+          {books.map((b) => (
+            <li key={b.id} className="sg__row">
+              <div className="sg__text">
+                <p className="sg__name">{b.title}</p>
+                <p className="sg__why">{[b.author, (STATUSES.find((s) => s.key === b.status) || {}).label, b.finished].filter(Boolean).join(' · ')}</p>
+              </div>
+              <div className="as__buttons">
+                <button type="button" className="pg-btn" onClick={() => { setForm(toForm(b)); setEditing(b.id); setErrors({}); setSaved(''); window.scrollTo && window.scrollTo(0, 0) }}>Change</button>
+                <button type="button" className="pg-btn pg-btn--danger" onClick={() => { if (window.confirm(`Delete \u201c${b.title}\u201d for good?`)) { removeBook(b.id).then(load).catch((e) => setProblem(e.message)) } }}>Delete</button>
+              </div>
+            </li>
+          ))}
+        </ul>
+      </section>
+        </div>
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ab-book-title">
         <h2 id="ab-book-title">{editing ? 'Change this book' : 'Add a book'}</h2>
         <form className="ab__form" onSubmit={submitBook} noValidate>
           <ErrorSummary errors={summary(errors)} />
@@ -94,26 +116,8 @@ export default function AdminBooks({ session }) {
           </div>
         </form>
       </section>
-
-      <section aria-labelledby="ab-list-title">
-        <h2 id="ab-list-title">Your books ({books.length})</h2>
-        {status === 'loading' && <p className="rp-note">Loading…</p>}
-        {status === 'ready' && books.length === 0 && <p className="rp-note">No books yet.</p>}
-        <ul className="sg__rows">
-          {books.map((b) => (
-            <li key={b.id} className="sg__row">
-              <div className="sg__text">
-                <p className="sg__name">{b.title}</p>
-                <p className="sg__why">{[b.author, (STATUSES.find((s) => s.key === b.status) || {}).label, b.finished].filter(Boolean).join(' · ')}</p>
-              </div>
-              <div className="as__buttons">
-                <button type="button" className="pg-btn" onClick={() => { setForm(toForm(b)); setEditing(b.id); setErrors({}); setSaved(''); window.scrollTo && window.scrollTo(0, 0) }}>Change</button>
-                <button type="button" className="pg-btn pg-btn--danger" onClick={() => { if (window.confirm(`Delete \u201c${b.title}\u201d for good?`)) { removeBook(b.id).then(load).catch((e) => setProblem(e.message)) } }}>Delete</button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </section>
+        </div>
+      </div>
     </main>
   )
 }

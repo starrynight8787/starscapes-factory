@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PageBanner from '../components/PageBanner'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { formatDate } from '../rooms/postRules'
@@ -44,10 +45,7 @@ export default function Home() {
 
   return (
     <main className="pg pg--list">
-      <header className="rp-head">
-        <h1>All posts</h1>
-        <p className="rp-blurb">Every post from every room, newest first.</p>
-      </header>
+      <PageBanner chip="Blog" title="All posts" subtitle="Every post from every room, newest first." art="blog" />
 
       {allTags.length > 0 && (
         <div className="pg-filter" role="group" aria-label="Filter by tag">

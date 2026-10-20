@@ -8,6 +8,8 @@ import { fetchAllForOwner, fetchSpaces, removeSuggestion, setSpaceOn, setStatus 
 import '../styles/pages.css'
 import '../suggest/suggest.css'
 import './admin.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 
 const NAMES = { 'story-ledger': 'Story Ledger: what to audit next', 'book-club': 'Book Club: what to read next' }
 const when = (iso) => { const d = new Date(iso); return Number.isNaN(d.getTime()) ? '' : d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) }
@@ -51,18 +53,16 @@ export default function AdminSuggestions({ session }) {
   const votes = (id) => Number(data.tally[id]) || 0
 
   return (
-    <main className="ad as">
-      <p className="rp-back"><Link to="/admin">← Back to Admin</Link></p>
-      <h1>Suggestions</h1>
-      <p className="ad-note">Switch each box on or off, and read what people have suggested. Nothing appears on the site until you approve it.</p>
+    <main className="ad ad--wide as">
+      <AdminBanner chip="Suggestions" title="Suggestions" subtitle="Switch each box on or off, and read what people have suggested. Nothing appears on the site until you approve it." icon="ideas" />
       {problem && <p className="rp-note" role="alert">{problem}</p>}
       {status === 'loading' && <p className="rp-note">Loading…</p>}
-      {status === 'ready' && Object.keys(SPACES).map((space) => {
+      {status === 'ready' && <div className="ad-cols">{Object.keys(SPACES).map((space) => {
         const mine = data.rows.filter((r) => r.space === space)
         const group = (name) => mine.filter((r) => (name === 'showing' ? r.status === 'approved' || r.status === 'chosen' : r.status === name))
         const switchOn = on[space] === true
         return (
-          <section key={space} className="as__space" aria-labelledby={`as-${space}`}>
+          <section key={space} className="as__space ad-card ad-group" aria-labelledby={`as-${space}`}>
             <div className="as__head">
               <h2 id={`as-${space}`}>{NAMES[space]}</h2>
               <label className="as__switch">
@@ -101,7 +101,7 @@ export default function AdminSuggestions({ session }) {
             })}
           </section>
         )
-      })}
+      })}</div>}
     </main>
   )
 }

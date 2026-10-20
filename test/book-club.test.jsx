@@ -32,7 +32,7 @@ describe('the page, as designed', () => {
   it('has the design\u2019s sections, in order', async () => {
     page()
     expect(screen.getByRole('heading', { level: 1, name: 'Book Club' })).toBeInTheDocument()
-    expect(screen.getByText('What I am reading, and what it taught me.')).toBeInTheDocument()
+    expect(screen.getByText('come write with me, come read with me, come study with me')).toBeInTheDocument()
     const heads = screen.getAllByRole('heading', { level: 2 }).map((x) => x.textContent)
     expect(heads).toEqual(['A message from me', 'Into the Nebula', 'Theme for 2026: to be chosen', 'Read along with me', 'Reading now', 'Up next', 'The Shelf', 'Choose a genre', 'The 2026 shelf', 'Reviews and conversations'])
     expect(screen.getByRole('link', { name: /Back to Knowledge Nook/ })).toHaveAttribute('href', '/knowledge-nook')

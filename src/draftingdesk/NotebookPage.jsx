@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import './draftingdesk.css'
+import PageBanner from '../components/PageBanner'
 import useTitle from './useTitle'
 import { AREAS } from './draftingData'
 
@@ -11,10 +12,7 @@ export default function NotebookPage() {
   return (
     <main className="dd">
       <p className="dd-back"><Link to="/drafting-desk">← Back to the Drafting Desk</Link></p>
-      <header className="dd-head">
-        <h1>{info.name}</h1>
-        <p className="dd-blurb">{info.blurb}</p>
-      </header>
+      <PageBanner chip="Pass holders" title={info.name} subtitle={info.blurb} art="notebook" />
       <section className="dd-locked" aria-label="Members only">
         <svg className="dd-locked__icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
           <g fill="none" stroke="#14306A" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">

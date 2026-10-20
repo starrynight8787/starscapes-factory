@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
+import '../admin/adminv2.css'
+import './artloftadmin.css'
+import AdminBanner from '../admin/AdminBanner'
 import useTitle from './useTitle'
 import { fetchPrints, setPublished, setCollection, setDescription, currentUser, fetchPictureList, savePicture, fetchCatalogue, fetchShopCatalogue, syncRepo } from './artLoftApi'
 import { planSync, applySync } from './sync'
@@ -179,9 +182,9 @@ export default function AdminPrints() {
   }
 
   return (
-    <main className="al al-admin legacy">
-      <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link></p>
-      <h1>Manage prints</h1>
+    <main className="al al-admin legacy ad--wide al-v2">
+      <p className="al-back"><Link to="/art-loft">← Back to the Art Loft</Link> <Link to="/admin">Back to Admin</Link></p>
+      <AdminBanner back={false} chip="Art Loft" title="Manage prints" subtitle="Switch prints on, sort them into collections, sync with Creative Hub and see your orders." icon="hub" />
       <p className="al-admin__links"><Link className="al-btn al-btn--quiet" to="/art-loft/admin/originals">Manage original paintings</Link></p>
       <p className="al-blurb">
         {prints.length} prints, {live} live. A print is only visible to visitors once you switch it on. You can always see all of them while you are signed in. Use the drop-down beside a print to move it to a different collection.

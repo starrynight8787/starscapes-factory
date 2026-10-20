@@ -1,0 +1,80 @@
+/* Art Loft admin screens in the starry admin style (the "Admin v2" designs): banner on top, then cards two across. Scoped to .al-v2. */
+.al.al-v2 {
+  max-width: 1320px;
+  padding: 24px 24px 56px;
+}
+.al-v2 .al-back {
+  display: flex;
+  gap: 18px;
+  flex-wrap: wrap;
+  margin: 0 0 12px;
+}
+.al-v2 .al-back a {
+  color: #14306a;
+  font-weight: 600;
+}
+
+/* Prints: banner and intro run full width, the cards sit two across */
+.al-v2.al-admin {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
+}
+.al-v2.al-admin > .al-back,
+.al-v2.al-admin > .adb,
+.al-v2.al-admin > .al-admin__links,
+.al-v2.al-admin > .al-blurb,
+.al-v2.al-admin > .al-note,
+.al-v2.al-admin > .al-admin__fill,
+.al-v2.al-admin > .al-admin__counts,
+.al-v2.al-admin > form,
+.al-v2.al-admin > p,
+.al-v2.al-admin > .al-admin__group:has(.al-admin__needs) {
+  grid-column: 1 / -1;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+.al-v2 .al-admin__pictures,
+.al-v2 .al-admin__group,
+.al-v2 .al-orig-form {
+  padding: 18px 20px;
+  margin: 0;
+  border: 1.5px solid #dce6ff;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(20, 48, 106, 0.08);
+}
+.al-v2 .al-admin__pictures h2,
+.al-v2 .al-admin__head h2,
+.al-v2 .al-orig-form h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: #14306a;
+}
+.al-v2 .al-admin__pictures h2::before,
+.al-v2 .al-admin__head h2::before,
+.al-v2 .al-orig-form h2::before {
+  content: '';
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  background: #f5c842;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.al-v2 .al-admin__list li {
+  flex-wrap: wrap;
+}
+.al-v2 .al-admin__links {
+  margin: 0;
+}
+
+@media (max-width: 900px) {
+  .al.al-v2 {
+    padding: 16px 16px 40px;
+  }
+  .al-v2.al-admin {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}

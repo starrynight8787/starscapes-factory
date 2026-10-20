@@ -11,6 +11,8 @@ import { clearIntroId, fetchIntroId, saveIntroId } from '../den/youtubeApi'
 import { videoIdFrom } from '../den/youtubeRules'
 import '../styles/pages.css'
 import './admin.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 
 const BLANK = { title: '', date: '', time: '', description: '', link: '' }
 
@@ -71,14 +73,14 @@ export default function AdminHome({ session }) {
 
   const now = Date.now()
   return (
-    <main className="ad ab">
-      <p className="rp-back"><Link to="/admin">← Back to Admin</Link></p>
-      <h1>Home page</h1>
-      <p className="ad-note">What the boxes under the floor plan on the home page show: the next event, and the featured room.</p>
+    <main className="ad ad--wide ab">
+      <AdminBanner chip="Home page" title="Home page" subtitle="What the boxes under the floor plan on the home page show: the next event, and the featured room." icon="home" />
       {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
       {saved && <SuccessMessage title={saved} />}
 
-      <section aria-labelledby="ah-featured-title">
+      <div className="ad-cols">
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ah-featured-title">
         <h2 id="ah-featured-title">Featured room</h2>
         <form className="ab__form" onSubmit={submitFeatured}>
           <Field id="ah-room" label="Which room to feature" help="It shows with its picture, its description and a button to step inside. If none is chosen, it is the Art Loft.">
@@ -87,8 +89,7 @@ export default function AdminHome({ session }) {
           <button type="submit" className="pg-btn sg-btn--primary">Save the featured room</button>
         </form>
       </section>
-
-      <section aria-labelledby="ah-intro-title">
+      <section className="ad-card ad-group" aria-labelledby="ah-intro-title">
         <h2 id="ah-intro-title">YouTube intro video</h2>
         <p className="ad-note">{intro ? <>Pinned now: <a href={`https://www.youtube.com/watch?v=${intro}`} target="_blank" rel="noopener noreferrer">this video (opens in a new tab)</a>.</> : 'None chosen, so the YouTube Series page pins its newest video.'}</p>
         <form className="ab__form" onSubmit={submitIntro} noValidate>
@@ -100,8 +101,9 @@ export default function AdminHome({ session }) {
           </div>
         </form>
       </section>
-
-      <section aria-labelledby="ah-event-title">
+        </div>
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ah-event-title">
         <h2 id="ah-event-title">{editing ? 'Change this event' : 'Add an event'}</h2>
         <form className="ab__form" onSubmit={submitEvent} noValidate>
           <ErrorSummary errors={summary} />
@@ -116,8 +118,7 @@ export default function AdminHome({ session }) {
           </div>
         </form>
       </section>
-
-      <section aria-labelledby="ah-list-title">
+      <section className="ad-card ad-group" aria-labelledby="ah-list-title">
         <h2 id="ah-list-title">Your events ({events.length})</h2>
         <p className="ad-note">The home page shows the soonest event that has not finished.</p>
         {status === 'loading' && <p className="rp-note">Loading…</p>}
@@ -140,6 +141,8 @@ export default function AdminHome({ session }) {
           })}
         </ul>
       </section>
+        </div>
+      </div>
     </main>
   )
 }

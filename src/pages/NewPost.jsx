@@ -7,6 +7,8 @@ import { MAX_PICTURE_MB, postProblems, summaryOf } from './postFormRules'
 import { PASS_CHOICES, canUsePasses, cleanPass, saveLockedBody } from '../membership/lockedPosts'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import '../admin/adminv2.css'
+import AdminBanner from '../admin/AdminBanner'
 import { resetPassIndex } from '../membership/passIndex'
 
 const IDS = { title: 'np-title', content: 'np-content', file: 'np-file' }
@@ -107,17 +109,28 @@ export default function NewPost({ session }) {
   }
 
   return (
-    <main className="fm">
-      <h1 className="fm__title">New post</h1>
+    <main className="fm fm--post ad--wide">
+      <AdminBanner chip="Write" title="New post" subtitle="Write a post and publish it. Choose a room, tags, and who can read it." icon="post" />
       <ErrorSummary errors={summaryOf(errors, IDS)} />
       {error && <FailureMessage title="The post was not saved">{error}</FailureMessage>}
-      <form className="fm__form" onSubmit={handleSubmit} noValidate>
+      <form className="fm__form np__grid" onSubmit={handleSubmit} noValidate>
+        <div className="np__main ad-card">
         <Field id="np-title" label="Title" error={errors.title}>
           {(p) => <input {...p} type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} />}
         </Field>
         <Field id="np-content" label="Post text" error={errors.content}>
           {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
         </Field>
+        <div className="fm__actions">
+          <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
+            {saving ? 'Publishing...' : 'Publish'}
+          </button>
+          <button type="button" className="pg-btn" onClick={() => navigate('/admin')}>
+            Cancel
+          </button>
+        </div>
+        </div>
+        <div className="np__side ad-card">
         <div className="fm__row">
           <Field id="np-tags" label="Tags" help="Separate them with commas, for example art, travel.">
             {(p) => <input {...p} type="text" placeholder="Tags (comma separated, e.g. art, travel)" value={tags} onChange={(e) => setTags(e.target.value)} />}
@@ -152,13 +165,6 @@ export default function NewPost({ session }) {
         <Field id="np-file" label={`Header picture (optional, up to ${MAX_PICTURE_MB} MB)`} error={errors.file}>
           {(p) => <input {...p} type="file" accept="image/*" onChange={(e) => setFile(e.target.files[0] || null)} />}
         </Field>
-        <div className="fm__actions">
-          <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
-            {saving ? 'Publishing...' : 'Publish'}
-          </button>
-          <button type="button" className="pg-btn" onClick={() => navigate('/admin')}>
-            Cancel
-          </button>
         </div>
       </form>
     </main>

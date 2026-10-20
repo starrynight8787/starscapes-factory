@@ -1,6 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import './artloft.css'
+import '../admin/adminv2.css'
+import './artloftadmin.css'
+import AdminBanner from '../admin/AdminBanner'
 import useTitle from './useTitle'
 import { fetchOriginals, saveOriginal, setSold, setPublished, deleteOriginal, uploadOriginalPhotos, discardOriginalPhotos, currentUser, MISSING_ORIGINAL_COLUMNS } from './artLoftApi'
 import { COLLECTIONS, formatPrice } from './artLoftData'
@@ -210,12 +213,12 @@ export default function AdminOriginals() {
   )
 
   return (
-    <main className="al al-admin legacy">
+    <main className="al al-admin legacy ad--wide al-v2">
       <p className="al-back">
         <Link to="/art-loft">← Back to the Art Loft</Link>
         <Link to="/art-loft/admin">Manage prints</Link>
       </p>
-      <h1>Manage originals</h1>
+      <AdminBanner back={false} chip="Art Loft" title="Manage originals" subtitle="One-of-a-kind paintings: add them, mark them sold, and switch them on." icon="originals" />
       <p className="al-blurb">
         Originals are one of a kind. Mark one as sold when it goes, and it stays on its page with a Sold label. You can undo that at any time. A new original starts as a draft that only you can see.
       </p>

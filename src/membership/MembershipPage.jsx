@@ -9,6 +9,7 @@ import { PASSES, PASS_IDS, cleanPassIds, CONSENT_TEXT, FREE_TEXT, STRIPE_NOTE } 
 import { LAUNCH_OFFER, priceFor, formatPounds, ladderRows, ladderKey, YEARLY_MONTHS } from './pricing'
 import { startMembershipCheckout, checkPromoCode } from './membershipApi'
 import './membership.css'
+import './membershipv2.css'
 
 // Every room's name, by its address (the Drafting Desk, the Factory Floor and the Knowledge Nook are not all in the illustrated-rooms list, but they are all here).
 const ROOM_NAME = Object.fromEntries(channels.map((c) => [c.slug, c.name]))
@@ -155,20 +156,23 @@ function Chooser({ draft, signedIn }) {
   }
 
   return (
-    <main className="mb">
+    <main className="mb mb--choose">
       {draft && (
         <div className="mb__draft" role="note">
           <strong>Draft: only you can see this page.</strong> Memberships are not open yet. Visitors are told so until you switch them on.
         </div>
       )}
       <div className="mb__hero">
+        <p className="mb__chip">Membership passes</p>
         <h1>Open the parts of the story you want.</h1>
         <p>Choose one pass, or several. The more you take, the less each one costs.</p>
       </div>
       <div className="mb__body">
         <div className="mb__left">
-          <h2 className="mb__h2">Free, always</h2>
-          <p className="mb__lead">{FREE_TEXT}</p>
+          <div className="mb__free">
+            <h2 className="mb__h2">Free, always</h2>
+            <p className="mb__lead">{FREE_TEXT}</p>
+          </div>
           <fieldset className="mb__passes">
             <legend className="mb__h2">Passes</legend>
             {PASSES.map((p) => {
@@ -206,6 +210,7 @@ function Chooser({ draft, signedIn }) {
             </div>
           </section>
 
+          <div className="mb__pay">
           <div className="mb__promo">
             <label htmlFor="mb-code">Have a promo code?</label>
             <div className="mb__promorow">
@@ -241,6 +246,7 @@ function Chooser({ draft, signedIn }) {
             </p>
           )}
           <p className="mb__stripe">{STRIPE_NOTE}</p>
+          </div>
 
           <section className="mb__ladder" aria-label="Prices">
             <h2 className="mb__ladderh">The more passes you take, the less each one costs</h2>

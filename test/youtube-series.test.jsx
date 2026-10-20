@@ -101,7 +101,7 @@ describe('the page', () => {
   it('has the design\u2019s words, a way back, and a subscribe link that opens safely in a new tab', async () => {
     show()
     expect(screen.getByRole('heading', { level: 1, name: 'YouTube Series' })).toBeInTheDocument()
-    expect(screen.getByText('Watch the adventures come to life.')).toBeInTheDocument()
+    expect(screen.getByText('come write with me, come read with me, come study with me')).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to Sarah Jr.'s Den/ })).toHaveAttribute('href', '/sarah-jrs-den')
     const sub = screen.getByRole('link', { name: /Subscribe on YouTube/ })
     expect(sub).toHaveAttribute('href', SOCIAL_LINKS.youtube); expect(sub).toHaveAttribute('target', '_blank'); expect(sub.getAttribute('rel')).toMatch(/noopener/)

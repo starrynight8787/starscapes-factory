@@ -8,6 +8,8 @@ import { cleanChapter, cleanStory, slugFrom } from '../stories/storiesRules'
 import { fetchChapterPosts, fetchChapterRows, fetchStories, removeChapter, removeStory, saveChapter, saveStory } from '../stories/storiesApi'
 import '../styles/pages.css'
 import './admin.css'
+import './adminv2.css'
+import AdminBanner from './AdminBanner'
 
 const BLANK = { title: '', slug: '', teaser: '', picture: '', status: 'running', finished: '' }
 const BLANK_CHAPTER = { story: '', number: '', post: '' }
@@ -62,14 +64,14 @@ export default function AdminStories({ session }) {
   }
 
   return (
-    <main className="ad ast">
-      <p className="rp-back"><Link to="/admin">← Back to Admin</Link></p>
-      <h1>Stories</h1>
-      <p className="ad-note">The story we write together, on the Stories page in the Idea Hatchery. A chapter is an ordinary post: write it in New post, choose the pass Come Write With Me, then give it its number here. Chapters 1 to 3 are free to read; chapter 4 and on are for members.</p>
+    <main className="ad ad--wide ast">
+      <AdminBanner chip="Stories" title="Stories" subtitle="The story we write together, on the Stories page in the Idea Hatchery. A chapter is an ordinary post: write it in New post, choose the pass Come Write With Me, then give it its number here. Chapters 1 to 3 are free to read; chapter 4 and on are for members." icon="post" />
       {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
       {saved && <SuccessMessage title={saved} />}
 
-      <section aria-labelledby="ast-story-title">
+      <div className="ad-cols">
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ast-story-title">
         <h2 id="ast-story-title">{editing ? 'Change this story' : 'Add a story'}</h2>
         <form className="ab__form" onSubmit={submitStory} noValidate>
           <ErrorSummary errors={summary(errors, 'ast')} />
@@ -85,8 +87,7 @@ export default function AdminStories({ session }) {
           </div>
         </form>
       </section>
-
-      <section aria-labelledby="ast-chapter-title">
+      <section className="ad-card ad-group" aria-labelledby="ast-chapter-title">
         <h2 id="ast-chapter-title">Make a post a chapter</h2>
         <form className="ab__form" onSubmit={submitChapter} noValidate>
           <ErrorSummary errors={summary(chapterErrors, 'asc')} />
@@ -96,8 +97,9 @@ export default function AdminStories({ session }) {
           <div className="ab__buttons"><button type="submit" className="pg-btn sg-btn--primary">Save the chapter</button></div>
         </form>
       </section>
-
-      <section aria-labelledby="ast-list-title">
+        </div>
+        <div className="ad-col">
+      <section className="ad-card ad-group" aria-labelledby="ast-list-title">
         <h2 id="ast-list-title">Your stories ({stories.length})</h2>
         {status === 'loading' && <p className="rp-note">Loading…</p>}
         {status === 'ready' && stories.length === 0 && <p className="rp-note">No stories yet.</p>}
@@ -124,6 +126,8 @@ export default function AdminStories({ session }) {
           })}
         </ul>
       </section>
+        </div>
+      </div>
     </main>
   )
 }

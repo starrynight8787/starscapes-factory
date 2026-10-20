@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PageBanner from '../components/PageBanner'
 import { Link, useLocation } from 'react-router-dom'
 import useTitle from '../rooms/useTitle'
 import { formatDate, safeImage } from '../rooms/postRules'
@@ -21,7 +22,7 @@ function Picture({ post, className }) {
 // box under the pinned one (for example the Author's Notebook for members). It works for any room: the page that uses it says what it is called, where "back"
 // goes, how to fetch the room's posts (load) and which of them belong on the page (belongs). Those two should be fixed functions (defined outside the page),
 // so the page does not fetch again on every redraw. On a phone: latest, pinned, the grid (four first), then the extra box.
-export default function EntryPage({ title, blurb, backTo, backLabel, load, belongs, aside = null }) {
+export default function EntryPage({ title, blurb, backTo, backLabel, load, belongs, aside = null, art = null, chip = null }) {
   useTitle(title)
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
@@ -45,10 +46,14 @@ export default function EntryPage({ title, blurb, backTo, backLabel, load, belon
   return (
     <main className="rp en">
       <p className="rp-back"><Link to={backTo}>← {backLabel}</Link></p>
-      <header className="rp-head">
-        <h1>{title}</h1>
-        <p className="rp-blurb">{blurb}</p>
-      </header>
+      {art ? (
+        <PageBanner chip={chip} title={title} subtitle={blurb} art={art} />
+      ) : (
+        <header className="rp-head">
+          <h1>{title}</h1>
+          <p className="rp-blurb">{blurb}</p>
+        </header>
+      )}
       {status === 'error' && <p className="rp-note" role="alert">The entries could not load just now. Please try again in a moment.</p>}
       {status === 'loading' && <p className="rp-note">Loading…</p>}
       {status === 'ready' && posts.length === 0 && <p className="rp-note">The first entry is on its way.</p>}

@@ -1,0 +1,183 @@
+/* "Choose your passes", redesigned (Figma: 17 Membership v2): a starry hero, passes two across, and the price, promo code and ladder in cards. Only the
+   chooser page carries .mb--choose, so the other membership pages (Change passes, My passes) look as they did. */
+.mb--choose .mb__hero {
+  position: relative;
+  overflow: hidden;
+  margin-top: 16px;
+  padding: 44px 24px 40px;
+  background:
+    radial-gradient(ellipse 60% 120% at 12% 0%, rgba(96, 126, 230, 0.55), transparent 60%),
+    radial-gradient(circle at 92% 0%, rgba(128, 160, 255, 0.4), transparent 45%),
+    linear-gradient(120deg, #14306a 0%, #1a3a86 55%, #2a4fb0 100%);
+}
+.mb--choose .mb__hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    radial-gradient(1.5px 1.5px at 6% 22%, #fff, transparent),
+    radial-gradient(1px 1px at 11% 70%, #fff, transparent),
+    radial-gradient(2px 2px at 19% 38%, #fff, transparent),
+    radial-gradient(1px 1px at 27% 82%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 33% 18%, #fff, transparent),
+    radial-gradient(1px 1px at 41% 56%, #fff, transparent),
+    radial-gradient(2px 2px at 49% 12%, #fff, transparent),
+    radial-gradient(1px 1px at 55% 78%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 62% 34%, #fff, transparent),
+    radial-gradient(1px 1px at 69% 64%, #fff, transparent),
+    radial-gradient(2px 2px at 76% 20%, #fff, transparent),
+    radial-gradient(1px 1px at 83% 84%, #fff, transparent),
+    radial-gradient(1.5px 1.5px at 90% 48%, #fff, transparent),
+    radial-gradient(1px 1px at 96% 16%, #fff, transparent);
+  opacity: 0.85;
+}
+.mb--choose .mb__hero::after {
+  content: '';
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  width: 12%;
+  left: -20%;
+  pointer-events: none;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.22), transparent);
+  transform: rotate(-20deg);
+  animation: mb-shimmer 9s ease-in-out 2s infinite;
+}
+@keyframes mb-shimmer {
+  0% { left: -20%; }
+  35%, 100% { left: 120%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mb--choose .mb__hero::after { animation: none; display: none; }
+}
+.mb--choose .mb__hero > * {
+  position: relative;
+  z-index: 1;
+}
+.mb--choose .mb__hero .mb__chip {
+  display: inline-block;
+  margin: 0 auto 12px;
+  padding: 3px 12px;
+  border: 1px solid #f5c842;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.12);
+  color: #f5c842;
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.mb--choose .mb__hero p:not(.mb__chip) {
+  color: #dce6ff;
+}
+
+/* two columns: the passes on the left, the price and payment on the right */
+.mb--choose .mb__body {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 420px);
+  max-width: 1320px;
+  padding: 28px 60px 56px;
+  gap: 40px;
+}
+.mb--choose .mb__left {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.mb--choose .mb__free,
+.mb--choose .mb__pay,
+.mb--choose .mb__price,
+.mb--choose .mb__ladder {
+  padding: 18px 20px;
+  border: 1.5px solid #dce6ff;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(20, 48, 106, 0.08);
+}
+.mb--choose .mb__free .mb__lead {
+  margin: 0;
+}
+.mb--choose .mb__h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.mb--choose .mb__h2::before {
+  content: '';
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background: #f5c842;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.mb--choose .mb__passes {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.mb--choose .mb__passes .mb__h2 {
+  grid-column: 1 / -1;
+}
+.mb--choose .mb__pass {
+  grid-template-columns: 26px 48px minmax(0, 1fr);
+  gap: 12px;
+  align-items: start;
+  padding: 14px;
+  border-color: #dce6ff;
+  box-shadow: 0 2px 8px rgba(20, 48, 106, 0.06);
+}
+.mb--choose .mb__pass.is-on {
+  border-color: var(--sf-navy-700, #14306a);
+  border-width: 2px;
+  background: #dce6ff;
+}
+.mb--choose .mb__pass .mb__box,
+.mb--choose .mb__pass > :nth-child(3) {
+  margin-top: 2px;
+}
+.mb--choose .mb__passname {
+  font-family: var(--sf-body, 'Inter', system-ui, sans-serif);
+  font-size: 1rem;
+}
+.mb--choose .mb__passblurb {
+  font-size: 0.875rem;
+}
+
+/* the right column */
+.mb--choose .mb__right {
+  gap: 16px;
+}
+.mb--choose .mb__pay {
+  display: grid;
+  gap: 12px;
+}
+.mb--choose .mb__pay .mb__go {
+  width: 100%;
+}
+.mb--choose .mb__ladder ul {
+  margin-top: 8px;
+}
+.mb--choose .mb__ladder li {
+  padding: 7px 10px;
+  border-radius: 10px;
+}
+.mb--choose .mb__ladder li.is-now {
+  background: #dce6ff;
+}
+
+@media (max-width: 1100px) {
+  .mb--choose .mb__body {
+    grid-template-columns: minmax(0, 1fr);
+    padding: 20px 24px 48px;
+  }
+  .mb--choose .mb__right {
+    max-width: 640px;
+  }
+}
+@media (max-width: 640px) {
+  .mb--choose .mb__body {
+    padding: 16px 16px 40px;
+  }
+  .mb--choose .mb__passes {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
