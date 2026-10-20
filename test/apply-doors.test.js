@@ -19,7 +19,7 @@ describe('opening a door in a scene', () => {
     expect(blog.kind).toBe('page')
     expect(blog.to).toBe('/sarah-jrs-den/blog')
     expect(blog.art).toBe('/scenes/sarah-jrs-den/item-blog-open.svg')
-    expect(blog.blurb).toBe('Little notes from the Den.')
+    expect(blog.blurb).toBe('Little notes from the Clubhouse.')
     expect(blog.lock).toBeUndefined()
     expect(blog.name).toBe('Blog')
     expect([blog.cx, blog.cy, blog.w, blog.h]).toEqual([item(scene, 'blog').cx, item(scene, 'blog').cy, item(scene, 'blog').w, item(scene, 'blog').h])

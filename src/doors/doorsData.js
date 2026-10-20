@@ -16,7 +16,7 @@ export const DOORS = [
   { room: 'knowledge-nook', id: 'research', name: 'Research', blurb: 'A space to test things out.', page: { layout: 'list' } },
   { room: 'knowledge-nook', id: 'book-to-screen', name: 'Book to Screen', blurb: 'Books that made it to the screen.', page: { layout: 'gallery' } },
   { room: 'knowledge-nook', id: 'story-ledger', name: 'Story Ledger', blurb: 'Audits of old TV.', page: { layout: 'custom' } },
-  { room: 'sarah-jrs-den', id: 'blog', name: 'Blog', blurb: 'Little notes from the Den.', page: { layout: 'list' } },
+  { room: 'sarah-jrs-den', id: 'blog', name: 'Blog', blurb: 'Little notes from the Clubhouse.', page: { layout: 'list' } },
   { room: 'sarah-jrs-den', id: 'daryls-adventures', name: "Daryl's Adventures", blurb: "Daryl's world, one adventure at a time.", page: { layout: 'gallery' } },
   { room: 'sarah-jrs-den', id: 'books', name: 'Books', blurb: 'Stories to read together.', page: { layout: 'gallery' } },
   { room: 'sarah-jrs-den', id: 'youtube-series', name: 'YouTube Series', blurb: 'Little adventures to watch.', page: { layout: 'custom' } },

@@ -57,7 +57,7 @@ describe('the list of doors', () => {
   })
   it('makes a room page for each door that has a page, tagged with the door\u2019s own name, and none for a door without one', () => {
     expect(doorAreas('sarah-jrs-den')).toEqual({
-      blog: { name: 'Blog', blurb: 'Little notes from the Den.', layout: 'list', tags: ['blog'] },
+      blog: { name: 'Blog', blurb: 'Little notes from the Clubhouse.', layout: 'list', tags: ['blog'] },
       'daryls-adventures': { name: "Daryl's Adventures", blurb: "Daryl's world, one adventure at a time.", layout: 'gallery', tags: ['daryls-adventures'] },
       books: { name: 'Books', blurb: 'Stories to read together.', layout: 'gallery', tags: ['books'] },
     })
