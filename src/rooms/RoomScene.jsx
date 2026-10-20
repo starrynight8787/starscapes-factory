@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import HomeLink from '../components/HomeLink'
+import { BannerPicture } from '../components/PageBanner'
 import './roomscene.css'
 import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneRules'
 
@@ -8,17 +9,31 @@ import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneR
 // which room this is, taken from the picture's own address (/scenes/<room>/base.svg), so each room's heading can be placed clear of its own drawings
 const roomOf = (scene) => ((String(scene.base).match(/\/scenes\/([^/]+)\//) || [])[1]) || ''
 
+// On a phone the room's name, tagline and line become a starry banner with a small word above, and a picture below (the "Room banner" designs in Figma).
+// On a bigger screen none of that shows: the heading sits on the room's picture as it always has.
+const BANNER = {
+  'drafting-desk': { chip: 'Writing', art: 'notebook' },
+  'idea-hatchery': { chip: 'Experiments', art: 'story' },
+  'leadership-lounge': { chip: 'Leadership', art: 'mountain' },
+  'explorers-bay': { chip: 'Travel', art: 'transit' },
+  'knowledge-nook': { chip: 'Reading', art: 'nook' },
+  'sarah-jrs-den': { chip: 'Stories', art: 'sarah-jr' },
+}
+
 export default function RoomScene({ scene }) {
   const items = scene.items.map(resolveItem)
+  const banner = BANNER[roomOf(scene)]
   return (
     <main className="rs" data-room={roomOf(scene)}>
       <div className="rs-home">
         <HomeLink />
       </div>
-      <header className="rs-head">
+      <header className="rs-head pb--starry">
+        {banner && <p className="pb__chip rs-chip">{banner.chip}</p>}
         <h1>{scene.name}</h1>
         {scene.tagline && <p className="rs-tagline">{scene.tagline}</p>}
         {scene.blurb && <p className="rs-blurb">{scene.blurb}</p>}
+        {banner && <BannerPicture art={banner.art} />}
       </header>
 
       <div className="rs-stage" style={{ aspectRatio: `${scene.width} / ${scene.height}` }}>

@@ -319,6 +319,20 @@ a.rs-item:focus-visible .rs-art {
   font-weight: 600;
   color: var(--sf-navy-700, #14306a);
 }
+/* The starry banner is for phones only (see the block below). On a bigger screen the heading is plain writing on the room's picture, exactly as before. */
+@media (min-width: 821px) {
+  .rs-head.pb--starry {
+    background: none;
+    overflow: visible;
+    border-radius: 0;
+  }
+  .rs-head.pb--starry::before,
+  .rs-head.pb--starry::after,
+  .rs-head .rs-chip,
+  .rs-head .pb__art {
+    display: none;
+  }
+}
 @media (max-width: 820px) {
   /* on a phone there is no picture, only the list, so the heading goes back to the top of the page */
   .rs {
@@ -356,6 +370,68 @@ a.rs-item:focus-visible .rs-art {
   }
   .rs-list {
     display: block;
+  }
+}
+
+@media (max-width: 820px) {
+  /* The phone heading is the room's starry banner: a small word, the name, the tagline, the line under it, and the room's picture. */
+  .rs[data-room] .rs-head.pb--starry {
+    display: grid;
+    justify-items: start;
+    gap: 12px;
+    width: auto;
+    margin: 16px 0 20px;
+    padding: 24px;
+    border-radius: 20px;
+    overflow: hidden;
+    text-align: left;
+    pointer-events: auto;
+    color: #fff;
+  }
+  .rs[data-room] .rs-head.pb--starry::before {
+    display: block;
+  }
+  .rs[data-room] .rs-head.pb--starry::after {
+    display: block;
+  }
+  .rs[data-room] .rs-head.pb--starry > * {
+    position: relative;
+    z-index: 1;
+    margin: 0;
+  }
+  .rs[data-room] .rs-head.pb--starry .rs-chip {
+    display: inline-block;
+  }
+  .rs[data-room] .rs-head.pb--starry h1 {
+    margin: 0;
+    font-size: 2rem;
+    line-height: 1.15;
+    color: #fff;
+  }
+  .rs[data-room] .rs-head.pb--starry .rs-tagline {
+    margin: 0;
+    font-family: var(--sf-body, 'Inter', sans-serif);
+    font-size: 1.125rem;
+    line-height: 1.45;
+    color: #fff;
+  }
+  .rs[data-room] .rs-head.pb--starry .rs-blurb {
+    max-width: none;
+    margin: 0;
+    font-size: 1rem;
+    line-height: 1.5;
+    color: #dce6ff;
+  }
+  .rs[data-room] .rs-head.pb--starry .pb__art {
+    display: block;
+    justify-self: center;
+    width: 100%;
+    max-width: 320px;
+    margin: 8px auto 0;
+  }
+  .rs[data-room] .rs-head.pb--starry .pb__art--bear {
+    width: 200px;
+    max-width: 60%;
   }
 }
 
