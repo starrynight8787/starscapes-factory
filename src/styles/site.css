@@ -1203,3 +1203,11 @@ html body h3 {
 /* The home page sits on the dark sky: focus rings are white out there and navy inside the white boxes */
 .sf-home { --sf-focus: #fff; }
 .sf-home .hs__card { --sf-focus: var(--sf-navy-700); }
+/* the hero's own glow fades out at the bottom, so there is no hard edge where the hero ends and the page's sky carries on */
+.sf-hero > .sf-hero__art {
+  -webkit-mask-image: linear-gradient(to bottom, #000 0%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(to bottom, #000 0%, #000 84%, transparent 100%);
+}
+.sf-planet { bottom: clamp(36px, 13%, 110px); }
+.sf-moon { bottom: 19%; }
+.sf-goldstar { bottom: 12%; }

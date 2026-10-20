@@ -15,8 +15,6 @@ import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './bookclub.css'
 
-// The row of genre books on this page is the five main genres (each has its own look); every genre is on the bookshelf page's tabs.
-const MAIN_GENRES = GENRES.slice(0, 5)
 const genreOf = (key) => GENRES.find((g) => g.key === key)
 const chunk = (list, size) => Array.from({ length: Math.ceil(list.length / size) }, (_, i) => list.slice(i * size, i * size + size))
 
@@ -168,7 +166,7 @@ export default function BookClubPage({ now = new Date() }) {
         <p><Link className="pg-btn" to={shelfPath()}>See the whole bookshelf</Link></p>
         <div className="bc__bookshelf">
           <ul className="bc__spines">
-            {MAIN_GENRES.map((g, i) => {
+            {GENRES.map((g, i) => {
               const n = (genreShelves(books).find((x) => x.key === g.key) || { books: [] }).books.length
               return (
                 <li key={g.key} className={`bc__bookitem bc__bookitem--${i % 5}`}>

@@ -14,6 +14,9 @@ vi.mock('../src/home/homeApi', () => ({
   saveEvent: vi.fn(async (id, value) => { if (h.failSave) throw new Error('Only the site owner can change this.'); h.calls.push(['saveEvent', id, value]) }),
   removeEvent: vi.fn(async (id) => { h.calls.push(['removeEvent', id]) }),
   saveFeaturedSlug: vi.fn(async (slug) => { h.calls.push(['saveFeaturedSlug', slug]) }),
+  fetchRoomPictures: vi.fn(async () => ({})),
+  saveRoomPicture: vi.fn(async () => 'https://example.com/p.png'),
+  removeRoomPicture: vi.fn(async () => {}),
 }))
 vi.mock('../src/den/youtubeApi', () => ({ fetchIntroId: vi.fn(async () => ''), saveIntroId: vi.fn(async () => {}), clearIntroId: vi.fn(async () => {}), fetchSeries: vi.fn(async () => []) }))
 vi.mock('../src/admin/useIsOwner', () => ({ useOwnerCheck: () => ({ checking: false, owner: h.owner }) }))
@@ -206,5 +209,14 @@ describe('how it is wired in', () => {
   it('has no inline styles and no text under 14px', () => {
     for (const f of ['src/home/HomeSections.jsx', 'src/admin/AdminHome.jsx']) expect(read(f), f).not.toMatch(/style=\{\{/)
     for (const m of read('src/home/homeSections.css').matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)
+  })
+})
+
+describe('a picture chosen for the featured room', () => {
+  it('shows the owner\u2019s picture instead of the line drawing, for that room only', () => {
+    const { container, rerender } = wrap(<FeaturedRoomBox slug="art-loft" pictures={{ 'art-loft': 'https://example.com/loft.png' }} />)
+    expect(container.querySelector('img.hs__roomimg')).toHaveAttribute('src', 'https://example.com/loft.png')
+    rerender(<MemoryRouter><FeaturedRoomBox slug="art-loft" pictures={{ 'explorers-bay': 'https://example.com/bay.png' }} /></MemoryRouter>)
+    expect(container.querySelector('img.hs__roomimg')).toBeNull()
   })
 })

@@ -36,7 +36,7 @@ export default function AdminHome({ session }) {
 
   const load = useCallback(async () => {
     try {
-      const [list, slug, chosen, pics] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => ''), fetchIntroId().catch(() => ''), fetchRoomPictures().catch(() => ({}))])
+      const [list, slug, chosen, pics] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => ''), fetchIntroId().catch(() => ''), Promise.resolve().then(() => fetchRoomPictures()).catch(() => ({}))])
       setPictures(pics || {}); setEvents(list); setFeatured(featuredRoomSlug(slug, channels.map((c) => c.slug))); setIntro(chosen); setStatus('ready')
     } catch (e) { setProblem(e.message); setStatus('error') }
   }, [])
