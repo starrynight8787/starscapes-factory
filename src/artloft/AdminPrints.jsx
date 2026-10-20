@@ -51,6 +51,24 @@ export default function AdminPrints() {
     return [...(other.length ? [{ name: 'No collection', items: other, needsPlacing: true }] : []), ...known.filter((g) => g.items.length)]
   }, [prints])
 
+  // Two even columns of collection cards. Ocean's View always sits directly above Dance Like You Just Don't Care; otherwise each card goes in the shorter column.
+  const columns = useMemo(() => {
+    const units = []
+    groups.forEach((g) => {
+      const last = units[units.length - 1]
+      if (last && last[last.length - 1].name === "Ocean's View" && g.name === "Dance Like You Just Don't Care") last.push(g)
+      else units.push([g])
+    })
+    const cols = [[], []]
+    const size = [0, 0]
+    units.forEach((u) => {
+      const i = size[0] <= size[1] ? 0 : 1
+      cols[i].push(...u)
+      size[i] += u.reduce((n, g) => n + g.items.length + 2, 0)
+    })
+    return cols
+  }, [groups])
+
   async function apply(ids, published, doing) {
     if (!ids.length) return
     setBusy(true)
@@ -227,7 +245,9 @@ export default function AdminPrints() {
 
       {groups.length === 0 && <p className="al-note">There are no prints to manage.</p>}
       <div className="al-v2__groups">
-      {groups.map((g) => {
+      {columns.map((col, ci) => (
+      <div className="al-v2__col" key={ci}>
+      {col.map((g) => {
         const off = g.items.filter((p) => !p.published).map((p) => p.id)
         const on = g.items.filter((p) => p.published).map((p) => p.id)
         return (
@@ -270,6 +290,8 @@ export default function AdminPrints() {
           </section>
         )
       })}
+      </div>
+      ))}
       </div>
     </main>
   )

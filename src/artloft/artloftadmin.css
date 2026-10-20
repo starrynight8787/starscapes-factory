@@ -79,18 +79,19 @@
   }
 }
 
-/* The collections: cards side by side in two even columns, each card as tall as it needs with no gaps (they can differ a lot in length). */
+/* The collections: two even columns side by side, each card as tall as it needs with no gaps between them. */
 .al-v2.al-admin > .al-v2__groups {
   grid-column: 1 / -1;
-  column-count: 2;
-  column-gap: 18px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 18px;
+  align-items: start;
 }
-.al-v2__groups > .al-admin__group {
-  break-inside: avoid;
-  margin: 0 0 18px;
-  display: inline-block;
-  width: 100%;
-  box-sizing: border-box;
+.al-v2__col {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-width: 0;
 }
 .al-v2 .al-admin__head {
   display: flex;
@@ -116,6 +117,6 @@
 }
 @media (max-width: 900px) {
   .al-v2.al-admin > .al-v2__groups {
-    column-count: 1;
+    grid-template-columns: minmax(0, 1fr);
   }
 }
