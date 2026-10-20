@@ -26,7 +26,7 @@ export const HOME_DESCRIPTION = 'A cosy, creative hub for stories, art, ideas an
 
 // The words that describe each share picture, for people who cannot see it
 export const IMAGES = {
-  site: { file: 'site.png', alt: 'The eight Starscapes Factory room icons: a pen and paper, a bear, a palette, a sailboat, a star cog, an armchair, a hatching egg and a stack of books.' },
+  site: { file: 'site.png', alt: 'Starscapes Factory: where imagination takes shape. The names of the eight rooms sit below the title on a starry blue background.' },
   'idea-hatchery': { file: 'idea-hatchery.png', alt: 'A lab bench of flasks, beakers and test tubes under a hanging lamp.' },
   'leadership-lounge': { file: 'leadership-lounge.png', alt: 'A sofa with a star on its cushion, a lamp, a plant and a framed certificate.' },
   'explorers-bay': { file: 'explorers-bay.png', alt: 'A night harbour with a sailboat, a wooden pier, a suitcase and a line of pegged photographs.' },
