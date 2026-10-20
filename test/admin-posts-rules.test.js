@@ -14,12 +14,12 @@ describe('the name of a room', () => {
 })
 
 describe('which pages of a room list posts, and how a post gets on them', () => {
-  it('the Idea Hatchery: Stop Motion and Writing Prompts by tag, and Come Study With Me behind its door; not the story page (it has its own design) and not the old gallery kept for old links', () => {
+  it('the Idea Hatchery: Stop Motion by tag, and Come Study With Me behind its door; not the story page (it has its own design), not the old gallery kept for old links, and no longer Writing Prompts (moved to the Drafting Desk)', () => {
     expect(pagesOfRoom('idea-hatchery')).toEqual([
       { name: 'Stop Motion', to: '/idea-hatchery/stop-motion', tags: ['stop-motion'] },
-      { name: 'Writing Prompts', to: '/idea-hatchery/writing-prompts', tags: ['writing-prompts'] },
       { name: 'Come Study With Me', to: '/idea-hatchery/come-study-with-me', tags: ['come-study-with-me'] },
     ])
+    expect(names('idea-hatchery')).not.toContain('Writing Prompts')
     expect(names('idea-hatchery')).not.toContain('Let\u2019s write a story'); expect(names('idea-hatchery')).not.toContain('Short Stories')
   })
   it('the Leadership Lounge: Leading from the Middle by tag, and the Blog, which shows every post in the room', () => {
@@ -28,10 +28,12 @@ describe('which pages of a room list posts, and how a post gets on them', () => 
   it('Explorer\u2019s Bay: Writing in Transit and Photography, by tag', () => {
     expect(pagesOfRoom('explorers-bay').map((p) => [p.name, p.tags])).toEqual([['Writing in Transit', ['writing-in-transit']], ['Photography', ['photography']]])
   })
-  it('the Drafting Desk: Archive Entries and the Author\u2019s Notebook, each by its two accepted tags', () => {
+  it('the Drafting Desk: Archive Entries, the Author\u2019s Notebook, Writing Prompts and Poems, each by its accepted tags', () => {
     expect(pagesOfRoom('drafting-desk')).toEqual([
       { name: 'Archive Entries', to: '/drafting-desk/archive-entries', tags: ['archive-entries', 'archive-entry'] },
       { name: 'Author\u2019s Notebook', to: '/drafting-desk/authors-notebook', tags: ['authors-notebook', 'notebook'] },
+      { name: 'Writing Prompts', to: '/drafting-desk/writing-prompts', tags: ['writing-prompts', 'writing-prompt'] },
+      { name: 'Poems', to: '/drafting-desk/poems', tags: ['poems', 'poem', 'poetry'] },
     ])
   })
   it('the Factory Floor: every post in the room is a note on the floor', () => {
@@ -65,7 +67,7 @@ describe('where a post appears', () => {
   })
   it('says which tags would put a post on a page when none of its tags does (the missing-test-post case)', () => {
     const text = whereIs(post('a', 'idea-hatchery', ['random', 'test']))
-    expect(text).toMatch(/^Not on a page of The Idea Hatchery yet, because none of its tags is one that room's pages use\./); expect(text).toContain('It appears on the blog page'); expect(text).toContain('stop-motion (Stop Motion)'); expect(text).toContain('writing-prompts (Writing Prompts)')
+    expect(text).toMatch(/^Not on a page of The Idea Hatchery yet, because none of its tags is one that room's pages use\./); expect(text).toContain('It appears on the blog page'); expect(text).toContain('stop-motion (Stop Motion)'); expect(text).toContain('come-study-with-me (Come Study With Me)'); expect(text).not.toContain('writing-prompts')
     expect(whereIs(post('b', 'drafting-desk', null))).toContain('archive-entries (Archive Entries)')
   })
   it('says a draft appears nowhere, even if its tags would match', () => {

@@ -8,23 +8,23 @@ const items = ROOMS['idea-hatchery'].items
 const geo = GEOMETRY['idea-hatchery']
 const file = (name) => readFileSync(join(process.cwd(), `public/scenes/idea-hatchery/${name}`), 'utf8')
 const svg = (id) => file(`item-${id}.svg`)
-const ORDER = ['writing-prompts', 'short-stories', 'come-study-with-me', 'stop-motion']
+const ORDER = ['short-stories', 'come-study-with-me', 'stop-motion'] // Writing Prompts moved to the Drafting Desk on 20 October, so the bench has three beakers
 
 describe('Idea Hatchery: the order along the bench', () => {
-  it('is Writing Prompts, Short Stories, Come Study With Me, then the orange Stop Motion flask: second from the end of the whole bench', () => {
+  it('is Short Stories, Come Study With Me, then the orange Stop Motion flask: second from the end of the whole bench', () => {
     expect([...items].sort((a, b) => a.cx - b.cx).map((i) => i.id)).toEqual(ORDER)
   })
   it('is also the order of the list (so keyboard tabbing and the phone list follow what you see)', () => {
     expect(items.map((i) => i.id)).toEqual(ORDER)
   })
   it('puts each beaker at its place, with a picture and a frame to match', () => {
-    expect(ORDER.map((id) => geo[id].cx)).toEqual([340, 462, 580.5, 847])
+    expect(ORDER.map((id) => geo[id].cx)).toEqual([462, 580.5, 847])
     // each drawing was shifted by exactly how far its beaker moved from where it was first drawn
-    const moved = { 'writing-prompts': 340 - 576, 'short-stories': 462 - 444, 'come-study-with-me': 580.5 - 716.5, 'stop-motion': 847 - 322 }
+    const moved = { 'short-stories': 462 - 444, 'come-study-with-me': 580.5 - 716.5, 'stop-motion': 847 - 322 }
     for (const [id, dx] of Object.entries(moved)) expect(svg(id), id).toContain(`transform="translate(${dx} 0)"`)
   })
   it('keeps the names on two rows so neighbours never sit on each other', () => {
-    expect(items.map((i) => i.labelAt)).toEqual([[340, 754], [462, 700], [600, 754], [847, 700]])
+    expect(items.map((i) => i.labelAt)).toEqual([[462, 700], [600, 754], [847, 700]])
   })
 })
 
@@ -41,18 +41,17 @@ describe('Idea Hatchery: the rest of the bench moved with them', () => {
   })
   it('every cloud rises from above its flask: the lowest bubble stays clear of the top of the glass', () => {
     const body = file('base.svg')
-    const bubbles = [...body.slice(body.indexOf('<g id="bubbles"')).matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/g)].slice(0, 15).map((m) => ({ x: Number(m[1]), y: Number(m[2]), r: Number(m[3]) }))
-    const tops = { 'writing-prompts': 399, 'short-stories': 380, 'stop-motion': 460 }   // where the glass of each begins
-    const clouds = { 'writing-prompts': bubbles.slice(0, 5), 'short-stories': bubbles.slice(5, 10), 'stop-motion': bubbles.slice(10, 15) }
+    const bubbles = [...body.slice(body.indexOf('<g id="bubbles"')).matchAll(/<circle cx="([\d.]+)" cy="([\d.]+)" r="([\d.]+)"/g)].slice(0, 10).map((m) => ({ x: Number(m[1]), y: Number(m[2]), r: Number(m[3]) }))
+    const tops = { 'short-stories': 380, 'stop-motion': 460 }   // where the glass of each begins
+    const clouds = { 'short-stories': bubbles.slice(0, 5), 'stop-motion': bubbles.slice(5, 10) }
     for (const [id, cloud] of Object.entries(clouds)) expect(Math.max(...cloud.map((b) => b.y + b.r)), id).toBeLessThanOrEqual(tops[id] - 4)
   })
-  it('each cloud of bubbles sits over its own flask: the first three flasks and the orange one', () => {
-    const circles = [...base.slice(base.indexOf('<g id="bubbles"')).matchAll(/<circle cx="([\d.]+)"/g)].slice(0, 15).map((m) => Number(m[1]))
-    expect(circles).toHaveLength(15)
+  it('each cloud of bubbles sits over its own flask: the tall flask and the orange one', () => {
+    const circles = [...base.slice(base.indexOf('<g id="bubbles"')).matchAll(/<circle cx="([\d.]+)"/g)].slice(0, 10).map((m) => Number(m[1]))
+    expect(circles).toHaveLength(10)
     const centre = (list) => (Math.min(...list) + Math.max(...list)) / 2
-    expect(Math.abs(centre(circles.slice(0, 5)) - geo['writing-prompts'].cx)).toBeLessThanOrEqual(10)
-    expect(Math.abs(centre(circles.slice(5, 10)) - geo['short-stories'].cx)).toBeLessThanOrEqual(10)
-    expect(Math.abs(centre(circles.slice(10, 15)) - geo['stop-motion'].cx)).toBeLessThanOrEqual(10)
+    expect(Math.abs(centre(circles.slice(0, 5)) - geo['short-stories'].cx)).toBeLessThanOrEqual(10)
+    expect(Math.abs(centre(circles.slice(5, 10)) - geo['stop-motion'].cx)).toBeLessThanOrEqual(10)
   })
 })
 
@@ -61,15 +60,15 @@ describe('Idea Hatchery: everything fits on the bench without piling up', () => 
   const dome = [114, 266]
   const rack = [917, 1087]
   const plain = [788 - 135, 910 - 135]
-  const half = { 'writing-prompts': 70, 'short-stories': 46, 'come-study-with-me': 66.5, 'stop-motion': 66 }
+  const half = { 'short-stories': 46, 'come-study-with-me': 66.5, 'stop-motion': 66 }
   const row = [
     ['dome', ...dome],
-    ...ORDER.slice(0, 3).map((id) => [id, geo[id].cx - half[id], geo[id].cx + half[id]]),
+    ...ORDER.slice(0, 2).map((id) => [id, geo[id].cx - half[id], geo[id].cx + half[id]]),
     ['the plain beaker', ...plain],
     ['stop-motion', geo['stop-motion'].cx - half['stop-motion'], geo['stop-motion'].cx + half['stop-motion']],
     ['the test-tube rack', ...rack],
   ]
-  it('in this order, left to right: dome, three beakers, the plain beaker, the orange flask, the rack', () => {
+  it('in this order, left to right: dome, two beakers, the plain beaker, the orange flask, the rack', () => {
     const lefts = row.map((r) => r[1])
     expect([...lefts].sort((a, b) => a - b)).toEqual(lefts)
   })

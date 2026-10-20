@@ -63,9 +63,9 @@ describe('an area page', () => {
     expect(document.title).toBe('Stop Motion | Starscapes Factory')
   })
   it('lists only the published posts of its own room that carry its tag, newest first', async () => {
-    const { container } = open('/idea-hatchery/writing-prompts')
+    const { container } = open('/explorers-bay/photography') // Writing Prompts moved to the Drafting Desk on 20 October: this page lists only the photography posts of its own room
     await wait(container)
-    expect(titles(container)).toEqual(['Ten prompts for a wet Tuesday'])
+    expect(titles(container)).toEqual(['The harbour at night', 'A photo with a broken address'])
     const stop = open('/idea-hatchery/stop-motion')
     await vi.waitFor(() => expect(titles(stop.container).length).toBeGreaterThan(0))
     expect(titles(stop.container)).toEqual(['Ten prompts for a wet Tuesday', 'A tiny world in clay'])        // newest first, and a post with two tags is on both pages

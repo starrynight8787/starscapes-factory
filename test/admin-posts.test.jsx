@@ -89,7 +89,7 @@ describe('the filters', () => {
   it('explains how posts get onto a room\u2019s pages once a room is chosen, and not before', async () => {
     page(); await screen.findByText('My test blog'); expect(screen.queryByText(/How posts get on/)).toBeNull()
     await userEvent.selectOptions(screen.getByLabelText('Room'), 'idea-hatchery'); const help = screen.getByText("How posts get on The Idea Hatchery's pages").closest('details')
-    expect(within(help).getByText(/Stop Motion/).closest('li')).toHaveTextContent('a post with the tag stop-motion'); expect(help).toHaveTextContent('Writing Prompts')
+    expect(within(help).getByText(/Stop Motion/).closest('li')).toHaveTextContent('a post with the tag stop-motion'); expect(help).toHaveTextContent('Come Study With Me'); expect(help).not.toHaveTextContent('Writing Prompts')
     await userEvent.selectOptions(screen.getByLabelText('Room'), 'leadership-lounge'); expect(screen.getByText(/Leadership Blog/).closest('li')).toHaveTextContent('every post in this room')
   })
   it('shows a room name it does not know (a post saved with an odd room) rather than hiding the post', async () => {

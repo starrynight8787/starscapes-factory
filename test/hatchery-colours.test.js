@@ -104,7 +104,7 @@ describe('Idea Hatchery: nothing else changed', () => {
   })
   it('keeps the sizes of the objects, and the places of the ones that did not move', () => {
     const g = JSON.parse(read('geometry.json'))
-    expect(Object.keys(g).sort()).toEqual(['come-study-with-me', 'short-stories', 'stop-motion', 'writing-prompts'])
+    expect(Object.keys(g).sort()).toEqual(['come-study-with-me', 'short-stories', 'stop-motion']) // Writing Prompts moved to the Drafting Desk (20 October)
     expect(g['stop-motion']).toMatchObject({ cx: 847, cy: 555, w: 140, h: 198 }) // second from the end of the bench
   })
 })
