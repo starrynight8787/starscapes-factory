@@ -1,0 +1,53 @@
+THE NEWSLETTER (with Resend)   starscapes-newsletter-20oct.zip   (SFW-250)
+Needs the Passes and members, Promotions packages already installed (they are). One Supabase step, and one Vercel setting to open the sign-up when you are ready.
+
+WHAT IT ADDS
+ * A SIGN-UP BOX in the footer of every page. It stays HIDDEN until you open it (see "OPENING IT" below). Someone types their email and ticks a box saying they would like the newsletter; they are then emailed a button to CONFIRM. They are not on the list until they press it (double opt-in).
+ * Pages for the two links in the emails: /newsletter/confirm and /newsletter/unsubscribe. Opening a link changes NOTHING (mail programs and virus scanners open links before people do): the person presses a button, and only then is anything done.
+ * ADMIN, NEWSLETTER (in the Write group): who is signed up (confirmed, waiting, unsubscribed; search; Remove for good); a place to WRITE a newsletter (subject, words, with a guide to headings, lists, bold and links), PREVIEW it, SAVE a draft, SEND A TEST TO YOURSELF, and SEND IT to everyone who confirmed, with a count and live progress; and a list of past newsletters.
+ * Every newsletter email has its own private unsubscribe link for that person, the one-click unsubscribe that mail programs use (so Gmail and Outlook show their own Unsubscribe button), and who is sending it (your company name, number and registered office).
+
+HOW IT WORKS (and why it is safe)
+ * RESEND ONLY DELIVERS THE EMAILS. The list is in your own database (Supabase): who signed up, when, the exact words they agreed to, who confirmed, who left. This is a change from the plan on SFW-235 (a Resend "audience"): it keeps proof of consent in one place, has no limit on contacts, needs no extra Resend webhook, and an unsubscribe takes effect at once. Resend is still your mailing tool and is still the one company that handles the emails (as your Privacy policy says).
+ * Someone who unsubscribes STAYS in the table, marked unsubscribed, so they are never emailed again. "Remove" deletes a person completely (for a request to erase their details).
+ * A newsletter goes ONLY to people who are confirmed, and still are when their turn comes. It is sent fifty at a time (Resend allows a hundred per request and two requests a second). One row is made for each person, so nobody is emailed twice, even if you press Send twice or something is interrupted; Resend's own duplicate guard is used as well.
+ * If Resend's limit is reached (the FREE PLAN stops at 100 emails a day: see SFW-188), it stops cleanly, tells you in plain words, and nothing is lost: press Send again later and it carries on from where it stopped. A newsletter that has gone out cannot be sent again. Anyone Resend refuses is counted, and "Try those again" sends them again.
+ * The sign-up never says whether an address is already signed up, a hidden box catches robots, and the same address is not sent another confirmation email within ten minutes.
+ * Everything you write is shown as plain words in the email: web code in it is neutralised, and only https:// and mailto: links work. The preview is shown in a locked frame.
+ * No 13th server function: the public parts go inside the ebook sign-up function, the owner parts inside the membership function (after its owner check).
+ * 163 new tests, and 28 deliberate breakages (sending to people who never confirmed, emailing someone twice, emailing someone who left, opening a link confirming someone, a key shown in an error...): all caught. (While writing them they found, and I fixed: a key echoed in a Resend error would have been stored; and a stale highlight showing two alerts.)
+
+STEP 1: THE SUPABASE STEP (do this once, before or after installing: the site works either way, the newsletter page just says it cannot read yet)
+ In Supabase: choose your project, click SQL Editor in the left menu, click New query, paste ALL of this, click Run (green button, bottom right). It says "Success. No rows returned." It is safe to run twice.
+ (It is also in sql/newsletter.sql in the zip. I tested it against your real database inside a transaction that I rolled back: all 14 safety checks passed and nothing was left behind.)
+ To check, run this in a new query: it should show 3 rows, each with rowsecurity = true:
+   select tablename, rowsecurity from pg_tables where tablename like 'newsletter_%';
+ And this should say 0 (no visitor can touch the tables):
+   select count(*) from pg_policies where tablename like 'newsletter_%';
+
+STEP 2: INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-newsletter-20oct.zip
+ 3. python3 tools/add-newsletter.py            (it checks seven files first; if anything is unexpected it changes nothing)
+ 4. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it must still print 12)
+ 7. find . -name "*.before-newsletter" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (7 changed source files, 12 new source files, 6 new tests, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Admin: build the newsletter (sign-up, confirm, unsubscribe, write and send with Resend)"
+    git push
+
+STEP 3: CHECK THE VERCEL SETTINGS (Vercel, your project, Settings, Environment Variables)
+ * RESEND_API_KEY must be set (the order emails already use it). The sending domain in Resend must be verified, and the sender is imagine@starscapesfactory.com.
+ * SUPABASE_SERVICE_ROLE_KEY (or SUPABASE_SECRET_KEY) and OWNER_EMAIL must be set (Orders and the other admin pages already use them).
+ * NEWSLETTER_OPEN: leave it UNSET for now. The sign-up box stays hidden and the sign-up refuses everyone, which is what you want until the Privacy policy is live. Confirm and unsubscribe links always work.
+
+OPENING IT (later: only once the Privacy policy is live and says what the newsletter holds: see SFW-250 and SFW-233)
+ Vercel, Settings, Environment Variables, Add: Name NEWSLETTER_OPEN, Value yes, tick Production, Save, then Deployments, the three dots on the latest, Redeploy. The box appears in the footer. To close it again, delete the variable and redeploy.
+
+TRY IT (for a real test with your own two email addresses, you have to open it briefly: do it before the site is public, and close it again after)
+ 1. Set NEWSLETTER_OPEN to yes (above) and redeploy. 2. From the footer, sign up with one of your addresses: you should get an email with a button, and be told to check your email. 3. Press the button in the email, then the button on the page: it says you are subscribed. 4. Do the same with a second address.
+ 5. Admin, Newsletter: both are "Confirmed". Write a short newsletter, press Preview, then Send a test to me and read it in your inbox. 6. Press Send to 2 people: confirm: it sends and says "Finished: 2 of 2 sent."
+ 7. In one of the emails use Gmail's own Unsubscribe, or the link at the bottom, then press the button: Admin, Newsletter shows that person as Unsubscribed. 8. Send a second newsletter: only the person still subscribed gets it.
+ 9. Tidy up: Remove both test people (Remove), delete the test newsletters' drafts, and delete NEWSLETTER_OPEN again and redeploy if you are not ready to open.

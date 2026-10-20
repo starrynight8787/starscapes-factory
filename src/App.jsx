@@ -29,6 +29,8 @@ import OpenDoors from './admin/OpenDoors'
 import AdminSuggestions from './admin/AdminSuggestions'
 import AdminComments from './admin/AdminComments'
 import AdminBooks from './admin/AdminBooks'
+import AdminNewsletter from './admin/AdminNewsletter'
+import { NewsletterConfirmPage, NewsletterUnsubscribePage } from './newsletter/NewsletterLinkPage'
 import AdminStories from './admin/AdminStories'
 import AdminPosts from './admin/AdminPosts'
 import AdminHome from './admin/AdminHome'
@@ -82,6 +84,8 @@ export default function App() {
 <Route path="/page/:slug" element={<StaticPage owner={owner} />} /> 
 <Route path="/testers" element={<TestersPage />} />
 <Route path="/membership" element={<MembershipPage owner={owner} session={session} />} />
+<Route path="/newsletter/confirm" element={<NewsletterConfirmPage />} />
+<Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />
 <Route path="/membership/welcome" element={ <ProtectedRoute session={session}> <WelcomePage /> </ProtectedRoute> } />
 <Route path="/membership/passes" element={ <ProtectedRoute session={session}> <MyPassesPage owner={owner} /> </ProtectedRoute> } />
 <Route path="/membership/change" element={ <ProtectedRoute session={session}> <ChangePassesPage owner={owner} /> </ProtectedRoute> } />
@@ -93,6 +97,7 @@ export default function App() {
 <Route path="/admin/suggestions" element={ <ProtectedRoute session={session}> <AdminSuggestions session={session} /> </ProtectedRoute> } />
 <Route path="/admin/comments" element={ <ProtectedRoute session={session}> <AdminComments session={session} /> </ProtectedRoute> } />
 <Route path="/admin/books" element={ <ProtectedRoute session={session}> <AdminBooks session={session} /> </ProtectedRoute> } />
+<Route path="/admin/newsletter" element={ <ProtectedRoute session={session}> <AdminNewsletter session={session} /> </ProtectedRoute> } />
 <Route path="/admin/stories" element={ <ProtectedRoute session={session}> <AdminStories session={session} /> </ProtectedRoute> } />
 <Route path="/admin/posts" element={ <ProtectedRoute session={session}> <AdminPosts session={session} /> </ProtectedRoute> } />
 <Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />

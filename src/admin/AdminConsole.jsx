@@ -10,6 +10,7 @@ import './adminv2.css'
 // Small line icons for the tool tiles. They are decoration, so they are hidden from screen readers.
 const ICON_PATHS = {
   post: <><path d="M4 20h4l11-11-4-4L4 16z" /><path d="M13 7l4 4" /></>,
+  newsletter: <><rect x="3" y="5" width="18" height="14" rx="2" /><path d="M3 7l9 6 9-6" /></>,
   product: <><path d="M5 8h14l-1 12H6z" /><path d="M9 8a3 3 0 0 1 6 0" /></>,
   hub: <><circle cx="12" cy="12" r="3" /><path d="M12 3v3M12 18v3M3 12h3M18 12h3M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M18.4 5.6l-2.1 2.1M7.7 16.3l-2.1 2.1" /></>,
   originals: <><rect x="4" y="4" width="16" height="13" rx="1.5" /><path d="M6 20l3-3M18 20l-3-3M4 14l4-4 4 4 3-3 5 5" /></>,

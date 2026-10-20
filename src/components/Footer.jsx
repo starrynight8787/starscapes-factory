@@ -5,6 +5,7 @@ import { roomPath } from '../data/roomImages'
 import { social as socialLinks } from '../data/social'
 import { pageExists, pageIsReady } from '../data/staticPages'
 import { companyLine, printerLine } from '../data/company'
+import NewsletterSignup from '../newsletter/NewsletterSignup'
 import '../styles/site.css'
 import './footer.css'
 
@@ -61,6 +62,7 @@ export default function Footer({ social = socialLinks, owner = false }) {
             )}
           </div>
         </div>
+        <NewsletterSignup />
         <hr />
         <div className="ft__company">
           <p>{companyLine()}</p>
