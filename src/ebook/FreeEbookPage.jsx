@@ -2,11 +2,13 @@ import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Field, CheckField, ErrorSummary, FailureMessage } from '../components/FormMessages'
 import useTitle from '../rooms/useTitle'
+import PageBanner from '../components/PageBanner'
 import { EBOOK } from './ebookConfig'
 import { cleanSignup } from './ebookRules'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './ebook.css'
+import './ebookv2.css'
 
 // The Free Ebook pages behind the Lounge's door (Figma: "Download page: Free Ebook, sign up with email" and "thank you and download").
 // Someone gives their email and ticks the box, the server keeps both, and they get the download. Until there is a PDF (src/ebook/ebookConfig.js) the
@@ -46,13 +48,12 @@ export default function FreeEbookPage() {
 
   if (done) {
     return (
-      <main className="rp eb">
+      <main className="rp eb eb--v2">
         {back}
+        <PageBanner chip="You are in" title={done.file ? 'Thank you. Your ebook is ready.' : 'Thank you. Your ebook is being finished.'} art="mountain" />
         <div className="eb__layout">
-          {cover}
-          <div>
-            <span className="pg-chip">You are in</span>
-            <h1 className="eb__title">{done.file ? 'Thank you. Your ebook is ready.' : 'Thank you. Your ebook is being finished.'}</h1>
+          <div className="eb__side">{cover}</div>
+          <div className="eb__card">
             {done.file ? (
               <>
                 <p className="eb__text">Use the button to download it.</p>
@@ -75,15 +76,17 @@ export default function FreeEbookPage() {
 
   const summary = Object.entries(errors).map(([id, message]) => ({ id: id === 'consent' ? 'eb-consent' : 'eb-email', message }))
   return (
-    <main className="rp eb">
+    <main className="rp eb eb--v2">
       {back}
+      <PageBanner chip="Free" title={EBOOK.title} subtitle={EBOOK.summary} art="mountain" />
       <div className="eb__layout">
-        {cover}
-        <div>
-          <span className="pg-chip">Free</span>
-          <h1 className="eb__title">{EBOOK.title}</h1>
-          <p className="eb__text">{EBOOK.summary}</p>
+        <div className="eb__side">
+          {cover}
+          <h2 className="eb__h2">What is inside</h2>
           <ul className="eb__inside">{EBOOK.inside.map((line) => <li key={line}>{line}</li>)}</ul>
+        </div>
+        <div className="eb__card">
+          <h2 className="eb__h2">Where shall I send it?</h2>
           <form className="eb__form" onSubmit={submit} noValidate>
             <ErrorSummary errors={summary} />
             {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}

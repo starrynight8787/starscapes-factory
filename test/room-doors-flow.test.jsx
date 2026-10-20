@@ -75,11 +75,11 @@ describe('the page behind a door', () => {
     expect(screen.queryByText('No door tag')).toBeNull()
     expect(screen.queryByRole('note')).toBeNull()
   })
-  it('shows a gallery for a door whose page is a gallery', async () => {
+  it('shows the Books door as a bookshelf, with each published book on it', async () => {
     world.open = { 'sarah-jrs-den/books': true }
     const { container } = visit('/sarah-jrs-den/books')
     await screen.findByText('A story for bedtime')
-    expect(container.querySelector('.rp-entries--gallery')).not.toBeNull()
+    expect(container.querySelector('.rp-shelf .rp-book')).not.toBeNull()
   })
   it('shows the owner the page while it is closed, under a banner', async () => {
     world.owner = true
