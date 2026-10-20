@@ -1,0 +1,20 @@
+PRIVACY POLICY: A PLAINER REASON FOR KEEPING LEAVERS   starscapes-privacy-wording-20oct.zip   (SFW-233)
+(One sentence changed. No Supabase step, nothing to set in Vercel. The policy is still a draft.)
+
+THE CHANGE, in the newsletter row of "What we collect and why", the last column ("Our legal reason"):
+  BEFORE: Your consent, which you can take back at any time, and our legitimate interest in respecting your choice if you leave
+  AFTER:  Your consent, which you can take back at any time, and our legitimate interest in making sure we never email someone who has asked us to stop
+Same meaning, in words a visitor understands. (Gill decided this on 20 October 2026; the free-advice review can still change it if needed.)
+A test holds the new wording in place, and fails if the old wording comes back or the reason is cut down to just "legitimate interest".
+
+INSTALL (from the project folder; ONLY run git add . at the very end). The earlier privacy package must already be installed (it is: commit fdf8fb5).
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-privacy-wording-20oct.zip
+ 3. python3 tools/add-privacy-wording.py        (it must print one line starting "changed"; if it says anything else, it has changed nothing: tell me)
+ 4. grep -c "making sure we never email someone who has asked us to stop" src/data/legalPages.js     (it must print 1)
+ 5. npm test                                    (it should end with exactly 1 failed: the contact address test)
+ 6. find . -name "*.before-privacy-wording" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (1 changed file: src/data/legalPages.js; 1 changed test: newsletter-privacy; the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Privacy policy: plainer reason for keeping people who have unsubscribed"
+    git push

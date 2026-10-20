@@ -1,0 +1,73 @@
+// @vitest-environment node
+// The script that adds the suggest and vote box and the Story Ledger page: exact, all-or-nothing, backed up, safe to run twice.
+import { describe, it, expect, afterEach } from 'vitest'
+import fs from 'node:fs'
+import os from 'node:os'
+import path from 'node:path'
+import { execFileSync } from 'node:child_process'
+
+const SCRIPT = path.resolve('tools/add-privacy-wording.py')
+const FIX = path.resolve('test/fixtures/privacy-wording')
+const FILES = ['src/data/legalPages.js']
+const NEW = ['INSTALL-PRIVACY-WORDING.txt']
+const flat = (rel) => rel.replace(/\//g, '__')
+const before = (rel) => fs.readFileSync(path.join(FIX, 'before', flat(rel)), 'utf8')
+const after = (rel) => fs.readFileSync(path.join(FIX, 'after', flat(rel)), 'utf8')
+const dirs = []
+afterEach(() => { while (dirs.length) fs.rmSync(dirs.pop(), { recursive: true, force: true }) })
+
+function project({ newFiles = true, change = {} } = {}) {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'wordingtest-'))
+  dirs.push(dir)
+  const put = (rel, text) => { fs.mkdirSync(path.dirname(path.join(dir, rel)), { recursive: true }); fs.writeFileSync(path.join(dir, rel), text) }
+  for (const rel of FILES) put(rel, change[rel] ?? before(rel))
+  if (newFiles) for (const rel of NEW) put(rel, '// new file\n')
+    put('package.json', '{}\n')
+  put('src/main.jsx', '// the site\n')
+  return dir
+}
+const run = (cwd) => {
+  try { return { code: 0, out: execFileSync('python3', [SCRIPT], { cwd, encoding: 'utf8', stdio: ['ignore', 'pipe', 'pipe'] }) } } catch (e) { return { code: e.status, out: `${e.stdout || ''}${e.stderr || ''}` } }
+}
+const read = (dir, rel) => fs.readFileSync(path.join(dir, rel), 'utf8')
+
+describe('changing the privacy wording', () => {
+  it('changes the one file into exactly the finished versions, and says so', () => {
+    const dir = project()
+    const r = run(dir)
+    expect(r.code, r.out).toBe(0)
+    for (const rel of FILES) { expect(read(dir, rel)).toBe(after(rel)); expect(r.out).toContain(`changed       ${rel}`) }
+  })
+  it('keeps a copy of each file as it was, ending .before-privacy-wording', () => {
+    const dir = project()
+    run(dir)
+    for (const rel of FILES) expect(read(dir, `${rel}.before-privacy-wording`)).toBe(before(rel))
+  })
+  it('is safe to run twice: the second time changes nothing', () => {
+    const dir = project()
+    run(dir)
+    const once = FILES.map((rel) => read(dir, rel))
+    const r = run(dir)
+    expect(r.code, r.out).toBe(0)
+    expect(r.out).toMatch(/Everything was already in place/)
+    expect(FILES.map((rel) => read(dir, rel))).toEqual(once)
+  })
+  it('changes NOTHING if even one file is not the way it expects, and says which', () => {
+    const odd = before('src/data/legalPages.js').replace('Our legal reason', 'Our legal reasons')
+    expect(odd).not.toBe(before('src/data/legalPages.js'))
+    const dir = project({ change: { 'src/data/legalPages.js': odd } })
+    const r = run(dir)
+    expect(r.code).toBe(1)
+    expect(r.out).toMatch(/NOTHING WAS CHANGED/)
+    expect(r.out).toContain('src/data/legalPages.js')
+    for (const rel of FILES) expect(fs.existsSync(path.join(dir, `${rel}.before-privacy-wording`))).toBe(false)
+    expect(read(dir, 'src/data/legalPages.js')).toBe(odd)
+  })
+  it('asks you to unzip first if the new files are not there, and changes nothing', () => {
+    const dir = project({ newFiles: false })
+    const r = run(dir)
+    expect(r.code).toBe(1)
+    expect(r.out).toMatch(/Unzip starscapes-privacy-wording-20oct\.zip/)
+    for (const rel of FILES) expect(read(dir, rel)).toBe(before(rel))
+  })
+})
