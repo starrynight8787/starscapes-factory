@@ -185,3 +185,20 @@
 .container:has(> .pg > .pb) {
   max-width: 1272px;
 }
+
+/* The Sarah Jr. patchwork bear on the right of the banners in Sarah Jr.'s Den: a cut-out picture, so it sits on the sky without a frame. */
+.pb__art--bear {
+  flex: 0 1 260px;
+  width: 260px;
+  height: auto;
+  margin-right: 24px;
+  filter: drop-shadow(0 6px 14px rgba(8, 12, 60, 0.35));
+}
+@media (max-width: 960px) {
+  .pb__art--bear {
+    flex: 0 0 auto;
+    width: 200px;
+    max-width: 60%;
+    margin: 0 auto;
+  }
+}

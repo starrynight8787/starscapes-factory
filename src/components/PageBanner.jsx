@@ -13,7 +13,8 @@ export default function PageBanner({ chip, title, subtitle, picture, art, childr
         {subtitle && <p className="pb__subtitle">{subtitle}</p>}
         {children && <div className="pb__buttons">{children}</div>}
       </div>
-      {art && <BannerArt name={art} />}
+      {art === 'sarah-jr' && <img className="pb__art pb__art--bear" src="/sarah-jr/bear.png" alt="" width="260" height="273" loading="lazy" />}
+      {art && art !== 'sarah-jr' && <BannerArt name={art} />}
       {!art && picture && (
         <div className="pb__picture">
           <img src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
