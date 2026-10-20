@@ -137,7 +137,13 @@ export default function PrintPage() {
         <div className="al-print__info">
           <h1>{print.title}</h1>
           {collection && <p className="al-print__collection"><Link to={`/art-loft/collections/${collection.slug}`}>{collection.name}</Link></p>}
-          {print.description && <p className="al-print__desc">{print.description}</p>}
+          {print.description && (
+            <div className="al-print__desc">
+              {print.description.split(/\n\s*\n/).map((para, n) => (
+                <p key={n}>{para.trim()}</p>
+              ))}
+            </div>
+          )}
 
           {variants.length === 0 ? (
             <p className="al-note">Sizes for this print are coming soon.</p>

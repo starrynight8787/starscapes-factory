@@ -94,7 +94,13 @@ export default function OriginalPage({ online = ORIGINALS_ONLINE_CHECKOUT }) {
               ))}
             </ul>
           )}
-          {original.description && <p className="al-print__desc">{original.description}</p>}
+          {original.description && (
+            <div className="al-print__desc">
+              {original.description.split(/\n\s*\n/).map((para, n) => (
+                <p key={n}>{para.trim()}</p>
+              ))}
+            </div>
+          )}
 
           {sold ? (
             <div className="al-original__buy">
