@@ -25,6 +25,7 @@ function project({ newFiles = true, change = {} } = {}) {
   put('src/stories/storiesRules.js', '// from the stories update\n')
   put('src/suggest/useUser.js', '// from the suggest box update\n')
   put('src/membership/membershipApi.js', '// from the membership update\n')
+  put('src/admin/AdminBanner.jsx', '// from the admin redesign\n')
   put('package.json', '{}\n')
   return dir
 }
