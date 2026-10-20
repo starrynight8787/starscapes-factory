@@ -7,6 +7,7 @@ import { fetchChapterPosts, fetchChapterRows, fetchStories } from './storiesApi'
 import { buildChapters, chapterTag, completedStories, currentStory } from './storiesRules'
 import { CHAPTERS, COMPLETED, PAGE, PINNED } from './storiesData'
 import StoryVote from './StoryVote'
+import PageBanner from '../components/PageBanner'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './stories.css'
@@ -64,10 +65,7 @@ export default function LetsWriteStoryPage() {
   return (
     <main className="rp ls">
       <p className="rp-back"><Link to="/idea-hatchery">← Back to {PAGE.back}</Link></p>
-      <header className="rp-head">
-        <h1>{PAGE.title}</h1>
-        <p className="rp-blurb">{PAGE.subtitle}</p>
-      </header>
+      <PageBanner chip="The Idea Hatchery" title={PAGE.title} subtitle={PAGE.subtitle} room="idea-hatchery" />
       {state.status === 'loading' && <p className="rp-note">Loading…</p>}
       {state.status === 'error' && <p className="rp-note" role="alert">The stories could not load just now. Please try again in a moment.</p>}
       {empty && <p className="rp-note">{PAGE.emptyTitle}</p>}
