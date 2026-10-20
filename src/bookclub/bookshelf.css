@@ -1,0 +1,91 @@
+/* The bookshelf page and each book's own page (Figma: "Bookshelf page" and "Book detail page", Book Club). */
+.bs__bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 16px; margin: 20px 0; }
+.bs__jump { display: flex; flex-wrap: wrap; align-items: center; gap: 12px; }
+.bs__jumplabel { font-size: 0.75rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sf-blue, #1f6fa8); }
+.bs__tabs { display: flex; flex-wrap: wrap; gap: 8px; }
+.bs__tab { min-height: 44px; padding: 8px 16px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 999px; background: #fff; color: var(--sf-navy-700, #14306a); font: inherit; font-weight: 700; cursor: pointer; }
+.bs__tab[aria-pressed='true'] { background: var(--sf-navy-700, #14306a); color: #fff; }
+.bs__tab:focus-visible, .bs__selectbox:focus-visible, .bs__input:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bs__count { font-weight: 400; opacity: 0.8; margin-left: 4px; }
+.bs__select { display: none; width: 100%; }
+.bs__select label { display: block; margin-bottom: 6px; }
+.bs__selectbox { width: 100%; min-height: 48px; padding: 10px 44px 10px 18px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 999px; background: #fff; color: var(--sf-navy-700, #14306a); font: inherit; font-weight: 700; }
+.bs__search { position: relative; flex: 0 1 320px; min-width: 240px; }
+.bs__input { box-sizing: border-box; width: 100%; min-height: 48px; padding: 10px 20px 10px 46px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 999px; background: #fff; font: inherit; color: #0e1530; }
+.bs__icon { position: absolute; left: 18px; top: 50%; width: 12px; height: 12px; margin-top: -9px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 50%; pointer-events: none; }
+.bs__icon::after { content: ''; position: absolute; left: 9px; top: 10px; width: 7px; height: 2px; background: var(--sf-navy-700, #14306a); transform: rotate(45deg); transform-origin: left center; }
+.bs__sr { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+.bs__case { gap: 24px; }
+.bs__shelf { display: grid; gap: 8px; scroll-margin-top: 90px; }
+.bs__label { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; }
+.bs__name { margin: 0; font-family: var(--sf-school, 'Schoolbell', cursive); font-size: 1.75rem; font-weight: 400; color: var(--sf-navy-700, #14306a); }
+.bs__muted { color: var(--sf-muted, #5b6585); font-size: 0.875rem; }
+.bs__picked { padding: 4px 12px; border-radius: 999px; background: #f2c94c; color: #0e1530; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.bs__cubby { display: flex; align-items: flex-end; min-height: 200px; padding: 12px 16px 0; background: #ecf1ff; border-radius: 6px 6px 0 0; }
+.bs__shelf--on .bs__cubby { outline: 2px solid var(--sf-blue, #1f6fa8); }
+.bs__spines { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.bs__spine { position: relative; text-decoration: none; }
+.bs__spine:hover { transform: translateY(-6px); }
+.bs__spine--now::before { content: ''; position: absolute; top: 0; right: 6px; width: 10px; height: 22px; background: #f2c94c; }
+.bs__plank { height: 14px; background: var(--sf-navy-700, #14306a); border-radius: 0 0 4px 4px; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.25); }
+.bs__empty { display: flex; align-items: center; justify-content: center; gap: 40px; width: 100%; min-height: 188px; text-align: center; }
+.bs__empty p { display: grid; gap: 4px; margin: 0; }
+.bs__empty strong { font-family: var(--sf-school, 'Schoolbell', cursive); font-size: 1.375rem; font-weight: 400; color: var(--sf-navy-700, #14306a); }
+.bs__empty span:not(.bs__end) { color: var(--sf-muted, #5b6585); font-size: 0.875rem; }
+.bs__end { flex: none; width: 16px; height: 96px; border-radius: 3px; background: var(--sf-navy-700, #14306a); }
+
+@media (max-width: 640px) {
+  .bs__tabs, .bs__jump > .bs__jumplabel { display: none; }
+  .bs__select { display: block; }
+  .bs__jump { width: 100%; }
+  .bs__search { flex-basis: 100%; order: -1; }
+  .bs__empty { gap: 12px; }
+}
+
+/* ---------- a book's own page ---------- */
+.bk { display: grid; gap: 24px; }
+.bk__hero { display: grid; grid-template-columns: 240px 1fr; gap: 40px; align-items: start; }
+.bk__cover { width: 240px; aspect-ratio: 240 / 350; object-fit: cover; border-radius: 6px; background: var(--sf-navy-700, #14306a); }
+.bk__cover--blank { display: flex; align-items: center; padding: 22px; box-sizing: border-box; color: #fff; font-family: var(--sf-heading, 'Josefin Sans', sans-serif); font-size: 1.75rem; font-weight: 700; }
+.bk__chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.bk__chip { padding: 5px 12px; border-radius: 999px; background: #dbe4ff; color: var(--sf-navy-700, #14306a); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; }
+.bk__chip--dark { background: var(--sf-navy-700, #14306a); color: #fff; }
+.bk__chip--gold { background: #f2c94c; color: #0e1530; }
+.bk__title { margin: 0; font-size: clamp(2rem, 5vw, 2.75rem); line-height: 1.1; color: var(--sf-navy-700, #14306a); }
+.bk__stars { display: flex; align-items: center; gap: 10px; margin: 0; color: var(--sf-muted, #5b6585); font-weight: 700; font-size: 0.875rem; }
+.bk__stars span:first-child { font-size: 1.5rem; color: #d9a91a; letter-spacing: 2px; }
+.bk__facts { display: grid; grid-template-columns: 1fr 1fr; gap: 0 24px; margin: 0; padding: 12px 20px; background: #ecf1ff; border-radius: 8px; }
+.bk__fact { padding: 8px 0; }
+.bk__fact dt { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.06em; text-transform: uppercase; color: var(--sf-blue, #1f6fa8); }
+.bk__fact dd { margin: 2px 0 0; font-weight: 700; }
+.bk__two { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; align-items: start; }
+.bk__hint { margin: 0; color: var(--sf-muted, #5b6585); font-family: var(--sf-school, 'Schoolbell', cursive); }
+.bk__text { display: grid; gap: 12px; }
+.bk__text p { margin: 0; line-height: 1.7; }
+.bk__chars { display: grid; gap: 12px; margin: 0; padding: 0; list-style: none; }
+.bk__chars li { display: flex; align-items: center; gap: 12px; }
+.bk__avatar { flex: none; width: 36px; height: 36px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 50%; background: #dbe4ff; }
+.bk__chars strong { display: block; color: var(--sf-navy-700, #14306a); }
+.bk__chars span { color: var(--sf-muted, #5b6585); font-size: 0.875rem; }
+.bk__quote { margin: 0; font-family: var(--sf-school, 'Schoolbell', cursive); font-size: clamp(1.375rem, 3vw, 1.75rem); line-height: 1.4; color: var(--sf-navy-700, #14306a); }
+.bk__tiles { display: flex; flex-wrap: wrap; gap: 10px; margin: 0; padding: 0; list-style: none; }
+.bk__tile { display: grid; place-items: center; width: 84px; height: 96px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 8px; background: #fff; color: var(--sf-navy-700, #14306a); text-decoration: none; text-align: center; }
+.bk__tile strong { font-size: 1.5rem; line-height: 1; }
+.bk__tile small { font-weight: 700; font-size: 0.6875rem; }
+.bk__tile--read { background: var(--sf-navy-700, #14306a); color: #fff; }
+.bk__tile--read small { color: #f2c94c; }
+.bk__tile--reading { background: #f2c94c; color: #0e1530; }
+.bk__comment { display: flex; gap: 14px; padding: 10px 0; }
+.bk__comment p { margin: 0; }
+.bk__comment .bk__who { font-weight: 700; color: var(--sf-navy-700, #14306a); font-size: 0.875rem; }
+.bk__form { display: grid; gap: 10px; }
+.bk__textarea { box-sizing: border-box; width: 100%; min-height: 96px; padding: 14px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 10px; font: inherit; }
+.bk__link { background: none; border: 0; padding: 0; color: var(--sf-blue, #1f6fa8); text-decoration: underline; cursor: pointer; font: inherit; font-size: 0.875rem; }
+
+@media (max-width: 760px) {
+  .bk__hero, .bk__two { grid-template-columns: 1fr; }
+  .bk__hero { gap: 24px; }
+  .bk__cover { width: 200px; }
+  .bk__facts { grid-template-columns: 1fr; }
+  .bk__tile { width: 72px; height: 84px; }
+}

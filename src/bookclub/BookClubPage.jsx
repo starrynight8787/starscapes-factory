@@ -9,7 +9,7 @@ import { PROJECT_SOCIALS } from '../data/contact'
 import { MEMBERSHIP } from '../data/membership'
 import SuggestPanel from '../suggest/SuggestPanel'
 import { fetchBooks, fetchGoals } from './bookApi'
-import { GENRES, aboutParagraphs, progress, safeCover, shelfFor, spineClass, starsText, yearsOf } from './bookRules'
+import { GENRES, aboutParagraphs, bookPath, genreShelves, progress, safeCover, shelfFor, shelfPath, spineClass, starsText, yearsOf } from './bookRules'
 import { COME_READ, GENRES_INTRO, MEMBER_BENEFITS, SHELF_INTRO, SUBTITLE, THEME_FALLBACK, THEME_INTRO, VIDEO_ID, WELCOME } from './bookClubData'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -53,7 +53,6 @@ export default function BookClubPage({ now = new Date() }) {
   const bar = progress(shelf.length, goal.goal)
   const theme = (goals[thisYear] && goals[thisYear].theme) || THEME_FALLBACK
   const open = shelf.find((b) => b.id === picked) || null
-  const countFor = (key) => posts.filter((p) => inArea({ tags: [key] }, p)).length
   const membershipOpen = MEMBERSHIP.open === true
   const videoOk = VIDEO_ID.test(String(WELCOME.videoId || ''))
 
@@ -130,6 +129,7 @@ export default function BookClubPage({ now = new Date() }) {
                 <h3 className="bc__now-title">{b.title}</h3>
                 <p className="bc__muted">{[b.author, b.note].filter(Boolean).join('. ')}</p>
                 {aboutParagraphs(b.about).length > 0 && <div className="bc__about">{aboutParagraphs(b.about).map((para, n) => <p key={n}>{para}</p>)}</div>}
+                <Link className="pg-btn" to={bookPath(b.id)}>See the book page</Link>
                 {b.review_post_id && <Link className="pg-btn" to={`/post/${b.review_post_id}`}>Read my notes</Link>}
               </div>
             </article>
@@ -163,15 +163,16 @@ export default function BookClubPage({ now = new Date() }) {
       <section className="bc__box bc__genres" aria-labelledby="bc-genres">
         <h2 id="bc-genres" className="bc__h3">Choose a genre</h2>
         <p className="bc__muted">{GENRES_INTRO}</p>
+        <p><Link className="pg-btn" to={shelfPath()}>See the whole bookshelf</Link></p>
         <div className="bc__bookshelf">
           <ul className="bc__spines">
             {GENRES.map((g, i) => {
-              const n = countFor(g.key)
+              const n = (genreShelves(books).find((x) => x.key === g.key) || { books: [] }).books.length
               return (
                 <li key={g.key} className={`bc__bookitem bc__bookitem--${i % 5}`}>
-                  <Link className="bc__book" to={`/blog?tag=${g.key}`}>
+                  <Link className="bc__book" to={shelfPath(g.key)}>
                     <span className="bc__book-name">{g.label}</span>
-                    <span className="bc__book-count">{postsStatus === 'ready' ? (n === 0 ? 'No notes yet' : `${n} ${n === 1 ? 'note' : 'notes'}`) : '\u00a0'}</span>
+                    <span className="bc__book-count">{status === 'ready' ? (n === 0 ? 'Nothing yet' : `${n} ${n === 1 ? 'book' : 'books'}`) : '\u00a0'}</span>
                   </Link>
                 </li>
               )
@@ -209,6 +210,7 @@ export default function BookClubPage({ now = new Date() }) {
                 {open.rating && <p className="bc__stars">{starsText(open.rating)}</p>}
                 {open.finished && <p className="bc__muted">Finished {formatDate(open.finished)}</p>}
                 {open.note && <p>{open.note}</p>}
+                <Link className="pg-btn" to={bookPath(open.id)}>See the book page</Link>
                 {open.review_post_id && <Link className="pg-btn" to={`/post/${open.review_post_id}`}>Read my review</Link>}
               </div>
             </article>

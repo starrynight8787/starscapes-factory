@@ -8,6 +8,8 @@ import StoryLedgerPage from '../ledger/StoryLedgerPage'
 import YouTubeSeriesPage from '../den/YouTubeSeriesPage'
 import FreeEbookPage from '../ebook/FreeEbookPage'
 import BookClubPage from '../bookclub/BookClubPage'
+import BookShelfPage from '../bookclub/BookShelfPage'
+import BookPage from '../bookclub/BookPage'
 import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
 import WritingInTransitPage from '../entries/WritingInTransitPage'
 import LetsWriteStoryPage from '../stories/LetsWriteStoryPage'
@@ -18,6 +20,8 @@ export default function RoomRoutes({ room }) {
   return (
     <Routes>
       <Route index element={<RoomHome room={room} />} />
+      {room === 'knowledge-nook' && <Route path="book-club/shelf" element={<DoorGate room="knowledge-nook" door="book-club"><BookShelfPage /></DoorGate>} />}
+      {room === 'knowledge-nook' && <Route path="book-club/book/:id" element={<DoorGate room="knowledge-nook" door="book-club"><BookPage /></DoorGate>} />}
       <Route path=":area" element={<AreaRoute room={room} />} />
       <Route
         path="*"

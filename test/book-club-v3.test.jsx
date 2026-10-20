@@ -111,13 +111,13 @@ describe('The Shelf: a tile for each year', () => {
 })
 
 describe('the genres, as books on a bookshelf', () => {
-  it('has a book for each of the five genres, each a link to the posts with that tag, with its number of notes', async () => {
+  it('has a book for each of the five genres, each a link to its own shelf on the bookshelf page, with its number of books', async () => {
     h.posts = [post(1, ['book-club', 'leadership']), post(2, ['book-club', 'leadership']), post(3, ['book-club', 'fiction'])]
     page()
     const shelf = screen.getByRole('region', { name: 'Choose a genre' })
     const links = await within(shelf).findAllByRole('link')
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/blog?tag=leadership', '/blog?tag=fiction', '/blog?tag=memoir', '/blog?tag=self-growth', '/blog?tag=childrens'])
-    expect(links[0]).toHaveTextContent('2 notes'); expect(links[1]).toHaveTextContent('1 note'); expect(links[2]).toHaveTextContent('No notes yet')
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/knowledge-nook/book-club/shelf', '/knowledge-nook/book-club/shelf?genre=leadership', '/knowledge-nook/book-club/shelf?genre=fiction', '/knowledge-nook/book-club/shelf?genre=memoir', '/knowledge-nook/book-club/shelf?genre=self-growth', '/knowledge-nook/book-club/shelf?genre=childrens'])
+    expect(links[1]).toHaveTextContent('Leadership'); expect(links[3]).toHaveTextContent('Memoir')
     expect(within(shelf).getByText('Every book on this shelf is a genre. Pick one to see my notes.')).toBeInTheDocument()
   })
   it('gives each book its own look, five in all', () => {

@@ -55,16 +55,13 @@ describe('the page, as designed', () => {
 })
 
 describe('the genres', () => {
-  it('lists the five genres, each a link to the posts with that tag, with how many notes it has', async () => {
+  it('lists the five genres, each a link to its own shelf on the bookshelf page', async () => {
     h.posts = [post(1, ['book-club', 'leadership']), post(2, ['book-club', 'Leadership']), post(3, ['book-club', 'fiction']), post(4, ['leadership'])]
     page()
     const lead = await screen.findByRole('link', { name: /Leadership/ })
-    expect(lead).toHaveAttribute('href', '/blog?tag=leadership')
-    expect(lead).toHaveTextContent('2 notes')
-    expect(screen.getByRole('link', { name: /Fiction/ })).toHaveTextContent('1 note')
-    expect(screen.getByRole('link', { name: /Memoir/ })).toHaveTextContent('No notes yet')
-    expect(screen.getByRole('link', { name: /Self-growth/ })).toHaveAttribute('href', '/blog?tag=self-growth')
-    expect(screen.getByRole('link', { name: /Children's/ })).toHaveAttribute('href', '/blog?tag=childrens')
+    expect(lead).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=leadership')
+    expect(screen.getByRole('link', { name: /Self-growth/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=self-growth')
+    expect(screen.getByRole('link', { name: /Children's/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=childrens')
   })
 })
 

@@ -13,7 +13,7 @@ export const STATUSES = [
   { key: 'read', label: 'Read' },
   { key: 'upnext', label: 'Up next' },
 ]
-export const LIMITS = { title: 150, author: 100, note: 300, about: 1000, theme: 120, goalMax: 999 }
+export const LIMITS = { title: 150, author: 100, note: 300, about: 1000, theme: 120, goalMax: 999, review: 6000, quote: 600, quotePage: 60, series: 100, characters: 12, characterName: 60, characterLine: 160 }
 
 const tidy = (v) => String(v === null || v === undefined ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim()
 // A few paragraphs about a book: line breaks are kept (a blank line starts a new paragraph), spaces are tidied, and control characters are removed.
@@ -31,6 +31,42 @@ export function postIdFrom(text) {
   return /^[A-Za-z0-9-]{1,64}$/.test(s) ? s : ''
 }
 
+// Key characters are written one to a line in Admin as "Name: who they are" (the part after the colon is optional). They are kept as a list of { name, line }.
+export function parseCharacters(text) {
+  return String(text === null || text === undefined ? '' : text)
+    .split(/\r?\n/)
+    .map((l) => tidy(l))
+    .filter(Boolean)
+    .map((l) => { const i = l.indexOf(':'); return i > 0 ? { name: l.slice(0, i).trim(), line: l.slice(i + 1).trim() } : { name: l, line: '' } })
+}
+export const charactersToText = (list) => (Array.isArray(list) ? list : []).map((c) => (c && c.name ? (c.line ? `${c.name}: ${c.line}` : c.name) : '')).filter(Boolean).join('\n')
+
+// The books that share this book's series, with the state of each place in it: 'read', 'reading' or 'todo'. A series is only shown when the book names one.
+// The tiles run to the series' total (or to the highest number you have added); a number with no book added is simply "not yet".
+export function seriesTiles(books, book) {
+  if (!book || !book.series_name) return null
+  const mates = (Array.isArray(books) ? books : []).filter((b) => b && b.series_name && b.series_name.trim().toLowerCase() === book.series_name.trim().toLowerCase())
+  const top = Math.max(Number(book.series_total) || 0, ...mates.map((b) => Number(b.series_number) || 0), Number(book.series_number) || 0)
+  const total = Math.min(top, 999)
+  const state = (n) => { const m = mates.find((b) => Number(b.series_number) === n); return m ? (m.status === 'read' ? 'read' : m.status === 'reading' ? 'reading' : 'todo') : 'todo' }
+  const shown = Math.min(total, 12)
+  const tiles = Array.from({ length: shown }, (_, i) => ({ number: i + 1, state: state(i + 1), id: (mates.find((b) => Number(b.series_number) === i + 1) || {}).id || null }))
+  const readCount = Array.from({ length: total }, (_, i) => state(i + 1)).filter((s) => s === 'read').length
+  return { name: book.series_name, total, readCount, tiles, more: Math.max(0, total - shown) }
+}
+
+// The shelves: one for each genre, holding the books read or being read (newest finished first). Searching keeps only books whose title or author contains the words.
+export const matchesSearch = (book, query) => {
+  const q = tidy(query).toLowerCase()
+  if (!q) return true
+  return q.split(' ').every((w) => `${book.title || ''} ${book.author || ''}`.toLowerCase().includes(w))
+}
+export function genreShelves(books, query = '') {
+  const have = (Array.isArray(books) ? books : []).filter((b) => b && (b.status === 'read' || b.status === 'reading') && matchesSearch(b, query))
+  return GENRES.map((g) => ({ ...g, books: have.filter((b) => b.genre === g.key) }))
+}
+
+// Cleans one book before it is saved.
 // Checks one book before it is saved. Returns { ok: true, value } or { ok: false, errors } with plain words for each problem.
 export function cleanBook(input) {
   const i = input || {}
@@ -46,6 +82,14 @@ export function cleanBook(input) {
   const coverText = tidy(i.cover)
   const reviewText = tidy(i.review)
   const rating = tidy(i.rating)
+  const yearPublished = tidy(i.yearPublished)
+  const fullReview = tidyText(i.fullReview)
+  const quote = tidyText(i.quote)
+  const quotePage = tidy(i.quotePage)
+  const seriesName = tidy(i.seriesName)
+  const seriesNumber = tidy(i.seriesNumber)
+  const seriesTotal = tidy(i.seriesTotal)
+  const characters = parseCharacters(i.characters)
 
   if (!title) errors.title = 'Write the book\u2019s title.'
   else if (title.length > LIMITS.title) errors.title = `Keep the title to ${LIMITS.title} characters or fewer.`
@@ -61,6 +105,16 @@ export function cleanBook(input) {
   if (about.length > LIMITS.about) errors.about = `Keep what the book is about to ${LIMITS.about} characters or fewer.`
   if (coverText && !safeCover(coverText)) errors.cover = 'The cover must be a web address that starts https:// and ends .jpg, .png or .webp.'
   if (reviewText && !postIdFrom(reviewText)) errors.review = 'Paste the post\u2019s address (it ends /post/ and a code), or just the code.'
+  if (yearPublished && !(/^\d{4}$/.test(yearPublished) && Number(yearPublished) >= 1000 && Number(yearPublished) <= 2100)) errors.yearPublished = 'Write the year as four digits, for example 1982.'
+  if (fullReview.length > LIMITS.review) errors.fullReview = `Keep the review to ${LIMITS.review} characters or fewer.`
+  if (quote.length > LIMITS.quote) errors.quote = `Keep the quote to ${LIMITS.quote} characters or fewer.`
+  if (quotePage.length > LIMITS.quotePage) errors.quotePage = `Keep the page or chapter to ${LIMITS.quotePage} characters or fewer.`
+  if (seriesName.length > LIMITS.series) errors.seriesName = `Keep the series name to ${LIMITS.series} characters or fewer.`
+  if (seriesNumber && !(/^\d+$/.test(seriesNumber) && Number(seriesNumber) >= 1 && Number(seriesNumber) <= 999)) errors.seriesNumber = 'The place in the series is a whole number, for example 1.'
+  if (seriesTotal && !(/^\d+$/.test(seriesTotal) && Number(seriesTotal) >= 1 && Number(seriesTotal) <= 999)) errors.seriesTotal = 'The number of books in the series is a whole number, for example 25.'
+  if ((seriesNumber || seriesTotal) && !seriesName) errors.seriesName = 'Write the series name, or empty the series boxes.'
+  if (characters.length > LIMITS.characters) errors.characters = `Up to ${LIMITS.characters} characters, one to a line.`
+  else if (characters.some((c) => c.name.length > LIMITS.characterName || c.line.length > LIMITS.characterLine)) errors.characters = `Keep each name to ${LIMITS.characterName} letters and each description to ${LIMITS.characterLine}.`
   if (Object.keys(errors).length) return { ok: false, errors }
   return {
     ok: true,
@@ -76,6 +130,15 @@ export function cleanBook(input) {
       review_post_id: reviewText ? postIdFrom(reviewText) : null,
       note: note || null,
       about: about || null,
+      year_published: yearPublished ? Number(yearPublished) : null,
+      theme_book: i.themeBook === true || i.themeBook === 'true',
+      characters,
+      review: fullReview || null,
+      quote: quote || null,
+      quote_page: quotePage || null,
+      series_name: seriesName || null,
+      series_number: seriesNumber ? Number(seriesNumber) : null,
+      series_total: seriesTotal ? Number(seriesTotal) : null,
     },
   }
 }
@@ -121,3 +184,8 @@ export function spineClass(id) {
 }
 
 export const starsText = (rating) => (rating >= 1 && rating <= 5 ? `${'\u2605'.repeat(rating)}${'\u2606'.repeat(5 - rating)} (${rating} out of 5)` : '')
+
+// Where a book's own page and the bookshelf live
+export const BOOK_CLUB_PATH = '/knowledge-nook/book-club'
+export const bookPath = (id) => `${BOOK_CLUB_PATH}/book/${id}`
+export const shelfPath = (genre) => `${BOOK_CLUB_PATH}/shelf${genre ? `?genre=${encodeURIComponent(genre)}` : ''}`

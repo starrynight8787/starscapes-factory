@@ -6,14 +6,15 @@ import path from 'node:path'
 import { GENRES, STATUSES, LIMITS, cleanBook, cleanGoal, postIdFrom, shelfFor, yearsOf, progress, spineClass, starsText, safeCover, tidyText, aboutParagraphs } from '../src/bookclub/bookRules'
 
 const read = (p) => fs.readFileSync(path.resolve(p), 'utf8')
+const EXTRA = { year_published: null, theme_book: false, characters: [], review: null, quote: null, quote_page: null, series_name: null, series_number: null, series_total: null }
 const good = { title: '  The Culture Map ', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: '4', cover: 'https://img.example.com/c.jpg', review: 'https://starscapesfactory.com/post/abc-123', note: 'Changed how I run meetings.' }
 
 describe('a book', () => {
   it('is accepted when it is good, tidied up, and ready for the database', () => {
-    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.', about: null } })
+    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.', about: null, ...EXTRA } })
   })
   it('keeps everything optional really optional, as nothing (null)', () => {
-    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null, about: null })
+    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null, about: null, ...EXTRA })
     // with no status given it counts as "read", which needs a finishing date, so a bare title is asked for the date
     const bare = cleanBook({ title: 'Dune' })
     expect(bare.ok).toBe(false)

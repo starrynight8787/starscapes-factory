@@ -4,15 +4,15 @@ import PageLoading from '../components/PageLoading'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
 import useTitle from '../pages/useTitle'
 import { useOwnerCheck } from './useIsOwner'
-import { GENRES, STATUSES, cleanBook, cleanGoal } from '../bookclub/bookRules'
+import { GENRES, STATUSES, charactersToText, cleanBook, cleanGoal } from '../bookclub/bookRules'
 import { fetchBooks, fetchGoals, removeBook, saveBook, saveGoal } from '../bookclub/bookApi'
 import '../styles/pages.css'
 import './admin.css'
 import './adminv2.css'
 import AdminBanner from './AdminBanner'
 
-const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '', about: '' }
-const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '', about: b.about || '' })
+const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '', about: '', yearPublished: '', themeBook: false, characters: '', fullReview: '', quote: '', quotePage: '', seriesName: '', seriesNumber: '', seriesTotal: '' }
+const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '', about: b.about || '', yearPublished: b.year_published ? String(b.year_published) : '', themeBook: b.theme_book === true, characters: charactersToText(b.characters), fullReview: b.review || '', quote: b.quote || '', quotePage: b.quote_page || '', seriesName: b.series_name || '', seriesNumber: b.series_number ? String(b.series_number) : '', seriesTotal: b.series_total ? String(b.series_total) : '' })
 
 // The owner's tool at /admin/books: add the books you are reading, have read, or will read next, and set each year's reading goal and theme. The Book Club
 // page shows them. The database only lets the owner's account change anything.
@@ -111,6 +111,16 @@ export default function AdminBooks({ session }) {
           <Field id="ab-review" label="Your review or notes (optional)" help="Paste the post's address, or just the code at the end of it." error={errors.review}>{(p) => <input {...p} type="text" value={form.review} onChange={set('review')} />}</Field>
           <Field id="ab-note" label="A short note (optional)" help="A line on why this one, or what it taught you." error={errors.note}>{(p) => <input {...p} type="text" value={form.note} onChange={set('note')} />}</Field>
           <Field id="ab-about" label="What the book is about (optional)" help="A few lines. They show on the Book Club page under the book you are reading now. A blank line starts a new paragraph. Up to 1,000 letters." error={errors.about}>{(p) => <textarea {...p} rows={6} maxLength={1200} value={form.about} onChange={set('about')} />}</Field>
+          <h3 className="ab__sub">The book's own page</h3>
+          <Field id="ab-yearPublished" label="Year published (optional)" error={errors.yearPublished}>{(p) => <input {...p} type="text" inputMode="numeric" maxLength={4} value={form.yearPublished} onChange={set('yearPublished')} />}</Field>
+          <Field id="ab-themeBook" label="Was it part of that year's theme?">{(p) => <select {...p} value={String(form.themeBook)} onChange={(e) => setForm((f) => ({ ...f, themeBook: e.target.value === 'true' }))}><option value="false">No</option><option value="true">Yes</option></select>}</Field>
+          <Field id="ab-characters" label="Key characters (optional)" help="One to a line, like: Kinsey Millhone: private investigator. The part after the colon is optional. Up to 12." error={errors.characters}>{(p) => <textarea {...p} rows={5} value={form.characters} onChange={set('characters')} />}</Field>
+          <Field id="ab-fullReview" label="Your review (optional)" help="Shows under My review on the book's page. A blank line starts a new paragraph. Up to 6,000 letters." error={errors.fullReview}>{(p) => <textarea {...p} rows={8} value={form.fullReview} onChange={set('fullReview')} />}</Field>
+          <Field id="ab-quote" label="Favourite quote (optional)" help="Just the words, without quote marks." error={errors.quote}>{(p) => <textarea {...p} rows={3} value={form.quote} onChange={set('quote')} />}</Field>
+          <Field id="ab-quotePage" label="Where the quote is (optional)" help="For example: page 42, or chapter 3." error={errors.quotePage}>{(p) => <input {...p} type="text" value={form.quotePage} onChange={set('quotePage')} />}</Field>
+          <Field id="ab-seriesName" label="Series name (optional)" help="Fill this in only if the book is part of a series. Use the same name on every book in it, so they line up in the series tracker." error={errors.seriesName}>{(p) => <input {...p} type="text" value={form.seriesName} onChange={set('seriesName')} />}</Field>
+          <Field id="ab-seriesNumber" label="Its place in the series (optional)" help="For example 1 for the first book." error={errors.seriesNumber}>{(p) => <input {...p} type="number" min="1" value={form.seriesNumber} onChange={set('seriesNumber')} />}</Field>
+          <Field id="ab-seriesTotal" label="How many books in the series (optional)" error={errors.seriesTotal}>{(p) => <input {...p} type="number" min="1" value={form.seriesTotal} onChange={set('seriesTotal')} />}</Field>
           <div className="ab__buttons">
             <button type="submit" className="pg-btn sg-btn--primary">{editing ? 'Save changes' : 'Add the book'}</button>
             {editing && <button type="button" className="pg-btn" onClick={() => { setForm(BLANK); setEditing(''); setErrors({}) }}>Cancel</button>}

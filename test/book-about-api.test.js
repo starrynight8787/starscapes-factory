@@ -23,6 +23,7 @@ vi.mock('../src/supabaseClient', () => ({
 import { fetchBooks, saveBook } from '../src/bookclub/bookApi'
 import { LIMITS } from '../src/bookclub/bookRules'
 const read = (p) => fs.readFileSync(path.resolve(p), 'utf8')
+const DETAILS = 'year_published, theme_book, characters, review, quote, quote_page, series_name, series_number, series_total'
 const COLUMNS = 'id, title, author, genre, status, started, finished, rating, cover_url, review_post_id, note, created_at'
 beforeEach(() => { sb.results = []; sb.seen = [] })
 
@@ -30,12 +31,17 @@ describe('reading the books', () => {
   it('asks for the about text along with the rest', async () => {
     sb.results = [{ data: [{ id: 'a', about: 'Words.' }], error: null }]
     await expect(fetchBooks()).resolves.toEqual([{ id: 'a', about: 'Words.' }])
-    expect(sb.seen[0]).toEqual(['books', 'select', `${COLUMNS}, about`])
+    expect(sb.seen[0]).toEqual(['books', 'select', `${COLUMNS}, about, ${DETAILS}`])
   })
   it('asks again without it if the database has no about column yet, so the Book Club page never breaks before the SQL has been run', async () => {
     sb.results = [{ data: null, error: { message: 'column books.about does not exist' } }, { data: [{ id: 'a' }], error: null }]
     await expect(fetchBooks()).resolves.toEqual([{ id: 'a' }])
-    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, about`, COLUMNS])
+    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, about, ${DETAILS}`, `${COLUMNS}, about`])
+  })
+  it('asks for fewer columns again if the book page columns are not there yet (sql/book-details.sql), down to the plain list', async () => {
+    sb.results = [{ data: null, error: { message: 'column books.year_published does not exist' } }, { data: null, error: { message: 'column books.about does not exist' } }, { data: [{ id: 'a' }], error: null }]
+    await expect(fetchBooks()).resolves.toEqual([{ id: 'a' }])
+    expect(sb.seen.filter((s) => s[1] === 'select').map((s) => s[2])).toEqual([`${COLUMNS}, about, ${DETAILS}`, `${COLUMNS}, about`, COLUMNS])
   })
   it('does not ask again for any other trouble, and says it plainly', async () => {
     sb.results = [{ data: null, error: { message: 'boom' } }]
