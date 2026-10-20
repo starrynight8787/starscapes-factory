@@ -187,3 +187,12 @@
     width: 100%;
   }
 }
+
+/* A picture the owner chose for the featured room, in place of the line drawing */
+.hs__roomimg {
+  display: block;
+  width: 100%;
+  max-height: 240px;
+  object-fit: cover;
+  border-radius: 4px;
+}

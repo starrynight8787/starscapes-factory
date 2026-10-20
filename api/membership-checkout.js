@@ -16,6 +16,7 @@
 import { requireOwner } from '../lib/ownerGuard.js'
 import { requireUser } from '../lib/userGuard.js'
 import { handleReminders, isReminderRequest } from '../lib/membershipReminders.js'
+import { handleAdmin, isAdminRequest } from '../lib/membershipAdmin.js'
 import { serviceFetch } from '../lib/serviceKey.js'
 import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
@@ -88,6 +89,8 @@ export default async function handler(req, res) {
   if (isAccountRequest(req)) return handleAccount(req, res)
   // The daily reminder job (asked for by Vercel's scheduler, see vercel.json) is handled in lib/membershipReminders.js, for the same reason
   if (isReminderRequest(req)) return handleReminders(req, res)
+  // The owner's admin requests (Passes and members, later Promotions) are handled in lib/membershipAdmin.js, locked to the owner, for the same reason
+  if (isAdminRequest(req)) return handleAdmin(req, res)
   res.setHeader('Cache-Control', 'no-store')
 
   if (req.method === 'GET') {

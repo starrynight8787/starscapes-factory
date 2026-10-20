@@ -62,13 +62,13 @@ export function MembershipBox() {
   )
 }
 
-export function FeaturedRoomBox({ slug }) {
+export function FeaturedRoomBox({ slug, pictures }) {
   const room = channels.find((c) => c.slug === featuredRoomSlug(slug, channels.map((c) => c.slug)))
   if (!room) return null
   return (
     <section className="hs__card hs__room" aria-labelledby="hs-room-title">
       <div className="hs__roompic">
-        <RoomIcon room={room.slug} size={140} />
+        {pictures && pictures[room.slug] ? <img className="hs__roomimg" src={pictures[room.slug]} alt="" loading="lazy" /> : <RoomIcon room={room.slug} size={140} />}
         <span className="hs__plaque">{room.name}</span>
       </div>
       <div className="hs__roomtext">
@@ -109,14 +109,14 @@ export function LatestPostBox({ post }) {
   )
 }
 
-export default function HomeSections({ event, featured, post }) {
+export default function HomeSections({ event, featured, post, pictures }) {
   return (
     <div className="hs">
       <div className="hs__top">
         <NextEventBox event={event} />
         <MembershipBox />
       </div>
-      <FeaturedRoomBox slug={featured} />
+      <FeaturedRoomBox slug={featured} pictures={pictures} />
       <LatestPostBox post={post} />
     </div>
   )

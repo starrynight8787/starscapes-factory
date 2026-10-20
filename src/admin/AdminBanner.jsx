@@ -23,6 +23,7 @@ const Rect = (x, y, w, h, r, fill = BLUE) => <rect x={x} y={y} width={w} height=
 const Ln = (x1, y1, x2, y2) => <line x1={x1} y1={y1} x2={x2} y2={y2} {...line} />
 
 const ART = {
+  passes: (<g>{Rect(40, 34, 128, 72, 10)}<line x1="128" y1="34" x2="128" y2="106" stroke="#C9D8FF" strokeWidth="1.6" strokeDasharray="4 5" />{Ln(58, 58, 112, 58)}{Ln(58, 74, 104, 74)}{Ln(58, 90, 96, 90)}{STAR(148, 70, 13)}{Rect(150, 14, 74, 64, 8, LIGHT)}{Ln(164, 34, 210, 34)}{Ln(164, 50, 200, 50)}{STAR(24, 26, 9)}{SPARK(226, 104, 6)}</g>),
   console: (<g><path d="M60 100 L120 30 L150 58 L180 36 L230 100 Z" fill={BLUE} {...line} /><path d="M120 30 L104 48 L114 46 L120 56 L128 44 L138 48Z" fill="#fff" />{STAR(120, 16, 12)}{STAR(196, 22, 8)}{SPARK(30, 30, 7)}{SPARK(240, 60, 6)}{Ln(16, 100, 244, 100)}</g>),
   door: (<g>{Rect(80, 16, 70, 104, 6)}{Rect(90, 26, 50, 84, 4, LIGHT)}<circle cx="132" cy="70" r="4" fill="#F5C842" />{STAR(115, 6, 9)}{SPARK(30, 40, 7)}{SPARK(190, 50, 6)}{SPARK(180, 110, 5)}</g>),
   home: (<g><path d="M50 70 L115 18 L180 70 V120 H50Z" fill={BLUE} {...line} />{Rect(98, 80, 34, 40, 4, LIGHT)}{STAR(115, 8, 9)}{SPARK(30, 40, 7)}{SPARK(200, 40, 6)}</g>),

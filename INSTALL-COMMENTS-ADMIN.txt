@@ -1,0 +1,30 @@
+ADMIN: "MANAGE COMMENTS"   starscapes-comments-admin-20oct.zip   (SFW-249)
+(No Supabase step: the database already lets you read and delete every comment, I checked. Nothing to do in Stripe or Vercel. No server change at all.)
+
+WHAT IT DOES
+A new tile in Admin, "Manage comments" (in the Rooms group), links to /admin/comments, a page for you only:
+ * EVERY COMMENT on the Book Club books in one list, newest first: the book (a link to its page), who wrote it, the date and hour, the words (paragraphs kept), and a "New" tag for the last 7 days.
+ * COUNTS at the top: comments, new in the last 7 days, books with comments, people who have commented.
+ * FILTER by book (each shown with how many comments it has) and SEARCH the words, a name or a book's title.
+ * DELETE a comment: it asks first ("Delete this comment for good? The person who wrote it will not be told."), then takes it off the page and says it is done. If the database does not delete it (it does not complain when it refuses), the page says so plainly instead of pretending.
+ * Only comments on BOOKS exist on the site today. Comments on blog posts would be a new feature (SFW-249 explains why).
+
+HOW IT IS KEPT SAFE
+ * Only you can open the page (sign-in route, and an owner check). The database decides who may read or delete: only Book Club members and you can read comments, and only the writer or you can delete one. A test fails if that database rule is ever changed, because the page would then silently stop working.
+ * A comment's words are always shown as plain text, never as web code, so nobody can slip anything in through a comment.
+ * 55 tests, including 10 deliberate breakages (deleting without asking, reporting a failed delete as a success, showing words as web code, an unprotected route...): all caught.
+
+ONE THING I NOTICED (not changed): the database rule for who counts as a Book Club member (is_book_club_member) only counts memberships that are active or trialing. Every other pass also stays open while a failed payment is being retried (past_due). So a Book Club member whose payment is being retried can't read or write comments, though their other passes still work. It is one line of SQL to make it match, but it changes who may read the comments, so I have not done it without asking.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-comments-admin-20oct.zip
+ 3. python3 tools/add-comments-admin.py         (it checks four files first; if anything is unexpected it changes nothing)
+ 4. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it must still print 12)
+ 7. git add .
+    git status                                   (4 changed source files, 4 new source files, 3 new tests, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Admin: build the Manage comments page"
+    git push
+ 8. When Vercel says READY, sign in as the owner, open Admin and press "Manage comments". Today it should say "Nobody has commented on a book yet." (there are no comments). To try it for real: with a Book Club pass (or as yourself), write a comment on a book's page, come back here, find it, and delete it.

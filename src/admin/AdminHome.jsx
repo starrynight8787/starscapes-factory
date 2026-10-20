@@ -6,7 +6,7 @@ import useTitle from '../pages/useTitle'
 import { useOwnerCheck } from './useIsOwner'
 import { channels } from '../data/channels'
 import { cleanEvent, featuredRoomSlug, formatEventWhen, isoToLondonInputs } from '../home/homeRules'
-import { fetchFeaturedSlug, listEvents, removeEvent, saveEvent, saveFeaturedSlug } from '../home/homeApi'
+import { fetchFeaturedSlug, fetchRoomPictures, listEvents, removeEvent, removeRoomPicture, saveEvent, saveFeaturedSlug, saveRoomPicture } from '../home/homeApi'
 import { clearIntroId, fetchIntroId, saveIntroId } from '../den/youtubeApi'
 import { videoIdFrom } from '../den/youtubeRules'
 import '../styles/pages.css'
@@ -29,14 +29,15 @@ export default function AdminHome({ session }) {
   const [errors, setErrors] = useState({})
   const [problem, setProblem] = useState('')
   const [saved, setSaved] = useState('')
+  const [pictures, setPictures] = useState({}) // the pictures chosen for the featured room, by room
   const [intro, setIntro] = useState('') // the pinned YouTube video now chosen ('' if none)
   const [introText, setIntroText] = useState('')
   const [introError, setIntroError] = useState('')
 
   const load = useCallback(async () => {
     try {
-      const [list, slug, chosen] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => ''), fetchIntroId().catch(() => '')])
-      setEvents(list); setFeatured(featuredRoomSlug(slug, channels.map((c) => c.slug))); setIntro(chosen); setStatus('ready')
+      const [list, slug, chosen, pics] = await Promise.all([listEvents(), fetchFeaturedSlug().catch(() => ''), fetchIntroId().catch(() => ''), fetchRoomPictures().catch(() => ({}))])
+      setPictures(pics || {}); setEvents(list); setFeatured(featuredRoomSlug(slug, channels.map((c) => c.slug))); setIntro(chosen); setStatus('ready')
     } catch (e) { setProblem(e.message); setStatus('error') }
   }, [])
   useEffect(() => { if (owner) load() }, [owner, load])
@@ -57,6 +58,16 @@ export default function AdminHome({ session }) {
   async function submitFeatured(event) {
     event.preventDefault(); setProblem(''); setSaved('')
     try { await saveFeaturedSlug(featured); const room = channels.find((c) => c.slug === featured); setSaved(`${room ? room.name : 'That room'} is now the featured room.`) } catch (e) { setProblem(e.message) }
+  }
+
+  async function choosePicture(slug, file) {
+    if (!file) return
+    setProblem(''); setSaved('')
+    try { const url = await saveRoomPicture(slug, file, session.user.id); setPictures((p) => ({ ...p, [slug]: url })); const room = channels.find((c) => c.slug === slug); setSaved(`${room ? room.name : 'That room'} now shows your picture when it is the featured room.`) } catch (e) { setProblem(e.message) }
+  }
+  async function resetPicture(slug) {
+    setProblem(''); setSaved('')
+    try { await removeRoomPicture(slug); setPictures((p) => { const n = { ...p }; delete n[slug]; return n }); setSaved('Back to the line drawing.') } catch (e) { setProblem(e.message) }
   }
 
   async function submitIntro(event) {
@@ -88,6 +99,23 @@ export default function AdminHome({ session }) {
           </Field>
           <button type="submit" className="pg-btn sg-btn--primary">Save the featured room</button>
         </form>
+      </section>
+      <section className="ad-card ad-group" aria-labelledby="ah-pics-title">
+        <h2 id="ah-pics-title">Featured room pictures</h2>
+        <p className="ad-note">The featured room box on the home page shows a line drawing. Choose your own picture for any room here (JPG, PNG or WebP, up to 3 MB) and it is used whenever that room is featured.</p>
+        <ul className="ah__pics">
+          {channels.map((c) => (
+            <li key={c.slug} className="ah__pic">
+              {pictures[c.slug] ? <img className="ah__thumb" src={pictures[c.slug]} alt="" /> : <span className="ah__thumb ah__thumb--none" aria-hidden="true">Drawing</span>}
+              <span className="ah__picname">{c.name}</span>
+              <label className="pg-btn ah__choose">
+                {pictures[c.slug] ? 'Change picture' : 'Choose picture'}
+                <input className="ah__file" type="file" accept="image/jpeg,image/png,image/webp" onChange={(e) => { choosePicture(c.slug, e.target.files && e.target.files[0]); e.target.value = '' }} />
+              </label>
+              {pictures[c.slug] && <button type="button" className="pg-btn" onClick={() => resetPicture(c.slug)}>Use the drawing</button>}
+            </li>
+          ))}
+        </ul>
       </section>
       <section className="ad-card ad-group" aria-labelledby="ah-intro-title">
         <h2 id="ah-intro-title">YouTube intro video</h2>

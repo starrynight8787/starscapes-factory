@@ -27,10 +27,12 @@ import NewProduct from './pages/NewProduct'
 import AdminConsole from './admin/AdminConsole'
 import OpenDoors from './admin/OpenDoors'
 import AdminSuggestions from './admin/AdminSuggestions'
+import AdminComments from './admin/AdminComments'
 import AdminBooks from './admin/AdminBooks'
 import AdminStories from './admin/AdminStories'
 import AdminPosts from './admin/AdminPosts'
 import AdminHome from './admin/AdminHome'
+import AdminMembers from './admin/AdminMembers'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -88,10 +90,12 @@ export default function App() {
 <Route path="/admin" element={ <ProtectedRoute session={session}> <AdminConsole session={session} /> </ProtectedRoute> } />
 <Route path="/admin/doors" element={ <ProtectedRoute session={session}> <OpenDoors session={session} /> </ProtectedRoute> } />
 <Route path="/admin/suggestions" element={ <ProtectedRoute session={session}> <AdminSuggestions session={session} /> </ProtectedRoute> } />
+<Route path="/admin/comments" element={ <ProtectedRoute session={session}> <AdminComments session={session} /> </ProtectedRoute> } />
 <Route path="/admin/books" element={ <ProtectedRoute session={session}> <AdminBooks session={session} /> </ProtectedRoute> } />
 <Route path="/admin/stories" element={ <ProtectedRoute session={session}> <AdminStories session={session} /> </ProtectedRoute> } />
 <Route path="/admin/posts" element={ <ProtectedRoute session={session}> <AdminPosts session={session} /> </ProtectedRoute> } />
 <Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />
+<Route path="/admin/members" element={ <ProtectedRoute session={session}> <AdminMembers session={session} /> </ProtectedRoute> } />
           <Route
             path="/new"
             element={

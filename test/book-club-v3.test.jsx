@@ -112,19 +112,19 @@ describe('The Shelf: a tile for each year', () => {
 })
 
 describe('the genres, as books on a bookshelf', () => {
-  it('has a book for each genre (all 20 of them), each a link to its own shelf on the bookshelf page, with its number of books', async () => {
+  it('has a book for each of the five main genres (the first five of the 20), each a link to its own shelf on the bookshelf page, with its number of books', async () => {
     h.posts = [post(1, ['book-club', 'leadership']), post(2, ['book-club', 'leadership']), post(3, ['book-club', 'fiction'])]
     page()
     const shelf = screen.getByRole('region', { name: 'Choose a genre' })
     const links = await within(shelf).findAllByRole('link')
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/knowledge-nook/book-club/shelf', ...GENRES.map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`)])
-    expect(GENRES).toHaveLength(20)
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/knowledge-nook/book-club/shelf', ...GENRES.slice(0, 5).map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`)])
+    expect(GENRES.slice(0, 5).map((g) => g.key)).toEqual(['leadership', 'fiction', 'memoir', 'self-growth', 'childrens']) // the other genres are on the bookshelf page's filter
     expect(links[1]).toHaveTextContent('Leadership'); expect(links[3]).toHaveTextContent('Memoir')
     expect(within(shelf).getByText('Every book on this shelf is a genre. Pick one to see my notes.')).toBeInTheDocument()
   })
-  it('gives the books five looks between them, repeating in order along the shelf (one book for each of the 20 genres)', () => {
+  it('gives each of the five books its own look, five in all', () => {
     const { container } = page()
-    expect([...container.querySelectorAll('.bc__spines > li')].map((li) => [...li.classList].find((c) => /bc__bookitem--\d/.test(c)))).toEqual(GENRES.map((_, n) => `bc__bookitem--${n % 5}`))
+    expect([...container.querySelectorAll('.bc__spines > li')].map((li) => [...li.classList].find((c) => /bc__bookitem--\d/.test(c)))).toEqual(['bc__bookitem--0', 'bc__bookitem--1', 'bc__bookitem--2', 'bc__bookitem--3', 'bc__bookitem--4'])
   })
 })
 

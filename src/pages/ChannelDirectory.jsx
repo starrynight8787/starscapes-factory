@@ -5,12 +5,13 @@ import { roomImages, roomPath } from '../data/roomImages'
 import RoomIcon from '../components/RoomIcon'
 import { ROOM_ICONS } from '../components/roomIcons'
 import HomeSections from '../home/HomeSections'
+import * as homeApi from '../home/homeApi'
 import { fetchFeaturedSlug, fetchLatestPost, fetchNextEvent } from '../home/homeApi'
 import '../styles/site.css'
 
 // The starry backdrop behind the floor plan (the "Home v3" design): a soft nebula, faint orbits, two constellations, a sweep of light and twelve glints.
 // It is decoration only, so it is hidden from screen readers.
-const GLINTS = [[6, 30], [15, 10], [11, 43], [3, 56], [94, 22], [89, 9], [92, 43], [97, 59], [20, 94], [77, 95], [43, 3], [59, 2]]
+const GLINTS = [[6, 30], [15, 10], [11, 43], [3, 56], [94, 22], [89, 9], [92, 43], [97, 59], [20, 94], [77, 95], [43, 3], [59, 2], [25, 26], [34, 6], [66, 5], [75, 12], [8, 18], [17, 70], [4, 76], [90, 70], [85, 88], [30, 90], [52, 92], [68, 90], [96, 12], [2, 8], [48, 94], [13, 82]]
 function HeroArt() {
   return (
     <div className="sf-hero__art" aria-hidden="true">
@@ -27,6 +28,18 @@ function HeroArt() {
           {[[107, 250], [131, 356], [128, 466], [154, 566], [70, 689], [1342, 300], [1306, 400], [1372, 516], [1296, 630], [1388, 740]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="4" />)}
         </g>
       </svg>
+      <svg className="sf-planet" viewBox="0 0 130 90" focusable="false">
+        <g transform="rotate(-18 65 45)">
+          <path d="M9 45 A56 15 0 0 1 121 45" fill="none" stroke="#c9d8ff" strokeWidth="3" strokeLinecap="round" />
+          <circle cx="65" cy="45" r="26" fill="#7c9be8" stroke="#dce6ff" strokeWidth="2" />
+          <path d="M42 36 Q65 30 88 36 M40 48 Q65 42 90 48 M44 60 Q65 55 86 60" fill="none" stroke="#dce6ff" strokeWidth="2" opacity=".5" />
+          <path d="M9 45 A56 15 0 0 0 121 45" fill="none" stroke="#e8f0ff" strokeWidth="3.5" strokeLinecap="round" />
+        </g>
+      </svg>
+      <span className="sf-moon" />
+      <span className="sf-goldstar" />
+      <span className="sf-shoot sf-shoot--l" />
+      <span className="sf-shoot sf-shoot--r" />
       {GLINTS.map(([x, y], i) => <span key={i} className="sf-glint" style={{ left: `${x}%`, top: `${y}%`, '--g': i }} />)}
     </div>
   )
@@ -77,11 +90,11 @@ export default function ChannelDirectory() {
   const navigate = useNavigate()
   const [active, setActive] = useState(null)
   // The three extras under the floor plan. A problem with any of them just means that box has nothing to show.
-  const [extras, setExtras] = useState({ event: null, featured: '', post: null })
+  const [extras, setExtras] = useState({ event: null, featured: '', post: null, pictures: {} })
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchNextEvent().catch(() => null), fetchFeaturedSlug().catch(() => ''), fetchLatestPost().catch(() => null)]).then(([event, featured, post]) => {
-      if (!cancelled) setExtras({ event, featured, post })
+    Promise.all([fetchNextEvent().catch(() => null), fetchFeaturedSlug().catch(() => ''), fetchLatestPost().catch(() => null), Promise.resolve().then(() => homeApi.fetchRoomPictures()).catch(() => ({}))]).then(([event, featured, post, pictures]) => {
+      if (!cancelled) setExtras({ event, featured, post, pictures: pictures || {} })
     })
     return () => {
       cancelled = true
@@ -176,7 +189,7 @@ export default function ChannelDirectory() {
       </section>
 
       {/* ---------- Next event, membership, the featured room and the latest post ---------- */}
-      <HomeSections event={extras.event} featured={extras.featured} post={extras.post} />
+      <HomeSections event={extras.event} featured={extras.featured} post={extras.post} pictures={extras.pictures} />
     </div>
   )
 }
