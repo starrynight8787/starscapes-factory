@@ -1,0 +1,18 @@
+BRING THE ROOM PAGE TESTS UP TO DATE WITH THE REDESIGN   starscapes-room-tests-20oct.zip   (SFW-244)
+(One test file only. No site change, no build needed, nothing to do in Supabase, Stripe or Vercel.)
+
+Four tests in test/room-pages.test.jsx described the room pages as they were before your redesign. Checked against the code, each page now does something DELIBERATE and different, so the tests now describe what the pages really do:
+ 1. WRITING IN TRANSIT (a notebook-style page): shows its latest entry big, with a "Read the entry" button, instead of a list of entries. The tag test (capitals, spaces, hyphens count as the same) now checks that the entry tagged "Writing in Transit" appears there.
+ 2. LEADERSHIP BLOG: has its own layout (Featured, More ways in, Building Blocks, Latest posts, More from the blog). The test now checks every published post of the room is there, each linking to its post, and that no other room's post and no draft appears.
+ 3. "COMPACT LIST" TEST: still true for the plain list pages (no pictures, even for a post with one); the part that used Writing in Transit now checks it uses the entry template, not the compact list.
+ 4. FREE EBOOK: a door that has a page but is not open yet now tells visitors "This door isn't open yet. Come back soon.", with the way back to the room (only you see the page behind it). It is no longer in the "Page not found" list.
+Nothing was weakened: the test for other rooms' posts and for drafts still fails if either appears. I checked this by breaking the pages five ways (all five caught).
+
+INSTALL (from the project folder)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-room-tests-20oct.zip
+ 3. npm test -- test/room-pages.test.jsx              (it should say all 43 tests passed)
+ 4. git add .
+    git status                                          (only test/room-pages.test.jsx and INSTALL-ROOM-TESTS.txt should be listed)
+    git commit -m "Bring the room page tests up to date with the redesign"
+    git push

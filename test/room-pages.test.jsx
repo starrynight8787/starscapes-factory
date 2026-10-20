@@ -92,13 +92,17 @@ describe('an area page', () => {
     const { container } = open('/idea-hatchery/stop-motion')                         // the post is tagged "Stop Motion"
     await wait(container)
     expect(titles(container)).toContain('A tiny world in clay')
-    const bay = open('/explorers-bay/writing-in-transit')                            // tagged "Writing in Transit"
-    await vi.waitFor(() => expect(titles(bay.container)).toEqual(['Notes from a night train']))
+    const bay = open('/explorers-bay/writing-in-transit')                            // tagged "Writing in Transit": a notebook-style page, which shows its latest entry big
+    await vi.waitFor(() => expect(bay.container.querySelector('.en__latest .en__title')?.textContent).toBe('Notes from a night train'))
   })
-  it('lists every published post of the room on the Blog page, whatever its tags, but never another room\'s', async () => {
+  it('shows every published post of the room on the Blog page, whatever its tags, but never another room\'s (the Blog page has its own layout: Featured, Latest posts and so on)', async () => {
     const { container } = open('/leadership-lounge/blog')
     await wait(container)
-    expect(titles(container)).toEqual(['A note on meetings', 'What the middle is for'])
+    await vi.waitFor(() => expect(container.textContent).toContain('A note on meetings'))
+    expect(container.textContent).toContain('What the middle is for')
+    for (const other of ['Notes from a night train', 'The harbour at night', 'A desk post', 'Ten prompts for a wet Tuesday', 'The unfinished one']) expect(container.textContent, other).not.toContain(other)
+    expect(screen.getAllByRole('link', { name: /A note on meetings/ })[0]).toHaveAttribute('href', '/post/l-2')
+    expect(screen.getAllByRole('link', { name: /What the middle is for/ })[0]).toHaveAttribute('href', '/post/l-1')
   })
   it('says there is nothing yet, rather than showing an empty page', async () => {
     db.state.posts = db.state.posts.filter((p) => p.channel !== 'explorers-bay')
@@ -150,15 +154,17 @@ describe('galleries and lists', () => {
     expect(card.querySelector('img')).toBeNull()
     expect(card.className).not.toContain('has-image')
   })
-  it('keeps a list page as compact rectangles with no pictures, even for a post that has one', async () => {
+  it('keeps a list page as compact rectangles with no pictures, even for a post that has one (and a notebook-style page uses the entry template)', async () => {
     const { container } = open('/leadership-lounge/leading-from-the-middle')       // this post has a picture
     await wait(container)
     expect(titles(container)).toEqual(['What the middle is for'])
     expect(container.querySelector('.rp-entries').className).not.toContain('gallery')
     expect(container.querySelectorAll('.rp-entry img')).toHaveLength(0)
-    const list = open('/explorers-bay/writing-in-transit')
-    await vi.waitFor(() => expect(list.container.querySelectorAll('.rp-entry').length).toBe(1))
-    expect(list.container.querySelectorAll('.rp-entry img')).toHaveLength(0)
+    // a notebook-style page (Writing in Transit) uses the entry template instead: its latest entry big, not the compact list
+    const notebook = open('/explorers-bay/writing-in-transit')
+    await vi.waitFor(() => expect(notebook.container.querySelector('.en__latest')).toBeTruthy())
+    expect(notebook.container.querySelector('.rp-entries')).toBeNull()
+    expect(within(notebook.container.querySelector('.en__latest')).getByRole('link', { name: 'Read the entry' })).toHaveAttribute('href', '/post/e-1')
   })
   it('hides a picture that will not load, and keeps the title and date', async () => {
     const { container } = open('/explorers-bay/photography')
@@ -179,7 +185,6 @@ describe('galleries and lists', () => {
 // ---------- pages that are not there ----------
 describe('pages that do not exist', () => {
   it.each([
-    ['/leadership-lounge/free-ebook', 'a locked object has no page'],
     ['/leadership-lounge/audiobook', 'an outside link has no page of its own'],
     ['/leadership-lounge/udemy-course', 'an outside link has no page of its own'],
     ['/explorers-bay/coming-soon', 'a locked object has no page'],
@@ -193,6 +198,12 @@ describe('pages that do not exist', () => {
     open(url)
     expect(screen.getByRole('heading', { level: 1, name: 'Page not found' })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to/ })).toHaveAttribute('href', `/${url.split('/')[1]}`)
+  })
+  it('tells a visitor that a door which has a page, but is not open yet, is not open yet, with the way back to the room (only the owner sees the page behind it)', () => {
+    open('/leadership-lounge/free-ebook')
+    expect(screen.getByRole('heading', { level: 1, name: "This door isn't open yet" })).toBeInTheDocument()
+    expect(screen.getByText('Come back soon.')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /Back to Leadership Lounge/ })).toHaveAttribute('href', '/leadership-lounge')
   })
   it('does not even ask the database when the page does not exist', () => {
     open('/idea-hatchery/nonsense')
