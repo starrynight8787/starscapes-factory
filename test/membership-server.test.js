@@ -135,8 +135,8 @@ describe('the Stripe checkout it asks for', () => {
     const f = sessionForm(fn)
     expect(f.get('mode')).toBe('subscription')
     expect(f.get('line_items[0][price_data][unit_amount]')).toBe('1000'); expect(f.get('line_items[0][price_data][currency]')).toBe('gbp'); expect(f.get('line_items[0][price_data][recurring][interval]')).toBe('month'); expect(f.get('line_items[0][quantity]')).toBe('1')
-    expect(f.get('line_items[0][price_data][product_data][name]')).toBe('Starscapes Factory passes: 3 passes')
-    expect(f.get('line_items[0][price_data][product_data][description]')).toBe("The Author's Notebook, Blueprints, Book Club")
+    expect(f.get('line_items[0][price_data][product_data][name]')).toBe("Starscapes Factory passes: The Author's Notebook, Blueprints and Book Club")
+    expect(f.get('line_items[0][price_data][product_data][description]')).toBe('Billed every month.')
     expect(f.get('discounts[0][coupon]')).toBe('launch-off50-first-year-month'); expect(f.get('discounts[0][promotion_code]')).toBeNull()
     expect(f.get('client_reference_id')).toBe(USER.id); expect(f.get('customer_email')).toBe(USER.email); expect(f.get('customer')).toBeNull()
     expect(f.get('success_url')).toBe('https://starscapesfactory.com/membership/welcome?session_id={CHECKOUT_SESSION_ID}'); expect(f.get('cancel_url')).toBe('https://starscapesfactory.com/membership?checkout=cancelled')
@@ -172,9 +172,9 @@ describe('the Stripe checkout it asks for', () => {
   it('charges 12 pounds for all five passes, and lists them all', async () => {
     const fn = withNetwork(); await call({ body: { ...good, passes: ['book-club', 'come-write-with-me', 'blueprints', 'early-drafts', 'authors-notebook'] } })
     const f = sessionForm(fn)
-    expect(f.get('line_items[0][price_data][unit_amount]')).toBe('1200'); expect(f.get('line_items[0][price_data][product_data][name]')).toBe('Starscapes Factory passes: 5 passes')
+    expect(f.get('line_items[0][price_data][unit_amount]')).toBe('1200'); expect(f.get('line_items[0][price_data][product_data][name]')).toBe("Starscapes Factory passes: The Author's Notebook, Early drafts and book background, Come Write With Me, Blueprints and Book Club")
     expect(f.get('subscription_data[metadata][passes]')).toBe('authors-notebook,early-drafts,come-write-with-me,blueprints,book-club')
-    expect(f.get('line_items[0][price_data][product_data][description]')).toBe("The Author's Notebook, Early drafts and book background, Come Write With Me, Blueprints, Book Club")
+    expect(f.get('line_items[0][price_data][product_data][description]')).toBe('Billed every month.')
   })
   it('uses a promo code INSTEAD of the launch offer (Stripe allows one discount), and says so on the record', async () => {
     const fn = withNetwork({ promo: { id: 'promo_1', coupon: { valid: true, percent_off: 20, duration: 'repeating', duration_in_months: 3 } } })

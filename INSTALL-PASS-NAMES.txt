@@ -1,0 +1,29 @@
+NAME THE PASSES ON THE CHECKOUT LINE AND THE INVOICE   starscapes-pass-names-20oct.zip
+(No Supabase step. Nothing to do in Stripe or Vercel.)
+
+WHAT CHANGES
+The line a member sees on Stripe's checkout page, the receipt and the invoice used to say "Starscapes Factory passes: 4 passes". It now names them:
+    Starscapes Factory passes: The Author's Notebook, Early drafts and book background, Come Write With Me and Blueprints
+(one pass: "Starscapes Factory pass: Blueprints"). Under it the checkout page says "Billed every month." or "Billed every year." (it used to repeat the names there).
+AFTER A CHANGE OF PASSES the invoice names the new set too. A change used to use one general product called "Starscapes Factory passes", which would have printed no names. Now a change uses a product for exactly the passes the
+member is changing to. The product has the same id every time for the same set, so at most 31 ever exist in Stripe (you will see them under Product catalogue, named "Starscapes Factory passes: ..."), and they are all reused. Stripe
+needs them to be ACTIVE (a product made on the spot by a checkout is filed as inactive and cannot be used for a change), and the code makes sure of it each time.
+NOT CHANGED: what a member pays, the VAT, the launch offer, the renewal emails (they already name the passes).
+EXISTING TEST SUBSCRIPTIONS keep their old line; the new line shows on the next checkout and on any change.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-pass-names-20oct.zip
+ 3. python3 tools/add-pass-names.py            (it checks the two files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                        (it should still print 12)
+ 7. git add .
+    git status                                 (no files ending .before- should be listed)
+    git commit -m "Name the passes on the checkout line and the invoice, including after a change of passes"
+    git push
+ 8. Wait for Vercel to say READY. Then make a test purchase (cancel the current test subscription first if the page sends you to "change"):
+    the checkout page and the invoice should name the passes you chose. Then change your passes on My passes (only possible from 13 November for your current test membership, or buy afresh)
+    and check the new invoice names the new set.
+
+(The unzip also replaces two existing test files, membership-server.test.js and membership-account-server.test.js, and adds membership-passes-line.test.js.)

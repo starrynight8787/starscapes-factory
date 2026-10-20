@@ -149,8 +149,14 @@ describe('changing passes (action change)', () => {
   it('prices a change under an ACTIVE product of its own, never the subscription\u2019s inactive one (the bug that stopped the first real change)', async () => {
     const fn = withNetwork(); await call({ body: { action: 'change', passes: ['blueprints'] } })
     const f = new URLSearchParams(updateOf(fn).init.body)
-    expect(f.get('items[0][price_data][product]')).toBe('starscapes-passes'); expect(f.toString()).not.toContain('prod_1')
+    expect(f.get('items[0][price_data][product]')).toBe('starscapes-passes-blueprints'); expect(f.toString()).not.toContain('prod_1')
     const made = fn.calls.find((c) => c.url.endsWith('/v1/products')); expect(new URLSearchParams(made.init.body).get('active')).toBe('true')
+  })
+  it('names the passes on the invoice after a change: a product for exactly the passes they are changing TO, with the same id each time for the same set', async () => {
+    const fn = withNetwork(); await call({ body: { action: 'change', passes: ['blueprints', 'authors-notebook', 'book-club'], consent: true } })
+    const made = new URLSearchParams(fn.calls.find((c) => c.url.endsWith('/v1/products')).init.body)
+    expect([made.get('id'), made.get('name'), made.get('active')]).toEqual(['starscapes-passes-authors-notebook-blueprints-book-club', "Starscapes Factory passes: The Author's Notebook, Blueprints and Book Club", 'true'])
+    expect(new URLSearchParams(updateOf(fn).init.body).get('items[0][price_data][product]')).toBe('starscapes-passes-authors-notebook-blueprints-book-club')
   })
   it('says kindly, and changes nothing, if that product cannot be made', async () => {
     const fn = withNetwork({ productFails: true }); const r = await call({ body: { action: 'change', passes: ['blueprints'] } })
