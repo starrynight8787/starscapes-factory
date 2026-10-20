@@ -207,6 +207,10 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
     const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the free ebook, the ebook and our free blog posts/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
     expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube\)/)
   })
+  it('says that links to other websites, such as the Substack, leave this site and have their own privacy policies, and the site really does link to the Substack', () => {
+    expect(section('Who we share your information with')).toMatch(/Our site links to other websites, such as our Substack\. Once you follow a link you have left this site, and that website.s own privacy policy applies\./)
+    expect(read('src/draftingdesk/draftingData.js')).toMatch(/OVERTHINK_ARCHIVE_URL = 'https:\/\/[a-z0-9.-]*substack\.com/)
+  })
   it('keeps emails and messages to us for 2 years, as Gill decided on 20 October 2026', () => {
     expect(section('How long we keep it')).toMatch(/Emails and messages to us:\*\* 2 years, then deleted\./); expect(privacy()).not.toMatch(/\[2 years\]/)
   })

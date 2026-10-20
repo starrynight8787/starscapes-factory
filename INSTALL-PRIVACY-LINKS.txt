@@ -1,0 +1,24 @@
+PRIVACY POLICY: LINKS TO OTHER WEBSITES   starscapes-privacy-links-20oct.zip
+(Words only, one sentence. NO Supabase step, nothing to do in Stripe or Vercel. This goes on top of the two privacy packages you already installed. The page is still owner-only, under the Draft banner.)
+
+WHAT IT CHANGES (the privacy page and the note at the top of src/data/legalPages.js; nothing else)
+ * One new sentence at the end of "Who we share your information with":
+     "Our site links to other websites, such as our Substack. Once you follow a link you have left this site, and that website's own privacy policy applies."
+ * A line in the note at the top of legalPages.js saying why it is there (SFW-236).
+
+THE TESTS now also fail if the sentence is removed, or if the Substack link in src/draftingdesk/draftingData.js is ever taken out while the sentence stays. So if you close the Substack, change that link and the test will remind you to take the sentence out too.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-privacy-links-20oct.zip
+ 3. python3 tools/add-privacy-links.py        (it checks the file first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Privacy policy: a sentence about links to other websites such as the Substack"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then, signed in as the owner, open starscapesfactory.com/page/privacy and look at the end of "Who we share your information with".
+
+(The unzip also replaces one existing test file, legal-pages.test.jsx.)

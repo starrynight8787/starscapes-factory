@@ -17,6 +17,7 @@
 //    and its plan limits (SFW-188); the Founders' wall (display names, opt-in) and a newsletter each need their own lines when built; and the solicitor should check the YouTube wording, the proof that someone agreed to open their passes
 //    straight away (deleted with the account, though Stripe keeps a copy), and the sentence that we do not look at who voted for what (Gill's promise): see SFW-234. Re-check against the ICO's right-to-be-informed checklist near launch:
 //    the ICO says its guidance is under review after the Data (Use and Access) Act.
+//    A sentence about links to other websites such as the Substack was added on 20 October (SFW-236). If the Substack link in src/draftingdesk/draftingData.js is ever removed, take the sentence out too.
 //  * RETURNS: [RETURN ADDRESS] is a gap. Decided 17 October: returns go to the registered office (a forwarding address); it goes in once the large-print courier figures are
 //    in (SFW-185). Section 3 says the print studio takes photos before an order is packed: check that with the print service. The cancellation form's blanks are written
 //    in (round brackets) so they are not counted as gaps.
@@ -168,7 +169,8 @@ export const LEGAL_PAGES = [
         "paragraphs": [
           "We share only what each of these needs to do its job:",
           "* **Creative Hub, run by Printspace Studios Limited** (company number 06043884, 74 Kingsland Road, London E2 8DL; its privacy policy is at [https://www.theprintspace.co.uk/privacy-policy/](https://www.theprintspace.co.uk/privacy-policy/)) makes and posts your order. It receives your name, delivery address, phone number and what you ordered.\n* **Stripe** takes your payments for prints and passes. It receives your name, email and payment details, and keeps the payment records for your passes.\n* **Supabase** stores our database and sign-ins, so it holds your account and order details.\n* **Vercel** hosts the website, so it sees technical details of visits.\n* **Resend** sends our emails. That means emails about your orders, account and passes, such as confirmations, receipts and password resets, and, if you sign up for the free ebook, the ebook and our free blog posts. It receives your email address.\n* **YouTube (Google)**, only if you press play on a video. It can then see your visit and set its own cookies.\n* **Our accountants and accounting software** receive sales and invoice records.\n* **Authorities**, but only where the law requires it.",
-          "We don't sell your information, and we don't share it for other people's marketing."
+          "We don't sell your information, and we don't share it for other people's marketing.",
+          "Our site links to other websites, such as our Substack. Once you follow a link you have left this site, and that website's own privacy policy applies."
         ]
       },
       {
