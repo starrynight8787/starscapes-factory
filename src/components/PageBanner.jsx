@@ -9,18 +9,28 @@ export function BannerPicture({ art }) {
   return <BannerArt name={art} />
 }
 
-export default function PageBanner({ chip, title, subtitle, picture, art, children }) {
+// A row of translucent books standing along the bottom edge of a starry banner (Figma: "Option B: a shelf of books along the bottom"). Decoration only.
+export function ShelfBooks() {
+  return (
+    <span className="pb__shelf" aria-hidden="true">
+      {Array.from({ length: 64 }, (_, i) => <span key={i} className="pb__book" />)}
+    </span>
+  )
+}
+
+export default function PageBanner({ chip, title, subtitle, picture, art, shelf, children }) {
   // art: the name of a starry line-art picture (see BannerArt), or 'plain' for stars only. It makes the banner starry and replaces the picture panel.
   return (
-    <header className={`pb${art ? ' pb--starry' : ''}`}>
+    <header className={`pb${art || shelf ? ' pb--starry' : ''}${shelf ? ' pb--shelf' : ''}`}>
       <div className="pb__text">
         {chip && <p className="pb__chip">{chip}</p>}
         <h1 className="pb__title">{title}</h1>
         {subtitle && <p className="pb__subtitle">{subtitle}</p>}
         {children && <div className="pb__buttons">{children}</div>}
       </div>
-      {art && <BannerPicture art={art} />}
-      {!art && picture && (
+      {art && !shelf && <BannerPicture art={art} />}
+      {shelf && <ShelfBooks />}
+      {!art && !shelf && picture && (
         <div className="pb__picture">
           <img src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
         </div>

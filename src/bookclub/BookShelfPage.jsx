@@ -52,7 +52,7 @@ export default function BookShelfPage() {
   return (
     <main className="rp bc bs">
       <p className="rp-back"><Link to={BOOK_CLUB_PATH}>← Back to Book Club</Link></p>
-      <PageBanner chip="Members" title="The Bookshelf" subtitle="Every book I've read, shelved by genre. Pick a spine to see my notes." art="nook" />
+      <PageBanner chip="Members" title="The Bookshelf" subtitle="Every book I've read, shelved by genre. Pick a spine to see my notes." art="nook" shelf />
 
       <div className="bs__bar">
         <nav className="bs__jump" aria-label="Jump to a shelf">

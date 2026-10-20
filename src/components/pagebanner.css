@@ -202,3 +202,18 @@
     margin: 0 auto;
   }
 }
+
+/* The shelf banner: books standing along the bottom edge of the starry sky. */
+.pb--shelf { padding-bottom: 72px; min-height: 140px; }
+.pb__shelf { position: absolute; left: 0; right: 0; bottom: 0; display: flex; align-items: flex-end; gap: 4px; height: 40px; padding: 0 0 0 0; overflow: hidden; z-index: 1; pointer-events: none; border-bottom: 2px solid rgba(201, 216, 255, 0.7); }
+.pb__book { flex: none; width: 16px; border: 1px solid rgba(201, 216, 255, 0.75); border-bottom: 0; border-radius: 2px 2px 0 0; background: rgba(140, 166, 232, 0.55); }
+.pb__book:nth-child(3n) { width: 20px; }
+.pb__book:nth-child(4n) { width: 12px; background: rgba(170, 190, 245, 0.5); }
+.pb__strip { min-height: 150px; padding: 0; }
+@media (max-width: 760px) { .pb--shelf { padding-bottom: 64px; } .pb__strip { min-height: 120px; } }
+.pb__book { height: 22px; }
+.pb__book:nth-child(7n+1) { height: 30px; }
+.pb__book:nth-child(5n+2) { height: 18px; }
+.pb__book:nth-child(4n+3) { height: 34px; }
+.pb__book:nth-child(6n+4) { height: 26px; }
+.pb__book:nth-child(9n+5) { height: 16px; }

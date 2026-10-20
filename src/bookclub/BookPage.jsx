@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { ShelfBooks } from '../components/PageBanner'
 import useTitle from '../rooms/useTitle'
 import useUser from '../suggest/useUser'
 import { formatDate } from '../rooms/postRules'
@@ -59,6 +60,8 @@ export default function BookPage() {
   return (
     <main className="rp bc bk">
       <p className="rp-back"><Link to={shelfPath(book.genre)}>← Back to the bookshelf</Link></p>
+
+      <div className="pb pb--starry pb--shelf pb__strip" aria-hidden="true"><ShelfBooks /></div>
 
       <section className="bc__box bk__hero" aria-labelledby="bk-title">
         {cover
