@@ -13,7 +13,7 @@ import ChangePassesPage, { CHANGE_TERMS } from '../src/membership/ChangePassesPa
 import { CONSENT_TEXT } from '../src/membership/passes'
 
 const future = new Date(Date.now() + 400 * 86400000).toISOString()
-const row = (over = {}) => ({ status: 'active', passes: ['authors-notebook', 'blueprints'], billing_interval: 'month', current_period_end: '2026-11-16T10:00:00Z', cancel_at_period_end: false, offer_ends_at: null, offer_note: null, ...over })
+const row = (over = {}) => ({ status: 'active', passes: ['authors-notebook', 'blueprints'], billing_interval: 'month', current_period_end: new Date(Date.now() + 3 * 86400000).toISOString(), cancel_at_period_end: false, offer_ends_at: null, offer_note: null, ...over })
 const show = (owner = false) => render(<MemoryRouter initialEntries={['/membership/change']}><Routes><Route path="/membership/change" element={<ChangePassesPage owner={owner} />} /><Route path="/membership/passes" element={<p>my passes page</p>} /><Route path="/membership" element={<p>choose page</p>} /></Routes></MemoryRouter>)
 const box = (name) => screen.getByRole('checkbox', { name: new RegExp(name) })
 const summary = () => screen.getByRole('region', { name: 'Your new price' })
@@ -101,5 +101,43 @@ describe('adding needs the agreement; saving', () => {
   })
   it('has a Cancel that goes back to My passes without saving', async () => {
     show(); await ready(); expect(screen.getByRole('link', { name: 'Cancel' })).toHaveAttribute('href', '/membership/passes'); expect(api.changePasses).not.toHaveBeenCalled()
+  })
+})
+
+describe('only in the last days before the next payment (Gill, 20 October 2026)', () => {
+  beforeEach(() => { vi.useFakeTimers({ toFake: ['Date'] }) })
+  afterEach(() => vi.useRealTimers())
+  const when = (iso) => vi.setSystemTime(new Date(iso))
+  const closed = () => row({ current_period_end: '2026-11-16T10:00:00Z' })
+  it('more than 7 days before the next payment it says when changes open, offers no tick boxes and no Save, and goes back to My passes', async () => {
+    when('2026-11-01T12:00:00Z'); api.fetchMyMembership.mockResolvedValue(closed()); show(); await ready()
+    expect(screen.getByText('You can change your passes in the 7 days before your next payment. Your next payment is on 16 November 2026, so you can change them from 9 November 2026.')).toBeInTheDocument()
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+    expect(screen.queryByRole('button', { name: 'Save my passes' })).toBeNull()
+    expect(screen.getByRole('link', { name: 'Back to my passes' })).toHaveAttribute('href', '/membership/passes')
+    expect(screen.getByText(/Manage payment or cancel/)).toBeInTheDocument()
+  })
+  it('opens at exactly 7 days before and not a minute earlier', async () => {
+    when('2026-11-09T09:59:00Z'); api.fetchMyMembership.mockResolvedValue(closed()); const a = show(); await ready()
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0); a.unmount()
+    when('2026-11-09T10:00:00Z'); api.fetchMyMembership.mockResolvedValue(closed()); show(); await ready()
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0)
+  })
+  it('shows the passes to tick inside the window', async () => {
+    when('2026-11-12T12:00:00Z'); api.fetchMyMembership.mockResolvedValue(closed()); show(); await ready()
+    expect(box("The Author's Notebook")).toBeChecked(); expect(screen.getByRole('button', { name: 'Save my passes' })).toBeInTheDocument()
+  })
+  it('is closed for most of the year for a yearly member, with the dates a year ahead', async () => {
+    when('2026-11-01T12:00:00Z'); api.fetchMyMembership.mockResolvedValue(row({ billing_interval: 'year', current_period_end: '2027-10-20T10:00:00Z' })); show(); await ready()
+    expect(screen.getByText(/Your next payment is on 20 October 2027, so you can change them from 13 October 2027\./)).toBeInTheDocument()
+    expect(screen.queryAllByRole('checkbox')).toHaveLength(0)
+  })
+  it('is open when the next-payment date is missing, so nobody is locked out by a gap in our records', async () => {
+    when('2026-11-01T12:00:00Z'); api.fetchMyMembership.mockResolvedValue(row({ current_period_end: null })); show(); await ready()
+    expect(screen.getAllByRole('checkbox').length).toBeGreaterThan(0)
+  })
+  it('still tells a member who has cancelled to start again first (the window does not hide that)', async () => {
+    when('2026-11-01T12:00:00Z'); api.fetchMyMembership.mockResolvedValue(row({ cancel_at_period_end: true, current_period_end: '2026-11-16T10:00:00Z' })); show(); await ready()
+    expect(screen.getByText(/Start again/)).toBeInTheDocument()
   })
 })

@@ -26,7 +26,7 @@ describe('the four drafts came across whole', () => {
     expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
     expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
-    expect(page('terms').sections).toHaveLength(15)
+    expect(page('terms').sections).toHaveLength(19)
   })
   it('each has the introduction that comes before its first section (Terms\u2019 was left out at first)', () => {
     expect(page('terms').intro.join(' ')).toMatch(/These terms apply to everything you buy on this website/)
@@ -216,5 +216,57 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
   })
   it('lets people take back their consent, and says how long ebook sign-ups and passes records are kept', () => {
     expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Free ebook sign-ups:\*\* until you unsubscribe/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
+  })
+})
+
+import { PASSES, CONSENT_TEXT } from '../src/membership/passes'
+import { PRICE_LADDER_POUNDS, EVERYTHING_POUNDS, YEARLY_MONTHS, LAUNCH_OFFER } from '../src/membership/pricing'
+import { CHANGE_WINDOW_DAYS } from '../src/membership/changeWindow'
+
+describe('the Terms for passes say what the passes really do (SFW-182)', () => {
+  const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
+  const titles = () => page('terms').sections.map((x) => x.title)
+  const part = (title) => textOf({ intro: [], sections: page('terms').sections.filter((x) => x.title === title) })
+  it('adds four sections before "Changes to these terms", so no number the text refers to moves (section 4 is still Prices and VAT, section 5 Delivery)', () => {
+    expect(titles().slice(0, 13)).toEqual(['About us', 'What we sell and how your order is made', 'Placing an order', 'Prices and VAT', 'Delivery', 'Orders from outside the UK', 'Payment', 'Cancelling and returns', 'Your account', 'Copyright and what you can do with a print', 'Using this website', 'Our responsibility to you', 'Events outside our control'])
+    expect(titles().slice(13)).toEqual(['Passes', 'Paying for passes', 'Changing your passes', 'Cancelling passes and your right to change your mind', 'Changes to these terms', 'Complaints and the law'])
+  })
+  it('names all five passes, exactly as the site does, and says the first three posts and sessions are free', () => {
+    for (const p of PASSES) expect(part('Passes'), p.id).toContain(p.name)
+    expect(PASSES).toHaveLength(5)
+    expect(part('Passes')).toMatch(/first three posts in every pass are free to read, and the first three Come Write With Me sessions are free to join/)
+    expect(part('Passes')).toMatch(/one vote each, which you can change until the vote closes/)
+  })
+  it('gives the prices the pricing rules give: one pass, two, three, four or more, a year as ten months, and the launch offer as half', () => {
+    const t = part('Paying for passes')
+    expect(t).toContain(`One pass costs £${PRICE_LADDER_POUNDS[1]} a month, two cost £${PRICE_LADDER_POUNDS[2]}, three cost £${PRICE_LADDER_POUNDS[3]}, and four or more cost £${EVERYTHING_POUNDS}.`)
+    expect(YEARLY_MONTHS).toBe(10); expect(t).toContain('A year costs ten months.')
+    expect(LAUNCH_OFFER.fraction).toBe(0.5); expect(t).toMatch(/your first year costs half the normal price/)
+  })
+  it('says prices include VAT shown separately at checkout, passes are for customers in the UK for now, payment is by Stripe, and renewal is automatic', () => {
+    const t = part('Paying for passes')
+    expect(t).toMatch(/include VAT, which is shown separately at checkout/); expect(t).toMatch(/Passes are for customers in the UK for now\./)
+    expect(t).toMatch(/Payment is taken by Stripe, by card/); expect(t).toMatch(/renew automatically at the end of each month or year/); expect(t).toMatch(/we will email you before the price changes/)
+  })
+  it('gives the same window to change passes as the page and the server enforce (7 days before the next payment), and asks for the same tick box when a pass is added', () => {
+    const t = part('Changing your passes')
+    expect(CHANGE_WINDOW_DAYS).toBe(7); expect(t).toContain(`in the ${CHANGE_WINDOW_DAYS} days before your next payment`)
+    expect(t).toMatch(/Nothing is charged or refunded when you change/); expect(t).toMatch(/tick the same box as when you first bought/)
+  })
+  it('uses the exact words of the tick box, says you cannot buy without it, and says there is no refund for a part-used period', () => {
+    const t = part('Cancelling passes and your right to change your mind')
+    expect(t).toContain(`"${CONSENT_TEXT}"`); expect(t).toMatch(/cannot buy passes without ticking it/)
+    expect(t).toMatch(/We do not refund the rest of a period you have paid for, apart from where the law says we must/); expect(t).toMatch(/you will not be charged again/)
+  })
+  it('only says passes stay open while a failed payment is tried again because the database really lets a past-due member read and vote; they close once Stripe marks it unpaid or cancelled', () => {
+    expect(part('Paying for passes')).toMatch(/If a payment fails, Stripe tries again and your passes stay open while it does\. If it still fails, your passes close\./)
+    for (const file of ['sql/locked-posts.sql', 'sql/story-votes.sql']) { const sql = read(file); expect(sql, file).toMatch(/'active', 'trialing', 'past_due'/); expect(sql, file).not.toMatch(/'active', 'trialing', 'past_due', 'unpaid'/) }
+  })
+  it('points to the same place to cancel as My passes does', () => {
+    expect(part('Cancelling passes and your right to change your mind')).toContain('"Manage payment or cancel"')
+    expect(read('src/membership/MyPassesPage.jsx')).toContain('Manage payment or cancel')
+  })
+  it('leaves the print sections as they were: Prices and VAT, Payment and Cancelling and returns say nothing about passes', () => {
+    for (const title of ['Prices and VAT', 'Payment', 'Cancelling and returns']) expect(part(title), title).not.toMatch(/\bpass(es)?\b/i)
   })
 })

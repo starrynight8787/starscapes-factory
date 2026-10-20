@@ -1,0 +1,38 @@
+THE TERMS FOR PASSES, AND WHEN PASSES CAN BE CHANGED   starscapes-passes-terms-20oct.zip
+(NO Supabase step, nothing to do in Stripe or Vercel. The Terms page is still HIDDEN from visitors: only you see it, under the yellow Draft banner. Memberships stay closed to visitors.)
+
+You said "do what we know for now, and we will change it when we have answers". So everything here is a WORKING VERSION, built from your decisions, and the places that may change are marked below.
+
+1. FOUR NEW SECTIONS IN THE TERMS (sections 14 to 17, just before "Changes to these terms", so no section number the text refers to has moved)
+   Passes  /  Paying for passes  /  Changing your passes  /  Cancelling passes and your right to change your mind.
+   They say: what a pass is and the five passes; the first three posts and sessions are free; one vote each in Come Write With Me; the prices (£5, £7, £10, £12 a month, a year is ten months); the half-price first year and
+   that we email before the price changes; automatic renewal, paid by Stripe by card; prices include VAT, shown separately at checkout; passes are for customers in the UK for now; what happens if a payment fails;
+   changing passes (below); cancelling in My passes, "Manage payment or cancel"; no refund for a part-used period apart from where the law says we must; the 14-day right, with the exact words of the tick box.
+   The tests tie every price, pass name, the tick box wording and the 7 days to the real code, and the "stay open while a payment is retried" promise to the database.
+
+2. THE CHANGE RULE (a WORKING RULE: change it by changing one number, CHANGE_WINDOW_DAYS in src/membership/changeWindow.js, and the Terms sentence)
+   A member can change their passes only in the 7 DAYS BEFORE THEIR NEXT PAYMENT. The change starts at once and the new price starts with that payment (nothing charged or refunded when you change). This closes the loophole where someone adds
+   passes the day after paying and removes them just before the next payment.
+   * The server refuses a change outside the window, says when it opens, and touches nothing.
+   * The Change my passes page, outside the window, says: "You can change your passes in the 7 days before your next payment. Your next payment is on 19 November 2026, so you can change them from 12 November 2026."
+   * If we do not have a next-payment date for a member, the window is OPEN (nobody is locked out because of a gap in our records).
+   * Only changing is limited: the billing page and cancelling work at any time.
+   * For a YEARLY member this means changes are possible only in the last week of the year. That is the price of the simple rule. If you would rather charge the difference when someone upgrades, tell me.
+
+NOT BUILT YET (the Terms promise them, so they must exist before passes open): the email before the price changes, and the other renewal reminders (SFW-237). Also check Stripe's retry settings match "your passes stay open while it tries again"
+(I have not seen your Stripe settings).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-passes-terms-20oct.zip
+ 3. python3 tools/add-passes-terms.py         (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Terms for passes (draft, owner only); passes can be changed in the 7 days before the next payment"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then, signed in as the owner, read the new sections at starscapesfactory.com/page/terms (sections 14 to 17).
+
+(The unzip also replaces four existing test files, legal-pages.test.jsx, footer-company.test.jsx, membership-account-server.test.js and membership-change.test.jsx, and adds membership-change-window.test.js.)

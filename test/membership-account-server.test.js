@@ -168,3 +168,51 @@ describe('changing passes (action change)', () => {
     expect(r.status).toBe(502); expect(JSON.stringify(r.body)).not.toMatch(/sk_test|stripe could not/)
   })
 })
+
+describe('changing passes only in the last days before the next payment (Gill, 20 October 2026)', () => {
+  const at = (iso) => { vi.useFakeTimers({ toFake: ['Date'] }); vi.setSystemTime(new Date(iso)) }
+  afterEach(() => vi.useRealTimers())
+  const change = { action: 'change', passes: ['blueprints'] }
+  const END = '2026-11-16T10:00:00Z'
+  it('refuses a change more than 7 days before the next payment, says when it opens, and touches nothing (no Stripe call, nothing saved)', async () => {
+    at('2026-11-01T12:00:00Z'); const fn = withNetwork({ member: { ...MEMBER, current_period_end: END } }); const r = await call({ body: change })
+    expect(r.status).toBe(409)
+    expect(r.body.message).toBe('You can change your passes in the 7 days before your next payment. Your next payment is on 16 November 2026, so you can change them from 9 November 2026.')
+    expect(r.body.reason).toBe('change_window_closed'); expect(r.body.opensAt).toBe('2026-11-09T10:00:00.000Z')
+    expect(stripePosts(fn)).toHaveLength(0); expect(saves(fn)).toHaveLength(0); expect(fn.calls.some((c) => c.url.includes('/v1/subscriptions'))).toBe(false)
+  })
+  it('refuses an upgrade the day after paying (the loophole), and a downgrade straight after paying too', async () => {
+    at('2026-11-02T09:00:00Z')
+    for (const passes of [['authors-notebook', 'blueprints', 'book-club'], ['blueprints']]) {
+      const fn = withNetwork({ member: { ...MEMBER, current_period_end: '2026-12-01T10:00:00Z' } })
+      const r = await call({ body: { action: 'change', passes, consent: true } })
+      expect(r.status).toBe(409); expect(stripePosts(fn)).toHaveLength(0)
+    }
+  })
+  it('opens at exactly 7 days before and not a minute earlier', async () => {
+    at('2026-11-09T09:59:00Z'); let fn = withNetwork({ member: { ...MEMBER, current_period_end: END } }); expect((await call({ body: change })).status).toBe(409)
+    vi.useRealTimers(); at('2026-11-09T10:00:00Z'); fn = withNetwork({ member: { ...MEMBER, current_period_end: END } })
+    const r = await call({ body: change }); expect(r.status).toBe(200); expect(stripePosts(fn)).toHaveLength(1)
+  })
+  it('lets a change through inside the window, and still just after the payment date if the new period is not recorded yet', async () => {
+    at('2026-11-12T12:00:00Z'); withNetwork({ member: { ...MEMBER, current_period_end: END } })
+    expect((await call({ body: change })).body).toMatchObject({ ok: true, removed: ['authors-notebook'] })
+    vi.useRealTimers(); at('2026-11-16T10:30:00Z'); withNetwork({ member: { ...MEMBER, current_period_end: END } })
+    expect((await call({ body: change })).status).toBe(200)
+  })
+  it('lets a change through when there is no usable next-payment date (a member is never locked out by a gap in our records)', async () => {
+    at('2026-11-01T12:00:00Z')
+    for (const end of [undefined, null, '', 'nonsense']) {
+      withNetwork({ member: { ...MEMBER, current_period_end: end } })
+      expect((await call({ body: change })).status, String(end)).toBe(200)
+    }
+  })
+  it('asks the database for the next-payment date (so the rule has something to go on)', async () => {
+    at('2026-11-01T12:00:00Z'); const fn = withNetwork({ member: { ...MEMBER, current_period_end: END } }); await call({ body: change })
+    expect(fn.calls.find((c) => c.url.includes('/rest/v1/memberships') && (!c.init.method || c.init.method === 'GET')).url).toContain('current_period_end')
+  })
+  it('only limits CHANGING: the billing page still opens when the window is closed', async () => {
+    at('2026-11-01T12:00:00Z'); withNetwork({ member: { ...MEMBER, current_period_end: END } })
+    const portal = await call({ body: { action: 'portal' } }); expect(portal.status).toBe(200); expect(portal.body.url).toMatch(/^https:\/\/billing\.stripe\.com\//)
+  })
+})

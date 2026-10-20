@@ -8,6 +8,7 @@ import { MEMBERSHIP } from '../data/membership'
 import { PASSES, PASS_IDS, CONSENT_TEXT } from './passes'
 import { formatPounds, ladderRows, ladderKey } from './pricing'
 import { accountView, priceNow, changeOf, nameList, unitWord } from './account'
+import { changeWindow, closedMessage } from './changeWindow'
 import { fetchMyMembership, changePasses } from './membershipApi'
 import { NotOpen } from './MembershipPage'
 import './membership.css'
@@ -62,6 +63,21 @@ export default function ChangePassesPage({ owner = false }) {
           <Link className="mb__wbtn" to={state.phase === 'error' || row ? '/membership/passes' : '/membership'}>
             {state.phase === 'error' || row ? 'Back to my passes' : 'Choose your passes'}
           </Link>
+        </div>
+      </main>
+    )
+  }
+
+  // Only in the last days before the next payment (a working rule, see changeWindow.js): outside that, say when it opens
+  const win = changeWindow(row)
+  if (!win.open) {
+    return (
+      <main className="mb mb--welcome">
+        <div className="mb__w">
+          <h1>Change my passes</h1>
+          <p className="mb__lead">{closedMessage(win)}</p>
+          <p className="mb__small">To stop all your passes, go back and use "Manage payment or cancel".</p>
+          <Link className="mb__wbtn" to="/membership/passes">Back to my passes</Link>
         </div>
       </main>
     )

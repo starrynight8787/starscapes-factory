@@ -18,6 +18,11 @@
 //    straight away (deleted with the account, though Stripe keeps a copy), and the sentence that we do not look at who voted for what (Gill's promise): see SFW-234. Re-check against the ICO's right-to-be-informed checklist near launch:
 //    the ICO says its guidance is under review after the Data (Use and Access) Act.
 //    A sentence about links to other websites such as the Substack was added on 20 October (SFW-236). If the Substack link in src/draftingdesk/draftingData.js is ever removed, take the sentence out too.
+//  * THE TERMS GAINED FOUR SECTIONS FOR PASSES on 20 October 2026 (SFW-182), placed before "Changes to these terms" so no existing section number moves: Passes; Paying for passes; Changing your passes;
+//    Cancelling passes and your right to change your mind. They are written from the site as it works and from Gill's decisions (VAT included in the price and shown separately at checkout; UK customers only for now; no refund
+//    for a part-used period; changes only in the 7 days before the next payment, a WORKING RULE in src/membership/changeWindow.js that Gill has not yet confirmed). Two promises need building before passes open:
+//    we email before the price changes (SFW-237), and Stripe's retry settings must match "your passes stay open while it tries again" (not checked). The accountant (SFW-183) and the free-advice questions (SFW-234)
+//    may change the wording on VAT, overseas customers and the 14-day right: change the words here and the tests will say what else has to follow.
 //  * RETURNS: [RETURN ADDRESS] is a gap. Decided 17 October: returns go to the registered office (a forwarding address); it goes in once the large-print courier figures are
 //    in (SFW-185). Section 3 says the print studio takes photos before an order is packed: check that with the print service. The cancellation form's blanks are written
 //    in (round brackets) so they are not counted as gaps.
@@ -113,6 +118,36 @@ export const LEGAL_PAGES = [
         "title": "Events outside our control",
         "paragraphs": [
           "If something outside our reasonable control delays or prevents an order, such as a postal strike, severe weather or a fault at the print studio, we are not responsible for the delay. We will tell you as soon as we can, and if it goes on for a long time you may cancel and be refunded."
+        ]
+      },
+      {
+        "title": "Passes",
+        "paragraphs": [
+          "A pass gives you access to members-only posts and other material in one part of the site. The passes are The Author's Notebook, Early drafts and book background, Come Write With Me, Blueprints and Book Club. The first three posts in every pass are free to read, and the first three Come Write With Me sessions are free to join.",
+          "In Come Write With Me, members vote on where the story goes: one vote each, which you can change until the vote closes.",
+          "Passes are digital: nothing is posted to you. They are for your own use, so please don't share your login or copy the material."
+        ]
+      },
+      {
+        "title": "Paying for passes",
+        "paragraphs": [
+          "You choose which passes you want and whether to pay monthly or yearly. One pass costs £5 a month, two cost £7, three cost £10, and four or more cost £12. A year costs ten months. Prices are in pounds and include VAT, which is shown separately at checkout. Passes are for customers in the UK for now.",
+          "While the launch offer lasts, your first year costs half the normal price. After that we charge the normal price shown when you chose, unless you cancel first, and we will email you before the price changes.",
+          "Your passes renew automatically at the end of each month or year, at the price shown, until you cancel. Payment is taken by Stripe, by card. If a payment fails, Stripe tries again and your passes stay open while it does. If it still fails, your passes close."
+        ]
+      },
+      {
+        "title": "Changing your passes",
+        "paragraphs": [
+          "You can add or remove passes in My passes, in the 7 days before your next payment. The change starts at once, and the new price starts with that payment. Nothing is charged or refunded when you change. This stops passes being added just after a payment and taken away just before the next one.",
+          "If you add a pass, we ask you to tick the same box as when you first bought, because the new pass opens straight away."
+        ]
+      },
+      {
+        "title": "Cancelling passes and your right to change your mind",
+        "paragraphs": [
+          "You can cancel at any time in My passes, under \"Manage payment or cancel\". Your passes stay open until the end of the period you have paid for, and you will not be charged again. We do not refund the rest of a period you have paid for, apart from where the law says we must.",
+          "By law you have 14 days from buying to cancel and get your money back. Your passes open as soon as you pay, so before you pay we ask you to tick a box that says: \"Open my passes now. I understand that once they open, I lose my 14-day right to cancel and get a refund.\" You cannot buy passes without ticking it, because they open at once."
         ]
       },
       {

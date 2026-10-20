@@ -87,8 +87,8 @@ describe('the pages the footer links to', () => {
   })
   it('the Terms are a legal page, in your draft\u2019s words, with the real company details, and stay hidden until you switch them on', () => {
     const terms = LEGAL_PAGES.find((p) => p.slug === 'terms')
-    expect(resolvePage('terms')).toMatchObject({ kind: 'legal' }); expect(terms.sections).toHaveLength(15)
-    expect(terms.sections.map((x) => x.title)).toEqual(['About us', 'What we sell and how your order is made', 'Placing an order', 'Prices and VAT', 'Delivery', 'Orders from outside the UK', 'Payment', 'Cancelling and returns', 'Your account', 'Copyright and what you can do with a print', 'Using this website', 'Our responsibility to you', 'Events outside our control', 'Changes to these terms', 'Complaints and the law'])
+    expect(resolvePage('terms')).toMatchObject({ kind: 'legal' }); expect(terms.sections).toHaveLength(19)
+    expect(terms.sections.map((x) => x.title)).toEqual(['About us', 'What we sell and how your order is made', 'Placing an order', 'Prices and VAT', 'Delivery', 'Orders from outside the UK', 'Payment', 'Cancelling and returns', 'Your account', 'Copyright and what you can do with a print', 'Using this website', 'Our responsibility to you', 'Events outside our control', 'Passes', 'Paying for passes', 'Changing your passes', 'Cancelling passes and your right to change your mind', 'Changes to these terms', 'Complaints and the law'])
     const all = terms.sections.flatMap((x) => x.paragraphs).join(' ')
     expect(all).toContain(COMPANY.number); expect(all).toContain(COMPANY.vat); expect(all).toContain('71-75 Shelton Street, Covent Garden, London, WC2H 9JQ'); expect(all).toContain(CONTACT_EMAIL)
     expect(terms.updated).toBe('[date]') // a gap the owner's banner counts, until the page is published
