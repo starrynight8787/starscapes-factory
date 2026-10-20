@@ -1,0 +1,185 @@
+/* The "suggest and vote" box. Drawn in Figma (06 Room pages, "Suggest and vote"). Stands on its own: nothing here depends on the old index.css rules. */
+.sg {
+  margin: 32px 0;
+  padding: 28px;
+  background: var(--sf-card, #fff);
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 12px;
+  color: var(--sf-ink, #0e1530);
+}
+.sg__title {
+  margin: 0 0 6px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.5rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.sg__blurb,
+.sg__note,
+.sg__why,
+.sg__login-text,
+.sg__empty {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.5;
+}
+.sg__note {
+  margin-top: 20px;
+  font-size: 0.95rem;
+}
+.sg__login {
+  margin: 20px 0 0;
+  padding: 18px 20px;
+  background: var(--sf-star, #dce6ff);
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+}
+.sg__login-title {
+  margin: 0 0 4px;
+  font-weight: 700;
+  color: var(--sf-navy-700, #14306a);
+}
+.sg__login-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-top: 12px;
+}
+.sg__login-buttons .pg-btn,
+.sg__submit {
+  display: inline-flex;
+  align-items: center;
+  text-decoration: none;
+}
+.sg-btn--primary {
+  background: var(--sf-blue, #1f6fa8);
+  border-color: var(--sf-blue, #1f6fa8);
+  color: #fff;
+}
+.sg-btn--primary:hover {
+  background: var(--sf-navy-700, #14306a);
+  border-color: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.sg__form {
+  display: grid;
+  gap: 14px;
+  margin: 20px 0 0;
+}
+.sg__kinds {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+.sg__kinds legend {
+  float: left;
+  margin-right: 8px;
+  padding: 0;
+  font-weight: 700;
+}
+.sg__kind {
+  position: relative;
+  cursor: pointer;
+}
+.sg__kind input {
+  position: absolute;
+  opacity: 0;
+  inset: 0;
+  cursor: pointer;
+}
+.sg__kind.is-on {
+  background: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.sg__kind:focus-within {
+  outline: 3px solid var(--sf-focus, #14306a);
+  outline-offset: 2px;
+}
+.sg__fields {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  align-items: end;
+}
+/* The fields sit side by side when the box is wide enough and wrap onto their own lines when it is not: it depends on the width of the BOX, not of the screen, so it never squeezes into slivers. */
+.sg__fields > * {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.sg__fields > .sg__submit {
+  flex: 0 0 auto;
+}
+.sg__list {
+  margin-top: 24px;
+}
+.sg__label {
+  margin: 0 0 10px;
+  font-family: var(--sf-body, 'Inter', sans-serif);
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sf-muted, #5b6585);
+}
+.sg__rows {
+  display: grid;
+  gap: 10px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.sg__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 16px;
+  padding: 14px 16px;
+  background: var(--sf-star, #dce6ff);
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 10px;
+}
+.sg__row.is-chosen {
+  background: #e3f4e6;
+  border-color: #1d6b34;
+}
+.sg__rank {
+  min-width: 1.5rem;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--sf-navy-700, #14306a);
+}
+.sg__text {
+  flex: 1 1 200px;
+  min-width: 0;
+}
+.sg__name {
+  margin: 0;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.sg__why {
+  font-size: 0.95rem;
+  overflow-wrap: anywhere;
+}
+.sg__chosen {
+  background: #1d6b34;
+  color: #fff;
+}
+.sg__vote {
+  min-width: 5.5rem;
+}
+.sg__vote:disabled {
+  opacity: 0.6;
+}
+.sg-off {
+  margin: 24px 0;
+  padding: 12px 16px;
+  background: #fff4d6;
+  border: 1px solid #8a5a00;
+  border-radius: 8px;
+  color: #5c3b00;
+}

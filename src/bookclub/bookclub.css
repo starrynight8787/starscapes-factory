@@ -1,3 +1,4 @@
+/* The Book Club page. On a wide screen Reading now and Up next are horizontal bands, not narrow tall boxes: see the grid, and the two-column suggest box rules, in the wide-screen block further down. */
 /* The Book Club page. Stands on its own: nothing here depends on the old index.css rules. */
 .bc section { margin: 32px 0; }
 .bc h2 { margin: 0 0 12px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); color: var(--sf-navy-700, #14306a); }
@@ -125,12 +126,17 @@
 @media (min-width: 980px) {
   .bc__intro { grid-template-columns: 2fr 1fr; }
   .bc__welcome { grid-template-columns: 380px 1fr; }
-  .bc__grid { grid-template-columns: 1fr 1fr 392px; grid-template-areas: 'theme theme come' 'read next shelf'; }
+  .bc__grid { grid-template-columns: 1fr 1fr 392px; grid-template-areas: 'theme theme come' 'read read shelf' 'next next next'; }
   .bc__theme { grid-area: theme; }
   .bc__comecard { grid-area: come; }
-  .bc__reading { grid-area: read; }
-  .bc__next { grid-area: next; }
-  .bc__shelfcard { grid-area: shelf; }
+  .bc__reading { grid-area: read; align-self: start; } /* Reading now and Up next are wide horizontal bands beside the Shelf, not narrow tall boxes: an empty one stays short, and the suggest form gets room to sit in a row */
+  .bc__next { grid-area: next; align-self: start; }
+  .bc__shelfcard { grid-area: shelf; align-self: start; }
+  /* Up next is a full-width band: the suggest box inside it sits in two columns, the form and its words on the left and "Most wanted" on the right */
+  .bc__next .sg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; column-gap: 32px; align-items: start; margin: 20px 0 0; }
+  .bc__next .sg > * { grid-column: 1; }
+  .bc__next .sg > .sg__list { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+  .bc__next .sg > .sg__note { grid-column: 2; grid-row: 4; margin-top: 12px; }
 }
 /* on a phone the books lie flat in a pile, so the names stay readable */
 @media (max-width: 700px) {

@@ -1,0 +1,28 @@
+BOOK CLUB LAYOUT: Reading now and Up next as horizontal bands   starscapes-book-club-layout-20oct.zip
+(Styling only. NO Supabase step, nothing to do in Stripe or Vercel.)
+
+WHAT IT CHANGES
+ * On a wide screen, READING NOW and UP NEXT were two narrow tall boxes side by side, so the "What should we read next?" form was squeezed into about 300px and its labels wrapped into slivers.
+   Now: Reading now is a wide band beside The Shelf, and Up next is a full-width band underneath.
+ * Inside the Up next band, the suggest box sits in TWO COLUMNS: the question and the form on the left, "Most wanted" (with the vote buttons and the note) on the right.
+ * An empty "Reading now" stays short (it no longer stretches into a tall empty box), and The Shelf keeps its own height.
+ * The suggest form's fields now sit side by side only when their box is wide enough, and wrap onto their own lines when it is not. They used to decide by the width of the SCREEN, which is why they got squeezed.
+   This also helps anywhere else the suggest box is used.
+ * Phones and small tablets are unchanged: everything is one column, in the same order.
+
+NOT CHANGED: the Figma file. The Book Club v3 frames still show the old arrangement; say if you would like me to update them to match.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-book-club-layout-20oct.zip
+ 3. python3 tools/add-book-club-layout.py     (it checks the two style files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Book Club: Reading now and Up next as horizontal bands; the suggest form wraps by its own width"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words.
+
+(The unzip also replaces two existing test files, book-club-v3.test.jsx and suggest-panel.test.jsx, which now describe the new layout.)

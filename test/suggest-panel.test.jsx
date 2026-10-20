@@ -143,3 +143,11 @@ describe('the styles', () => {
     expect(css).toMatch(/\.sg__kind:focus-within \{[^}]*outline:\s*3px solid/)
   })
 })
+
+describe('the suggest form fields never squeeze into slivers', () => {
+  const css = readFileSync(join(process.cwd(), 'src/suggest/suggest.css'), 'utf8')
+  it('sit side by side when their box is wide enough and wrap onto their own lines when it is not, by the width of the box and not of the screen', () => {
+    expect(css).toMatch(/\.sg__fields \{\s*display: flex;\s*flex-wrap: wrap;/); expect(css).toMatch(/\.sg__fields > \* \{\s*flex: 1 1 240px;\s*min-width: 0;/); expect(css).toMatch(/\.sg__fields > \.sg__submit \{\s*flex: 0 0 auto;/)
+    expect(css).not.toMatch(/\.sg__fields \{[^}]*grid-template-columns/); expect(css).not.toMatch(/@media \(max-width: 760px\) \{\s*\.sg__fields/)
+  })
+})

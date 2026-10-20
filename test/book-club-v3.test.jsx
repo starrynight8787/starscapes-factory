@@ -145,10 +145,23 @@ describe('the look of it', () => {
       const [bg, fg] = pair(s); expect(ratio(bg, fg), s).toBeGreaterThanOrEqual(4.5)
     }
   })
-  it('arranges the cards in a grid on a wide screen (theme and Come Read on top, reading, up next and The Shelf below) and in one column on a phone', () => {
-    expect(css).toMatch(/grid-template-areas:\s*'theme theme come' 'read next shelf'/)
+  it('arranges the cards in a grid on a wide screen (theme and Come Read on top; Reading now beside The Shelf; Up next across the whole width below) and in one column on a phone', () => {
+    expect(css).toMatch(/grid-template-areas:\s*'theme theme come' 'read read shelf' 'next next next'/)
     for (const a of ['theme', 'come', 'read', 'next', 'shelf']) expect(css).toMatch(new RegExp(`grid-area: ${a};`))
     expect(css).toMatch(/\.bc__grid \{[^}]*grid-template-columns: 1fr;/); expect(css).toMatch(/@media \(max-width: 700px\)/)
+  })
+  it('makes Reading now and Up next wide horizontal bands, not narrow tall boxes, and keeps the Shelf and an empty Reading now at their own height', () => {
+    const wideBlock = () => { const start = css.indexOf('@media (min-width: 980px) {'); let depth = 0; for (let i = css.indexOf('{', start); i < css.length; i += 1) { if (css[i] === '{') depth += 1; else if (css[i] === '}') { depth -= 1; if (depth === 0) return css.slice(start, i + 1) } } return '' }
+    const wide = wideBlock()
+    expect(wide).toMatch(/\.bc__reading \{ grid-area: read; align-self: start; \}/); expect(wide).toMatch(/\.bc__next \{ grid-area: next; align-self: start; \}/); expect(wide).toMatch(/\.bc__shelfcard \{ grid-area: shelf; align-self: start; \}/)
+    expect(css).not.toMatch(/'read next shelf'/); expect(css).not.toMatch(/'next next shelf'/)
+  })
+  it('lays the suggest box out in two columns inside the Up next band on a wide screen (the form on the left, Most wanted on the right) and only there', () => {
+    const wideBlock = () => { const start = css.indexOf('@media (min-width: 980px) {'); let depth = 0; for (let i = css.indexOf('{', start); i < css.length; i += 1) { if (css[i] === '{') depth += 1; else if (css[i] === '}') { depth -= 1; if (depth === 0) return css.slice(start, i + 1) } } return '' }
+    const wide = wideBlock()
+    expect(wide).toMatch(/\.bc__next \.sg \{ display: grid; grid-template-columns: minmax\(0, 1fr\) minmax\(0, 1fr\);/); expect(wide).toMatch(/\.bc__next \.sg > \* \{ grid-column: 1; \}/)
+    expect(wide).toMatch(/\.bc__next \.sg > \.sg__list \{ grid-column: 2; grid-row: 1 \/ span 3;/); expect(wide).toMatch(/\.bc__next \.sg > \.sg__note \{ grid-column: 2; grid-row: 4;/)
+    expect(css.replace(wide, '')).not.toMatch(/\.bc__next \.sg/) // on a phone and a small tablet it stays one column
   })
   it('lays the books flat in a pile on a phone, and has a visible focus on every book and tile', () => {
     expect(css).toMatch(/@media \(max-width: 700px\) \{[^@]*\.bc__spines \{ grid-template-columns: 1fr;/)

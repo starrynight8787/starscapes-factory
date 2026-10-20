@@ -1,0 +1,152 @@
+/* The Book Club page. On a wide screen Reading now and Up next are horizontal bands, not narrow tall boxes: see the grid, and the two-column suggest box rules, in the wide-screen block further down. */
+/* The Book Club page. Stands on its own: nothing here depends on the old index.css rules. */
+.bc section { margin: 32px 0; }
+.bc h2 { margin: 0 0 12px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); color: var(--sf-navy-700, #14306a); }
+.bc__muted { margin: 0 0 8px; color: var(--sf-muted, #5b6585); line-height: 1.5; }
+.bc__come { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__theme { padding: 20px 22px; background: var(--sf-star, #dce6ff); border-radius: 12px; }
+.bc__theme h2 { margin: 8px 0; }
+.bc__theme p { margin: 0 0 12px; line-height: 1.6; }
+.bc__theme .pg-btn, .bc__now .pg-btn, .bc__card .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__now, .bc__card { display: grid; grid-template-columns: 110px 1fr; gap: 20px; align-items: start; padding: 18px; background: #fff; border: 1px solid var(--sf-border, #dde3f0); border-radius: 12px; }
+@media (max-width: 560px) { .bc__now, .bc__card { grid-template-columns: 1fr; }
+}
+.bc__now-chip { background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__now-title { margin: 8px 0 4px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: 1.5rem; color: var(--sf-navy-700, #14306a); overflow-wrap: anywhere; }
+.bc__cover { display: block; width: 110px; aspect-ratio: 3 / 4; object-fit: cover; border-radius: 8px; border: 1px solid var(--sf-border, #dde3f0); background: var(--sf-star, #dce6ff); }
+.bc__cover--blank { display: grid; place-items: center; padding: 8px; background: var(--sf-navy-700, #14306a); color: #fff; text-align: center; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: 0.95rem; font-weight: 700; line-height: 1.2; overflow: hidden; }
+.bc__queue { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; padding: 0; list-style: none; }
+.bc__goal { margin: 4px 0 16px; }
+.bc__goal-text { margin: 0 0 6px; font-weight: 700; color: var(--sf-navy-700, #14306a); }
+.bc__bar { height: 14px; max-width: 480px; background: var(--sf-star, #dce6ff); border: 2px solid var(--sf-navy-700, #14306a); border-radius: 999px; overflow: hidden; }
+.bc__bar-fill { display: block; height: 100%; background: var(--sf-blue, #1f6fa8); }
+.bc__shelf { display: flex; flex-wrap: wrap; align-items: flex-end; gap: 6px; min-height: 60px; margin: 16px 0 0; padding: 0 12px; list-style: none; }
+.bc__spine { display: flex; align-items: center; justify-content: center; width: 48px; padding: 8px 4px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 4px 4px 0 0; cursor: pointer; font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1rem; line-height: 1.1; }
+.bc__spine span { writing-mode: vertical-rl; transform: rotate(180deg); max-height: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.bc__spine[aria-pressed='true'] { outline: 3px solid var(--sf-blue, #1f6fa8); outline-offset: 2px; transform: translateY(-6px); }
+.bc__spine:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__spine--none { background: #dce6ff; color: #14306a; }
+.bc__spine--leadership { background: #14306a; color: #fff; }
+.bc__spine--fiction { background: #b8ccf5; color: #14306a; }
+.bc__spine--memoir { background: #ffa6cb; color: #14306a; }
+.bc__spine--self-growth { background: #8fd694; color: #0e1530; }
+.bc__spine--childrens { background: #ffe27a; color: #0e1530; }
+.bc__spine--h0 { height: 150px; }
+.bc__spine--h1 { height: 160px; }
+.bc__spine--h2 { height: 170px; }
+.bc__spine--h3 { height: 180px; }
+.bc__spine--h4 { height: 190px; }
+.bc__spine--h5 { height: 200px; }
+.bc__spine--h6 { height: 210px; }
+.bc__plank { height: 14px; background: #c9a070; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 4px; }
+.bc__detail { margin-top: 16px; min-height: 8px; }
+.bc__stars { margin: 0 0 8px; font-size: 1.125rem; color: var(--sf-navy-700, #14306a); }
+@media (prefers-reduced-motion: reduce) { .bc__spine[aria-pressed='true'] { transform: none; }
+}
+/* the progress bar, in steps of 5 per cent */
+.bc__bar-fill--p0 { width: 0%; }
+.bc__bar-fill--p5 { width: 5%; }
+.bc__bar-fill--p10 { width: 10%; }
+.bc__bar-fill--p15 { width: 15%; }
+.bc__bar-fill--p20 { width: 20%; }
+.bc__bar-fill--p25 { width: 25%; }
+.bc__bar-fill--p30 { width: 30%; }
+.bc__bar-fill--p35 { width: 35%; }
+.bc__bar-fill--p40 { width: 40%; }
+.bc__bar-fill--p45 { width: 45%; }
+.bc__bar-fill--p50 { width: 50%; }
+.bc__bar-fill--p55 { width: 55%; }
+.bc__bar-fill--p60 { width: 60%; }
+.bc__bar-fill--p65 { width: 65%; }
+.bc__bar-fill--p70 { width: 70%; }
+.bc__bar-fill--p75 { width: 75%; }
+.bc__bar-fill--p80 { width: 80%; }
+.bc__bar-fill--p85 { width: 85%; }
+.bc__bar-fill--p90 { width: 90%; }
+.bc__bar-fill--p95 { width: 95%; }
+.bc__bar-fill--p100 { width: 100%; }
+
+/* ---- Book Club v3 (Figma: "Book Club v3") ---- */
+.bc__box { display: grid; gap: 14px; align-content: start; padding: 24px; background: #fff; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 10px; box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6); }
+.bc__box--star { background: var(--sf-star, #dce6ff); }
+.bc__box p { margin: 0; line-height: 1.6; }
+.bc__label { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0; font-family: var(--sf-body, 'Inter', sans-serif); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.08em; text-transform: uppercase; color: var(--sf-navy-700, #14306a); }
+.bc h2.bc__label { margin: 0; font-size: 0.875rem; }
+.bc h2.bc__big { margin: 0; font-size: 2rem; line-height: 1.25; }
+.bc h2.bc__script { margin: 0; font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.75rem; line-height: 1.25; }
+.bc h2.bc__h3 { margin: 0; font-size: 1.5rem; line-height: 1.25; }
+.bc__soonchip { padding: 2px 10px; border-radius: 999px; background: #ffe27a; color: #0e1530; font-size: 0.875rem; letter-spacing: 0.04em; text-transform: none; }
+.bc__intro { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 24px 0; }
+.bc__welcome { grid-template-columns: 1fr; align-items: center; gap: 20px; }
+.bc__welcometext { display: grid; gap: 10px; }
+.bc__video { display: grid; place-items: center; align-content: center; gap: 6px; position: relative; width: 100%; aspect-ratio: 16 / 9; padding: 0; border: 1px solid var(--sf-border, #dde3f0); border-radius: 8px; background: var(--sf-star, #dce6ff); color: var(--sf-navy-700, #14306a); overflow: hidden; }
+.bc__video--poster { cursor: pointer; }
+.bc__video--poster:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__video img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.bc__play { position: relative; display: grid; place-items: center; width: 56px; height: 56px; border-radius: 999px; background: var(--sf-navy-700, #14306a); color: #fff; font-size: 1.5rem; }
+.bc__benefits { display: grid; gap: 8px; margin: 0; padding: 0; list-style: none; }
+.bc__benefits li { line-height: 1.5; }
+.bc__wide { display: inline-flex; justify-content: center; align-items: center; width: 100%; text-decoration: none; }
+.bc__soon { opacity: 1; background: #8fb1d6; border-color: #8fb1d6; color: #0e1530; cursor: not-allowed; }
+.bc__grid { display: grid; grid-template-columns: 1fr; gap: 24px; margin: 24px 0; }
+.bc__grid > * { min-width: 0; }
+.bc__theme .pg-btn, .bc__comecard .pg-btn { justify-self: start; display: inline-flex; align-items: center; text-decoration: none; }
+.bc__now .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
+.bc__reading .bc__now, .bc__next .bc__queue { margin: 0; }
+.bc__reading .bc__now { padding: 0; border: 0; background: transparent; }
+.bc__queue { display: grid; gap: 10px; padding: 0; list-style: none; }
+.bc__queued { padding: 10px 12px; background: #f6f8fc; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; font-weight: 700; color: var(--sf-navy-700, #14306a); overflow-wrap: anywhere; }
+.bc__tiles { display: grid; gap: 14px; }
+.bc__ledge { display: grid; }
+.bc__tilerow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+.bc__tile { display: grid; gap: 2px; place-content: center; text-align: center; min-height: 84px; padding: 12px 10px; border: 0; border-radius: 6px 6px 0 0; background: var(--sf-navy-700, #14306a); color: #fff; font: inherit; cursor: pointer; }
+.bc__tile[aria-pressed='true'] { background: var(--sf-blue, #1f6fa8); color: #fff; outline: 3px solid var(--sf-navy-700, #14306a); outline-offset: -3px; }
+.bc__tile:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__tile--empty { background: transparent; border: 2px dashed var(--sf-navy-700, #14306a); color: var(--sf-navy-700, #14306a); cursor: default; }
+.bc__tile-year { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.5rem; line-height: 1.2; }
+.bc__tile-note { font-size: 0.875rem; }
+.bc__ledge-plank { height: 10px; background: var(--sf-navy-700, #14306a); border-radius: 0 0 4px 4px; }
+.bc__genres .bc__muted, .bc__shelfcard .bc__muted { margin: 0; }
+.bc__spines { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: end; margin: 0; padding: 0; list-style: none; }
+.bc__book { display: grid; gap: 4px; align-content: center; justify-items: center; text-align: center; min-height: var(--h, 210px); padding: 24px 12px 16px; border-radius: 8px 8px 0 0; text-decoration: none; }
+.bc__book::before { content: ''; width: 60px; height: 4px; border-radius: 2px; background: currentColor; opacity: 0.5; }
+.bc__book:focus-visible { outline: 3px solid var(--sf-focus, #14306a); outline-offset: 2px; }
+.bc__book:hover { filter: brightness(1.08); }
+.bc__book-name { font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: 1.5rem; line-height: 1.2; overflow-wrap: anywhere; }
+.bc__book-count { font-size: 0.875rem; }
+.bc__bookitem--0 .bc__book { --h: 210px; background: var(--sf-navy-700, #14306a); color: #fff; }
+.bc__bookitem--1 .bc__book { --h: 240px; background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__bookitem--2 .bc__book { --h: 196px; background: var(--sf-star, #dce6ff); color: var(--sf-navy-700, #14306a); border: 2px solid var(--sf-navy-700, #14306a); border-bottom: 0; }
+.bc__bookitem--3 .bc__book { --h: 226px; background: var(--sf-navy-700, #14306a); color: #fff; }
+.bc__bookitem--4 .bc__book { --h: 204px; background: var(--sf-blue, #1f6fa8); color: #fff; }
+.bc__yearshelf { margin: 32px 0; }
+/* the older rule that spaces every section out must not add to the gaps between the cards */
+.bc section.bc__box { margin: 0; }
+.bc section.bc__genres, .bc section.bc__reviews { margin: 24px 0; }
+@media (min-width: 980px) {
+  .bc__intro { grid-template-columns: 2fr 1fr; }
+  .bc__welcome { grid-template-columns: 380px 1fr; }
+  .bc__grid { grid-template-columns: 1fr 1fr 392px; grid-template-areas: 'theme theme come' 'read read shelf' 'next next next'; }
+  .bc__theme { grid-area: theme; }
+  .bc__comecard { grid-area: come; }
+  .bc__reading { grid-area: read; align-self: start; } /* Reading now and Up next are wide horizontal bands beside the Shelf, not narrow tall boxes: an empty one stays short, and the suggest form gets room to sit in a row */
+  .bc__next { grid-area: next; align-self: start; }
+  .bc__shelfcard { grid-area: shelf; align-self: start; }
+  /* Up next is a full-width band: the suggest box inside it sits in two columns, the form and its words on the left and "Most wanted" on the right */
+  .bc__next .sg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; column-gap: 32px; align-items: start; margin: 20px 0 0; }
+  .bc__next .sg > * { grid-column: 1; }
+  .bc__next .sg > .sg__list { grid-column: 2; grid-row: 1 / span 3; margin-top: 0; }
+  .bc__next .sg > .sg__note { grid-column: 2; grid-row: 4; margin-top: 12px; }
+}
+/* on a phone the books lie flat in a pile, so the names stay readable */
+@media (max-width: 700px) {
+  .bc__spines { grid-template-columns: 1fr; gap: 0; }
+  .bc__bookitem { margin-left: 0; }
+  .bc__bookitem--1 { margin-left: 14px; }
+  .bc__bookitem--2 { margin-left: 4px; }
+  .bc__bookitem--3 { margin-left: 18px; }
+  .bc__bookitem--4 { margin-left: 8px; }
+  .bc__book { grid-template-columns: 1fr auto; justify-items: start; text-align: left; min-height: 0; padding: 12px 16px; border-radius: 8px 4px 4px 8px; }
+  .bc__book::before { display: none; }
+  .bc__bookitem--2 .bc__book { border-bottom: 2px solid var(--sf-navy-700, #14306a); }
+}

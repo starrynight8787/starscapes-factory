@@ -99,15 +99,18 @@
   outline-offset: 2px;
 }
 .sg__fields {
-  display: grid;
-  grid-template-columns: 1fr 1fr auto;
+  display: flex;
+  flex-wrap: wrap;
   gap: 16px;
   align-items: end;
 }
-@media (max-width: 760px) {
-  .sg__fields {
-    grid-template-columns: 1fr;
-  }
+/* The fields sit side by side when the box is wide enough and wrap onto their own lines when it is not: it depends on the width of the BOX, not of the screen, so it never squeezes into slivers. */
+.sg__fields > * {
+  flex: 1 1 240px;
+  min-width: 0;
+}
+.sg__fields > .sg__submit {
+  flex: 0 0 auto;
 }
 .sg__list {
   margin-top: 24px;
