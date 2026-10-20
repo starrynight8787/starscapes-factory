@@ -1,0 +1,37 @@
+THE PRIVACY POLICY, UPDATED (SFW-233)   starscapes-privacy-policy-20oct.zip
+(Words only. NO Supabase step, nothing to do in Stripe or Vercel. The page stays HIDDEN from visitors: only you can see it, under the yellow "Draft" banner.)
+
+WHAT IT CHANGES (the privacy page and the note at the top of src/data/legalPages.js; nothing else on the site)
+ * The table of what you collect gains four rows: passes, suggestions and votes, story votes, and the free ebook (email, plus the date and wording agreed).
+ * A new section, "Suggestions and votes": only the suggestion is shown (never a name or email); only totals are shown; nobody can see who voted for what; totals hidden until you have voted or the vote closes;
+   "We could see who voted for what by looking directly in our database, but we don't look. We only ever use the totals." (Gill's decision, 20 October 2026.)
+   If you ask to delete your account, your suggestions, votes and passes record go with it (the database really does this); payment records are kept.
+ * Cookies: the choice made on the passes page, and the YouTube player (nothing loads from YouTube until you press play).
+ * Who we share with: Stripe also for passes, [MAILING TOOL], and YouTube (Google) only if you press play. Abroad: Google and the mailing tool.
+ * How long we keep it: passes records, suggestions and votes, ebook sign-ups. Your rights: take back your consent at any time.
+ * Marketing: no longer "we don't send marketing emails". The ebook tick box says yes to the free ebook AND free blog posts by email, so the policy now says exactly that, with an unsubscribe link in every email.
+
+THREE GAPS LEFT FOR YOU (the draft banner counts them, and they stop it going live until filled):
+ 1. [date]: the day you publish.   2. [2 years]: how long you keep emails to you.   3. [MAILING TOOL]: the real name, once chosen. The ebook door and the newsletter box wait for this, and the tool must give every email an unsubscribe link.
+
+THE TESTS NOW TIE THE POLICY TO THE SITE. They fail if the ebook tick box changes without the policy, if the "deleted with your account" sentence stops being true in the database, if orders get tied to accounts,
+if YouTube stops using the privacy-enhanced player, or if a stray [placeholder] slips in.
+
+STILL TO DO BEFORE IT GOES LIVE (also in the note at the top of legalPages.js): the three gaps; the solicitor's check (the YouTube wording, the proof that someone agreed to open their passes straight away, which is deleted with the account
+though Stripe keeps a copy, and the votes sentence); lines for the Founders' wall and a newsletter when they are built; re-check against the ICO's right-to-be-informed checklist near launch (the ICO says its guidance is under review
+after the Data (Use and Access) Act).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-privacy-policy-20oct.zip
+ 3. python3 tools/add-privacy-policy.py       (it checks the file first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Privacy policy: passes, suggest and vote, story votes, the free ebook, YouTube (draft, owner only)"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then, signed in as the owner, open  starscapesfactory.com/page/privacy  to read it.
+
+(The unzip also replaces one existing test file, legal-pages.test.jsx.)

@@ -23,7 +23,7 @@ describe('the four drafts came across whole', () => {
     for (const p of LEGAL_PAGES) expect(resolvePage(p.slug).kind).toBe('legal')
   })
   it('each has the sections of its draft, with their titles', () => {
-    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
+    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
     expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
     expect(page('terms').sections).toHaveLength(15)
@@ -61,7 +61,7 @@ describe('they agree with the rest of the site', () => {
     for (const p of LEGAL_PAGES) for (const m of textOf(p).matchAll(/\]\(([^)]+)\)/g)) expect(m[1], `${p.slug}: ${m[1]}`).toMatch(/^(\/|https:\/\/|mailto:)/)
   })
   it('the only gaps left in [square brackets] are the known ones, so a stray placeholder cannot slip in', () => {
-    const known = new Set(['[date]', '[RETURN ADDRESS]', '[2 years]'])
+    const known = new Set(['[date]', '[RETURN ADDRESS]', '[2 years]', '[MAILING TOOL]'])
     for (const p of LEGAL_PAGES) for (const m of textOf(p).replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)) expect(known.has(m[0]), `${p.slug}: ${m[0]}`).toBe(true)
     for (const p of LEGAL_PAGES) expect(countGaps(textOf(p)), p.slug).toBeGreaterThanOrEqual(0)
   })
@@ -97,11 +97,11 @@ describe('they show properly', () => {
       unmount()
     }
   })
-  it('the Privacy policy\u2019s table is a real table: four columns with headings, and six rows', () => {
+  it('the Privacy policy\u2019s table is a real table: four columns with headings, and ten rows', () => {
     const { container } = open('privacy')
     const table = container.querySelector('table')
     expect([...table.querySelectorAll('th')].map((h) => h.textContent)).toEqual(['What', 'When', 'Why', 'Our legal reason'])
-    expect(table.querySelectorAll('tbody tr')).toHaveLength(6); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(10); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
     expect(container.querySelector('.md-tablewrap')).toBeTruthy()
   })
   it('a table scrolls inside a box a keyboard can reach and a screen reader can name, with a short hint for people on a phone', () => {
@@ -115,9 +115,9 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (7), how long it keeps things (4), your rights (6)', () => {
+  it('lists are lists: the people Privacy shares with (9), how long it keeps things (7), your rights (7)', () => {
     const { container } = open('privacy')
-    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([7, 4, 6])
+    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([9, 7, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
   })
   it('the Returns steps are a numbered list of three, and the cancellation form is a quote', () => {
@@ -157,5 +157,57 @@ describe('the table and quote styles', () => {
   })
   it('have no text under 14px', () => {
     for (const m of css.matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)
+  })
+})
+
+import { EBOOK } from '../src/ebook/ebookConfig'
+
+describe('the Privacy policy says what the site really does (SFW-233)', () => {
+  const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
+  const privacy = () => textOf(page('privacy'))
+  const section = (title) => textOf({ intro: [], sections: page('privacy').sections.filter((x) => x.title === title) })
+  it('has exactly three gaps for the owner to fill: the date, how long emails are kept, and the name of the mailing tool', () => {
+    const gaps = [...privacy().replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)].map((m) => m[0]).sort()
+    expect(page('privacy').updated).toBe('[date]'); expect(gaps).toEqual(['[2 years]', '[MAILING TOOL]', '[date]'])
+    expect(page('privacy').ready).toBe(false)
+  })
+  it('covers passes, suggestions and votes, story votes, the free ebook, YouTube and the choice kept on the passes page', () => {
+    const t = privacy()
+    for (const needle of ['Your passes:', 'What you suggest', 'Your vote in a story vote', 'sign up for the free ebook', 'privacy-enhanced player', 'the choice you make on the passes page']) expect(t, needle).toContain(needle)
+  })
+  it('no longer says there is no marketing, and says what the ebook tick box says: yes to the ebook AND the free blog posts, with an unsubscribe link', () => {
+    expect(privacy()).not.toMatch(/We don.t send marketing emails/)
+    expect(EBOOK.consent).toMatch(/free ebook and your free blog posts by email/)
+    const m = section('Marketing'); expect(m).toMatch(/free ebook and our free blog posts by email/); expect(m).toMatch(/unsubscribe link/); expect(m).toMatch(/never sell your email address/)
+    expect(m).toMatch(/receipts and password resets, are not marketing/)
+  })
+  it('promises that who voted for what is not shown or looked at, as Gill decided on 20 October 2026', () => {
+    const v = section('Suggestions and votes')
+    expect(v).toMatch(/never your name or email address/); expect(v).toMatch(/nobody can see who voted for what, and nobody else can see your vote/); expect(v).toMatch(/We could see who voted for what by looking directly in our database, but we don.t look\. We only ever use the totals\./)
+  })
+  it('only promises to delete suggestions, votes and the passes record with an account because the database really does (on delete cascade on each)', () => {
+    expect(section('Suggestions and votes')).toMatch(/your suggestions, your votes and your passes record are deleted with it/)
+    const sql = (f) => read(`sql/${f}`)
+    const tableText = (file, name) => sql(file).split(`create table if not exists public.${name} (`)[1].split('\n);')[0]
+    expect(tableText('memberships.sql', 'memberships')).toMatch(/user_id uuid primary key references auth\.users \(id\) on delete cascade/)
+    expect(tableText('suggestions.sql', 'suggestions')).toMatch(/user_id uuid not null references auth\.users \(id\) on delete cascade/)
+    expect(tableText('suggestions.sql', 'suggestion_votes')).toMatch(/user_id uuid not null references auth\.users \(id\) on delete cascade/)
+    expect(tableText('story-votes.sql', 'story_ballots')).toMatch(/user_id uuid not null references auth\.users \(id\) on delete cascade/)
+  })
+  it('says orders are kept for six years even without an account, because orders are not tied to an account', () => {
+    expect(tableText_orders()).not.toMatch(/user_id/); expect(section('How long we keep it')).toMatch(/Order and invoice records:\*\* six years/)
+    function tableText_orders() { return read('sql/orders.sql').split('create table if not exists public.orders (')[1].split('\n);')[0] }
+  })
+  it('says what is kept in the browser (sign-in, cart, the passes choice) and that videos load nothing from YouTube until play, as the code does', () => {
+    expect(read('src/cart/cartStore.js')).toMatch(/'sf-cart-v1'/); expect(read('src/membership/MembershipPage.jsx')).toMatch(/CHOICE_KEY = 'sf-membership-choice'/)
+    for (const f of ['src/bookclub/BookClubPage.jsx', 'src/den/YouTubePlayer.jsx']) { try { expect(read(f)).not.toMatch(/https:\/\/www\.youtube\.com\/embed/) } catch (e) { if (e.code !== 'ENOENT') throw e } }
+    expect(read('src/bookclub/BookClubPage.jsx')).toMatch(/youtube-nocookie\.com\/embed/)
+  })
+  it('lists the people it shares with, including the mailing tool and YouTube, and Stripe for passes', () => {
+    const t = section('Who we share your information with'); expect(t).toMatch(/\*\*\[MAILING TOOL\]\*\*/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
+    expect(section('Sending information abroad')).toMatch(/Google, which runs YouTube, and our mailing tool/)
+  })
+  it('lets people take back their consent, and says how long ebook sign-ups and passes records are kept', () => {
+    expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Free ebook sign-ups:\*\* until you unsubscribe/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
   })
 })
