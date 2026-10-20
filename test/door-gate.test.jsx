@@ -30,7 +30,7 @@ describe('the gate on a page behind a door', () => {
   })
   it('gives the visitor a way back to the room', () => {
     show()
-    expect(screen.getByRole('link', { name: /Back to Sarah Jr\.'s Den/ }).getAttribute('href')).toBe('/sarah-jrs-den')
+    expect(screen.getByRole('link', { name: /Back to Sarah Junior's Clubhouse/ }).getAttribute('href')).toBe('/sarah-jrs-den')
   })
   it('shows the owner the page under a banner that says the door is closed, with a way to open it', () => {
     state.owner = { checking: false, owner: true }

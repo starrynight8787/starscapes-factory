@@ -64,7 +64,7 @@ describe('the page behind a door', () => {
     visit('/sarah-jrs-den/blog')
     expect(await screen.findByRole('heading', { level: 1, name: "This door isn't open yet" })).toBeTruthy()
     expect(screen.queryByText('Daryl visits the sea')).toBeNull()
-    expect(screen.getByRole('link', { name: /Back to Sarah Jr\.'s Den/ }).getAttribute('href')).toBe('/sarah-jrs-den')
+    expect(screen.getByRole('link', { name: /Back to Sarah Junior's Clubhouse/ }).getAttribute('href')).toBe('/sarah-jrs-den')
   })
   it('shows the page, with only the posts tagged for that door, once it is open', async () => {
     world.open = { 'sarah-jrs-den/blog': true }
