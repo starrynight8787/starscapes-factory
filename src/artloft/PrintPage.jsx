@@ -8,6 +8,7 @@ import { addItem } from '../cart/cartStore'
 import useCart from '../cart/useCart'
 import { collectionBySlug, COLLECTIONS, PRINT_FACTS, firstImage, formatPrice, formatSize } from './artLoftData'
 import { detailsFor } from './printDetails'
+import { descriptionParagraphs } from './descriptionText'
 
 export default function PrintPage() {
   const { id } = useParams()
@@ -139,8 +140,8 @@ export default function PrintPage() {
           {collection && <p className="al-print__collection"><Link to={`/art-loft/collections/${collection.slug}`}>{collection.name}</Link></p>}
           {print.description && (
             <div className="al-print__desc">
-              {print.description.split(/\n\s*\n/).map((para, n) => (
-                <p key={n}>{para.trim()}</p>
+              {descriptionParagraphs(print.description).map((para, n) => (
+                <p key={n}>{para}</p>
               ))}
             </div>
           )}

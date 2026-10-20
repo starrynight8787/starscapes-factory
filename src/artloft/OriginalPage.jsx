@@ -7,6 +7,7 @@ import { formatPrice, ORIGINALS_ONLINE_CHECKOUT } from './artLoftData'
 import { detailLines, enquiryHref, isSold, ENQUIRY_EMAIL } from './originals'
 import { addItem } from '../cart/cartStore'
 import useCart from '../cart/useCart'
+import { descriptionParagraphs } from './descriptionText'
 
 // One original painting, at /art-loft/originals/:id.
 // While originals cannot be bought online, an available one shows an email button. A sold one says so and offers nothing to buy.
@@ -96,8 +97,8 @@ export default function OriginalPage({ online = ORIGINALS_ONLINE_CHECKOUT }) {
           )}
           {original.description && (
             <div className="al-print__desc">
-              {original.description.split(/\n\s*\n/).map((para, n) => (
-                <p key={n}>{para.trim()}</p>
+              {descriptionParagraphs(original.description).map((para, n) => (
+                <p key={n}>{para}</p>
               ))}
             </div>
           )}

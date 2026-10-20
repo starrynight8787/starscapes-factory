@@ -483,10 +483,9 @@ a.al-object:focus-visible {
   color: var(--sf-muted, #5b6585);
   line-height: 1.55;
 }
-/* A description is written in paragraphs (a blank line between them); a single line break, as in a list of sizes, stays a line break. */
+/* A description is shown as two paragraphs (see descriptionText.js). */
 .al-print__desc p {
   margin: 0 0 14px;
-  white-space: pre-line;
 }
 .al-print__desc p:last-child {
   margin-bottom: 0;
