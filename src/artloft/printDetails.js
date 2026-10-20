@@ -3,10 +3,12 @@
 // Every fact here comes from Creative Hub: their reply to us of 16 October 2026, and their help pages on frames, production times
 // and delivery times (updated 9 July 2026). If they change, change the numbers here, and the print page follows.
 
-// Working days to make, before it is posted
-export const MAKE_DAYS = { unframed: [1, 5], framed: [5, 10] }
-// Working days to reach the customer once posted. This is Creative Hub's standard time for the countries below.
-export const SHIP_DAYS = [6, 10]
+// Working days from the order to the parcel arriving: making it AND delivering it together, framed or unframed. Creative Hub's written reply of 20 October 2026 (to Gill's question
+// whether the 6 to 10 working days covers framed prints): "The standard 6-10 working day SLA applies to both framed and unframed prints." (Their answer did not give separate figures for
+// Europe, the US and Canada: ask again if it matters.) These were once added together as making days plus delivery days, which wrongly told customers 7 to 15 (or 11 to 20 framed).
+export const JOURNEY_DAYS = [6, 10]
+// Creative Hub's time for countries outside the list below (their help pages). The shop only sells to countries in the list.
+export const REST_OF_WORLD_DAYS = 15
 // The countries Creative Hub gives the standard 6 to 10 working days: the UK, the EU, Norway, Iceland, Liechtenstein, Switzerland,
 // the United States and Canada. Anywhere else (Australia, New Zealand, the rest of the world) takes up to 15, so the shop must not
 // say "6 to 10" for those. The test that checks the launch countries against this list is what stops that going wrong.
@@ -53,8 +55,7 @@ export function detailsFor(variant) {
     if (glazing === 'acrylic') lines.push('Glazed with 3 mm clear acrylic, so it travels safely.')
     else if (glazing === 'glass') lines.push('Glazed with float glass.')
   }
-  const [low, high] = MAKE_DAYS[framed ? 'framed' : 'unframed']
-  const [shipLow, shipHigh] = SHIP_DAYS
-  lines.push(`${framed ? 'Framed' : 'Printed'} to order in ${low} to ${high} working days, then ${shipLow} to ${shipHigh} working days to reach you: allow ${low + shipLow} to ${high + shipHigh} working days in all.`)
+  const [low, high] = JOURNEY_DAYS
+  lines.push(`${framed ? 'Framed' : 'Printed'} to order and delivered to you in ${low} to ${high} working days.`)
   return lines
 }

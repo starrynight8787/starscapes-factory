@@ -1,0 +1,60 @@
+// What a customer should know about the size and finish they have chosen, in plain words.
+//
+// Every fact here comes from Creative Hub: their reply to us of 16 October 2026, and their help pages on frames, production times
+// and delivery times (updated 9 July 2026). If they change, change the numbers here, and the print page follows.
+
+// Working days to make, before it is posted
+export const MAKE_DAYS = { unframed: [1, 5], framed: [5, 10] }
+// Working days to reach the customer once posted. This is Creative Hub's standard time for the countries below.
+export const SHIP_DAYS = [6, 10]
+// The countries Creative Hub gives the standard 6 to 10 working days: the UK, the EU, Norway, Iceland, Liechtenstein, Switzerland,
+// the United States and Canada. Anywhere else (Australia, New Zealand, the rest of the world) takes up to 15, so the shop must not
+// say "6 to 10" for those. The test that checks the launch countries against this list is what stops that going wrong.
+export const SHIPS_IN_6_TO_10 = new Set([
+  'GB', 'US', 'CA', 'NO', 'IS', 'LI', 'CH',
+  'AT', 'BE', 'BG', 'HR', 'CY', 'CZ', 'DK', 'EE', 'FI', 'FR', 'DE', 'GR', 'HU', 'IE', 'IT', 'LV', 'LT', 'LU', 'MT', 'NL', 'PL', 'PT', 'RO', 'SK', 'SI', 'ES', 'SE',
+])
+
+// These framed sizes are glazed with 3 mm clear acrylic so they travel safely (centimetres, shorter side first). Every other size has float glass.
+export const ACRYLIC_SIZES_CM = [[59.4, 84.1], [60, 80], [70, 100]]
+const TOLERANCE_CM = 0.6
+
+// "21x30cm", "60 × 80 cm", "A3 (29.7 × 42 cm)", "600 x 800 mm" -> [shorter, longer] in centimetres, or null if it cannot be read
+export function parseSizeCm(label) {
+  const text = String(label === null || label === undefined ? '' : label).toLowerCase()
+  const m = text.match(/(\d+(?:[.,]\d+)?)\s*[x×]\s*(\d+(?:[.,]\d+)?)/)
+  if (!m) return null
+  let [a, b] = [m[1], m[2]].map((n) => Number(n.replace(',', '.')))
+  if (!(a > 0 && b > 0)) return null
+  if (/\bmm\b/.test(text)) {
+    a /= 10
+    b /= 10
+  }
+  return [Math.min(a, b), Math.max(a, b)]
+}
+
+// 'acrylic', 'glass', or null if the size cannot be read (in which case nothing is claimed about it)
+export function glazingFor(label) {
+  const dims = parseSizeCm(label)
+  if (!dims) return /\bA1\b/i.test(String(label || '')) ? 'acrylic' : null
+  const acrylic = ACRYLIC_SIZES_CM.some(([w, h]) => Math.abs(dims[0] - w) <= TOLERANCE_CM && Math.abs(dims[1] - h) <= TOLERANCE_CM)
+  return acrylic ? 'acrylic' : 'glass'
+}
+
+// The lines to show for one size and finish
+export function detailsFor(variant) {
+  if (!variant) return []
+  const framed = Boolean(variant.framed)
+  const lines = []
+  if (framed) {
+    lines.push('Ready to hang: every frame comes with its hanging fixing.')
+    lines.push('The size shown is the outside size of the frame.')
+    const glazing = glazingFor(variant.size_label)
+    if (glazing === 'acrylic') lines.push('Glazed with 3 mm clear acrylic, so it travels safely.')
+    else if (glazing === 'glass') lines.push('Glazed with float glass.')
+  }
+  const [low, high] = MAKE_DAYS[framed ? 'framed' : 'unframed']
+  const [shipLow, shipHigh] = SHIP_DAYS
+  lines.push(`${framed ? 'Framed' : 'Printed'} to order in ${low} to ${high} working days, then ${shipLow} to ${shipHigh} working days to reach you: allow ${low + shipLow} to ${high + shipHigh} working days in all.`)
+  return lines
+}

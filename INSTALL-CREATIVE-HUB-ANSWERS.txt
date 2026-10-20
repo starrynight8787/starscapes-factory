@@ -1,0 +1,48 @@
+CREATIVE HUB'S ANSWERS, PUT INTO THE SITE   starscapes-creative-hub-answers-20oct.zip
+(NO Supabase step, nothing to do in Stripe or Vercel. The Terms page is still HIDDEN from visitors, and the order email wording is still marked "not approved", so nothing here reaches a real customer yet.)
+
+What Creative Hub told you in writing on 20 October 2026, and what this does with each answer:
+
+1. THE 6 TO 10 WORKING DAYS covers production AND delivery together, for framed AND unframed prints.
+   Before: the site ADDED making days to delivery days (unframed 1-5 plus 6-10, framed 5-10 plus 6-10). So the order email told customers "7 to 15 working days" (or "11 to 20" for a frame), the print page said the
+   same, the posted email said "6 to 10 days after posting", and the Terms said both. All of that was too pessimistic, and would have been wrong the moment a customer compared it with what Creative Hub promises.
+   Now: ONE figure, 6 to 10 working days from the order to the parcel arriving, everywhere:
+     - the print page line: "Framed to order and delivered to you in 6 to 10 working days." (or "Printed to order ...")
+     - the order confirmation email: "We expect your print to reach you within 6 to 10 working days of your order (framing and delivery together)."
+     - the posted email: "We expect it to reach you within 6 to 10 working days of your order."
+     - Terms section 5 (Delivery): the same, with the per-country "once posted" list taken out.
+   Countries outside Creative Hub's standard list (none of the six you sell to) still say "up to 15".
+
+2. THE SECOND ADDRESS LINE is delivery_line2. Until now the site stuck line 2 onto the end of line 1 so it could not be lost. Now it is sent in its own field, delivery_line2, exactly as Creative Hub named it.
+   (Nothing tested this before. There is now a test of the whole delivery address going to Creative Hub.)
+
+3. TRACKING: every order has tracking, and once dispatched the order shows status "Dispatched" with its tracking number. So "every order is sent with tracked delivery" (Terms section 5, Returns section 4) is now TRUE.
+   The confirmation email can say "We will email you when your order has been posted, with your tracking details", as the Terms do. There are no webhooks, so the site has to ask Creative Hub about each order.
+   NOT DONE YET: they did not say what the tracking field is called, so the "Send posted email" button in the Orders panel is still pressed by you, and you still type the tracking number in. See "Still to ask" below.
+
+4. CANCELLING AND CHANGING AN ADDRESS: an order can be cancelled only while printing has not started; a delivery address can be changed only before the order has been dispatched; both are done by EMAILING Creative Hub's
+   customer service (there is no way through the API).
+   Now the Terms (section 5) say: if you need to change the delivery address, or want to stop an order before it is made, email us straight away; we send your order to the print studio very soon after you pay, so we can only
+   cancel it if printing has not started, and only change the address before it has been posted; this is separate from your legal right to cancel (Returns and refunds). The order confirmation email says the same about the address.
+   YOU will need to email Creative Hub when a customer asks. (Their email address is not in the site. A one-line routine for yourself is worth having: customer emails you, you email Creative Hub the same day.)
+
+STILL TO ASK CREATIVE HUB (they did not answer these; I have added them to SFW-17):
+ a. The figures for Europe, the US and Canada (the answer only said "the standard SLA"; the site says 6 to 10 for all six countries you sell to, as before).
+ b. Who receives the tracking email from them, and whether they email the customer when you add the customer's email (SFW-17): otherwise customers could get two emails.
+ c. What the tracking field is called in their order, and whether it is a number, a link or both, and what the other status values are.
+ d. Whether a test order can be cancelled before it is charged or produced (it affects the supervised first order, SFW-8).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-creative-hub-answers-20oct.zip
+ 3. python3 tools/add-creative-hub-answers.py   (it checks the five files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it should still print 12)
+ 7. git add .
+    git status                                  (no files ending .before- should be listed)
+    git commit -m "Creative Hub's answers: 6 to 10 days in all, delivery_line2, tracking on every order, cancelling and address changes"
+    git push
+ 8. Watch Vercel's Deployments page for READY.
+
+(The unzip also replaces three existing test files, legal-pages.test.jsx, order-email-text.test.js and dispatch-email-text.test.js, and adds creativehub-payload.test.js and print-details-journey.test.js.)

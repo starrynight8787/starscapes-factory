@@ -270,3 +270,28 @@ describe('the Terms for passes say what the passes really do (SFW-182)', () => {
     for (const title of ['Prices and VAT', 'Payment', 'Cancelling and returns']) expect(part(title), title).not.toMatch(/\bpass(es)?\b/i)
   })
 })
+
+import { JOURNEY_DAYS } from '../src/artloft/printDetails'
+
+describe('the Terms on delivery say what Creative Hub confirmed in writing on 20 October 2026', () => {
+  const delivery = () => textOf({ intro: [], sections: page('terms').sections.filter((x) => x.title === 'Delivery') })
+  it('gives the same 6 to 10 working days as the print pages and emails use, for the whole journey, framed or unframed', () => {
+    expect(delivery()).toContain(`it usually reaches you within ${JOURNEY_DAYS[0]} to ${JOURNEY_DAYS[1]} working days of your order, which covers making it and delivering it`)
+    expect(delivery()).toMatch(/Framed or unframed/)
+  })
+  it('no longer adds making days to delivery days, or lists days "after posting" for each country', () => {
+    expect(delivery()).not.toMatch(/1 to 5 working days|5 to 10 working days|Once your print has been posted|up to 15|United Kingdom: 6 to 10/)
+  })
+  it('says every order is sent tracked (confirmed) and that we will email when it is posted, with the tracking details', () => {
+    expect(delivery()).toMatch(/made to order and sent with tracked delivery/); expect(delivery()).toMatch(/We will email you when your order has been posted, with your tracking details\./)
+    expect(textOf({ intro: [], sections: page('returns').sections.filter((x) => x.title === "If your print doesn't arrive") })).toMatch(/Every order is sent with tracked delivery/)
+  })
+  it('keeps the estimates-not-promises line and the 30-day backstop', () => {
+    expect(delivery()).toMatch(/These are estimates, not promises/); expect(delivery()).toMatch(/we will deliver within 30 days of your order/)
+  })
+  it('says how to change an address or stop an order, as Creative Hub told us: only while printing has not started, address only before posting, by email, and separate from the legal right to cancel', () => {
+    const t = delivery()
+    expect(t).toMatch(/If you need to change the delivery address, or want to stop an order before it is made, email/); expect(t).toMatch(/we can only cancel it if printing has not started, and we can only change the delivery address before it has been posted/)
+    expect(t).toMatch(/This is separate from your legal right to cancel/)
+  })
+})

@@ -8,9 +8,11 @@
 //   { slug, title, updated, intro: [ ...paragraphs ], ready, sections: [ { title, paragraphs: [ ... ] } ] }
 //
 // CHECK BEFORE PUBLISHING ANY OF THEM:
-//  * TRACKING AND DELIVERY TIMES (SFW-17). Terms section 5 and Returns section 4 say "Every order is sent with tracked delivery", and Terms section 5 gives 6 to 10 working
-//    days AFTER posting. The print service's help article says postal orders do not include detailed tracking, and their reply says 6 to 10 working days covers production AND
-//    delivery together. Wait for their answer to Gill's follow-up email, then correct those two sections (and the delivery estimate in the shop).
+//  * TRACKING AND DELIVERY TIMES (SFW-17): ANSWERED by Creative Hub in writing on 20 October 2026. The 6 to 10 working days covers production AND delivery together, framed or unframed; every order has tracking;
+//    an order can be cancelled while printing has not started, and a delivery address changed before dispatch, both by emailing their customer service (there is no way to do it through the API). Terms section 5, the print pages
+//    and the order emails now say so, and Returns section 4 ("every order is sent with tracked delivery") is confirmed. STILL NOT ANSWERED: separate figures for Europe, the US and Canada; who receives the tracking email from
+//    Creative Hub (so we do not know if customers would get two emails); whether a test order can be cancelled before it is charged; what the tracking field is called in their API.
+
 //  * THE PRIVACY POLICY was brought up to date on 20 October 2026 (SFW-233): passes, the suggest and vote boxes, story votes, the free ebook (its tick box also says yes to free blog posts by email, so Marketing now says so),
 //    the YouTube player and the browser storage. Decided 20 October: Resend is the mailing tool, and emails and messages to us are kept 2 years. THE ONLY GAP LEFT is the [date]. STILL TO DO BEFORE IT GOES LIVE: the ebook sign-up list
 //    is only stored in Supabase; before the ebook door opens it must reach a Resend audience and each email must be sent as a Resend Broadcast with its unsubscribe footer (not built yet); check which region the Resend account sends from
@@ -64,10 +66,9 @@ export const LEGAL_PAGES = [
         "title": "Delivery",
         "paragraphs": [
           "We deliver free to the United Kingdom, Ireland, Germany, France, the United States and Canada. We can't deliver anywhere else at the moment.",
-          "Unframed prints are normally made and posted within 1 to 5 working days, and framed prints within 5 to 10 working days. Every order is sent with tracked delivery, which then usually takes 6 to 10 working days (up to 15 outside Europe and North America). These are estimates, not promises. If we haven't agreed a delivery date with you, we will deliver within 30 days of your order. If we are late, contact us and we will put it right, and you may be able to cancel for a refund.",
-          "Once your print has been posted, it usually arrives in:",
-          "- United Kingdom: 6 to 10 working days\n- Ireland, Germany and France: 6 to 10 working days\n- United States and Canada: 6 to 10 working days",
+          "Every print is made to order and sent with tracked delivery. Framed or unframed, it usually reaches you within 6 to 10 working days of your order, which covers making it and delivering it. These are estimates, not promises. If we haven't agreed a delivery date with you, we will deliver within 30 days of your order. If we are late, contact us and we will put it right, and you may be able to cancel for a refund.",
           "We will email you when your order has been posted, with your tracking details.",
+          "If you need to change the delivery address, or want to stop an order before it is made, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) straight away. We send your order to the print studio very soon after you pay, so we can only cancel it if printing has not started, and we can only change the delivery address before it has been posted. This is separate from your legal right to cancel, which our Returns and refunds page explains.",
           "The print is your responsibility once it has been delivered to you, or to someone you have asked us to deliver it to. Please check the parcel when it arrives and tell us straight away about any damage: see our Returns and refunds page."
         ]
       },

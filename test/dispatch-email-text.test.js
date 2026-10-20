@@ -31,7 +31,8 @@ describe('the posted email', () => {
     expect(html).toContain('href="https://track.example.com/abc123"')
   })
   it('gives the posting time from the same numbers as the print page, and never "6 to 10" outside the countries it applies to', () => {
-    expect(buildDispatch(order()).text).toMatch(/6 to 10 working days/)
+    expect(buildDispatch(order()).text).toMatch(/We expect it to reach you within 6 to 10 working days of your order\. That is an estimate, not a promise\./)
+    expect(buildDispatch(order()).text).not.toMatch(/Posting usually takes/)
     expect(buildDispatch(order({ shipping: { address: { city: 'Sydney', country: 'AU' } } })).text).toMatch(/6 to 15 working days/)
   })
   it('reminds them about damage and the 14-day right to cancel, and gives the company details', () => {
