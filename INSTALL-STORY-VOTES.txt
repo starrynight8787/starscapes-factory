@@ -1,0 +1,51 @@
+LET'S WRITE A STORY, STEP TWO: THE VOTING   starscapes-story-votes-20oct.zip
+(SUPABASE FIRST: run sql/story-votes.sql, then install. Nothing to do in Stripe or Vercel.)
+
+WHAT IT DOES
+After a chapter, members who hold the Come Write With Me pass choose where the story goes next. The vote box on the Let's write a story page has the four states from your Figma design:
+ 1. A MEMBER WHO HAS NOT VOTED: "Open" chip, the question (What happens next?), "After Chapter 10: members choose where the story goes next.", the choices A, B, C... as radio buttons, a Cast my vote button
+    (off until they pick one), and "You can change your vote until it closes on 31 Oct 2026." No numbers are shown yet.
+ 2. A MEMBER WHO HAS VOTED: "Thank you, your vote is counted. It closes on 31 Oct 2026.", every choice with its votes and a bar, a "Your vote" mark on their own, and a Change my vote button
+    (which shows the choices again with theirs picked, Save my new vote, and Keep my vote).
+ 3. A VISITOR (signed out, or signed in without the pass): "Members only" chip, the choices to read but nothing to press, "The choices show here, but only members can vote. The voting closes on ...",
+    a Coming soon button (it becomes "Choose your passes" when memberships open), and "Already a member? Log in." for someone signed out. No numbers.
+ 4. AFTER THE VOTE CLOSES: "Closed" chip, "Where the story went", "After Chapter 10, members chose:", the results for everyone, the winner marked "Chosen",
+    and "Chapter 11 is being written. The next vote opens when it is published."
+With no vote yet, the box still shows the "Soon" box from step one.
+
+THE RULES (kept in the database, so they cannot be got round by poking at the website)
+ * Everyone can read the question and the choices. Only someone who HOLDS the pass can vote (active, trialing or past due, the same as everywhere else), only while the vote is open, ONE vote each.
+   They can change it any time until it closes.
+ * NOBODY can read anybody else's vote, not even you. The numbers come only from a database function that hands them over when the vote has closed, or the person asking has voted, or it is you.
+   So a visitor, or a member who has not voted, never gets numbers, however they ask.
+ * The winner is the choice YOU pick; if you pick none, it is the choice alone at the top. A tie, or no votes, marks nobody until you choose.
+
+YOUR TOOLS: Admin, then Stories, now has a VOTES section above your list of chapters.
+ * Make a vote: which story, after which chapter, the question (leave empty for "What happens next?"), when voting closes (date and time), and two to six choices ("Add another choice" / "Take out").
+   A story can have one vote after each chapter.
+ * Your votes: each shows open or closed, when, the numbers (you can always see them), and the choices. "Close it now" ends a vote early (it asks first). "Winner" picks the choice that won
+   (or "The one with the most votes"), then "Save the winner". "Delete" removes a vote and everyone's votes in it (it asks first).
+
+TO USE IT: make the first vote after your Chapter 3 or later chapter in Admin, Stories. The vote box appears on the story page at once.
+
+STEP 1: SUPABASE. Open Supabase, then SQL editor, then New query. Paste the whole of sql/story-votes.sql (the SQL itself, not the file name) and press Run. It says "Success. No rows returned." It is safe to run twice.
+ To check it worked, run these two, one at a time:
+   select tablename, policyname from pg_policies where tablename in ('story_votes', 'story_vote_options', 'story_ballots') order by tablename, policyname;       (11 rows)
+   select proname, prosecdef from pg_proc where proname in ('holds_story_pass', 'can_cast_vote', 'vote_results') order by proname;                                   (3 rows, all true)
+
+STEP 2: INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-story-votes-20oct.zip
+ 3. python3 tools/add-story-votes.py          (it checks the files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (every check should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Let's write a story: the vote, and the owner's tools for it"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+(The unzip also replaces two existing test files, stories-page.test.jsx and admin-stories.test.jsx, because the vote box is now its own part.)
+
+THIS NEEDS the Let's write a story step one package, and the earlier pass and membership packages, already installed.

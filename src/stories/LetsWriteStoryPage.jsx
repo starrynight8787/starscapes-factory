@@ -5,7 +5,8 @@ import { StarMark } from '../components/Logo'
 import { formatDate } from '../rooms/postRules'
 import { fetchChapterPosts, fetchChapterRows, fetchStories } from './storiesApi'
 import { buildChapters, chapterTag, completedStories, currentStory } from './storiesRules'
-import { CHAPTERS, COMPLETED, PAGE, PINNED, VOTE } from './storiesData'
+import { CHAPTERS, COMPLETED, PAGE, PINNED } from './storiesData'
+import StoryVote from './StoryVote'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './stories.css'
@@ -111,13 +112,7 @@ export default function LetsWriteStoryPage() {
           </div>
 
           <aside className="ls__side" aria-label="The vote and finished stories">
-            {story && (
-              <section className="ls__box ls__vote" aria-labelledby="ls-vote-title">
-                <p className="ls__label">{VOTE.label}<span className="ls__chip ls__chip--navy">{VOTE.chip}</span></p>
-                <h2 id="ls-vote-title" className="ls__script">{VOTE.title}</h2>
-                <p>{VOTE.text}</p>
-              </section>
-            )}
+            {story && <StoryVote story={story} />}
             <section className="ls__box ls__done" aria-labelledby="ls-done-title">
               <h2 id="ls-done-title" className="ls__h3">{COMPLETED.title}</h2>
               {done.length === 0 && <p className="rp-note">{COMPLETED.none}</p>}

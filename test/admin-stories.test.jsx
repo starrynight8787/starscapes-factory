@@ -13,6 +13,7 @@ vi.mock('../src/stories/storiesApi', () => ({
   removeChapter: vi.fn(async (storyId, number) => { h.calls.push(['removeChapter', storyId, number]) }),
 }))
 vi.mock('../src/admin/useIsOwner', () => ({ useOwnerCheck: () => ({ checking: false, owner: h.owner }) }))
+vi.mock('../src/stories/votesApi', () => ({ fetchVotes: vi.fn(async () => ({ votes: [], options: [] })), fetchResults: vi.fn(async () => []), saveVote: vi.fn(), closeVoteNow: vi.fn(), chooseWinner: vi.fn(), removeVote: vi.fn() }))
 import AdminStories from '../src/admin/AdminStories'
 
 const STORY_ID = '11111111-2222-4333-8444-555555555555'

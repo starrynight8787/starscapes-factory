@@ -11,6 +11,7 @@ vi.mock('../src/stories/storiesApi', () => ({
   fetchChapterRows: vi.fn(async () => h.rows),
   fetchChapterPosts: vi.fn(async (ids) => { h.asked.push(ids); return h.posts.filter((p) => ids.includes(p.id)) }),
 }))
+vi.mock('../src/stories/StoryVote', () => ({ default: ({ story }) => <div data-testid="story-vote">{story.id}</div> }))
 import LetsWriteStoryPage from '../src/stories/LetsWriteStoryPage'
 import { ROOMS } from '../src/rooms/roomsData'
 
@@ -90,12 +91,15 @@ describe('the chapter cards', () => {
   })
 })
 
-describe('the vote box (the voting itself comes in step two)', () => {
-  it('says the vote is coming: the label, a Soon chip and the question, with nothing to press', async () => {
-    page()
-    const box = await screen.findByRole('region', { name: 'What happens next?' })
-    expect(within(box).getByText('The vote')).toBeInTheDocument(); expect(within(box).getByText('Soon')).toBeInTheDocument(); expect(within(box).getByText(/Members will choose where the story goes next/)).toBeInTheDocument()
-    expect(within(box).queryByRole('button')).toBeNull(); expect(within(box).queryByRole('radio')).toBeNull(); expect(within(box).queryByRole('link')).toBeNull()
+describe('the vote box', () => {
+  it('is its own part (StoryVote), given the story the page is about, beside the pinned chapter and above the finished stories', async () => {
+    page(); expect(await screen.findByTestId('story-vote')).toHaveTextContent('s1')
+    const side = screen.getByRole('complementary'); expect(within(side).getByTestId('story-vote')).toBeInTheDocument(); expect(within(side).getByRole('region', { name: 'Completed stories' })).toBeInTheDocument()
+    expect(side.firstElementChild).toBe(screen.getByTestId('story-vote'))
+  })
+  it('is not there when there is no story running (only finished ones)', async () => {
+    h.stories = [{ id: 'd1', slug: 'x', title: 'Done one', teaser: null, picture_url: null, status: 'completed', finished_on: '2026-05-15', created_at: '2026-05-01T10:00:00Z' }]; h.rows = []; h.posts = []; page()
+    await screen.findByRole('region', { name: 'Completed stories' }); expect(screen.queryByTestId('story-vote')).toBeNull()
   })
 })
 
@@ -137,7 +141,7 @@ describe('when there is nothing, or something is wrong', () => {
   })
   it('says the next story is on its way, with no vote box and no pinned chapter, when only finished stories exist', async () => {
     h.stories = [{ id: 'd1', slug: 'x', title: 'Done one', teaser: null, picture_url: null, status: 'completed', finished_on: '2026-05-15', created_at: '2026-05-01T10:00:00Z' }]; h.rows = []; h.posts = []; page()
-    expect(await screen.findByText('The next story is on its way.')).toBeInTheDocument(); expect(screen.queryByRole('region', { name: 'What happens next?' })).toBeNull(); expect(screen.getByRole('region', { name: 'Completed stories' })).toBeInTheDocument()
+    expect(await screen.findByText('The next story is on its way.')).toBeInTheDocument(); expect(screen.queryByTestId('story-vote')).toBeNull(); expect(screen.getByRole('region', { name: 'Completed stories' })).toBeInTheDocument()
   })
   it('says plainly when the stories cannot load, and shows nothing misleading', async () => {
     h.fail = true; page()

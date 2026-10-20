@@ -5,6 +5,7 @@ import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../componen
 import useTitle from '../pages/useTitle'
 import { useOwnerCheck } from './useIsOwner'
 import { cleanChapter, cleanStory, slugFrom } from '../stories/storiesRules'
+import AdminStoryVotes from './AdminStoryVotes'
 import { fetchChapterPosts, fetchChapterRows, fetchStories, removeChapter, removeStory, saveChapter, saveStory } from '../stories/storiesApi'
 import '../styles/pages.css'
 import './admin.css'
@@ -97,6 +98,7 @@ export default function AdminStories({ session }) {
           <div className="ab__buttons"><button type="submit" className="pg-btn sg-btn--primary">Save the chapter</button></div>
         </form>
       </section>
+      <AdminStoryVotes stories={stories} rows={rows} />
         </div>
         <div className="ad-col">
       <section className="ad-card ad-group" aria-labelledby="ast-list-title">
