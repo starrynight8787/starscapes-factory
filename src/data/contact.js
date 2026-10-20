@@ -11,6 +11,9 @@ export const SOCIAL_LINKS = {
   threads: '',
 }
 
+// Gill's own Instagram, for the Photography page (Explorer's Bay)
+export const INSTAGRAM_GILL = 'https://www.instagram.com/gill_bennet/'
+
 // Each project's own accounts, for its own pages (for example the Story Ledger page and the Drafting Desk's live sessions).
 // The Drafting Desk's YouTube channel is the "write, study and read with me" live channel.
 export const PROJECT_SOCIALS = {

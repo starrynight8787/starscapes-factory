@@ -1,3 +1,4 @@
+import InstagramGallery from '../instagram/InstagramGallery'
 import { Routes, Route, Link, useParams } from 'react-router-dom'
 import RoomHome from './RoomHome'
 import RoomAreaPage from './RoomAreaPage'
@@ -55,7 +56,7 @@ const CUSTOM_AREAS = {
 function AreaRoute({ room }) {
   const { area } = useParams()
   const areas = { ...ROOMS[room].areas, ...doorAreas(room) }
-  const page = <RoomAreaPage room={room} areas={areas} />
+  const page = <RoomAreaPage room={room} areas={areas} extra={room === 'explorers-bay' && area === 'photography' ? <InstagramGallery /> : null} />
   const door = findDoor(room, area)
   const Own = !door ? CUSTOM_AREAS[`${room}/${area}`] : null
   if (Own) return <Own />

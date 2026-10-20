@@ -16,7 +16,7 @@ const chunk = (list, n) => Array.from({ length: Math.ceil(list.length / n) }, (_
 
 // One area of a room, at /<room>/<area>: the room's published posts that belong to it, newest first.
 // A gallery shows each post's picture; a list is a compact column of rectangles.
-export default function RoomAreaPage({ room, areas }) {
+export default function RoomAreaPage({ room, areas, extra = null }) {
   const config = ROOMS[room]
   const { area: areaKey } = useParams()
   const known = areas || config.areas // the room's own areas, or those plus the pages behind its doors
@@ -88,6 +88,7 @@ export default function RoomAreaPage({ room, areas }) {
           ))}
         </ul>
       )}
+      {extra}
     </main>
   )
 }
