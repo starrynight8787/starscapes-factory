@@ -5,11 +5,12 @@ import { MemoryRouter } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const h = vi.hoisted(() => ({ event: null, featured: '', post: null, fail: false, owner: true, calls: [], events: [], failSave: false }))
+const h = vi.hoisted(() => ({ event: null, featured: '', post: null, posts: null, fail: false, owner: true, calls: [], events: [], failSave: false }))
 vi.mock('../src/home/homeApi', () => ({
   fetchNextEvent: vi.fn(async () => { if (h.fail) throw new Error('x'); return h.event }),
   fetchFeaturedSlug: vi.fn(async () => { if (h.fail) throw new Error('x'); return h.featured }),
   fetchLatestPost: vi.fn(async () => { if (h.fail) throw new Error('x'); return h.post }),
+  fetchLatestPosts: vi.fn(async () => { if (h.fail) throw new Error('x'); return h.posts || (h.post ? [h.post] : []) }),
   listEvents: vi.fn(async () => h.events),
   saveEvent: vi.fn(async (id, value) => { if (h.failSave) throw new Error('Only the site owner can change this.'); h.calls.push(['saveEvent', id, value]) }),
   removeEvent: vi.fn(async (id) => { h.calls.push(['removeEvent', id]) }),
@@ -32,7 +33,7 @@ const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
 const wrap = (ui) => render(<MemoryRouter>{ui}</MemoryRouter>)
 const EVENT = { id: 'e1', title: 'Come read with me, live', starts_at: '2026-12-05T19:00:00Z', description: 'We read a chapter together.', link_url: null }
 const POST = { id: 'p1', title: 'Claude and I had a fight', image_url: null, channel: 'factory-floor', created_at: '2026-10-14T10:00:00Z' }
-beforeEach(() => { Object.assign(h, { event: null, featured: '', post: null, fail: false, owner: true, calls: [], events: [], failSave: false }); vi.spyOn(window, 'confirm').mockReturnValue(true) })
+beforeEach(() => { Object.assign(h, { event: null, featured: '', post: null, posts: null, fail: false, owner: true, calls: [], events: [], failSave: false }); vi.spyOn(window, 'confirm').mockReturnValue(true) })
 
 describe('Next event', () => {
   it('shows the event, when it is (in London time), what it is, and a calendar file that downloads', () => {
@@ -218,5 +219,21 @@ describe('a picture chosen for the featured room', () => {
     expect(container.querySelector('img.hs__roomimg')).toHaveAttribute('src', 'https://example.com/loft.png')
     rerender(<MemoryRouter><FeaturedRoomBox slug="art-loft" pictures={{ 'explorers-bay': 'https://example.com/bay.png' }} /></MemoryRouter>)
     expect(container.querySelector('img.hs__roomimg')).toBeNull()
+  })
+})
+
+describe('two featured posts', () => {
+  it('shows the two newest posts side by side, each with its own heading, picture slot and way to read it', () => {
+    const second = { ...POST, id: 'p2', title: 'A second post', channel: 'art-loft' }
+    const { container } = wrap(<HomeSections event={null} featured="" post={null} posts={[POST, second]} />)
+    expect(screen.getAllByText('Featured post')).toHaveLength(2)
+    expect(screen.getByRole('heading', { level: 2, name: 'Claude and I had a fight' })).toBeInTheDocument(); expect(screen.getByRole('heading', { level: 2, name: 'A second post' })).toBeInTheDocument()
+    expect(screen.getAllByRole('link', { name: 'Read the post' }).map((a) => a.getAttribute('href'))).toEqual(['/post/p1', '/post/p2'])
+    expect(container.querySelectorAll('.hs__posts > section')).toHaveLength(2)
+    expect(new Set([...container.querySelectorAll('.hs__posts h2')].map((h2) => h2.id)).size).toBe(2)
+  })
+  it('shows one wide box when there is only one post', () => {
+    const { container } = wrap(<HomeSections event={null} featured="" post={POST} posts={[]} />)
+    expect(container.querySelector('.hs__posts')).toBeNull(); expect(screen.getByText('Latest post')).toBeInTheDocument()
   })
 })

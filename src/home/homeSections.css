@@ -196,3 +196,24 @@
   object-fit: cover;
   border-radius: 4px;
 }
+
+/* Two featured posts side by side: each has its picture on top and its words below */
+.hs__posts {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+  align-items: stretch;
+}
+.hs__post--stacked {
+  grid-template-columns: 1fr;
+  gap: 20px;
+  align-content: start;
+}
+.hs__post--stacked .hs__posttext {
+  align-content: start;
+}
+@media (max-width: 720px) {
+  .hs__posts {
+    grid-template-columns: 1fr;
+  }
+}

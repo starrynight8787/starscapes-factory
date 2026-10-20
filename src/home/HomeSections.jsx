@@ -84,20 +84,21 @@ export function FeaturedRoomBox({ slug, pictures }) {
   )
 }
 
-export function LatestPostBox({ post }) {
+// One post box. On its own it is wide (picture left, words right); two together stand side by side, each with its picture on top.
+export function LatestPostBox({ post, label = 'Latest post', idSuffix = '', stacked = false }) {
   if (!post) return null
   const room = channels.find((c) => c.slug === post.channel)
   const date = formatDate(post.created_at)
   return (
-    <section className="hs__card hs__post" aria-labelledby="hs-post-title">
+    <section className={`hs__card hs__post${stacked ? ' hs__post--stacked' : ''}`} aria-labelledby={`hs-post-title${idSuffix}`}>
       {post.image_url ? (
         <img className="hs__postimg" src={post.image_url} alt="" loading="lazy" />
       ) : (
         <div className="hs__postimg hs__postimg--empty"><StarMark width={72} color="#8AA2DA" /></div>
       )}
       <div className="hs__posttext">
-        <p className="hs__label">Latest post</p>
-        <h2 id="hs-post-title" className="hs__title hs__title--school">{post.title}</h2>
+        <p className="hs__label">{label}</p>
+        <h2 id={`hs-post-title${idSuffix}`} className="hs__title hs__title--school">{post.title}</h2>
         <p className="hs__meta">{[room ? room.name : 'Blog', date].filter(Boolean).join(' · ')}</p>
         <PassChip postId={post.id} />
         <div className="hs__buttons">
@@ -109,7 +110,9 @@ export function LatestPostBox({ post }) {
   )
 }
 
-export default function HomeSections({ event, featured, post, pictures }) {
+export default function HomeSections({ event, featured, post, posts, pictures }) {
+  // the two newest posts (or just the one, if that is all there is)
+  const list = Array.isArray(posts) && posts.length ? posts.slice(0, 2) : post ? [post] : []
   return (
     <div className="hs">
       <div className="hs__top">
@@ -117,7 +120,13 @@ export default function HomeSections({ event, featured, post, pictures }) {
         <MembershipBox />
       </div>
       <FeaturedRoomBox slug={featured} pictures={pictures} />
-      <LatestPostBox post={post} />
+      {list.length > 1 ? (
+        <div className="hs__posts">
+          {list.map((p, i) => <LatestPostBox key={p.id} post={p} label="Featured post" idSuffix={i ? `-${i + 1}` : ''} stacked />)}
+        </div>
+      ) : (
+        <LatestPostBox post={list[0] || null} />
+      )}
     </div>
   )
 }

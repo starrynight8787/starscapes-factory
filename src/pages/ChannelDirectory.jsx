@@ -90,11 +90,11 @@ export default function ChannelDirectory() {
   const navigate = useNavigate()
   const [active, setActive] = useState(null)
   // The three extras under the floor plan. A problem with any of them just means that box has nothing to show.
-  const [extras, setExtras] = useState({ event: null, featured: '', post: null, pictures: {} })
+  const [extras, setExtras] = useState({ event: null, featured: '', post: null, posts: [], pictures: {} })
   useEffect(() => {
     let cancelled = false
-    Promise.all([fetchNextEvent().catch(() => null), fetchFeaturedSlug().catch(() => ''), fetchLatestPost().catch(() => null), Promise.resolve().then(() => homeApi.fetchRoomPictures()).catch(() => ({}))]).then(([event, featured, post, pictures]) => {
-      if (!cancelled) setExtras({ event, featured, post, pictures: pictures || {} })
+    Promise.all([fetchNextEvent().catch(() => null), fetchFeaturedSlug().catch(() => ''), fetchLatestPost().catch(() => null), Promise.resolve().then(() => homeApi.fetchRoomPictures()).catch(() => ({})), Promise.resolve().then(() => homeApi.fetchLatestPosts(2)).catch(() => [])]).then(([event, featured, post, pictures, posts]) => {
+      if (!cancelled) setExtras({ event, featured, post, posts: Array.isArray(posts) ? posts : [], pictures: pictures || {} })
     })
     return () => {
       cancelled = true
@@ -193,7 +193,7 @@ export default function ChannelDirectory() {
       </section>
 
       {/* ---------- Next event, membership, the featured room and the latest post ---------- */}
-      <HomeSections event={extras.event} featured={extras.featured} post={extras.post} pictures={extras.pictures} />
+      <HomeSections event={extras.event} featured={extras.featured} post={extras.post} posts={extras.posts} pictures={extras.pictures} />
       </div>
     </div>
   )

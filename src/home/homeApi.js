@@ -14,6 +14,13 @@ export async function fetchFeaturedSlug() {
   return error || !data ? '' : data.value || ''
 }
 
+// The newest published posts, for the two featured posts on the home page.
+export async function fetchLatestPosts(count = 2) {
+  const { data, error } = await supabase.from('posts').select('id, title, image_url, channel, created_at').eq('published', true).order('created_at', { ascending: false }).limit(count)
+  if (error || !Array.isArray(data)) return []
+  return data
+}
+
 export async function fetchLatestPost() {
   const { data, error } = await supabase.from('posts').select('id, title, image_url, channel, created_at').eq('published', true).order('created_at', { ascending: false }).limit(1)
   if (error || !Array.isArray(data)) return null
