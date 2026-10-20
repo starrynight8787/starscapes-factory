@@ -15,7 +15,7 @@ import './postv2.css'
 import BannerArt from '../components/BannerArt'
 
 // The picture on the banner changes with the room the post belongs to, so a reader can tell which room they are in.
-const ROOM_ART = { 'drafting-desk': 'notebook', 'sarah-jrs-den': 'blog', 'art-loft': 'plain', 'explorers-bay': 'blog', 'factory-floor': 'blog', 'idea-hatchery': 'story', 'leadership-lounge': 'mountain', 'knowledge-nook': 'nook' }
+const ROOM_ART = { 'drafting-desk': 'notebook', 'sarah-jrs-den': 'blog', 'art-loft': 'plain', 'explorers-bay': 'transit', 'factory-floor': 'blog', 'idea-hatchery': 'story', 'leadership-lounge': 'mountain', 'knowledge-nook': 'nook' }
 
 export default function PostPage({ session }) {
   const { id } = useParams()

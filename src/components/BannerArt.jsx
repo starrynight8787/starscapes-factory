@@ -88,6 +88,18 @@ const ARTS = {
     <g key="b4" transform="rotate(-38 322 96)"><rect x="288" y="90" width="68" height="11" rx="4" fill="#fff" {...OUT} /><polygon points="288,90 272,95.5 288,101" fill="#F5C842" stroke="#FFE49A" strokeWidth="1.2" /></g>,
     sparkle(60, 40, 7, 'p1'), sparkle(360, 34, 7, 'p2'), sparkle(30, 120, 5, 'p3'), sparkle(300, 150, 5, 'p4'),
   ],
+  // Writing in Transit (Explorer's Bay): a suitcase, a winding road and a map pin.
+  transit: [
+    ground,
+    rect(128, 72, 124, 84, 10, BLUE, 'su'),
+    <path key="h" d="M170 72 V58 a8 8 0 0 1 8-8 h24 a8 8 0 0 1 8 8 V72" fill="none" {...OUT} />,
+    rect(140, 72, 14, 84, 0, LIGHT, 'b1'), rect(226, 72, 14, 84, 0, LIGHT, 'b2'),
+    <path key="rd" d="M20 156 C 80 130, 60 110, 120 104" fill="none" {...OUT} opacity=".7" strokeDasharray="5 6" />,
+    <path key="pin" d="M308 126 c-22-26-30-40-30-54 a30 30 0 0 1 60 0 c0 14-8 28-30 54z" fill={LIGHT} {...OUT} />,
+    <circle key="pc" cx="308" cy="72" r="10" fill="#fff" {...OUT} />,
+    star(104, 40, 14, 's1'),
+    sparkle(30, 50, 7, 'p1'), sparkle(220, 30, 6, 'p2'), sparkle(380, 40, 7, 'p3'), sparkle(262, 120, 5, 'p4'),
+  ],
   // No picture: just the stars (a plain starry banner, for pages with no room of their own).
   plain: [],
 }

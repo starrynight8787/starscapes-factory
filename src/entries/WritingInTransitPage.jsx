@@ -11,5 +11,5 @@ const load = () => fetchRoomPosts(ROOM)
 const belongs = (post) => inArea(PAGE, post)
 
 export default function WritingInTransitPage() {
-  return <EntryPage title={PAGE.name} blurb={PAGE.blurb} backTo={`/${ROOM}`} backLabel={`Back to ${ROOMS[ROOM].name}`} load={load} belongs={belongs} />
+  return <EntryPage title={PAGE.name} blurb={PAGE.blurb} backTo={`/${ROOM}`} backLabel={`Back to ${ROOMS[ROOM].name}`} load={load} belongs={belongs} art="transit" chip={ROOMS[ROOM].name} />
 }

@@ -10,7 +10,7 @@ import { ROOMS } from './roomsData'
 import { inArea, safeImage } from './postRules'
 
 // The line-art picture on each room's banner, so a blog or a list page shows which room you are in.
-const ROOM_ART = { 'idea-hatchery': 'story', 'leadership-lounge': 'mountain', 'knowledge-nook': 'nook', 'sarah-jrs-den': 'blog', 'explorers-bay': 'blog' }
+const ROOM_ART = { 'idea-hatchery': 'story', 'leadership-lounge': 'mountain', 'knowledge-nook': 'nook', 'sarah-jrs-den': 'blog', 'explorers-bay': 'transit' }
 // Books stand on a shelf, four to a row, each row on its own board.
 const chunk = (list, n) => Array.from({ length: Math.ceil(list.length / n) }, (_, i) => list.slice(i * n, i * n + n))
 
