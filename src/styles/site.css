@@ -34,8 +34,8 @@
 
 /* Homepage background shimmer: change these three numbers to make it calmer or livelier */
 :root {
-  --sf-sheen-strength: 0.07; /* brightness of the slow band of light (0 = off, 0.15 = strong) */
-  --sf-sheen-seconds: 20s; /* how long the band takes to cross the page */
+  --sf-sheen-strength: 0.12; /* brightness of the slow band of light (0 = off, 0.15 = strong) */
+  --sf-sheen-seconds: 14s; /* how long the band takes to cross the page */
   --sf-twinkle-seconds: 8s; /* how slowly the little stars brighten and fade */
 }
 
@@ -449,8 +449,69 @@ html body h3 {
     radial-gradient(circle 1.4px at 86% 71%, #fff 0, #fff 55%, transparent 100%),
     radial-gradient(circle 1.6px at 94% 92%, #fff 0, #fff 55%, transparent 100%);
 }
+/* The Home v3 backdrop: nebula glow, orbits, constellations and glints, under the floor plan */
+.sf-hero > .sf-hero__art {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+.sf-hero__nebula {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 38% 46% at 8% 82%, rgba(110, 90, 220, 0.45), transparent 70%),
+    radial-gradient(ellipse 34% 40% at 92% 14%, rgba(36, 120, 182, 0.5), transparent 70%),
+    radial-gradient(ellipse 30% 36% at 94% 88%, rgba(160, 90, 200, 0.3), transparent 70%),
+    radial-gradient(ellipse 46% 50% at 50% 48%, rgba(90, 120, 198, 0.22), transparent 72%);
+}
+.sf-hero__orbits {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  fill: none;
+  stroke: rgba(220, 230, 255, 0.16);
+  stroke-width: 1.2;
+}
+.sf-hero__const polyline {
+  stroke: rgba(255, 228, 154, 0.5);
+  stroke-width: 1.4;
+  stroke-dasharray: 3 5;
+}
+.sf-hero__const circle {
+  fill: #ffe49a;
+  stroke: none;
+}
+.sf-glint {
+  position: absolute;
+  width: 20px;
+  height: 20px;
+  margin: -10px 0 0 -10px;
+  background: #fff;
+  clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+  animation: sf-twinkle var(--sf-twinkle-seconds) ease-in-out infinite;
+  animation-delay: calc(var(--g) * -0.7s);
+}
+.sf-glint:nth-child(3n + 1) {
+  background: #ffe49a;
+  width: 26px;
+  height: 26px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sf-glint {
+    animation: none;
+    opacity: 0.7;
+  }
+}
+@media (max-width: 640px) {
+  .sf-hero__const,
+  .sf-glint:nth-child(n + 7) {
+    display: none;
+  }
+}
 /* everything real on the hero sits above the shimmer */
-.sf-hero > * {
+.sf-hero > *:not(.sf-hero__art) {
   position: relative;
   z-index: 1;
 }

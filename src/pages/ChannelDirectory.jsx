@@ -8,6 +8,30 @@ import HomeSections from '../home/HomeSections'
 import { fetchFeaturedSlug, fetchLatestPost, fetchNextEvent } from '../home/homeApi'
 import '../styles/site.css'
 
+// The starry backdrop behind the floor plan (the "Home v3" design): a soft nebula, faint orbits, two constellations, a sweep of light and twelve glints.
+// It is decoration only, so it is hidden from screen readers.
+const GLINTS = [[6, 30], [15, 10], [11, 43], [3, 56], [94, 22], [89, 9], [92, 43], [97, 59], [20, 94], [77, 95], [43, 3], [59, 2]]
+function HeroArt() {
+  return (
+    <div className="sf-hero__art" aria-hidden="true">
+      <div className="sf-hero__nebula" />
+      <svg className="sf-hero__orbits" viewBox="0 0 1438 1066" preserveAspectRatio="xMidYMid slice" focusable="false">
+        <ellipse cx="719" cy="520" rx="760" ry="470" />
+        <ellipse cx="719" cy="560" rx="560" ry="360" />
+        <ellipse cx="110" cy="900" rx="380" ry="250" />
+        <g className="sf-hero__const">
+          <polyline points="107,250 131,356 128,466 154,566 70,689" />
+          <polyline points="1342,300 1306,400 1372,516 1296,630 1388,740" />
+          <polyline points="120,111 196,115 290,190" />
+          <polyline points="1305,100 1315,200 1390,145" />
+          {[[107, 250], [131, 356], [128, 466], [154, 566], [70, 689], [1342, 300], [1306, 400], [1372, 516], [1296, 630], [1388, 740]].map(([x, y]) => <circle key={`${x}-${y}`} cx={x} cy={y} r="4" />)}
+        </g>
+      </svg>
+      {GLINTS.map(([x, y], i) => <span key={i} className="sf-glint" style={{ left: `${x}%`, top: `${y}%`, '--g': i }} />)}
+    </div>
+  )
+}
+
 // The floor plan is drawn on a 960 x 640 grid.
 //   pts  = the corners of the room's shape
 //   box  = where the room's picture and name are centred: [x, y, width, height]
@@ -78,6 +102,7 @@ export default function ChannelDirectory() {
     <div className="sf-home">
       {/* ---------- Hero with the floor plan ---------- */}
       <section className="sf-hero" aria-labelledby="sf-hero-title">
+        <HeroArt />
         <p className="sf-eyebrow">Welcome in</p>
         <h1 id="sf-hero-title">Step inside. Pick a room.</h1>
         <p className="sf-sub">Every room is its own world. Click or tap one to walk in.</p>
