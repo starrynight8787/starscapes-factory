@@ -9,7 +9,7 @@ import { PROJECT_SOCIALS } from '../data/contact'
 import { MEMBERSHIP } from '../data/membership'
 import SuggestPanel from '../suggest/SuggestPanel'
 import { fetchBooks, fetchGoals } from './bookApi'
-import { GENRES, progress, safeCover, shelfFor, spineClass, starsText, yearsOf } from './bookRules'
+import { GENRES, aboutParagraphs, progress, safeCover, shelfFor, spineClass, starsText, yearsOf } from './bookRules'
 import { COME_READ, GENRES_INTRO, MEMBER_BENEFITS, SHELF_INTRO, SUBTITLE, THEME_FALLBACK, THEME_INTRO, VIDEO_ID, WELCOME } from './bookClubData'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -129,6 +129,7 @@ export default function BookClubPage({ now = new Date() }) {
               <div>
                 <h3 className="bc__now-title">{b.title}</h3>
                 <p className="bc__muted">{[b.author, b.note].filter(Boolean).join('. ')}</p>
+                {aboutParagraphs(b.about).length > 0 && <div className="bc__about">{aboutParagraphs(b.about).map((para, n) => <p key={n}>{para}</p>)}</div>}
                 {b.review_post_id && <Link className="pg-btn" to={`/post/${b.review_post_id}`}>Read my notes</Link>}
               </div>
             </article>

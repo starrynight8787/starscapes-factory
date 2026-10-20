@@ -4,7 +4,11 @@ const plain = (e) => (/row-level security|42501|permission/i.test(String((e && (
 
 // The books, newest finished first. A problem comes back as plain words.
 export async function fetchBooks() {
-  const { data, error } = await supabase.from('books').select('id, title, author, genre, status, started, finished, rating, cover_url, review_post_id, note, created_at').order('finished', { ascending: false, nullsFirst: false })
+  const columns = 'id, title, author, genre, status, started, finished, rating, cover_url, review_post_id, note, created_at'
+  const ask = (list) => supabase.from('books').select(list).order('finished', { ascending: false, nullsFirst: false })
+  let { data, error } = await ask(`${columns}, about`)
+  // Before the "about" column has been added to the database (sql/books-about.sql), asking for it fails: ask again without it, so the page never breaks
+  if (error && /\babout\b/i.test(String(error.message || error))) ({ data, error } = await ask(columns))
   if (error) throw new Error(plain(error))
   return Array.isArray(data) ? data : []
 }
@@ -21,6 +25,8 @@ export async function fetchGoals() {
 // ---------- the owner's side (the database only lets the owner's account do any of these) ----------
 export async function saveBook(id, value) {
   const { error } = id ? await supabase.from('books').update(value).eq('id', id) : await supabase.from('books').insert(value)
+  // A save that includes "about" cannot work until sql/books-about.sql has been run in Supabase: say so plainly rather than a vague failure
+  if (error && /\babout\b/i.test(String(error.message || error)) && value && value.about !== undefined) throw new Error('The "about" box needs one small step in Supabase first (run sql/books-about.sql). Nothing was saved.')
   if (error) throw new Error(plain(error))
 }
 

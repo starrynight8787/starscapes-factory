@@ -13,9 +13,13 @@ export const STATUSES = [
   { key: 'read', label: 'Read' },
   { key: 'upnext', label: 'Up next' },
 ]
-export const LIMITS = { title: 150, author: 100, note: 300, theme: 120, goalMax: 999 }
+export const LIMITS = { title: 150, author: 100, note: 300, about: 1000, theme: 120, goalMax: 999 }
 
 const tidy = (v) => String(v === null || v === undefined ? '' : v).replace(/[\u0000-\u001f\u007f]/g, ' ').replace(/\s+/g, ' ').trim()
+// A few paragraphs about a book: line breaks are kept (a blank line starts a new paragraph), spaces are tidied, and control characters are removed.
+export const tidyText = (v) => String(v === null || v === undefined ? '' : v).replace(/\r\n?/g, '\n').replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\u007f]/g, ' ').split('\n').map((l) => l.replace(/[ \t]+/g, ' ').trim()).join('\n').replace(/\n{3,}/g, '\n\n').trim()
+// What the page shows for it: a list of paragraphs (a single line break inside one is just a space)
+export const aboutParagraphs = (text) => tidyText(text).split(/\n\s*\n/).map((p) => p.replace(/\s*\n\s*/g, ' ').trim()).filter(Boolean)
 const isDate = (v) => /^\d{4}-\d{2}-\d{2}$/.test(v) && !Number.isNaN(new Date(`${v}T00:00:00Z`).getTime()) && new Date(`${v}T00:00:00Z`).toISOString().slice(0, 10) === v
 export const safeCover = (url) => (/^https:\/\/[^\s'"<>]+\.(jpe?g|png|webp)(\?[^\s'"<>]*)?$/i.test(String(url || '').trim()) ? String(url).trim() : '')
 
@@ -38,6 +42,7 @@ export function cleanBook(input) {
   const started = tidy(i.started)
   const finished = tidy(i.finished)
   const note = tidy(i.note)
+  const about = tidyText(i.about)
   const coverText = tidy(i.cover)
   const reviewText = tidy(i.review)
   const rating = tidy(i.rating)
@@ -53,6 +58,7 @@ export function cleanBook(input) {
   if (started && finished && isDate(started) && isDate(finished) && finished < started) errors.finished = 'The finishing date is before the starting date.'
   if (rating && !/^[1-5]$/.test(rating)) errors.rating = 'The rating is a whole number from 1 to 5, or empty.'
   if (note.length > LIMITS.note) errors.note = `Keep the note to ${LIMITS.note} characters or fewer.`
+  if (about.length > LIMITS.about) errors.about = `Keep what the book is about to ${LIMITS.about} characters or fewer.`
   if (coverText && !safeCover(coverText)) errors.cover = 'The cover must be a web address that starts https:// and ends .jpg, .png or .webp.'
   if (reviewText && !postIdFrom(reviewText)) errors.review = 'Paste the post\u2019s address (it ends /post/ and a code), or just the code.'
   if (Object.keys(errors).length) return { ok: false, errors }
@@ -69,6 +75,7 @@ export function cleanBook(input) {
       cover_url: coverText || null,
       review_post_id: reviewText ? postIdFrom(reviewText) : null,
       note: note || null,
+      about: about || null,
     },
   }
 }

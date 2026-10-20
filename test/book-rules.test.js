@@ -3,17 +3,17 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { GENRES, STATUSES, LIMITS, cleanBook, cleanGoal, postIdFrom, shelfFor, yearsOf, progress, spineClass, starsText, safeCover } from '../src/bookclub/bookRules'
+import { GENRES, STATUSES, LIMITS, cleanBook, cleanGoal, postIdFrom, shelfFor, yearsOf, progress, spineClass, starsText, safeCover, tidyText, aboutParagraphs } from '../src/bookclub/bookRules'
 
 const read = (p) => fs.readFileSync(path.resolve(p), 'utf8')
 const good = { title: '  The Culture Map ', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: '4', cover: 'https://img.example.com/c.jpg', review: 'https://starscapesfactory.com/post/abc-123', note: 'Changed how I run meetings.' }
 
 describe('a book', () => {
   it('is accepted when it is good, tidied up, and ready for the database', () => {
-    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.' } })
+    expect(cleanBook(good)).toEqual({ ok: true, value: { title: 'The Culture Map', author: 'Erin Meyer', genre: 'leadership', status: 'read', started: '2026-09-01', finished: '2026-10-03', rating: 4, cover_url: 'https://img.example.com/c.jpg', review_post_id: 'abc-123', note: 'Changed how I run meetings.', about: null } })
   })
   it('keeps everything optional really optional, as nothing (null)', () => {
-    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null })
+    expect(cleanBook({ title: 'Dune', status: 'upnext' }).value).toEqual({ title: 'Dune', author: null, genre: null, status: 'upnext', started: null, finished: null, rating: null, cover_url: null, review_post_id: null, note: null, about: null })
     // with no status given it counts as "read", which needs a finishing date, so a bare title is asked for the date
     const bare = cleanBook({ title: 'Dune' })
     expect(bare.ok).toBe(false)
@@ -118,5 +118,30 @@ describe('agreement with the database file', () => {
     expect(sql).toContain(`between 1 and ${LIMITS.goalMax}`)
     expect(sql).toContain("check (status <> 'read' or finished is not null)")
     expect(sql).toContain("cover_url ~ '^https://'")
+  })
+})
+
+describe('what the book is about (the box under "Reading now")', () => {
+  const withAbout = (about) => cleanBook({ ...good, about })
+  it('is optional, and is nothing (null) when left empty or blank', () => {
+    expect(withAbout('').value.about).toBeNull(); expect(withAbout('   \n  \n ').value.about).toBeNull(); expect(withAbout(undefined).value.about).toBeNull(); expect(withAbout(null).value.about).toBeNull()
+  })
+  it('keeps the paragraphs: line breaks stay, a long run of blank lines becomes one blank line, and spaces are tidied', () => {
+    expect(withAbout('  First   paragraph.\r\n\r\n\r\n\r\n  Second one. \n').value.about).toBe('First paragraph.\n\nSecond one.')
+  })
+  it('removes control characters, so nothing odd can be saved', () => {
+    expect(withAbout('Hello\u0000 there\u0007!').value.about).toBe('Hello there !')
+  })
+  it('can be up to 1,000 letters, and not one more, in plain words', () => {
+    expect(LIMITS.about).toBe(1000)
+    expect(withAbout('a'.repeat(1000)).ok).toBe(true)
+    const tooLong = withAbout('a'.repeat(1001)); expect(tooLong.ok).toBe(false); expect(tooLong.errors.about).toBe('Keep what the book is about to 1000 characters or fewer.')
+  })
+  it('is shown as a list of paragraphs: a blank line starts a new one, a single line break is just a space, and empty ones are dropped', () => {
+    expect(aboutParagraphs('One line\nstill one.\n\nTwo.\n\n\n\nThree.')).toEqual(['One line still one.', 'Two.', 'Three.'])
+    expect(aboutParagraphs('')).toEqual([]); expect(aboutParagraphs(null)).toEqual([]); expect(aboutParagraphs(undefined)).toEqual([]); expect(aboutParagraphs('  \n\n  ')).toEqual([])
+  })
+  it('tidyText leaves a single paragraph with its words alone', () => {
+    expect(tidyText('Just one paragraph.')).toBe('Just one paragraph.')
   })
 })

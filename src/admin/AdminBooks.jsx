@@ -11,8 +11,8 @@ import './admin.css'
 import './adminv2.css'
 import AdminBanner from './AdminBanner'
 
-const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '' }
-const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '' })
+const BLANK = { title: '', author: '', genre: '', status: 'read', started: '', finished: '', rating: '', cover: '', review: '', note: '', about: '' }
+const toForm = (b) => ({ title: b.title || '', author: b.author || '', genre: b.genre || '', status: b.status || 'read', started: b.started || '', finished: b.finished || '', rating: b.rating ? String(b.rating) : '', cover: b.cover_url || '', review: b.review_post_id || '', note: b.note || '', about: b.about || '' })
 
 // The owner's tool at /admin/books: add the books you are reading, have read, or will read next, and set each year's reading goal and theme. The Book Club
 // page shows them. The database only lets the owner's account change anything.
@@ -110,6 +110,7 @@ export default function AdminBooks({ session }) {
           <Field id="ab-cover" label="Cover picture address (optional)" help="A web address starting https:// and ending .jpg, .png or .webp." error={errors.cover}>{(p) => <input {...p} type="url" value={form.cover} onChange={set('cover')} />}</Field>
           <Field id="ab-review" label="Your review or notes (optional)" help="Paste the post's address, or just the code at the end of it." error={errors.review}>{(p) => <input {...p} type="text" value={form.review} onChange={set('review')} />}</Field>
           <Field id="ab-note" label="A short note (optional)" help="A line on why this one, or what it taught you." error={errors.note}>{(p) => <input {...p} type="text" value={form.note} onChange={set('note')} />}</Field>
+          <Field id="ab-about" label="What the book is about (optional)" help="A few lines. They show on the Book Club page under the book you are reading now. A blank line starts a new paragraph. Up to 1,000 letters." error={errors.about}>{(p) => <textarea {...p} rows={6} maxLength={1200} value={form.about} onChange={set('about')} />}</Field>
           <div className="ab__buttons">
             <button type="submit" className="pg-btn sg-btn--primary">{editing ? 'Save changes' : 'Add the book'}</button>
             {editing && <button type="button" className="pg-btn" onClick={() => { setForm(BLANK); setEditing(''); setErrors({}) }}>Cancel</button>}

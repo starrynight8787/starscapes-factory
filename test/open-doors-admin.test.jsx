@@ -28,7 +28,10 @@ beforeEach(() => { forgetDoors(); Object.assign(store, { open: {}, loadFails: fa
 describe('the Open a door tool', () => {
   it('lists the five rooms, with every door under its room, all closed to start with', async () => {
     await show()
-    expect(screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)).toEqual(['The Idea Hatchery', 'Leadership Lounge', "Explorer's Bay", 'Knowledge Nook', "Sarah Jr.'s Den"])
+    // The page sets the rooms out in two columns (the Nook and the Hatchery on the left; the Den, the Lounge and the Bay on the right), so that is the order they read in
+    const headings = screen.getAllByRole('heading', { level: 2 }).map((h) => h.textContent)
+    expect(headings).toEqual(['Knowledge Nook', 'The Idea Hatchery', "Sarah Jr.'s Den", 'Leadership Lounge', "Explorer's Bay"])
+    expect([...headings].sort()).toEqual(['Knowledge Nook', 'The Idea Hatchery', 'Leadership Lounge', "Explorer's Bay", "Sarah Jr.'s Den"].sort()) // every one of the five, once each
     expect(screen.getAllByRole('listitem').filter((li) => li.classList.contains('ad-door'))).toHaveLength(DOORS.length)
     expect(screen.getAllByText('Closed')).toHaveLength(DOORS.length)
     expect(screen.queryByText('Open to visitors')).toBeNull()

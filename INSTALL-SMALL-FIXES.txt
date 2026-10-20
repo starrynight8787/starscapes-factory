@@ -1,0 +1,44 @@
+THE SMALL FIXES, AND THE BOOK CLUB DESCRIPTION   starscapes-small-fixes-20oct.zip
+(ONE small Supabase step, below. Nothing to do in Stripe or Vercel.)
+
+1. BOOK CLUB: A DESCRIPTION FOR THE BOOK YOU ARE READING, AND NO MORE GAP
+   * Admin, Books has a new box: "What the book is about (optional)". A few lines (up to 1,000 letters); a blank line starts a new paragraph. It shows on the Book Club page under the author line on the
+     "Reading now" card, one paragraph for each paragraph you write. (Only the book you are reading now shows it.)
+   * Reading now now stretches to the same height as The Shelf beside it, so the gap under it (in your screenshot) is gone, and the description fills the space. With no description there is still empty space
+     inside the card: that is what the new box is for.
+   * Typed words are shown as plain text, never as code.
+   * IF YOU INSTALL BEFORE THE SUPABASE STEP, NOTHING BREAKS: the page simply shows no description, and saving one in Admin says plainly that the Supabase step is needed first (and saves nothing).
+
+2. THE SHARE PICTURE (the one social sites show for the home page) was 348 KB, over the 300 KB limit your own test checks. It is now 175 KB: the same picture, pixel for pixel (I checked every pixel), just stored
+   more efficiently. Nothing about how it looks has changed.
+
+3. TWO GUARD TESTS THAT WERE FAILING SINCE YOUR REDESIGN, both because the tests were out of date, not the site:
+   * "Open a door" page: your redesign set the rooms out in two columns (Knowledge Nook and The Idea Hatchery on the left; Sarah Jr.'s Den, Leadership Lounge and Explorer's Bay on the right). The test expected the
+     old order. It now expects the two-column order, and checks that all five rooms appear once each.
+   * The "legacy styles" guard looked for the exact text of the prints and originals admin pages' outer class, so the extra classes your redesign added (ad--wide al-v2) made it fail even though the pages are still
+     marked legacy. It now looks for the classes, in any order, with others beside them.
+
+STEP 1: SUPABASE (do this first, though the order is not critical). Open Supabase, then SQL editor, then New query. Paste the SQL below (the SQL itself, not the file name) and press Run. It says "Success. No rows returned."
+It is safe to run more than once, it only adds one optional column, and no permissions change.
+
+    alter table public.books add column if not exists about text check (about is null or char_length(about) <= 1000);
+
+To check it worked, run this one. It should return one row:
+
+    select column_name, data_type from information_schema.columns where table_schema = 'public' and table_name = 'books' and column_name = 'about';
+
+STEP 2: INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-small-fixes-20oct.zip
+ 3. python3 tools/add-small-fixes.py          (it checks the six files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Book Club: a description for the book being read, and Reading now as tall as the Shelf; smaller share picture; two guard tests brought up to date"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then in Admin, Books, change the book you are reading, write the description, and save.
+
+(The unzip also replaces the share picture, public/share/site.png, and five existing test files, book-club.test.jsx, book-rules.test.js, book-club-v3.test.jsx, legacy-styles.test.js and open-doors-admin.test.jsx,
+and adds book-about-api.test.js.)

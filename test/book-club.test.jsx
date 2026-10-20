@@ -296,3 +296,69 @@ describe('how it is wired in', () => {
     for (const [, name, bg, fg] of rules) expect(ratio(bg, fg), name).toBeGreaterThanOrEqual(4.5)
   })
 })
+
+describe('what the book you are reading is about (Gill, 20 October 2026)', () => {
+  it('shows it under the author line on the Reading now card, one paragraph for each paragraph written', async () => {
+    h.books = [book('r1', 'M is for Malice', 'reading', null, { about: 'Kinsey is hired to find a missing heir.\n\nBut the family has its own secrets.' })]
+    page()
+    const card = (await screen.findByRole('heading', { level: 3, name: 'M is for Malice' })).closest('article')
+    expect(within(card).getByText('Kinsey is hired to find a missing heir.')).toBeInTheDocument(); expect(within(card).getByText('But the family has its own secrets.')).toBeInTheDocument()
+    expect(card.querySelectorAll('.bc__about p')).toHaveLength(2)
+    // it sits after the author and before the "Read my notes" button
+    const order = [...card.querySelectorAll('.bc__muted, .bc__about, a')].map((el) => el.className || el.tagName); expect(order.indexOf('bc__muted')).toBeLessThan(order.indexOf('bc__about'))
+  })
+  it('shows nothing extra when there is no description (no empty box)', async () => {
+    h.books = [book('r1', 'M is for Malice', 'reading', null, { about: null })]
+    const { container } = page(); await screen.findByRole('heading', { level: 3, name: 'M is for Malice' })
+    expect(container.querySelector('.bc__about')).toBeNull()
+  })
+  it('shows nothing extra for a description that is only blank lines', async () => {
+    h.books = [book('r2', 'Dare to Lead', 'reading', null, { about: '   \n\n  ' })]
+    const { container } = page(); await screen.findByRole('heading', { level: 3, name: 'Dare to Lead' })
+    expect(container.querySelector('.bc__about')).toBeNull()
+  })
+  it('puts it in text, never as code: a description with angle brackets is shown as written', async () => {
+    h.books = [book('r1', 'Odd one', 'reading', null, { about: '<b>bold</b> <script>x()</script>' })]
+    const { container } = page(); await screen.findByRole('heading', { level: 3, name: 'Odd one' })
+    expect(container.querySelector('.bc__about b')).toBeNull(); expect(container.querySelector('.bc__about script')).toBeNull(); expect(container.querySelector('.bc__about p').textContent).toBe('<b>bold</b> <script>x()</script>')
+  })
+  it('does not show the description for a book that is not the one being read now', async () => {
+    h.books = [book('n1', 'Dune', 'upnext', null, { about: 'A desert planet.' }), book('d1', 'Old one', 'read', '2026-03-01', { about: 'Finished long ago.' })]
+    const { container } = page(); await screen.findByText('Dune, Dune author')
+    expect(container.querySelector('.bc__about')).toBeNull(); expect(screen.queryByText('A desert planet.')).toBeNull()
+  })
+})
+
+describe('the "What the book is about" box in Admin', () => {
+  const tool = () => render(<MemoryRouter><AdminBooks session={{ access_token: 't' }} /></MemoryRouter>)
+  it('is a proper box with a label, a help line saying where it shows, and room for several lines', async () => {
+    tool(); const box = await screen.findByLabelText('What the book is about (optional)')
+    expect(box.tagName).toBe('TEXTAREA'); expect(box).toHaveAttribute('rows', '6'); expect(box).toHaveClass('sf-input')
+    expect(screen.getByText(/They show on the Book Club page under the book you are reading now\. A blank line starts a new paragraph\. Up to 1,000 letters\./)).toBeInTheDocument()
+  })
+  it('is saved with the book, tidied, and a book without one saves it as nothing', async () => {
+    tool()
+    fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'M is for Malice' } })
+    fireEvent.change(screen.getByLabelText('Where is it?'), { target: { value: 'reading' } })
+    fireEvent.change(screen.getByLabelText('What the book is about (optional)'), { target: { value: '  Kinsey is hired.  \n\n\n\nShe digs.' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add the book' }))
+    await waitFor(() => expect(h.calls).toHaveLength(1)); expect(h.calls[0][2]).toMatchObject({ title: 'M is for Malice', status: 'reading', about: 'Kinsey is hired.\n\nShe digs.' })
+    h.calls.length = 0
+    fireEvent.change(screen.getByLabelText('Title'), { target: { value: 'Dune' } }); fireEvent.change(screen.getByLabelText('Where is it?'), { target: { value: 'upnext' } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add the book' })); await waitFor(() => expect(h.calls).toHaveLength(1)); expect(h.calls[0][2].about).toBeNull()
+  })
+  it('refuses more than 1,000 letters, in plain words, and saves nothing', async () => {
+    tool()
+    fireEvent.change(await screen.findByLabelText('Title'), { target: { value: 'Dune' } }); fireEvent.change(screen.getByLabelText('Where is it?'), { target: { value: 'upnext' } })
+    fireEvent.change(screen.getByLabelText('What the book is about (optional)'), { target: { value: 'a'.repeat(1001) } })
+    fireEvent.click(screen.getByRole('button', { name: 'Add the book' }))
+    expect((await screen.findAllByText('Keep what the book is about to 1000 characters or fewer.')).length).toBeGreaterThan(0); expect(h.calls).toEqual([])
+  })
+  it('comes into the form when you change a book that already has one, and saving updates it', async () => {
+    h.books = [book('r1', 'M is for Malice', 'reading', null, { about: 'Kinsey is hired.' })]
+    tool(); fireEvent.click(await screen.findByRole('button', { name: 'Change' }))
+    expect(screen.getByLabelText('What the book is about (optional)')).toHaveValue('Kinsey is hired.')
+    fireEvent.change(screen.getByLabelText('What the book is about (optional)'), { target: { value: 'New words.' } }); fireEvent.click(screen.getByRole('button', { name: 'Save changes' }))
+    await waitFor(() => expect(h.calls).toHaveLength(1)); expect(h.calls[0].slice(0, 2)).toEqual(['saveBook', 'r1']); expect(h.calls[0][2].about).toBe('New words.')
+  })
+})

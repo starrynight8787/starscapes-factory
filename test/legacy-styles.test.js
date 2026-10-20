@@ -9,14 +9,17 @@ const walk = (dir) => fs.readdirSync(dir, { withFileTypes: true }).flatMap((e) =
 const jsx = walk('src').filter((f) => f.endsWith('.jsx')).map((f) => f.split(path.sep).join('/'))
 
 // The pages that STILL rely on the old rules: each one's outer element carries the class "legacy". (The art-loft tools are all inside the two admin pages.)
+// Each is listed by the CLASSES its outer element must have, in any order and alongside any others (a redesign may add classes such as ad--wide without un-marking the page).
 const LEGACY_ROOTS = {
-  'src/cart/CartPage.jsx': 'className="cart legacy"',
-  'src/artloft/AdminPrints.jsx': 'className="al al-admin legacy"',
-  'src/artloft/AdminOriginals.jsx': 'className="al al-admin legacy"',
-  'src/pages/ProductGallery.jsx': 'className="legacy"',
-  'src/pages/ProductPage.jsx': 'className="legacy"',
-  'src/factoryfloor/PostFilter.jsx': 'ff-filter legacy',
+  'src/cart/CartPage.jsx': ['cart', 'legacy'],
+  'src/artloft/AdminPrints.jsx': ['al', 'al-admin', 'legacy'],
+  'src/artloft/AdminOriginals.jsx': ['al', 'al-admin', 'legacy'],
+  'src/pages/ProductGallery.jsx': ['legacy'],
+  'src/pages/ProductPage.jsx': ['legacy'],
+  'src/factoryfloor/PostFilter.jsx': ['ff-filter', 'legacy'],
 }
+// Does any className in this source carry all of these classes?
+const hasClasses = (source, classes) => [...source.matchAll(/className="([^"]*)"/g)].some((m) => classes.every((c) => m[1].split(/\s+/).includes(c)))
 const INSIDE_ADMIN_PRINTS = ['src/artloft/DeliveryTools.jsx', 'src/artloft/DescriptionEditor.jsx', 'src/artloft/OrdersPanel.jsx', 'src/artloft/SyncPlan.jsx']
 // Files with a bare checkbox, radio or hidden box that the browser or a class on its label draws, so they need none of the old rules
 const BARE_INPUT_ONLY = {
@@ -73,9 +76,16 @@ describe('every page that has a bare button, field or form', () => {
     for (const [f, b] of withBare) expect(known.has(f), `${f} has a bare ${Object.keys(b).join(', ')}: give it a class of its own (see src/styles/pages.css and forms.css)`).toBe(true)
   })
   it('is marked "legacy" if it relies on the old rules', () => {
-    for (const [file, marker] of Object.entries(LEGACY_ROOTS)) expect(read(file), file).toContain(marker)
+    for (const [file, classes] of Object.entries(LEGACY_ROOTS)) expect(hasClasses(read(file), classes), `${file} needs an element with the classes: ${classes.join(' ')}`).toBe(true)
     const admin = read('src/artloft/AdminPrints.jsx')
     for (const f of INSIDE_ADMIN_PRINTS) expect(admin, f).toContain(`<${path.basename(f, '.jsx')}`)
+  })
+  it('knows what "marked legacy" means: it finds the classes in any order, with others beside them, and does not mistake a look-alike class', () => {
+    expect(hasClasses('<main className="al al-admin legacy ad--wide al-v2">', ['al', 'al-admin', 'legacy'])).toBe(true)
+    expect(hasClasses('<main className="legacy al-admin al">', ['al', 'al-admin', 'legacy'])).toBe(true)
+    expect(hasClasses('<main className="al al-admin">', ['al', 'al-admin', 'legacy'])).toBe(false)
+    expect(hasClasses('<main className="al al-admin not-legacy">', ['al', 'al-admin', 'legacy'])).toBe(false)
+    expect(hasClasses('<main className="al">x</main><p className="al-admin legacy">', ['al', 'al-admin', 'legacy'])).toBe(false)
   })
   it('has only a checkbox, radio or hidden box bare, where it is one of the exceptions', () => {
     for (const [f] of withBare.filter(([file]) => BARE_INPUT_ONLY[file])) expect(Object.keys(bare(read(f))), f).toEqual(['input'])

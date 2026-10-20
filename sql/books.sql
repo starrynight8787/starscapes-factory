@@ -21,6 +21,7 @@ create table if not exists public.books (
   cover_url text check (cover_url is null or cover_url ~ '^https://'),
   review_post_id text check (review_post_id is null or review_post_id ~ '^[A-Za-z0-9-]{1,64}$'),
   note text check (note is null or char_length(note) <= 300),
+  about text check (about is null or char_length(about) <= 1000),
   created_at timestamptz not null default now(),
   check (status <> 'read' or finished is not null)
 );

@@ -94,6 +94,8 @@
 .bc__now .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
 .bc__reading .bc__now, .bc__next .bc__queue { margin: 0; }
 .bc__reading .bc__now { padding: 0; border: 0; background: transparent; }
+.bc__about { display: grid; gap: 10px; margin: 4px 0 12px; }
+.bc__about p { margin: 0; line-height: 1.6; color: var(--sf-ink, #0e1530); max-width: 62ch; overflow-wrap: anywhere; }
 .bc__queue { display: grid; gap: 10px; padding: 0; list-style: none; }
 .bc__queued { padding: 10px 12px; background: #f6f8fc; border: 1px solid var(--sf-border, #dde3f0); border-radius: 10px; font-weight: 700; color: var(--sf-navy-700, #14306a); overflow-wrap: anywhere; }
 .bc__tiles { display: grid; gap: 14px; }
@@ -129,9 +131,9 @@
   .bc__grid { grid-template-columns: 1fr 1fr 392px; grid-template-areas: 'theme theme come' 'read read shelf' 'next next next'; }
   .bc__theme { grid-area: theme; }
   .bc__comecard { grid-area: come; }
-  .bc__reading { grid-area: read; align-self: start; } /* Reading now and Up next are wide horizontal bands beside the Shelf, not narrow tall boxes: an empty one stays short, and the suggest form gets room to sit in a row */
+  .bc__reading { grid-area: read; } /* Reading now and Up next are wide horizontal bands, not narrow tall boxes. Reading now is as tall as the Shelf beside it (it stretches to fit: the grid does that, so nothing here may stop it) */
   .bc__next { grid-area: next; align-self: start; }
-  .bc__shelfcard { grid-area: shelf; align-self: start; }
+  .bc__shelfcard { grid-area: shelf; }
   /* Up next is a full-width band: the suggest box inside it sits in two columns, the form and its words on the left and "Most wanted" on the right */
   .bc__next .sg { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); grid-template-rows: auto auto 1fr auto; column-gap: 32px; align-items: start; margin: 20px 0 0; }
   .bc__next .sg > * { grid-column: 1; }
