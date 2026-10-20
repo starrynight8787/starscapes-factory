@@ -49,7 +49,7 @@ export default function Home() {
 
   return (
     <main className="pg pg--list">
-      <PageBanner chip="Blog" title="All posts" subtitle="Every post from every room, newest first." art="blog" />
+      <PageBanner chip="Blog" title="All posts" subtitle="Every post from every room, newest first." art="blog" room="factory-floor" />
 
       {allTags.length > 0 && (
         <div className="pg-filter" role="group" aria-label="Filter by tag">

@@ -1,0 +1,32 @@
+A SEPARATE COOKIE POLICY   starscapes-cookie-policy-20oct.zip   (SFW-233, SFW-234)
+(No Supabase step. Nothing to do in Stripe or Vercel. The new page is a DRAFT: visitors cannot see it until you switch it on, like the other policies.)
+
+WHAT IT ADDS
+ * A new page, "Cookie policy" (/page/cookies), written from what the site REALLY does, which I checked in the code:
+     - the site itself sets NO cookies; it keeps three small things in your browser's storage: your sign-in (a name starting sb- and ending -auth-token), your cart (sf-cart-v1) and your choice on the passes page (sf-membership-choice, gone when you close the tab);
+     - no analytics, advertising or tracking of any kind, so no cookie banner is needed (the three things are needed for something the visitor asked for);
+     - other companies: GOOGLE FONTS (your browser fetches the lettering from Google on every page, so Google sees the visitor's IP address and browser details; Google says it sets no cookies), YOUTUBE (nothing loads until play is pressed; then
+       its privacy-enhanced player), and STRIPE (its own page, its own cookies, when paying).
+ * The footer shows a "Cookie policy" link beside "Privacy policy" (visitors see it once the page is ready; you see it now, marked draft). The page has its title in the tab, and stays out of search results until it is ready.
+ * The Privacy policy's short cookies section now also mentions the fonts, and points to the Cookie policy.
+ * test/cookie-policy.test.js (14 tests) ties the page to the code. It FAILS if the site starts storing something new, sets a cookie, loads something from another company, adds an analytics or advertising tool, or the Privacy policy and the Cookie policy disagree.
+   I checked it by making the site "drift" ten ways: all ten were caught.
+ * Four tests for the admin posts list are brought up to date: your change on 20 October to open the list on all posts, drafts included, had left them expecting published posts only.
+ * Two legal-page tests now expect the new page and footer link.
+
+THE ONE GAP: the date at the top, "[date]" (the same gap as the other policies). The page tells you so, in its yellow draft banner.
+GOOGLE FONTS: the page is honest that the fonts come from Google. A better answer is to put the fonts on your own site, so nothing is sent to Google at all (Google's own advice for avoiding it): SFW-246. When that is done, one line comes out of the page and the test will tell us.
+LEGAL CHECK: I am not a lawyer. Please include "is a cookie banner needed for sign-in, cart and the passes choice?" in the free-advice review (SFW-234). I believe not, because they are needed for something the visitor asked for.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-cookie-policy-20oct.zip
+ 3. python3 tools/add-cookie-policy.py          (it checks the three files first; if anything is unexpected it changes nothing)
+ 4. npm test                                    (the whole suite: it should end with exactly 1 failed, the contact address test that waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it should still print 12)
+ 7. git add .
+    git status                                  (3 changed source files, 3 changed or new test files, nothing ending .before-)
+    git commit -m "Add a separate Cookie policy, tied to the code by tests; update the admin posts and legal page tests"
+    git push
+ 8. When Vercel says READY, sign in and open /page/cookies to read it (you will see a yellow "Draft" banner).

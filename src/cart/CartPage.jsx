@@ -62,6 +62,7 @@ export default function CartPage() {
     <main className="cart legacy cart--v2">
       <PageBanner
         art="plain"
+        room="factory-floor"
         chip="Your cart"
         title="Nearly there"
         subtitle="Check your order, then pay safely on Stripe. Your receipt arrives by email straight away."

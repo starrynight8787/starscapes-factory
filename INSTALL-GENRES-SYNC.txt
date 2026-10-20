@@ -1,0 +1,19 @@
+THE BOOK GENRES: DATABASE FILE AND TESTS BROUGHT UP TO DATE   starscapes-genres-sync-20oct.zip
+(No Supabase step: your LIVE database already allows all 20 genres, I checked. No change to the site itself.)
+
+WHAT WAS OUT OF DATE
+Your commit "Add more book genres" gave the Book Club 20 genres instead of five, and your live database was changed to allow all 20 (so adding and saving books works). But three things in the project still said five, so three tests failed:
+ * sql/books.sql (the project's copy of the database setup) still listed the first five genres. A database built from that file would refuse the other 15. It now lists the same 20 as the site and your live database, with two lines, in a note, for bringing an older database up to date.
+ * a Book Club test described "a book for each of the five genres": it now checks the shelf has one link per genre (all 20, taken from the site's own list), plus "all books".
+ * a Book Club test said the books have "five looks": the page really gives the 20 books five looks between them, repeating in order, and the test now says that.
+ * The test that compares the genres with the database file now checks the real rule in the table, not just a note that repeats it (I found that out by trying to break it: a genre missing from the real rule slipped past).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-genres-sync-20oct.zip
+ 3. python3 tools/add-genres-sync.py            (it checks sql/books.sql first; if anything is unexpected it changes nothing)
+ 4. npm test -- test/book-club-v3.test.jsx test/book-rules.test.js test/books-sql.test.js        (all should pass)
+ 5. git add .
+    git status                                   (sql/books.sql and two tests changed, plus the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Bring the book genres in the database file and the tests up to date with the 20 genres"
+    git push

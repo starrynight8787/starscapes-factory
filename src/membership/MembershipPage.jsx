@@ -1,3 +1,4 @@
+import '../components/pagebanner-rooms.css'
 import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useTitle from '../pages/useTitle'
@@ -162,7 +163,7 @@ function Chooser({ draft, signedIn }) {
           <strong>Draft: only you can see this page.</strong> Memberships are not open yet. Visitors are told so until you switch them on.
         </div>
       )}
-      <div className="mb__hero">
+      <div className="mb__hero pb--room pb--room-factory-floor">
         <p className="mb__chip">Membership passes</p>
         <h1>Open the parts of the story you want.</h1>
         <p>Choose one pass, or several. The more you take, the less each one costs.</p>

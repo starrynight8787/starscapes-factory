@@ -11,7 +11,7 @@ import './footer.css'
 // The footer from the Figma design: the logo and the line under it, four columns (Rooms, Shop and help, Legal, Follow), and the company details.
 // A page link shows once that page is ready. The OWNER also sees the pages that are not ready yet, marked "draft", so the whole site can be walked through.
 const HELP = [['Art Loft prints', '/art-loft'], ['Cart', '/cart'], ['Delivery and returns', '/page/delivery'], ['Contact', '/page/contact']]
-const LEGAL = [['Terms and conditions', '/page/terms'], ['Privacy policy', '/page/privacy'], ['Returns and refunds', '/page/returns'], ['AI policy', '/page/ai-policy'], ['Accessibility', '/page/accessibility']]
+const LEGAL = [['Terms and conditions', '/page/terms'], ['Privacy policy', '/page/privacy'], ['Cookie policy', '/page/cookies'], ['Returns and refunds', '/page/returns'], ['AI policy', '/page/ai-policy'], ['Accessibility', '/page/accessibility']]
 
 // `social` can be passed in (the tests do), and otherwise comes from src/data/social.js
 export default function Footer({ social = socialLinks, owner = false }) {

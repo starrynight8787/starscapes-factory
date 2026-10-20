@@ -15,6 +15,7 @@ vi.mock('../src/bookclub/bookClubData', async (original) => {
   return { ...m, WELCOME: { get videoId() { return h.videoId }, label: m.WELCOME.label, title: m.WELCOME.title, text: m.WELCOME.text, noVideo: m.WELCOME.noVideo } }
 })
 import BookClubPage from '../src/bookclub/BookClubPage'
+import { GENRES } from '../src/bookclub/bookRules'
 
 const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
 const NOW = new Date('2026-10-17T12:00:00Z')
@@ -111,18 +112,19 @@ describe('The Shelf: a tile for each year', () => {
 })
 
 describe('the genres, as books on a bookshelf', () => {
-  it('has a book for each of the five genres, each a link to its own shelf on the bookshelf page, with its number of books', async () => {
+  it('has a book for each genre (all 20 of them), each a link to its own shelf on the bookshelf page, with its number of books', async () => {
     h.posts = [post(1, ['book-club', 'leadership']), post(2, ['book-club', 'leadership']), post(3, ['book-club', 'fiction'])]
     page()
     const shelf = screen.getByRole('region', { name: 'Choose a genre' })
     const links = await within(shelf).findAllByRole('link')
-    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/knowledge-nook/book-club/shelf', '/knowledge-nook/book-club/shelf?genre=leadership', '/knowledge-nook/book-club/shelf?genre=fiction', '/knowledge-nook/book-club/shelf?genre=memoir', '/knowledge-nook/book-club/shelf?genre=self-growth', '/knowledge-nook/book-club/shelf?genre=childrens'])
+    expect(links.map((l) => l.getAttribute('href'))).toEqual(['/knowledge-nook/book-club/shelf', ...GENRES.map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`)])
+    expect(GENRES).toHaveLength(20)
     expect(links[1]).toHaveTextContent('Leadership'); expect(links[3]).toHaveTextContent('Memoir')
     expect(within(shelf).getByText('Every book on this shelf is a genre. Pick one to see my notes.')).toBeInTheDocument()
   })
-  it('gives each book its own look, five in all', () => {
+  it('gives the books five looks between them, repeating in order along the shelf (one book for each of the 20 genres)', () => {
     const { container } = page()
-    expect([...container.querySelectorAll('.bc__spines > li')].map((li) => [...li.classList].find((c) => /bc__bookitem--\d/.test(c)))).toEqual(['bc__bookitem--0', 'bc__bookitem--1', 'bc__bookitem--2', 'bc__bookitem--3', 'bc__bookitem--4'])
+    expect([...container.querySelectorAll('.bc__spines > li')].map((li) => [...li.classList].find((c) => /bc__bookitem--\d/.test(c)))).toEqual(GENRES.map((_, n) => `bc__bookitem--${n % 5}`))
   })
 })
 

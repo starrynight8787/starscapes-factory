@@ -16,10 +16,10 @@ const page = (slug) => LEGAL_PAGES.find((p) => p.slug === slug)
 const textOf = (p) => [p.updated, ...p.intro, ...p.sections.flatMap((s) => [s.title, ...s.paragraphs])].join('\n\n')
 const open = (slug) => render(<MemoryRouter initialEntries={[`/page/${slug}`]}><Routes><Route path="/page/:slug" element={<StaticPage owner />} /></Routes></MemoryRouter>)
 
-describe('the four drafts came across whole', () => {
-  it('are there, in the footer\u2019s order, each a legal page', () => {
-    expect(LEGAL_PAGES.map((p) => p.slug)).toEqual(['terms', 'privacy', 'returns', 'ai-policy'])
-    expect(LEGAL_PAGES.map((p) => p.title)).toEqual(['Terms and conditions', 'Privacy policy', 'Returns and refunds', 'AI policy'])
+describe('the four drafts came across whole, and the cookie policy was added to them', () => {
+  it('are there, in this order, each a legal page', () => {
+    expect(LEGAL_PAGES.map((p) => p.slug)).toEqual(['terms', 'privacy', 'returns', 'ai-policy', 'cookies'])
+    expect(LEGAL_PAGES.map((p) => p.title)).toEqual(['Terms and conditions', 'Privacy policy', 'Returns and refunds', 'AI policy', 'Cookie policy'])
     for (const p of LEGAL_PAGES) expect(resolvePage(p.slug).kind).toBe('legal')
   })
   it('each has the sections of its draft, with their titles', () => {
@@ -134,11 +134,12 @@ describe('they show properly', () => {
 })
 
 describe('the footer', () => {
-  it('shows the owner all five legal links, each marked draft, and Returns is no longer missing', () => {
+  it('shows the owner all six legal links, each marked draft, with the Cookie policy beside the Privacy policy, and Returns is no longer missing', () => {
     const { container } = render(<MemoryRouter><Footer social={[]} owner /></MemoryRouter>)
     const legal = screen.getByRole('navigation', { name: 'Legal' })
-    expect(within(legal).getAllByRole('link').map((a) => a.textContent)).toEqual(['Terms and conditions', 'Privacy policy', 'Returns and refunds', 'AI policy', 'Accessibility'])
+    expect(within(legal).getAllByRole('link').map((a) => a.textContent)).toEqual(['Terms and conditions', 'Privacy policy', 'Cookie policy', 'Returns and refunds', 'AI policy', 'Accessibility'])
     expect(within(legal).getByRole('link', { name: 'Returns and refunds' })).toHaveAttribute('href', '/page/returns')
+    expect(within(legal).getByRole('link', { name: 'Cookie policy' })).toHaveAttribute('href', '/page/cookies')
     expect(container.querySelectorAll('.ft__draft').length).toBeGreaterThanOrEqual(6)
   })
 })

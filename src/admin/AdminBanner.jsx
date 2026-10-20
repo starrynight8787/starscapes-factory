@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import './adminv2.css'
+import '../components/pagebanner-rooms.css'
 
 // The starry navy banner at the top of every admin page (the "Admin v2" designs in Figma): a small gold chip, the page title, a line under it, and a
 // little line-art picture on the right. The picture is decoration, so it is hidden from screen readers.
@@ -33,7 +34,11 @@ const ART = {
   posts: (<g>{Rect(40, 34, 120, 84, 8)}{Ln(56, 54, 144, 54)}{Ln(56, 70, 144, 70)}{Ln(56, 86, 110, 86)}{Rect(112, 16, 100, 84, 8, LIGHT)}{Ln(128, 36, 196, 36)}{Ln(128, 52, 196, 52)}{Ln(128, 68, 170, 68)}{STAR(200, 12, 10)}{SPARK(20, 50, 7)}{SPARK(220, 116, 6)}</g>),
 }
 
-export default function AdminBanner({ chip, title, subtitle, icon = 'console', back = true }) {
+// Which room's starry picture sits behind each admin page's banner.
+const ROOM_FOR = { books: 'knowledge-nook', ideas: 'idea-hatchery', originals: 'art-loft', hub: 'art-loft', home: 'factory-floor', post: 'drafting-desk', posts: 'drafting-desk' }
+
+export default function AdminBanner({ chip, title, subtitle, icon = 'console', room, back = true }) {
+  const where = room || ROOM_FOR[icon] || 'factory-floor'
   return (
     <>
       {back && (
@@ -41,13 +46,12 @@ export default function AdminBanner({ chip, title, subtitle, icon = 'console', b
           <Link className="ad-back__link" to="/admin">← Back to Admin</Link>
         </p>
       )}
-      <header className="adb">
+      <header className={`adb pb--room pb--room-${where}`}>
         <div className="adb__text">
           {chip && <p className="adb__chip">{chip}</p>}
           <h1 className="adb__title">{title}</h1>
           {subtitle && <p className="adb__subtitle">{subtitle}</p>}
         </div>
-        <svg className="adb__art" viewBox="0 0 240 136" aria-hidden="true" focusable="false">{ART[icon] || ART.console}</svg>
       </header>
     </>
   )

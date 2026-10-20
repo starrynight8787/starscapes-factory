@@ -321,6 +321,7 @@ a.rs-item:focus-visible .rs-art {
 }
 /* The starry banner is for phones only (see the block below). On a bigger screen the heading is plain writing on the room's picture, exactly as before. */
 @media (min-width: 821px) {
+  .rs-head.pb--starry.pb--room { background: none; min-height: 0; }
   .rs-head.pb--starry {
     background: none;
     overflow: visible;

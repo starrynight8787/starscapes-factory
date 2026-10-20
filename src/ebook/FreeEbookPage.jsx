@@ -50,7 +50,7 @@ export default function FreeEbookPage() {
     return (
       <main className="rp eb eb--v2">
         {back}
-        <PageBanner chip="You are in" title={done.file ? 'Thank you. Your ebook is ready.' : 'Thank you. Your ebook is being finished.'} art="mountain" />
+        <PageBanner chip="You are in" title={done.file ? 'Thank you. Your ebook is ready.' : 'Thank you. Your ebook is being finished.'} art="mountain" room="leadership-lounge" />
         <div className="eb__layout">
           <div className="eb__side">{cover}</div>
           <div className="eb__card">
@@ -78,7 +78,7 @@ export default function FreeEbookPage() {
   return (
     <main className="rp eb eb--v2">
       {back}
-      <PageBanner chip="Free" title={EBOOK.title} subtitle={EBOOK.summary} art="mountain" />
+      <PageBanner chip="Free" title={EBOOK.title} subtitle={EBOOK.summary} art="mountain" room="leadership-lounge" />
       <div className="eb__layout">
         <div className="eb__side">
           {cover}

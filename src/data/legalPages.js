@@ -28,6 +28,10 @@
 //  * RETURNS: [RETURN ADDRESS] is a gap. Decided 17 October: returns go to the registered office (a forwarding address); it goes in once the large-print courier figures are
 //    in (SFW-185). Section 3 says the print studio takes photos before an order is packed: check that with the print service. The cancellation form's blanks are written
 //    in (round brackets) so they are not counted as gaps.
+//  * COOKIES (added 20 October 2026): a separate Cookie policy, written from what the code really stores and loads. A test (test/cookie-policy.test.js) fails if the site starts storing something new, loading something from
+//    another company, or adding analytics without this page (and the Privacy policy's short cookies section) being brought up to date. THE ONLY GAP LEFT is the [date]. Google Fonts is named because the fonts
+//    are fetched from Google (src/styles/site.css): if the fonts are ever hosted on this site instead, take that line out (the test will say so). Gill asked for a separate page; the free-advice review (SFW-234) should
+//    confirm that no cookie banner is needed for sign-in, cart and the passes choice (they are needed for something the visitor asked for).
 export const LEGAL_PAGES = [
   {
     "slug": "terms",
@@ -197,7 +201,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Cookies and similar technologies",
         "paragraphs": [
-          "We only use what the site needs to work: your sign-in, your cart, and the choice you make on the passes page. All three are kept on your own device. We don't use advertising or analytics cookies, so we don't show a cookie banner. Nothing loads from YouTube until you press play. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may store its own cookies on your device and see your IP address, under its own policy. Stripe's payment page sets its own cookies under its own policy. If we ever add analytics, we will ask your permission first and update this page."
+          "We only use what the site needs to work: your sign-in, your cart, and the choice you make on the passes page. All three are kept on your own device. We don't use advertising or analytics cookies, so we don't show a cookie banner. Nothing loads from YouTube until you press play. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may store its own cookies on your device and see your IP address, under its own policy. Stripe's payment page sets its own cookies under its own policy. Your browser also fetches our fonts from Google whenever a page loads, so Google receives your IP address and browser details; Google says its fonts service sets no cookies. If we ever add analytics, we will ask your permission first and update this page. The full list is on our [Cookie policy](/page/cookies)."
         ]
       },
       {
@@ -368,6 +372,55 @@ export const LEGAL_PAGES = [
         "title": "Questions, and changes to this page",
         "paragraphs": [
           "If the way I use AI changes, I will update this page and its date. If you have a question about it, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com)."
+        ]
+      }
+    ]
+  },
+  {
+    "slug": "cookies",
+    "title": "Cookie policy",
+    "updated": "[date]",
+    "ready": false,
+    "intro": [
+      "This page lists everything this website keeps on your device, and everything it loads from other companies, and why. It goes with our [Privacy policy](/page/privacy), which explains what we do with your information."
+    ],
+    "sections": [
+      {
+        "title": "The short version",
+        "paragraphs": [
+          "We only use what the site needs to work. The site itself sets no cookies. It keeps three small things in your browser's storage, listed below, so that signing in, your cart and the passes page work as you would expect.",
+          "We don't use advertising cookies, analytics or visitor tracking of any kind. Because the three things below are needed for something you have asked the site to do, we don't show a cookie banner. If we ever add anything that needs your permission, we will ask first and update this page."
+        ]
+      },
+      {
+        "title": "What the site keeps on your device",
+        "paragraphs": [
+          "| Name | What it is for | How long it stays |\n| --- | --- | --- |\n| A name that starts **sb-** and ends **-auth-token** | Keeps you signed in, so you can use My passes, vote in a story and read what your passes open. It is only there once you have signed in. | Until you log out or clear your browser's data |\n| **sf-cart-v1** | Remembers what is in your cart, so it is still there if you leave and come back. It holds the prints in your cart, not your name or address. | Until you empty your cart or clear your browser's data |\n| **sf-membership-choice** | Remembers which passes you ticked, and whether you chose monthly or yearly, so your choice is still there if you go back a page. | Until you close the tab |",
+          "The first two are kept in your browser's local storage, and the third in its session storage. They are not cookies. They stay on your device and are used only to make the site work for you."
+        ]
+      },
+      {
+        "title": "What other companies set or see",
+        "paragraphs": [
+          "* **Google Fonts.** To draw our lettering, your browser fetches the fonts (Caveat, Inter, Josefin Sans, Sacramento and Schoolbell) from Google whenever a page loads. Google receives your IP address, the address of the font file and details of your browser, so that it can send them. Google says its fonts service does not set or log cookies ([Google's explanation](https://developers.google.com/fonts/faq/privacy)).\n* **YouTube.** Nothing loads from YouTube until you press play on a video. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may then store its own cookies on your device and see your IP address, under its own policy ([how Google uses cookies](https://policies.google.com/technologies/cookies)).\n* **Stripe.** When you pay, or manage your passes or your card, you leave our site for Stripe's own page. Stripe sets its own cookies there, to take payments and prevent fraud, under its own policy ([Stripe's privacy policy](https://stripe.com/gb/privacy)). We never see or store your card number."
+        ]
+      },
+      {
+        "title": "What we don't use",
+        "paragraphs": [
+          "We don't use advertising cookies, analytics, visitor tracking, social media buttons or tracking pixels, or anything that follows you from one website to another. The links to our social media pages are ordinary links: nothing is sent to those sites unless you follow one."
+        ]
+      },
+      {
+        "title": "Your choices",
+        "paragraphs": [
+          "You can see and delete what the site keeps from your browser's settings (look for \"cookies and site data\", or \"site data\"). If you delete the sign-in item you will be signed out, and if you delete the cart item your cart will be empty. You can also block fonts or videos from other companies using your browser or an extension: the site will still work, though some of the lettering may look different."
+        ]
+      },
+      {
+        "title": "If this changes",
+        "paragraphs": [
+          "If we add anything that needs your permission, we will ask first, and we will update this page and the date at the top. If you have a question about any of this, use the contact details on our [Contact page](/page/contact)."
         ]
       }
     ]

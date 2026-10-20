@@ -96,6 +96,7 @@ export const PAGES = {
   '/page/contact': { title: 'Contact', description: 'How to get in touch with Starscapes Factory.', image: 'site', index: false, client: true },
   '/page/terms': { title: 'Terms & Conditions', description: 'The terms that apply to everything bought on Starscapes Factory.', image: 'site', index: false, client: true },
   '/page/privacy': { title: 'Privacy Policy', description: 'How Starscapes Factory uses your information.', image: 'site', index: false, client: true },
+  '/page/cookies': { title: 'Cookie policy', description: 'What this website keeps on your device, and what other companies see.', image: 'site', index: false, client: true },
   '/page/ai-policy': { title: 'AI Policy', description: 'How Starscapes Factory uses AI tools.', image: 'site', index: false, client: true },
   '/page/returns': { title: 'Returns and refunds', description: 'Your rights to cancel an order, return a print and be refunded.', image: 'site', index: false, client: true },
   '/page/delivery': { title: 'Delivery and returns', description: 'How delivery works, and what to do if something goes wrong.', image: 'site', index: false, client: true },

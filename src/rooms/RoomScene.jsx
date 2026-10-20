@@ -1,3 +1,4 @@
+import '../components/pagebanner-rooms.css'
 import { Link } from 'react-router-dom'
 import HomeLink from '../components/HomeLink'
 import { BannerPicture } from '../components/PageBanner'
@@ -28,13 +29,12 @@ export default function RoomScene({ scene }) {
       <div className="rs-home">
         <HomeLink />
       </div>
-      <header className="rs-head pb--starry">
+      <header className={`rs-head pb--starry${banner ? ` pb--room pb--room-${roomOf(scene)}` : ''}`}>
         {banner && <p className="pb__chip rs-chip">{banner.chip}</p>}
         <h1>{scene.name}</h1>
         {scene.tagline && <p className="rs-tagline">{scene.tagline}</p>}
         {scene.blurb && <p className="rs-blurb">{scene.blurb}</p>}
-        {banner && <BannerPicture art={banner.art} />}
-      </header>
+              </header>
 
       <div className="rs-stage" style={{ aspectRatio: `${scene.width} / ${scene.height}` }}>
         <img className="rs-base" src={scene.base} alt="" />

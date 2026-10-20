@@ -157,3 +157,25 @@
   }
   .pg-post--v2 .pg-post__hero > .pb--starry.pb--post { background: none; }
 }
+
+/* The room's own starry picture behind the post's heading (the sky is a little darkened so the title stays easy to read). Phone: the banner; computer: the wrapper behind the whole top. */
+@media (max-width: 720px) {
+  .pg-post--v2.pg-post--drafting-desk .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/drafting-desk-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--sarah-jrs-den .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/sarah-jrs-den-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--art-loft .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/art-loft-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--explorers-bay .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/explorers-bay-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--factory-floor .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/factory-floor-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--leadership-lounge .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/leadership-lounge-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--idea-hatchery .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/idea-hatchery-m.webp'); background-size: cover; background-position: center; }
+  .pg-post--v2.pg-post--knowledge-nook .pb--starry.pb--post { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/knowledge-nook-m.webp'); background-size: cover; background-position: center; }
+}
+@media (min-width: 721px) {
+  .pg-post--v2.pg-post--drafting-desk .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/drafting-desk-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--sarah-jrs-den .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/sarah-jrs-den-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--art-loft .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/art-loft-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--explorers-bay .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/explorers-bay-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--factory-floor .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/factory-floor-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--leadership-lounge .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/leadership-lounge-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--idea-hatchery .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/idea-hatchery-d.webp'); background-size: cover; background-position: center top; }
+  .pg-post--v2.pg-post--knowledge-nook .pg-post__hero.pb--starry { background-image: linear-gradient(rgba(8, 20, 60, 0.3), rgba(8, 20, 60, 0.3)), url('/banners/knowledge-nook-d.webp'); background-size: cover; background-position: center top; }
+}

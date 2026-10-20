@@ -109,7 +109,7 @@ describe('the shelf', () => {
 describe('agreement with the database file', () => {
   const sql = read('sql/books.sql')
   it('uses the same genres, statuses, ratings and limits', () => {
-    expect(sql).toContain(`genre in (${GENRES.map((g) => `'${g.key}'`).join(', ')})`)
+    expect(sql).toContain(`genre text check (genre is null or genre in (${GENRES.map((g) => `'${g.key}'`).join(', ')}))`) // the real rule in the table, not just the note that repeats it
     expect(sql).toContain(`status in (${STATUSES.map((s) => `'${s.key}'`).join(', ')})`)
     expect(sql).toContain('rating between 1 and 5')
     expect(sql).toContain(`between 1 and ${LIMITS.title}`)

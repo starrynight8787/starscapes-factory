@@ -32,15 +32,17 @@ describe('who may see it', () => {
 })
 
 describe('the list', () => {
-  it('shows every published post from every room, newest first, with its room, date and tags', async () => {
+  it('shows every post from every room, drafts included, newest first, with its room, date and tags', async () => {
     page(); await screen.findByText('A tiny world in clay')
     const titles = screen.getAllByRole('listitem').filter((li) => li.className === 'ap__row').map((li) => li.querySelector('.ap__title').textContent)
-    expect(titles).toEqual(['A tiny world in clay', 'My test blog', 'Sunrise on the road', 'Post with no room'])
+    expect(titles).toEqual(['A tiny world in clay', 'My test blog', 'Sunrise on the road', 'Unfinished idea', 'Post with no room'])
+    expect(within(rowOf('Unfinished idea')).getByText('Not published')).toBeInTheDocument()
     const row = rowOf('A tiny world in clay'); expect(within(row).getByText('The Idea Hatchery')).toBeInTheDocument(); expect(within(row).getByText('5 Oct 2026')).toBeInTheDocument(); expect(within(row).getByText('Tags: Stop Motion')).toBeInTheDocument()
     expect(within(rowOf('Post with no room')).getByText('No room')).toBeInTheDocument(); expect(within(rowOf('Post with no room')).getByText('No tags')).toBeInTheDocument()
   })
-  it('says how many it is showing, out of how many it has', async () => {
-    page(); expect(await screen.findByRole('status')).toHaveTextContent('Showing 4 of 5 posts')
+  it('says how many it is showing, out of how many it has: all 5 to begin with, 4 when you choose published only', async () => {
+    page(); expect(await screen.findByRole('status')).toHaveTextContent('Showing 5 of 5 posts')
+    await userEvent.selectOptions(screen.getByLabelText('Show'), 'published'); expect(screen.getByRole('status')).toHaveTextContent('Showing 4 of 5 posts')
   })
   it('says where each post appears, and what to do when a post is on no page (the missing test blog)', async () => {
     page(); await screen.findByText('My test blog')
@@ -59,11 +61,11 @@ describe('the filters', () => {
   it('lists every room with how many posts it has, and posts with no room', async () => {
     page(); await screen.findByText('My test blog')
     const options = [...screen.getByLabelText('Room').querySelectorAll('option')].map((o) => o.textContent)
-    expect(options[0]).toBe('All rooms (4)'); expect(options).toContain('The Idea Hatchery (2)'); expect(options).toContain("Explorer's Bay (1)"); expect(options).toContain('The Art Loft (0)'); expect(options).toContain('No room (1)'); expect(options).toHaveLength(10)
+    expect(options[0]).toBe('All rooms (5)'); expect(options).toContain('The Idea Hatchery (3)'); expect(options).toContain("Explorer's Bay (1)"); expect(options).toContain('The Art Loft (0)'); expect(options).toContain('No room (1)'); expect(options).toHaveLength(10)
   })
   it('narrows to one room', async () => {
     page(); await screen.findByText('My test blog'); await userEvent.selectOptions(screen.getByLabelText('Room'), 'idea-hatchery')
-    expect(screen.getByRole('status')).toHaveTextContent('Showing 2 of 5 posts'); expect(screen.queryByText('Sunrise on the road')).toBeNull(); expect(screen.getByText('My test blog')).toBeInTheDocument()
+    expect(screen.getByRole('status')).toHaveTextContent('Showing 3 of 5 posts'); expect(screen.queryByText('Sunrise on the road')).toBeNull(); expect(screen.getByText('My test blog')).toBeInTheDocument()
   })
   it('narrows to posts with no room', async () => {
     page(); await screen.findByText('My test blog'); await userEvent.selectOptions(screen.getByLabelText('Room'), 'none'); expect(screen.getByRole('status')).toHaveTextContent('Showing 1 of 5 posts'); expect(screen.getByText('Post with no room')).toBeInTheDocument()
@@ -74,8 +76,11 @@ describe('the filters', () => {
     await userEvent.selectOptions(screen.getByLabelText('Show'), 'all'); expect(screen.getByRole('status')).toHaveTextContent('Showing 5 of 5 posts')
   })
   it('updates the counts in the room list when the published choice changes', async () => {
-    page(); await screen.findByText('My test blog'); await userEvent.selectOptions(screen.getByLabelText('Show'), 'all')
-    expect([...screen.getByLabelText('Room').querySelectorAll('option')].map((o) => o.textContent)).toContain('The Idea Hatchery (3)')
+    page(); await screen.findByText('My test blog')
+    const counts = () => [...screen.getByLabelText('Room').querySelectorAll('option')].map((o) => o.textContent)
+    expect(counts()).toContain('The Idea Hatchery (3)')
+    await userEvent.selectOptions(screen.getByLabelText('Show'), 'published'); expect(counts()).toContain('The Idea Hatchery (2)')
+    await userEvent.selectOptions(screen.getByLabelText('Show'), 'all'); expect(counts()).toContain('The Idea Hatchery (3)')
   })
   it('searches the titles, ignoring capitals, and says so when nothing matches', async () => {
     page(); await screen.findByText('My test blog'); await userEvent.type(screen.getByLabelText('Search the titles'), 'SUNRISE')

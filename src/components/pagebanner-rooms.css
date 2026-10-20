@@ -19,3 +19,25 @@
   .pb--starry.pb--room-idea-hatchery { background-image: url('/banners/idea-hatchery-d.webp'); }
   .pb--starry.pb--room-knowledge-nook { background-image: url('/banners/knowledge-nook-d.webp'); }
 }
+
+/* The same room pictures behind the Admin banner and the Membership hero. */
+.adb.pb--room, .mb--choose .mb__hero.pb--room { background-color: #14306a; background-size: cover; background-position: center; background-repeat: no-repeat; }
+.adb.pb--room::before, .mb--choose .mb__hero.pb--room::before { opacity: 0; }
+.adb.pb--room-drafting-desk, .mb--choose .mb__hero.pb--room-drafting-desk { background-image: url('/banners/drafting-desk-m.webp'); }
+.adb.pb--room-sarah-jrs-den, .mb--choose .mb__hero.pb--room-sarah-jrs-den { background-image: url('/banners/sarah-jrs-den-m.webp'); }
+.adb.pb--room-art-loft, .mb--choose .mb__hero.pb--room-art-loft { background-image: url('/banners/art-loft-m.webp'); }
+.adb.pb--room-explorers-bay, .mb--choose .mb__hero.pb--room-explorers-bay { background-image: url('/banners/explorers-bay-m.webp'); }
+.adb.pb--room-factory-floor, .mb--choose .mb__hero.pb--room-factory-floor { background-image: url('/banners/factory-floor-m.webp'); }
+.adb.pb--room-leadership-lounge, .mb--choose .mb__hero.pb--room-leadership-lounge { background-image: url('/banners/leadership-lounge-m.webp'); }
+.adb.pb--room-idea-hatchery, .mb--choose .mb__hero.pb--room-idea-hatchery { background-image: url('/banners/idea-hatchery-m.webp'); }
+.adb.pb--room-knowledge-nook, .mb--choose .mb__hero.pb--room-knowledge-nook { background-image: url('/banners/knowledge-nook-m.webp'); }
+@media (min-width: 821px) {
+  .adb.pb--room-drafting-desk, .mb--choose .mb__hero.pb--room-drafting-desk { background-image: url('/banners/drafting-desk-d.webp'); }
+  .adb.pb--room-sarah-jrs-den, .mb--choose .mb__hero.pb--room-sarah-jrs-den { background-image: url('/banners/sarah-jrs-den-d.webp'); }
+  .adb.pb--room-art-loft, .mb--choose .mb__hero.pb--room-art-loft { background-image: url('/banners/art-loft-d.webp'); }
+  .adb.pb--room-explorers-bay, .mb--choose .mb__hero.pb--room-explorers-bay { background-image: url('/banners/explorers-bay-d.webp'); }
+  .adb.pb--room-factory-floor, .mb--choose .mb__hero.pb--room-factory-floor { background-image: url('/banners/factory-floor-d.webp'); }
+  .adb.pb--room-leadership-lounge, .mb--choose .mb__hero.pb--room-leadership-lounge { background-image: url('/banners/leadership-lounge-d.webp'); }
+  .adb.pb--room-idea-hatchery, .mb--choose .mb__hero.pb--room-idea-hatchery { background-image: url('/banners/idea-hatchery-d.webp'); }
+  .adb.pb--room-knowledge-nook, .mb--choose .mb__hero.pb--room-knowledge-nook { background-image: url('/banners/knowledge-nook-d.webp'); }
+}
