@@ -97,11 +97,11 @@ describe('they show properly', () => {
       unmount()
     }
   })
-  it('the Privacy policy\u2019s table is a real table: four columns with headings, and ten rows', () => {
+  it('the Privacy policy\u2019s table is a real table: four columns with headings, and eleven rows (one for each thing it keeps, the newsletter being the eleventh)', () => {
     const { container } = open('privacy')
     const table = container.querySelector('table')
     expect([...table.querySelectorAll('th')].map((h) => h.textContent)).toEqual(['What', 'When', 'Why', 'Our legal reason'])
-    expect(table.querySelectorAll('tbody tr')).toHaveLength(10); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(11); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
     expect(container.querySelector('.md-tablewrap')).toBeTruthy()
   })
   it('a table scrolls inside a box a keyboard can reach and a screen reader can name, with a short hint for people on a phone', () => {
@@ -115,9 +115,9 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (8), how long it keeps things (7), your rights (7)', () => {
+  it('lists are lists: the people Privacy shares with (8), how long it keeps things (9), your rights (7)', () => {
     const { container } = open('privacy')
-    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([8, 7, 7])
+    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([8, 9, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
   })
   it('the Returns steps are a numbered list of three, and the cancellation form is a quote', () => {

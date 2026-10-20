@@ -5,6 +5,7 @@ import { COMPANY, companyLine } from '../data/company'
 
 export const SUBJECT_MAX = 150
 export const BODY_MAX = 20000
+export const UNCONFIRMED_DAYS = 30 // a sign-up that is never confirmed is deleted after this many days (the Privacy policy says so, and a test keeps the two the same)
 export const BATCH_SIZE = 50 // emails sent per request to Resend (its limit is 100 per request and 2 requests a second)
 export const TOKEN_PATTERN = /^[a-f0-9]{48}$/
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/

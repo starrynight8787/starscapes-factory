@@ -3,6 +3,10 @@
     {
       "path": "/api/membership-checkout?reminders=1",
       "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/ebook-signup?newsletter=tidy",
+      "schedule": "30 8 * * *"
     }
   ],
   "rewrites": [

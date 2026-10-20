@@ -1,0 +1,54 @@
+THE PRIVACY POLICY: THE NEWSLETTER   starscapes-privacy-newsletter-20oct.zip   (SFW-233, SFW-250)
+(One Supabase line to run, for a different thing I found: see "ALSO: A SECOND MISSING PERMISSION". Nothing to set in Vercel: the daily job uses CRON_SECRET, which the renewal reminders already need. The policy stays a DRAFT: only you can see it, and its date is still "[date]".)
+
+WHAT CHANGES IN THE POLICY (four places, in plain words, each checked against what the code really does)
+ 1. WHAT WE COLLECT AND WHY (the table gets an eleventh row):
+    What: Your email address, the date and wording you agreed to, whether and when you confirmed it, and, if you leave, that you left.
+    When: When you sign up for the newsletter, confirm it, or unsubscribe.
+    Why: To send you the newsletter, to keep proof that you asked for it and confirmed, and to make sure nobody who has unsubscribed is emailed again.
+    Our legal reason: Your consent, which you can take back at any time, and our legitimate interest in respecting your choice if you leave.
+ 2. WHO WE SHARE YOUR INFORMATION WITH: the Resend line now also says Resend sends "the email asking you to confirm and then the newsletter".
+ 3. HOW LONG WE KEEP IT (two new points):
+    Newsletter sign-ups: until you unsubscribe or ask us to delete your email address. If you sign up but never press the link to confirm, we delete your address after 30 days.
+    If you unsubscribe from the newsletter: we keep your email address, marked as unsubscribed, so that we never email you again by mistake. If you would rather we deleted it completely, ask us and we will.
+ 4. MARKETING (a new paragraph): If you sign up for the newsletter, you are saying yes to the newsletter: new posts and news from Starscapes Factory, by email. We first email you a link, and you are only added once you press it. Every newsletter has a link to unsubscribe, and the unsubscribe button that many email programs show works too. If you unsubscribe, we keep your address, marked as unsubscribed, so that we never email you again by mistake.
+ (Nothing that was already there was taken out. The ebook wording is untouched.)
+
+A PROMISE THE SITE DID NOT YET KEEP, NOW KEPT: "WE DELETE UNCONFIRMED SIGN-UPS AFTER 30 DAYS"
+ Before this, someone who signed up and never pressed the confirm link would have stayed in the table forever. Now a small job runs once a day (8.30 in the morning, Vercel's scheduler, beside the renewal reminders) and deletes people who are still waiting to confirm 30 days after their last sign-up email.
+ * It NEVER touches anyone who confirmed, or anyone who unsubscribed (they must stay, or they could be emailed again).
+ * It counts from their LAST sign-up email, so someone who left and signed up again today is not swept away because their first record is old.
+ * Like the reminders, it needs CRON_SECRET in Vercel, and refuses to run without it. It runs even while the sign-up box is closed.
+ * You can see it run in Vercel: your project, Logs (or Settings, Cron Jobs), where it will show "/api/ebook-signup?newsletter=tidy".
+
+ALSO: A SECOND MISSING PERMISSION (INSTAGRAM)
+ While testing I found another table the site cannot use. Your Instagram access code is saved in the instagram_token table (there is 1 row), but the server's key has NO permission to read it or to save the fresh code it swaps in before the old one runs out (Instagram codes last 60 days). Visitors correctly cannot read it. It is the same kind of gap as post_reads, and your project's own test (server-tables-have-service-role) was already warning about it.
+ FIX, in Supabase: your project, SQL Editor (left menu), New query, paste this one line, click Run. It says "Success. No rows returned." Safe to run twice.
+    grant select, insert, update, delete on public.instagram_token to service_role;
+ To check it, run this in a new query: the first should say true and the second false (visitors must NOT be able to read it).
+    select has_table_privilege('service_role','public.instagram_token','select') as server_can_read, has_table_privilege('anon','public.instagram_token','select') as visitors_can_read;
+ (The package also adds that line to sql/instagram.sql.) The Instagram pictures themselves never reach a visitor's browser from Instagram: the server fetches them and passes them along, so the Privacy and Cookie policies need no new line for them.
+
+TESTS THAT KEEP THE POLICY HONEST (so it cannot quietly become untrue)
+ * One test per promise: the table row matches what the database really keeps (and no name, phone or location is kept); nobody is added until they press the link, and a newsletter only goes to confirmed people; the unsubscribe link and the one-click header are in every newsletter; someone who unsubscribes is marked, never deleted; the Remove button really deletes; "30 days" is the number the daily job really uses; Resend is the only company the newsletter goes through.
+ * 25 new tests, and 10 deliberate breakages (the days changed, the tidy-up deleting people who confirmed or left, the secret skipped, the policy saying 14 days or "we delete people who unsubscribe"...): all caught.
+ * Three existing tests were updated on purpose: two display tests now expect eleven table rows and nine "how long we keep it" points; and the schedule test now expects the two daily jobs (it still checks the reminders are unchanged and that nothing runs more than once a day, and now that there are no more than two, the free plan's limit).
+
+STILL FOR YOU (I am not a lawyer; the free-advice review, SFW-234, should look at all of this)
+ * Read the four pieces of wording above, and change anything that is not how you want it said.
+ * Questions for the review: is a double opt-in sign-up with a "keep unsubscribed people on a do-not-email list" fine as the policy describes it? Is 30 days a sensible time to wait for a confirmation? Does the table's "legitimate interest in respecting your choice if you leave" read right?
+ * The policy is still not live. When you are ready: put the real date in, set it to ready (SFW-186, with the other legal pages), and only THEN open the sign-up (NEWSLETTER_OPEN=yes in Vercel).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-privacy-newsletter-20oct.zip
+ 3. python3 tools/add-privacy-newsletter.py     (it checks five files first; if anything is unexpected it changes nothing)
+ 4. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it must still print 12)
+ 7. find . -name "*.before-privacy-newsletter" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (5 changed files: legalPages.js, newsletter.js, newsletterRules.js, vercel.json, sql/instagram.sql; 4 tests (2 changed: legal-pages and membership-reminder-setup, 2 new); the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Privacy policy: the newsletter, and a daily job that deletes sign-ups nobody confirms after 30 days"
+    git push
+ 8. After Vercel says Ready, in Vercel open your project, Settings, Cron Jobs: you should see two jobs (the reminders and the newsletter tidy-up).

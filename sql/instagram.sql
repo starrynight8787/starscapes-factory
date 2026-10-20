@@ -9,6 +9,10 @@ create table if not exists public.instagram_token (
   refreshed_at timestamptz not null default now()
 );
 alter table public.instagram_token enable row level security;
+-- Only the SERVER's key (service_role) reads and writes this table, and a table made in the SQL editor gives that key no permission until it is granted. Without this line the site cannot read the
+-- token, or save the fresh one it swaps in before the old one runs out. Added 20 October 2026; run it on a project that already has the table:
+--   grant select, insert, update, delete on public.instagram_token to service_role;
+grant select, insert, update, delete on public.instagram_token to service_role;
 
 -- insert into public.instagram_token (id, token) values (1, 'PASTE-YOUR-TOKEN-HERE')
 --   on conflict (id) do update set token = excluded.token, refreshed_at = now();

@@ -8,12 +8,13 @@ const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
 
 describe('the schedule (vercel.json)', () => {
   const config = JSON.parse(read('vercel.json'))
-  it('asks for the reminder job once a day, through the existing payment function (a 13th function is not allowed on the free plan)', () => {
-    expect(config.crons).toEqual([{ path: '/api/membership-checkout?reminders=1', schedule: '0 8 * * *' }])
+  it('asks for the reminder job once a day, through the existing payment function, and for the newsletter tidy-up once a day, through the existing ebook sign-up function (a 13th function is not allowed on the free plan)', () => {
+    expect(config.crons).toEqual([{ path: '/api/membership-checkout?reminders=1', schedule: '0 8 * * *' }, { path: '/api/ebook-signup?newsletter=tidy', schedule: '30 8 * * *' }]) // the reminders are unchanged; the second job is the newsletter's tidy-up
     const functions = readdirSync(join(process.cwd(), 'api')).filter((f) => f.endsWith('.js')); expect(functions.length).toBeLessThanOrEqual(12)
   })
-  it('runs no more than once a day (the free plan allows no more): minute and hour are fixed numbers, day, month and weekday are stars', () => {
-    const [minute, hour, dom, month, dow] = config.crons[0].schedule.split(' '); expect(/^\d+$/.test(minute)).toBe(true); expect(/^\d+$/.test(hour)).toBe(true); expect([dom, month, dow]).toEqual(['*', '*', '*'])
+  it('runs no more than once a day each (the free plan allows no more, and no more than two jobs): minute and hour are fixed numbers, day, month and weekday are stars', () => {
+    expect(config.crons.length).toBeLessThanOrEqual(2)
+    for (const cron of config.crons) { const [minute, hour, dom, month, dow] = cron.schedule.split(' '); expect(/^\d+$/.test(minute)).toBe(true); expect(/^\d+$/.test(hour)).toBe(true); expect([dom, month, dow]).toEqual(['*', '*', '*']) }
   })
   it('still sends every page except the API to the site (the rewrite is unchanged)', () => {
     expect(config.rewrites).toEqual([{ source: '/((?!api/.*).*)', destination: '/index.html' }])
