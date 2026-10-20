@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react'
 import PageBanner from '../components/PageBanner'
-import { Link, useLocation, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { formatDate } from '../rooms/postRules'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import '../styles/articles.css'
 import PassChip from '../membership/PassChip'
+import { GENRES, shelfPath } from '../bookclub/bookRules'
 
 // Every published post from every room, newest first, at /blog. The tags found on the posts become the filter above the list.
 // The rows are the same cards as on the room pages (roompages.css), with the whole row a link.
@@ -39,6 +40,9 @@ export default function Home() {
 
   const allTags = useMemo(() => [...new Set(posts.flatMap((p) => (Array.isArray(p.tags) ? p.tags : [])))].sort((a, b) => a.localeCompare(b)), [posts])
   const shown = activeTag ? posts.filter((p) => Array.isArray(p.tags) && p.tags.includes(activeTag)) : posts
+
+  // The Book Club's genres used to link here (as a tag). Old links and bookmarks such as /blog?tag=fiction now go to that genre's shelf, unless some post really carries the tag.
+  if (!loading && !error && activeTag && GENRES.some((g) => g.key === activeTag) && shown.length === 0) return <Navigate to={shelfPath(activeTag)} replace />
 
   if (loading) return <p className="rp-note">Loading posts…</p>
   if (error) return <p className="rp-note" role="alert">The posts could not load just now. Please try again in a moment.</p>
