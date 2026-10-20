@@ -1,4 +1,14 @@
 /* The admin pages, redesigned: a starry navy banner, rounded cards, and two columns so nothing needs scrolling to find. */
+
+/* The site's page column is only 720px, so lift that limit when an admin page is showing (the same trick the homepage uses). It has to beat the width
+   limits the older pages and forms put on .container, hence the extra "body". */
+body .container:has(> .ad--wide),
+body .container:has(> .ad--wide.fm),
+body .container:has(> .al-v2) {
+  max-width: 1400px;
+  padding-left: 0;
+  padding-right: 0;
+}
 .ad.ad--wide {
   max-width: 1320px;
   padding: 24px 24px 56px;
