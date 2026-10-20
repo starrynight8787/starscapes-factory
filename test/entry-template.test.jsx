@@ -133,10 +133,10 @@ describe('the page', () => {
     await screen.findByRole('heading', { level: 2, name: 'No picture' })
     expect(second.container.querySelector('.en__latest img')).toBeNull()
   })
-  it('puts an extra box under the pinned entry when one is given, and nothing when not', async () => {
+  it('puts an extra box in the right-hand column when one is given (Writing in Transit gives the Into the Nebula box)', async () => {
     h.posts = many(4); const plain = page()
     await screen.findByRole('heading', { level: 2, name: 'Entry 4' })
-    expect(plain.container.querySelector('.en__o4')).toBeNull(); plain.unmount()
+    expect(plain.container.querySelector('.en__o4 .en__nebula')).toBeTruthy(); plain.unmount() // Writing in Transit has the Into the Nebula box
     const extra = page(<EntryPage title="T" blurb="B" backTo="/explorers-bay" backLabel="Back" load={load} belongs={belongs} aside={<p>An extra box</p>} />)
     expect(await extra.findByText('An extra box')).toBeInTheDocument(); expect(extra.container.querySelector('.en__right .en__o4')).toBeTruthy()
   })

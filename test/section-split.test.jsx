@@ -31,11 +31,12 @@ beforeEach(() => {
 
 describe('section pages: the search and the pinned post in a right-hand column', () => {
   const story = [post(6), post(5), post(4), post(1, { pinned_in: 'story' })]
-  it('puts the search first and the pinned post under it, in the side column', async () => {
+  it('puts the search first, then the Into the Nebula box, then the pinned post, in the side column', async () => {
     const { container } = await page('story', story)
     const kids = [...side(container).children]
     expect(kids[0].getAttribute('role')).toBe('search')
-    expect(kids[1].className).toMatch(/ff-side__pinned/)
+    expect(kids[1].className).toMatch(/en__nebula/) // the Into the Nebula box
+    expect(kids[2].className).toMatch(/ff-side__pinned/)
     expect(titlesIn(side(container))).toEqual(['Day 1: a story post'])
     expect(side(container).textContent).toMatch(/Start here/)
   })

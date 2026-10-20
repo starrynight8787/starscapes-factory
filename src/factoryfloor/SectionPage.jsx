@@ -4,6 +4,7 @@ import './factoryfloor.css'
 import useTitle from './useTitle'
 import PostNote from './PostNote'
 import PostFilter from './PostFilter'
+import NebulaBox from '../entries/NebulaBox'
 import { fetchFactoryPosts } from './factoryApi'
 import { fetchReads, pickMostRead } from '../entries/readsApi'
 import { SECTIONS, kindOf, tagsOf, filterPosts, isPinned } from './factoryData'
@@ -70,11 +71,12 @@ export default function SectionPage({ kind }) {
         {status === 'ready' && posts.length === 0 && <p className="ff-msg">Nothing here yet.</p>}
 
         <div className="ff-split">
-          {/* the right-hand column: the search first, then the pinned post, then the most read */}
+          {/* the right-hand column: the search first, then the Into the Nebula box, then the pinned post, then the most read */}
           <aside className="ff-side" aria-label="Search, and the pinned post">
             {status === 'ready' && restTotal > 0 && (
               <PostFilter q={q} tag={tag} sort={sort} tags={tags} total={restTotal} shown={rest.length} onChange={change} />
             )}
+            <NebulaBox />
             {status === 'ready' && pinnedPost && (
               <div className="ff-side__pinned">
                 <PostNote post={pinnedPost} index={0} />
