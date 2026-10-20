@@ -80,10 +80,27 @@ describe('Idea Hatchery: the egg under the dome', () => {
 
 describe('Idea Hatchery: nothing else changed', () => {
   it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', '#FFB36B', '#8FD694', '#B79CF2', '#070B26'])
+    // #E5484D is the red of the traffic cone on the bench, and #FFD60A the yellow of the "coming soon" tape across the dotted beaker (both fine, Gill, 20 October 2026);
+    // the next test makes sure each is only that one shape
+    const allowed = new Set(['#fff', '#14306A', 'none', '#FFB36B', '#8FD694', '#B79CF2', '#070B26', '#E5484D', '#FFD60A'])
     for (const f of ['base.svg', ...LIQUIDS.map((l) => l[0]), 'item-come-study-with-me.svg']) {
       for (const m of read(f).matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), `${f}: ${m[1]}`).toBe(true)
     }
+  })
+  it('has the red (#E5484D) in exactly one place: the traffic cone on the bench, with its band drawn on top', () => {
+    const reds = [...parse(read('base.svg')).querySelectorAll('[fill="#E5484D"]')]
+    expect(reds).toHaveLength(1)
+    expect(reds[0].tagName.toLowerCase()).toBe('path')
+    expect(reds[0].nextElementSibling.hasAttribute('data-cone-band')).toBe(true)
+    for (const f of [...LIQUIDS.map((l) => l[0]), 'item-come-study-with-me.svg']) expect(read(f)).not.toContain('E5484D')
+  })
+  it('has the yellow (#FFD60A) in exactly one place: the "coming soon" tape across the dotted beaker, with no outline', () => {
+    const yellows = [...parse(read('item-come-study-with-me.svg')).querySelectorAll('[fill="#FFD60A"]')]
+    expect(yellows).toHaveLength(1)
+    expect(yellows[0].tagName.toLowerCase()).toBe('rect')
+    expect(yellows[0].hasAttribute('data-tape')).toBe(true)
+    expect(yellows[0].getAttribute('stroke')).toBe('none')
+    for (const f of ['base.svg', ...LIQUIDS.map((l) => l[0])]) expect(read(f), f).not.toContain('FFD60A')
   })
   it('keeps the sizes of the objects, and the places of the ones that did not move', () => {
     const g = JSON.parse(read('geometry.json'))

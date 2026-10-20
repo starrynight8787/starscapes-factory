@@ -1,0 +1,16 @@
+IDEA HATCHERY: THE CONE'S RED AND THE TAPE'S YELLOW ARE ALLOWED   starscapes-hatchery-colours-20oct.zip   (SFW-244)
+(One test file only. No site change, no build needed, nothing to do in Supabase, Stripe or Vercel.)
+
+The colours test only allowed the Idea Hatchery's original colours, so it failed on two colours you have said are fine:
+  * the RED (#E5484D) of the traffic cone on the bench
+  * the YELLOW (#FFD60A) of the "coming soon" tape across the dotted beaker
+The test now allows both, and two new checks make sure each is ONLY that one shape (the cone with its band on top; the tape with no outline), so a stray red or yellow anywhere else still fails.
+
+INSTALL (from the project folder)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-hatchery-colours-20oct.zip
+ 3. npm test -- test/hatchery-colours.test.js          (it should say all 24 tests passed)
+ 4. git add .
+    git status                                           (only test/hatchery-colours.test.js and INSTALL-HATCHERY-COLOURS.txt should be listed)
+    git commit -m "Allow the Idea Hatchery cone's red and tape's yellow in the colours test"
+    git push
