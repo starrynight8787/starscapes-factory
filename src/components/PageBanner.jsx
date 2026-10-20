@@ -1,4 +1,5 @@
 import './pagebanner.css'
+import './pagebanner-rooms.css'
 import BannerArt from './BannerArt'
 
 // The banner at the top of a page (the navy panel in the Figma designs for the Leadership Blog, YouTube and Book Club). It holds a small chip, the page's
@@ -18,19 +19,21 @@ export function ShelfBooks() {
   )
 }
 
-export default function PageBanner({ chip, title, subtitle, picture, art, shelf, children }) {
+export default function PageBanner({ chip, title, subtitle, picture, art, room, shelf, children }) {
   // art: the name of a starry line-art picture (see BannerArt), or 'plain' for stars only. It makes the banner starry and replaces the picture panel.
+  // room: the room this page belongs to. Its full-width starry background (public/banners/<room>-d.webp and -m.webp) replaces the picture on the right.
+  const inRoom = Boolean(room) && !shelf
   return (
-    <header className={`pb${art || shelf ? ' pb--starry' : ''}${shelf ? ' pb--shelf' : ''}`}>
+    <header className={`pb${art || shelf || inRoom ? ' pb--starry' : ''}${shelf ? ' pb--shelf' : ''}${inRoom ? ` pb--room pb--room-${room}` : ''}`}>
       <div className="pb__text">
         {chip && <p className="pb__chip">{chip}</p>}
         <h1 className="pb__title">{title}</h1>
         {subtitle && <p className="pb__subtitle">{subtitle}</p>}
         {children && <div className="pb__buttons">{children}</div>}
       </div>
-      {art && !shelf && <BannerPicture art={art} />}
+      {art && !shelf && !inRoom && <BannerPicture art={art} />}
       {shelf && <ShelfBooks />}
-      {!art && !shelf && picture && (
+      {!art && !shelf && !inRoom && picture && (
         <div className="pb__picture">
           <img src={picture} alt="" loading="lazy" onError={(e) => { e.currentTarget.style.visibility = 'hidden' }} />
         </div>

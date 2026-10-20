@@ -36,7 +36,7 @@ export default function ComeWriteWithMePage() {
   return (
     <main className="rp yt cw">
       <p className="rp-back"><Link to="/drafting-desk">← Back to the Drafting Desk</Link></p>
-      <PageBanner title={PAGE.title} subtitle={PAGE.subtitle} art="story">
+      <PageBanner title={PAGE.title} subtitle={PAGE.subtitle} art="story" room="drafting-desk">
         {channel && <a className="pg-btn fm-btn--primary" href={channel} target="_blank" rel="noopener noreferrer" aria-label="Subscribe on YouTube (opens in a new tab)">Subscribe on YouTube ↗</a>}
       </PageBanner>
       {state.status === 'loading' && <p className="rp-note">Loading…</p>}

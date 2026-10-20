@@ -70,7 +70,7 @@ export default function BookClubPage({ now = new Date() }) {
   return (
     <main className="rp bc">
       <p className="rp-back"><Link to="/knowledge-nook">← Back to Knowledge Nook</Link></p>
-      <PageBanner chip="Members" title="Book Club" subtitle={SUBTITLE} art="nook" />
+      <PageBanner chip="Members" title="Book Club" subtitle={SUBTITLE} art="nook" room="knowledge-nook" />
 
       <div className="bc__intro">
         <section className="bc__box bc__welcome" aria-labelledby="bc-welcome">

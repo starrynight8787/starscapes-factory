@@ -12,7 +12,7 @@ export default function NotebookPage() {
   return (
     <main className="dd">
       <p className="dd-back"><Link to="/drafting-desk">← Back to the Drafting Desk</Link></p>
-      <PageBanner chip="Pass holders" title={info.name} subtitle={info.blurb} art="notebook" />
+      <PageBanner chip="Pass holders" title={info.name} subtitle={info.blurb} art="notebook" room="drafting-desk" />
       <section className="dd-locked" aria-label="Members only">
         <svg className="dd-locked__icon" viewBox="0 0 64 64" aria-hidden="true" focusable="false">
           <g fill="none" stroke="#14306A" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round">

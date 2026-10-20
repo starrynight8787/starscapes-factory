@@ -11,5 +11,5 @@ const belongs = (post) => areaOf(post) === 'archive-entries'
 const aside = <NotebookTeaser />
 
 export default function ArchiveEntriesPage() {
-  return <EntryPage art="archive" chip="Overthink Archive" title={AREA.name} blurb={AREA.blurb} backTo="/drafting-desk" backLabel="Back to the Drafting Desk" load={load} belongs={belongs} aside={aside} />
+  return <EntryPage art="archive" room="drafting-desk" chip="Overthink Archive" title={AREA.name} blurb={AREA.blurb} backTo="/drafting-desk" backLabel="Back to the Drafting Desk" load={load} belongs={belongs} aside={aside} />
 }

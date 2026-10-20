@@ -1,0 +1,21 @@
+/* Full-width room banners (Figma "15 Banners"): a starry night with a twist for each room. The picture is the whole background, so a banner with a room has no separate picture on the right. */
+.pb--room { background-color: #14306a; background-size: cover; background-position: center; background-repeat: no-repeat; min-height: 200px; }
+.pb--room::before { opacity: 0; }
+.pb--starry.pb--room-drafting-desk { background-image: url('/banners/drafting-desk-m.webp'); }
+.pb--starry.pb--room-sarah-jrs-den { background-image: url('/banners/sarah-jrs-den-m.webp'); }
+.pb--starry.pb--room-art-loft { background-image: url('/banners/art-loft-m.webp'); }
+.pb--starry.pb--room-explorers-bay { background-image: url('/banners/explorers-bay-m.webp'); }
+.pb--starry.pb--room-factory-floor { background-image: url('/banners/factory-floor-m.webp'); }
+.pb--starry.pb--room-leadership-lounge { background-image: url('/banners/leadership-lounge-m.webp'); }
+.pb--starry.pb--room-idea-hatchery { background-image: url('/banners/idea-hatchery-m.webp'); }
+.pb--starry.pb--room-knowledge-nook { background-image: url('/banners/knowledge-nook-m.webp'); }
+@media (min-width: 821px) {
+  .pb--starry.pb--room-drafting-desk { background-image: url('/banners/drafting-desk-d.webp'); }
+  .pb--starry.pb--room-sarah-jrs-den { background-image: url('/banners/sarah-jrs-den-d.webp'); }
+  .pb--starry.pb--room-art-loft { background-image: url('/banners/art-loft-d.webp'); }
+  .pb--starry.pb--room-explorers-bay { background-image: url('/banners/explorers-bay-d.webp'); }
+  .pb--starry.pb--room-factory-floor { background-image: url('/banners/factory-floor-d.webp'); }
+  .pb--starry.pb--room-leadership-lounge { background-image: url('/banners/leadership-lounge-d.webp'); }
+  .pb--starry.pb--room-idea-hatchery { background-image: url('/banners/idea-hatchery-d.webp'); }
+  .pb--starry.pb--room-knowledge-nook { background-image: url('/banners/knowledge-nook-d.webp'); }
+}

@@ -53,7 +53,7 @@ export default function RoomAreaPage({ room, areas }) {
   return (
     <main className={`rp rp--room rp--${room}`}>
       {back}
-      <PageBanner chip={config.name} title={area.name} subtitle={area.blurb} art={ROOM_ART[room] || 'plain'} />
+      <PageBanner chip={config.name} title={area.name} subtitle={area.blurb} art={ROOM_ART[room] || 'plain'} room={room} />
       {status === 'error' && <p className="rp-note" role="alert">The posts could not load just now. Please try again in a moment.</p>}
       {status === 'loading' && <p className="rp-note">Loading…</p>}
       {status === 'ready' && mine.length === 0 && !shelf && <p className="rp-note">Nothing here yet. Check back soon.</p>}

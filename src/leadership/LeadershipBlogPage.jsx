@@ -42,7 +42,7 @@ export default function LeadershipBlogPage() {
   return (
     <main className="rp lb">
       <p className="rp-back"><Link to={`/${ROOM}`}>← Back to Leadership Lounge</Link></p>
-      <PageBanner chip={BANNER_CHIP} title="Leadership Blog" subtitle={SUBTITLE} art="mountain">
+      <PageBanner chip={BANNER_CHIP} title="Leadership Blog" subtitle={SUBTITLE} art="mountain" room="leadership-lounge">
         {firstBlock && <Link className="pg-btn fm-btn--primary" to={`/post/${firstBlock.id}`} state={{ from }}>Start with Building Block 1</Link>}
       </PageBanner>
       {status === 'error' && <p className="rp-note" role="alert">The posts could not load just now. Please try again in a moment.</p>}
