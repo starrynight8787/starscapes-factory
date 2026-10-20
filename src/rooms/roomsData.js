@@ -28,7 +28,7 @@ export const ROOMS = {
     ],
     areas: {
       'stop-motion': { name: 'Stop Motion', blurb: 'Little worlds, one frame at a time.', layout: 'gallery', tags: ['stop-motion'] },
-      'lets-write-a-story': { name: 'Let\u2019s write a story', blurb: 'I write, you decide where the story goes.', layout: 'list', tags: null }, // its own designed page (src/stories), not a list of posts
+      'lets-write-a-story': { name: 'Let\u2019s write a story', blurb: 'I write, you decide where the story goes.', layout: 'list', tags: null, own: true }, // its own designed page (src/stories), not a list of posts (own: true tells the Admin list of posts not to say posts appear here)
       // The old Short Stories gallery of tagged posts. The beaker no longer leads here, but the address still works, so anything shared or bookmarked keeps working (oldLink: true says it is kept on purpose).
       'short-stories': { name: 'Short Stories', blurb: 'Small tales you can finish in a sitting.', layout: 'gallery', tags: ['short-stories'], oldLink: true },
       'writing-prompts': { name: 'Writing Prompts', blurb: 'A spark to start something of your own.', layout: 'gallery', tags: ['writing-prompts'] },

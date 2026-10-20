@@ -1,0 +1,37 @@
+The All posts list: starscapes-admin-posts-20oct.zip   (NO Supabase step, nothing to do in Stripe or Vercel)
+
+WHAT IT DOES
+A new tool in Admin, "All posts" (in the Rooms group), at starscapesfactory.com/admin/posts. Only you can open it.
+ * Every post from every room, newest first, each with its room, its date, its tags, and its pass if it has one.
+ * ROOM filter, with how many posts each room has (and "No room" for posts saved without one). SHOW filter: Published posts (the start), Not published (drafts), or Everything. And a search of the titles.
+   It says how many it is showing out of how many there are.
+ * UNDER EVERY POST, ONE PLAIN SENTENCE ABOUT WHERE IT APPEARS. A post only shows on a room's page if it is in that room AND carries a tag that page uses. So you will see, for example:
+     "Appears on: Stop Motion, and the blog page (which lists every post from every room)."
+   or, for a post that is in a room but on none of its pages:
+     "Not on a page of The Idea Hatchery yet, because none of its tags is one that room's pages use. It appears on the blog page ... Add one of these tags to put it on a page: stop-motion (Stop Motion), ..."
+   That is almost certainly what happened to your test blog for another room: every published post always appears on the blog page, but on a room's own page only if its tags match.
+ * Choose a room and a box "How posts get on <the room>'s pages" lists each page and the tag that puts a post on it.
+ * Each post has an Edit button and a View button (and its title is a link to the post).
+ * A draft is marked "Not published", and the list says it appears nowhere yet. (Whether drafts appear in the list at all depends on what your database lets you see; published posts always do.)
+
+THE PAGES IT KNOWS ABOUT: the Drafting Desk (Archive Entries, the Author's Notebook), the Idea Hatchery (Stop Motion, Writing Prompts, Come Study With Me), the Leadership Lounge (Leading from the Middle, the Blog),
+Explorer's Bay (Writing in Transit, Photography), the Knowledge Nook (Come Read With Me, Research, Book to Screen, the Book Club's reviews, the Story Ledger's audits), Sarah Jr.'s Den (Blog, Daryl's Adventures, Books),
+and the Factory Floor (every post in the room). The Let's write a story page is marked as having its own design, so the list never says a post appears there (its chapters are chosen in Admin, Stories).
+The Art Loft has no page that lists posts.
+
+THIS NEEDS THE "LET'S WRITE A STORY" PACKAGE INSTALLED FIRST (it makes one small change to the Idea Hatchery's room data that package added).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-admin-posts-20oct.zip
+ 3. python3 tools/add-admin-posts.py          (it checks the four files first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2     (every check should pass)
+ 5. npm run build                             (must finish without errors)
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Admin: a list of every post, filtered by room, saying where each one appears"
+    git push
+ 8. Watch Vercel's Deployments page for READY. If it says Error, click it and send me the words. Do not redeploy by hand.
+
+HOW TO USE IT (after it is Ready): Admin, then All posts. Choose the room your test blog is in, set Show to Everything if you are not sure it was published, and read the sentence under it.
