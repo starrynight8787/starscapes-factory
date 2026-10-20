@@ -1,0 +1,27 @@
+PRIVACY POLICY: RESEND AND 2 YEARS   starscapes-privacy-gaps-20oct.zip
+(Words only. NO Supabase step, nothing to do in Stripe or Vercel. This goes on top of the privacy package you already installed. The page is still owner-only, under the Draft banner.)
+
+WHAT IT CHANGES (the privacy page and the note at the top of src/data/legalPages.js; nothing else)
+ * [MAILING TOOL] becomes RESEND. Resend was already listed for order and password emails; that one line now also says it sends the free ebook and our free blog posts if someone signs up.
+ * [2 years] becomes 2 years: "Emails and messages to us: 2 years, then deleted." (You decided this on 20 October. It means emails and messages that people send to you, not the ebook list.)
+ * "Sending information abroad" no longer mentions the mailing tool by name. (I could not check which region your Resend account sends from, so the policy does not claim one. Check that, and add it if it is outside the UK.)
+ * The ONLY gap left is the [date]: the draft banner now says "1 gap".
+
+THE TESTS now also fail if the policy names a tool the code does not use (it checks lib/sendEmail.js talks to Resend), or if the 2 years changes without the policy.
+
+NOT BUILT YET (before the ebook door opens): the ebook sign-up list is only stored in Supabase. It has to be copied into a Resend audience, and each email sent as a Resend "Broadcast" with Resend's automatic unsubscribe link. Resend's own documentation says Broadcasts give every contact a unique unsubscribe link and skip anyone who has unsubscribed. Also check the plan limits (SFW-188): the free plan stops at 100 emails a day.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-privacy-gaps-20oct.zip
+ 3. python3 tools/add-privacy-gaps.py         (it checks the file first; if anything is unexpected it changes nothing)
+ 4. node tools/health-check.mjs | tail -2
+ 5. npm run build
+ 6. ls api/*.js | wc -l                       (it should still print 12)
+ 7. git add .
+    git status                                (no files ending .before- should be listed)
+    git commit -m "Privacy policy: Resend is the mailing tool, emails to us kept 2 years"
+    git push
+ 8. Watch Vercel's Deployments page for READY. Then, signed in as the owner, open starscapesfactory.com/page/privacy (the banner should say 1 gap).
+
+(The unzip also replaces one existing test file, legal-pages.test.jsx.)

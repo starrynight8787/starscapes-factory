@@ -61,7 +61,7 @@ describe('they agree with the rest of the site', () => {
     for (const p of LEGAL_PAGES) for (const m of textOf(p).matchAll(/\]\(([^)]+)\)/g)) expect(m[1], `${p.slug}: ${m[1]}`).toMatch(/^(\/|https:\/\/|mailto:)/)
   })
   it('the only gaps left in [square brackets] are the known ones, so a stray placeholder cannot slip in', () => {
-    const known = new Set(['[date]', '[RETURN ADDRESS]', '[2 years]', '[MAILING TOOL]'])
+    const known = new Set(['[date]', '[RETURN ADDRESS]'])
     for (const p of LEGAL_PAGES) for (const m of textOf(p).replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)) expect(known.has(m[0]), `${p.slug}: ${m[0]}`).toBe(true)
     for (const p of LEGAL_PAGES) expect(countGaps(textOf(p)), p.slug).toBeGreaterThanOrEqual(0)
   })
@@ -115,9 +115,9 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (9), how long it keeps things (7), your rights (7)', () => {
+  it('lists are lists: the people Privacy shares with (8), how long it keeps things (7), your rights (7)', () => {
     const { container } = open('privacy')
-    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([9, 7, 7])
+    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([8, 7, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
   })
   it('the Returns steps are a numbered list of three, and the cancellation form is a quote', () => {
@@ -166,9 +166,9 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
   const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
   const privacy = () => textOf(page('privacy'))
   const section = (title) => textOf({ intro: [], sections: page('privacy').sections.filter((x) => x.title === title) })
-  it('has exactly three gaps for the owner to fill: the date, how long emails are kept, and the name of the mailing tool', () => {
+  it('has exactly one gap left for the owner to fill: the date it is published (Resend and 2 years were decided on 20 October 2026)', () => {
     const gaps = [...privacy().replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)].map((m) => m[0]).sort()
-    expect(page('privacy').updated).toBe('[date]'); expect(gaps).toEqual(['[2 years]', '[MAILING TOOL]', '[date]'])
+    expect(page('privacy').updated).toBe('[date]'); expect(gaps).toEqual(['[date]'])
     expect(page('privacy').ready).toBe(false)
   })
   it('covers passes, suggestions and votes, story votes, the free ebook, YouTube and the choice kept on the passes page', () => {
@@ -204,8 +204,11 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
     expect(read('src/bookclub/BookClubPage.jsx')).toMatch(/youtube-nocookie\.com\/embed/)
   })
   it('lists the people it shares with, including the mailing tool and YouTube, and Stripe for passes', () => {
-    const t = section('Who we share your information with'); expect(t).toMatch(/\*\*\[MAILING TOOL\]\*\*/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
-    expect(section('Sending information abroad')).toMatch(/Google, which runs YouTube, and our mailing tool/)
+    const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the free ebook, the ebook and our free blog posts/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
+    expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube\)/)
+  })
+  it('keeps emails and messages to us for 2 years, as Gill decided on 20 October 2026', () => {
+    expect(section('How long we keep it')).toMatch(/Emails and messages to us:\*\* 2 years, then deleted\./); expect(privacy()).not.toMatch(/\[2 years\]/)
   })
   it('lets people take back their consent, and says how long ebook sign-ups and passes records are kept', () => {
     expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Free ebook sign-ups:\*\* until you unsubscribe/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
