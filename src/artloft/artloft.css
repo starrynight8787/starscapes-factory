@@ -336,6 +336,28 @@ a.al-object:focus-visible {
   font-size: 0.95rem;
   min-height: 20px;
 }
+.al-chips button {
+  padding: 8px 14px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  border-radius: 999px;
+  background: #fff;
+  color: inherit;
+  font: inherit;
+  font-size: 0.95rem;
+  min-height: 40px;
+  cursor: pointer;
+}
+.al-chips button:hover {
+  border-color: var(--sf-blue, #1f6fa8);
+}
+.al-chips button.is-on {
+  background: var(--sf-navy-700, #14306a);
+  border-color: var(--sf-navy-700, #14306a);
+  color: #fff;
+}
+.al-chips--tabs {
+  margin-top: 16px;
+}
 .al-chips a:hover {
   border-color: var(--sf-blue, #1f6fa8);
 }
