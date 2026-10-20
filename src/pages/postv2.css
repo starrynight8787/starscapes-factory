@@ -43,3 +43,11 @@
     padding: 20px 18px 24px;
   }
 }
+
+/* Posts have no picture on the right: the title uses the full banner width. */
+.pg-post--v2 .pb--post {
+  display: block;
+}
+.pg-post--v2 .pb--post .pb__text {
+  max-width: none;
+}
