@@ -11,7 +11,7 @@ export const channels = [
   {
     slug: 'sarah-jrs-den',
     emoji: '🧸',
-    name: "Sarah Jr.'s Den",
+    name: "Sarah Junior's Clubhouse",
     tagline: 'Tiny bear. Big adventures.',
     layout: 'gallery',
     blurb:

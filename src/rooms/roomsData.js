@@ -85,7 +85,7 @@ export const ROOMS = {
   },
   'sarah-jrs-den': {
     slug: 'sarah-jrs-den',
-    name: "Sarah Jr.'s Den",
+    name: "Sarah Junior's Clubhouse",
     tagline: "Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl.",
     blurb: 'Pick a door.',
     channel: 'sarah-jrs-den',
