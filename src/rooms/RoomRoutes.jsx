@@ -59,7 +59,7 @@ const CUSTOM_AREAS = {
 function AreaRoute({ room }) {
   const { area } = useParams()
   const areas = { ...ROOMS[room].areas, ...doorAreas(room) }
-  const page = <RoomAreaPage room={room} areas={areas} extra={room === 'explorers-bay' && area === 'photography' ? <InstagramGallery /> : room === 'sarah-jrs-den' && area === 'blog' ? <div className="rp-nebula"><NebulaBox /></div> : null} />
+  const page = <RoomAreaPage room={room} areas={areas} extra={room === 'explorers-bay' && area === 'photography' ? <InstagramGallery /> : (room === 'sarah-jrs-den' && area === 'blog') || (room === 'leadership-lounge' && area === 'leading-from-the-middle') ? <div className="rp-nebula"><NebulaBox /></div> : null} />
   const door = findDoor(room, area)
   const Own = !door ? CUSTOM_AREAS[`${room}/${area}`] : null
   if (Own) return <Own />

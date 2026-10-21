@@ -7,6 +7,7 @@ import { AUDIOBOOK_URL, UDEMY_URL } from '../rooms/roomsData'
 import useDoors from '../doors/useDoors'
 import { StarMark } from '../components/Logo'
 import PageBanner from '../components/PageBanner'
+import NebulaBox from '../entries/NebulaBox'
 import { BANNER_CHIP, BANNER_PICTURE, BLOCKS_INTRO, ROOM, SUBTITLE, WAYS } from './leadershipData'
 import { blocksFrom, latestPosts, morePosts, pickFeatured } from './leadershipRules'
 import '../rooms/roompages.css'
@@ -125,6 +126,8 @@ export default function LeadershipBlogPage() {
               <Link className="pg-btn" to="/blog">See all posts</Link>
             </section>
           )}
+
+          <div className="lb__o6"><NebulaBox /></div>
         </div>
       </div>
     </main>

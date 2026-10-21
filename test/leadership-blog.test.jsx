@@ -140,7 +140,7 @@ describe('the page', () => {
   it('with no posts at all, says so, and every block waits as "Coming soon"', async () => {
     h.posts = []; page()
     expect(await screen.findByText('The first post is on its way.')).toBeInTheDocument()
-    expect(screen.getAllByText('Coming soon')).toHaveLength(6)
+    expect(within(screen.getByRole('heading', { level: 2, name: 'Building Blocks' }).closest('section')).getAllByText('Coming soon')).toHaveLength(6) // (the membership box says it too, so only the Building Blocks are counted)
     expect(screen.queryByRole('heading', { name: 'Latest posts' })).toBeNull(); expect(screen.queryByText('Featured')).toBeNull()
   })
   it('says plainly when the posts cannot load, and still shows the ways in', async () => {

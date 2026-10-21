@@ -20,6 +20,7 @@
 .lb__o3 { order: 3; }
 .lb__o4 { order: 4; }
 .lb__o5 { order: 5; }
+.lb__o6 { order: 6; }
 .lb__card {
   display: grid;
   gap: 16px;
