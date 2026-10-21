@@ -30,6 +30,9 @@
 .al-v2.al-admin > .al-admin__counts,
 .al-v2.al-admin > form,
 .al-v2.al-admin > p,
+.al-v2.al-admin > .al-orig-filter,
+.al-v2.al-admin > .al-orig-list,
+.al-v2.al-admin > ul.al-orig-list,
 .al-v2.al-admin > .al-admin__group:has(.al-admin__needs) {
   grid-column: 1 / -1;
   margin-top: 0;
