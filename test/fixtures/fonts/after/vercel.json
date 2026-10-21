@@ -1,0 +1,29 @@
+{
+  "crons": [
+    {
+      "path": "/api/membership-checkout?reminders=1",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/ebook-signup?newsletter=tidy",
+      "schedule": "30 8 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/fonts/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ]
+}

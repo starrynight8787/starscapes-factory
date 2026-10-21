@@ -1,0 +1,35 @@
+HOST THE SITE'S FONTS OURSELVES   starscapes-fonts-21oct.zip   (SFW-246)
+(No Supabase step. Nothing to set in Vercel. The site looks the same; it just stops asking Google for its lettering.)
+
+WHAT WAS HAPPENING
+ One line at the top of src/styles/site.css asked Google for the five typefaces (Caveat, Inter, Josefin Sans, Sacramento and Schoolbell) every time a page loaded. That told Google each visitor's address and browser, which is why the Cookie policy had to say so (and why the free-advice review was going to be asked about it).
+
+WHAT CHANGES
+ * The same five typefaces, in the same weights, now live on the site itself: 23 small font files in public/fonts (476 KB in all; a page only downloads the few it needs), each typeface with its licence (they are open fonts, free to host).
+ * src/styles/fonts.css says which file is which; the first line of site.css now brings that in instead of Google's address.
+ * Browsers are told to keep the font files for a year (vercel.json), so a returning visitor doesn't ask for them again.
+ * The Cookie policy loses its "Google Fonts" bullet and gains one sentence: "Our own lettering is kept on our own server, so drawing it tells no other company about your visit." The Privacy policy's short cookies section says the same in a line, and "your choices" no longer mentions blocking fonts. Both are still drafts; nothing is live.
+ * One question fewer for the free-advice review: "is the Google Fonts explanation enough?" no longer applies. (Still for the review: is a cookie banner needed for the sign-in, cart and passes choice? Is the YouTube and Stripe wording right?)
+
+CHECKED IN A REAL BROWSER (not just by tests)
+ I built the site and loaded the home page in Chromium: it fetched 10 font files from the site itself, made ZERO requests to Google, every font file loaded, all five typefaces reported as loaded, headings drew in Josefin Sans and body text in Inter, and the page looked right (room names in Caveat).
+ Tests: 14 new, and I broke things 12 ways on purpose (the site going back to Google; a weight lost; a font fetched from an outside address; a font file missing, or really a web page, or left over; a licence missing; the policy naming Google Fonts again; the keep-for-a-year header lost or aimed at the wrong folder). All 12 were caught. Two cookie-policy checks were rewritten to say "no outside fonts at all" instead of "only Google's".
+
+THINGS TO KNOW
+ * scripts/add-schoolbell.mjs (an old helper that edited Google's line) is now obsolete. It refuses to do anything if the line isn't there, so it is harmless; it can be deleted whenever you like.
+ * If you ever want a new typeface or weight, it needs its file added to public/fonts and a rule in fonts.css (the test will tell you what is missing).
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-fonts-21oct.zip
+ 3. python3 tools/add-fonts.py                  (it checks three files first; if anything is unexpected it changes nothing and says which)
+ 4. ls public/fonts/*.woff2 | wc -l             (it must print 23)
+ 5. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-fonts" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (3 changed files: legalPages.js, site.css, vercel.json; 1 changed test; new: src/styles/fonts.css, public/fonts, the new test, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Host the site's fonts ourselves, so nothing is sent to Google; the policies say so"
+    git push
+ 9. After Vercel says Ready, open the site as usual. It should look exactly the same. To see the difference: right-click a page, Inspect, Network tab, reload, and type "font" in the filter: every font comes from starscapesfactory.com, none from google.

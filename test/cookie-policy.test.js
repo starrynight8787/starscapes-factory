@@ -67,14 +67,16 @@ describe('what other companies set or see: the page names each one, and nothing 
     expect(sources.filter((f) => /gtag\(|fbq\(|ttq\.|googletagmanager|plausible|hotjar|posthog|mixpanel|fullstory|clarity\.ms|connect\.facebook|platform\.twitter|static\.ads/i.test(read(f)))).toEqual([])
     expect(policy).toContain("We don't use advertising cookies, analytics, visitor tracking")
   })
-  it('names Google Fonts if (and only if) the site fetches its fonts from Google (if the fonts are ever hosted on this site, take that line out of the page)', () => {
-    const fromGoogle = [...withText('fonts.googleapis.com', styles), ...withText('fonts.googleapis.com', sources)].length > 0
-    expect(policy.includes('**Google Fonts.**'), 'the page and the code disagree about Google Fonts').toBe(fromGoogle)
-    expect(JSON.stringify(privacy.sections.find((s) => s.title === 'Cookies and similar technologies')).includes('fonts from Google'), 'the Privacy policy and the code disagree about Google Fonts').toBe(fromGoogle)
+  it('does not name Google Fonts, because the fonts are kept on this site (if the site ever fetches fonts from another company again, put that line back in the page and change this test)', () => {
+    const fromGoogle = [...withText('fonts.googleapis.com', styles), ...withText('fonts.googleapis.com', sources), ...withText('fonts.gstatic.com', styles), ...withText('fonts.gstatic.com', sources)].length > 0
+    expect(fromGoogle, 'the code fetches fonts from Google').toBe(false)
+    expect(policy.includes('Google Fonts'), 'the page names Google Fonts').toBe(false)
+    expect(JSON.stringify(privacy.sections.find((s) => s.title === 'Cookies and similar technologies')).includes('fonts from Google'), 'the Privacy policy says fonts come from Google').toBe(false)
+    expect(policy).toContain('Our own lettering is kept on our own server, so drawing it tells no other company about your visit')
   })
-  it('loads no other outside stylesheet or font than the one the page names', () => {
+  it('loads no stylesheet or font from any outside address at all: the fonts are files of this site', () => {
     const hosts = styles.flatMap((f) => [...read(f).matchAll(/(?:@import\s+url\(|url\()\s*['"]?(https?:\/\/[^/'")]+)/g)].map((m) => m[1]))
-    expect([...new Set(hosts)].filter((h) => h !== 'https://fonts.googleapis.com')).toEqual([])
+    expect([...new Set(hosts)]).toEqual([])
   })
   it('shows an outside video only inside YouTube\u2019s privacy-enhanced player, and only the page\u2019s two kinds of frame exist', () => {
     const frames = sources.flatMap((f) => [...read(f).matchAll(/<iframe[^>]*src=\{?[`'"]([^`'"]+)/g)].map((m) => m[1]))

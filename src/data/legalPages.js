@@ -29,8 +29,8 @@
 //    in (SFW-185). Section 3 says the print studio takes photos before an order is packed: check that with the print service. The cancellation form's blanks are written
 //    in (round brackets) so they are not counted as gaps.
 //  * COOKIES (added 20 October 2026): a separate Cookie policy, written from what the code really stores and loads. A test (test/cookie-policy.test.js) fails if the site starts storing something new, loading something from
-//    another company, or adding analytics without this page (and the Privacy policy's short cookies section) being brought up to date. THE ONLY GAP LEFT is the [date]. Google Fonts is named because the fonts
-//    are fetched from Google (src/styles/site.css): if the fonts are ever hosted on this site instead, take that line out (the test will say so). Gill asked for a separate page; the free-advice review (SFW-234) should
+//    another company, or adding analytics without this page (and the Privacy policy's short cookies section) being brought up to date. THE ONLY GAP LEFT is the [date]. The fonts are kept on this site (public/fonts, SFW-246, 21 October 2026), so Google Fonts is
+//    not named: if the site ever fetches fonts from another company again, put that line back (the test will say so). Gill asked for a separate page; the free-advice review (SFW-234) should
 //    confirm that no cookie banner is needed for sign-in, cart and the passes choice (they are needed for something the visitor asked for).
 export const LEGAL_PAGES = [
   {
@@ -201,7 +201,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Cookies and similar technologies",
         "paragraphs": [
-          "We only use what the site needs to work: your sign-in, your cart, and the choice you make on the passes page. All three are kept on your own device. We don't use advertising or analytics cookies, so we don't show a cookie banner. Nothing loads from YouTube until you press play. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may store its own cookies on your device and see your IP address, under its own policy. Stripe's payment page sets its own cookies under its own policy. Your browser also fetches our fonts from Google whenever a page loads, so Google receives your IP address and browser details; Google says its fonts service sets no cookies. If we ever add analytics, we will ask your permission first and update this page. The full list is on our [Cookie policy](/page/cookies)."
+          "We only use what the site needs to work: your sign-in, your cart, and the choice you make on the passes page. All three are kept on your own device. We don't use advertising or analytics cookies, so we don't show a cookie banner. Nothing loads from YouTube until you press play. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may store its own cookies on your device and see your IP address, under its own policy. Stripe's payment page sets its own cookies under its own policy. Our fonts are kept on our own server, so drawing our lettering tells no other company about your visit. If we ever add analytics, we will ask your permission first and update this page. The full list is on our [Cookie policy](/page/cookies)."
         ]
       },
       {
@@ -403,7 +403,8 @@ export const LEGAL_PAGES = [
       {
         "title": "What other companies set or see",
         "paragraphs": [
-          "* **Google Fonts.** To draw our lettering, your browser fetches the fonts (Caveat, Inter, Josefin Sans, Sacramento and Schoolbell) from Google whenever a page loads. Google receives your IP address, the address of the font file and details of your browser, so that it can send them. Google says its fonts service does not set or log cookies ([Google's explanation](https://developers.google.com/fonts/faq/privacy)).\n* **YouTube.** Nothing loads from YouTube until you press play on a video. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may then store its own cookies on your device and see your IP address, under its own policy ([how Google uses cookies](https://policies.google.com/technologies/cookies)).\n* **Stripe.** When you pay, or manage your passes or your card, you leave our site for Stripe's own page. Stripe sets its own cookies there, to take payments and prevent fraud, under its own policy ([Stripe's privacy policy](https://stripe.com/gb/privacy)). We never see or store your card number."
+          "* **YouTube.** Nothing loads from YouTube until you press play on a video. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may then store its own cookies on your device and see your IP address, under its own policy ([how Google uses cookies](https://policies.google.com/technologies/cookies)).\n* **Stripe.** When you pay, or manage your passes or your card, you leave our site for Stripe's own page. Stripe sets its own cookies there, to take payments and prevent fraud, under its own policy ([Stripe's privacy policy](https://stripe.com/gb/privacy)). We never see or store your card number.",
+          "Our own lettering is kept on our own server, so drawing it tells no other company about your visit."
         ]
       },
       {
@@ -415,7 +416,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Your choices",
         "paragraphs": [
-          "You can see and delete what the site keeps from your browser's settings (look for \"cookies and site data\", or \"site data\"). If you delete the sign-in item you will be signed out, and if you delete the cart item your cart will be empty. You can also block fonts or videos from other companies using your browser or an extension: the site will still work, though some of the lettering may look different."
+          "You can see and delete what the site keeps from your browser's settings (look for \"cookies and site data\", or \"site data\"). If you delete the sign-in item you will be signed out, and if you delete the cart item your cart will be empty. You can also block videos from other companies using your browser or an extension: the site will still work."
         ]
       },
       {
