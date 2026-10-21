@@ -1,0 +1,33 @@
+THE APPROVED LEGAL WORDING   starscapes-legal-wording-21oct.zip   (SFW-181)
+(Wording only, and tests that keep it true. No Supabase step, nothing to set in Vercel. All five pages stay DRAFTS: nothing is live.)
+
+WHAT CHANGES (the wording you approved from the legal check report)
+ 1. THE AI PROMISE, MADE TRUE. AI policy, "Handling your information" (its section is now headed "What I do not use AI for", because it is no longer a list of absolute nevers): "I do not put customers' personal details into AI tools, except where I need to fix a problem with your own order or account, and then only what is needed." Privacy policy, "Keeping it safe": the same, in "we". The old absolute promises are gone.
+ 2. PRIVACY: "If you order, we need your name, email, delivery address and phone number to make and deliver your order: without them we cannot. Everything else, such as the newsletter, suggestions and votes, is your choice." (Checkout really does ask for all four: a test checks it.)
+ 3. PRIVACY, WEBSITE LOGS: "only as long as needed to keep the site secure and fix faults. Our hosting provider sets this, and we do not keep our own copy." (The site really keeps no log of its own: a test checks there is no table for visits, requests or analytics.)
+ 4. PRIVACY, COMPLAINTS: "We will acknowledge your complaint within 30 days, look into it, and tell you what we found." The way to the ICO stays.
+ 5. RETURNS: "You can cancel from the moment you place your order until 14 days after the day your print is delivered..." and "email ... in that time".
+ 6. SMALLER ONES, shown in the report: a paragraph of its own for the right to object ("You can object to us using your information where we rely on our legitimate interest. Tell us and we will stop, unless we have a strong reason not to."), a line saying "We do not use automated decision-making or profiling.", and on the Cookie policy "The law treats these like cookies, and none of them needs your consent, because each is needed for something you asked the site to do." in place of "They are not cookies."
+
+WHAT I COULD NOT DO, AND WHAT IS STILL YOURS
+ * THE RETURN ADDRESS: the Returns page still says [RETURN ADDRESS]. I do not have it: it needs the answer from Creative Hub (SFW-17). Tell me the address and it goes in. A test keeps it as the only placeholder, apart from the date, so it cannot be forgotten.
+ * THE WELCOME EMAIL (item 2 of the report) is not wording on a page: it is an email that does not exist yet (SFW-209). It must confirm the 14-day tick box by email. It is recorded on that ticket.
+ * THE RULE FOR ME (so the AI promise stays true): while the shop is live, I only look at counts and test data in your database and payments, never customer rows, unless you ask me to fix a problem with a particular order or account, and then I look only at what is needed. Say "remember that" and I will save it to the project's memory.
+ * THE DATES AND THE SWITCH: each page still needs the real date and "ready" (SFW-186), after the review (SFW-234).
+
+TESTS (14 new; 12 deliberate breakages, all caught)
+ The two AI wordings are the same and neither makes the old promise; the "what you must give" sentence matches what checkout asks for; the log rule matches a site with no log tables; the complaint and cancel-from-order sentences are there with the rest of Returns intact; the right to object has its own paragraph; the Cookie wording is in and the three listed items are unchanged; every page is still a draft and the return address is the only other placeholder. Broken on purpose: each wording reverted, checkout changed to stop asking for a phone number, a visit-log table added, the AI policy switched on early. Two older tests were updated for the changed wording.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-legal-wording-21oct.zip
+ 3. python3 tools/add-legal-wording.py        (it checks one file first; it must print one line starting "changed"; if it says anything else it changed nothing: tell me)
+ 4. grep -c "except where I need to fix a problem with your own order or account" src/data/legalPages.js      (it must print 1)
+ 5. npm test                                    (it should end with exactly 1 failed: the contact address test)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-legal-wording" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (1 changed file: legalPages.js; 1 changed test: legal-pages.test.jsx; new: legal-check-wording.test.js, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Legal wording after the check against official guidance: honest AI promise, what you must give, logs, complaints, cancelling from the order"
+    git push
