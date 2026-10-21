@@ -9,6 +9,7 @@ const api = vi.hoisted(() => ({ fetchMyMembership: vi.fn(), fetchAccount: vi.fn(
 vi.mock('../src/data/membership', () => ({ MEMBERSHIP: { get open() { return store.open }, textWhileClosed: 'A space for people who want to go further in is on its way. It is not open yet.' } }))
 vi.mock('../src/membership/membershipApi', () => ({ fetchMyMembership: api.fetchMyMembership, fetchAccount: api.fetchAccount, openBillingPortal: api.openBillingPortal, resumePasses: api.resumePasses }))
 vi.mock('../src/cart/redirect', () => ({ redirectTo: api.redirect }))
+vi.mock('../src/membership/profileApi', () => ({ fetchProfile: vi.fn().mockResolvedValue({ name: '', username: '', icon: '', newsletter: 'none', email: 'a@b.co' }), saveProfile: vi.fn() }))
 
 import MyPassesPage from '../src/membership/MyPassesPage'
 

@@ -10,7 +10,7 @@ import { PASSES } from './passes'
 import { formatPounds } from './pricing'
 import { accountView, priceNow, formatDate, unitWord } from './account'
 import { fetchMyMembership, fetchAccount, openBillingPortal, resumePasses } from './membershipApi'
-import { NotOpen } from './MembershipPage'
+import ProfilePanel from './ProfilePanel'
 import './membership.css'
 
 const ROOM_NAME = Object.fromEntries(channels.map((c) => [c.slug, c.name]))
@@ -31,7 +31,7 @@ function PassCard({ pass, open }) {
 }
 
 // "My passes" (at /membership/passes), and, for someone with none, "My membership". What it shows depends on where their membership stands. For a signed-in person only.
-export default function MyPassesPage({ owner = false }) {
+function PassesContent({ owner = false }) {
   const open = MEMBERSHIP.open === true
   const location = useLocation()
   const [state, setState] = useState({ phase: 'loading', row: null })
@@ -64,11 +64,23 @@ export default function MyPassesPage({ owner = false }) {
     }
   }, [state.phase, status])
 
-  if (!open && !owner) return <NotOpen />
+  if (!open && !owner) {
+    return (
+      <div className="mb__pc mb--closed">
+        <div className="mb__w">
+          <h1>Memberships are not open yet</h1>
+          <p>{MEMBERSHIP.textWhileClosed}</p>
+          <p>
+            <Link to="/">Back to the home page</Link>
+          </p>
+        </div>
+      </div>
+    )
+  }
   if (state.phase === 'loading') return <PageLoading label="Finding your passes…" />
   if (state.phase === 'error') {
     return (
-      <main className="mb mb--welcome">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
           <h1>My passes</h1>
           <p className="mb__lead">We could not find your passes just now. Please try again in a moment.</p>
@@ -76,7 +88,7 @@ export default function MyPassesPage({ owner = false }) {
             Try again
           </button>
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -113,7 +125,7 @@ export default function MyPassesPage({ owner = false }) {
 
   if (view === 'free') {
     return (
-      <main className="mb mb--welcome">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
           <h1>My membership</h1>
           <section className="mb__sum">
@@ -128,13 +140,13 @@ export default function MyPassesPage({ owner = false }) {
             </Link>
           </section>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (view === 'cancelling') {
     return (
-      <main className="mb mb--welcome">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
           <h1>My passes</h1>
           <section className="mb__sum">
@@ -146,13 +158,13 @@ export default function MyPassesPage({ owner = false }) {
             {problemNote}
           </section>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (view === 'ended') {
     return (
-      <main className="mb mb--welcome">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
           <h1>My passes</h1>
           <section className="mb__sum">
@@ -163,13 +175,13 @@ export default function MyPassesPage({ owner = false }) {
             </Link>
           </section>
         </div>
-      </main>
+      </div>
     )
   }
 
   if (view === 'trouble') {
     return (
-      <main className="mb mb--welcome">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
           <h1>My passes</h1>
           <section className="mb__sum">
@@ -181,7 +193,7 @@ export default function MyPassesPage({ owner = false }) {
             {problemNote}
           </section>
         </div>
-      </main>
+      </div>
     )
   }
 
@@ -190,7 +202,7 @@ export default function MyPassesPage({ owner = false }) {
   const rest = PASSES.filter((p) => !row.passes.includes(p.id))
   const price = priceNow(row, mine.length)
   return (
-    <main className="mb mb--welcome">
+    <div className="mb__pc mb--welcome">
       <div className="mb__w">
         <h1>My passes</h1>
         {justChanged && (
@@ -231,6 +243,18 @@ export default function MyPassesPage({ owner = false }) {
           </>
         )}
         <p className="mb__small">Manage payment or cancel opens Stripe, where you can change your card, see receipts, or cancel. If you cancel, you keep your passes until the end of what you have paid for.</p>
+      </div>
+    </div>
+  )
+}
+
+// "My passes": your profile on the left (name, username, icon, emails) and your passes on the right. Figma: 25 My passes and profile.
+export default function MyPassesPage({ owner = false }) {
+  return (
+    <main className="mb mb--account">
+      <div className="mb__acct">
+        <ProfilePanel />
+        <PassesContent owner={owner} />
       </div>
     </main>
   )
