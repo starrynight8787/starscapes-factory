@@ -22,6 +22,7 @@ export default function NewPost({ session }) {
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({}) // a plain-words problem under each field that needs fixing
   const [saving, setSaving] = useState(false)
+  const [savingAs, setSavingAs] = useState('publish') // which button was pressed, so its own label says what is happening
   const [canPass, setCanPass] = useState(false) // has the database been given the pass column yet
   const [pass, setPass] = useState('') // '' means free for everyone
   const navigate = useNavigate()
@@ -34,9 +35,15 @@ export default function NewPost({ session }) {
     }
   }, [])
 
-  async function handleSubmit(e) {
+  function handleSubmit(e) {
     e.preventDefault()
+    return save(true)
+  }
+
+  // publish = true: visitors can read the post. publish = false: it is saved as a draft that only its author can see, to be published later (from All posts, from the post itself, or from Edit).
+  async function save(publish) {
     setError(null)
+    setSavingAs(publish ? 'publish' : 'draft')
     const found = postProblems({ title, content, file })
     if (Object.keys(found).length > 0) {
       setErrors(found)
@@ -75,7 +82,7 @@ export default function NewPost({ session }) {
         // a post for a pass: the post is made WITHOUT its words, and the words are kept in the protected table. If keeping them fails, the empty post is taken away again.
         const { data: made, error: insertError } = await supabase
           .from('posts')
-          .insert({ title, content: '', image_url: imageUrl, author_id: session.user.id, published: true, tags: tagsArray, channel: channel || null, pass: lockedPass })
+          .insert({ title, content: '', image_url: imageUrl, author_id: session.user.id, published: publish, tags: tagsArray, channel: channel || null, pass: lockedPass })
           .select('id')
           .single()
         if (insertError) throw insertError
@@ -91,7 +98,7 @@ export default function NewPost({ session }) {
           content,
           image_url: imageUrl,
           author_id: session.user.id,
-          published: true,
+          published: publish,
           tags: tagsArray,
           channel: channel || null,
         })
@@ -100,7 +107,7 @@ export default function NewPost({ session }) {
       }
 
       resetPassIndex()
-      navigate('/')
+      navigate(publish ? '/' : '/admin/posts')
     } catch (err) {
       setError(err.message)
     } finally {
@@ -110,7 +117,7 @@ export default function NewPost({ session }) {
 
   return (
     <main className="fm fm--post ad--wide">
-      <AdminBanner chip="Write" title="New post" subtitle="Write a post and publish it. Choose a room, tags, and who can read it." icon="post" />
+      <AdminBanner chip="Write" title="New post" subtitle="Write a post and publish it, or save it as a draft to finish later. Choose a room, tags, and who can read it." icon="post" />
       <ErrorSummary errors={summaryOf(errors, IDS)} />
       {error && <FailureMessage title="The post was not saved">{error}</FailureMessage>}
       <form className="fm__form np__grid" onSubmit={handleSubmit} noValidate>
@@ -123,7 +130,10 @@ export default function NewPost({ session }) {
         </Field>
         <div className="fm__actions">
           <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
-            {saving ? 'Publishing...' : 'Publish'}
+            {saving && savingAs === 'publish' ? 'Publishing...' : 'Publish'}
+          </button>
+          <button type="button" className="pg-btn" disabled={saving} onClick={() => save(false)}>
+            {saving && savingAs === 'draft' ? 'Saving...' : 'Save as draft'}
           </button>
           <button type="button" className="pg-btn" onClick={() => navigate('/admin')}>
             Cancel

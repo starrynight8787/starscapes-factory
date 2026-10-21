@@ -298,6 +298,12 @@
 .cart--v2 .cart-lines {
   margin: 12px 0 0;
 }
+.cart-card--empty {
+  max-width: 640px;
+}
+.cart-card--empty p {
+  margin: 0 0 8px;
+}
 .cart--v2 .cart-line:last-child {
   border-bottom: 0;
 }

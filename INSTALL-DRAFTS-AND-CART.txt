@@ -1,0 +1,35 @@
+DRAFTS, PUBLISH AND UNPUBLISH, AND THE EMPTY CART'S BANNER   starscapes-drafts-and-cart-21oct.zip   (SFW-251)
+(No Supabase step. Nothing to set in Vercel. The database already allowed all of this.)
+
+WHY YOU COULD NOT DO IT (it was never built, nothing was broken)
+ * New post always saved with "published" switched on: there was no way to save a draft.
+ * Edit post never touched the published choice, and All posts only LISTED posts (it showed a "Not published" mark but had no button).
+ * So the 90 drafts in your database (all written by the one account that wrote all 108 posts) could never be published from the site, and a live post could never be taken down except by deleting it.
+
+WHAT YOU GET
+ 1. New post: a "Save as draft" button beside "Publish". A draft is hidden from visitors, and you land on All posts, where it shows as "Not published". (It asks for the same things as publishing: a title and words.)
+ 2. Edit post: a "Published" switch under the pin switch. On for a live post, off for a draft, with a line saying what each means. Only a CHANGE is saved, so editing a post never takes it down by accident.
+ 3. All posts: a "Publish" or "Unpublish" button on every row. Unpublish asks first ("Take this post down? ... Nothing is deleted, and you can publish it again at any time."); publishing does not ask. A line above the list says what happened.
+ 4. A post's own page: you see "Publish" or "Unpublish" beside Edit and Delete, and on a draft a note: "This post is a draft. Only you can see it. Visitors cannot." Nobody but the author sees any of it.
+ 5. The empty cart: the Factory Floor starry banner ("Your cart", "Nothing here yet", "Browse the Art Loft and add a print you love."), with the message and both links in the new card, like the full cart.
+
+IF A BUTTON SAYS "NOTHING CHANGED"
+ The database only lets the account that WROTE a post change it, and when someone else tries it refuses by quietly changing nothing. The site now says so ("Nothing changed. A post can only be changed by the account that wrote it, so please check you are signed in with that account.") instead of pretending it worked. All 108 posts were written by the account ending @gillianbennet.com, so sign in with that one.
+
+TESTS
+ 32 new tests, and I broke the code 15 ways on purpose (Save as draft publishing anyway; a change that touched no rows reported as done; the database's own words shown to you; taking a post down without asking, on the post page and on All posts; Edit saving the choice every time; an older post with no choice recorded treated as a draft; the draft note shown to people who are not the author; the list not changing after a click; the empty cart losing its banner). All 15 were caught. The rest of the suite is unchanged.
+ I have NOT seen the new empty cart in a browser: the tests check its banner, heading, card and links, but please look at it once.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-drafts-and-cart-21oct.zip
+ 3. python3 tools/add-drafts-and-cart.py       (it checks eight files first; if anything is unexpected it changes nothing and says which)
+ 4. npm test                                    (it should end with exactly 1 failed: the contact address test, which waits for the legal review)
+ 5. npm run build
+ 6. ls api/*.js | wc -l                         (it must still print 12)
+ 7. find . -name "*.before-drafts-and-cart" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (8 changed files; 3 new files (postPublish.js, the new test, the install notes) and the installer and its test; nothing ending .before-)
+    git commit -m "Posts: save as a draft, publish and unpublish from every page; the empty cart gets its banner"
+    git push
+ 8. After Vercel says Ready, try it: write a post and press "Save as draft", find it in All posts, press "Publish", then "Unpublish" (it asks), then look at an empty cart.

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { recordRead } from '../entries/readsApi'
+import { WORDS as PUBLISH_WORDS, isPublished, setPublished } from './postPublish'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import BackToPosts from '../components/BackToPosts'
@@ -23,13 +24,15 @@ export default function PostPage({ session }) {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [deleting, setDeleting] = useState(false)
+  const [publishing, setPublishing] = useState(false)
+  const [publishNote, setPublishNote] = useState(null) // { ok, text }: what happened when the author published or took the post down
   const [body, setBody] = useState(null) // the words of a locked post, if this person may read them
   const [gated, setGated] = useState(false) // a locked post this person may not read
   useTitle(post ? post.title : 'Post') // the tab, and a search result, say which post this is
 
   useEffect(() => {
     async function fetchPost() {
-      const columns = 'id, title, content, image_url, created_at, author_id, tags, channel'
+      const columns = 'id, title, content, image_url, created_at, author_id, tags, channel, published'
       // the database may not have been given the pass column yet: carry on without it, and every post is free
       let { data, error } = await supabase.from('posts').select(columns + ', pass').eq('id', id).single()
       if (error && /\bpass\b/i.test(String(error.message || ''))) ({ data, error } = await supabase.from('posts').select(columns).eq('id', id).single())
@@ -70,6 +73,23 @@ export default function PostPage({ session }) {
     }
 
     navigate('/')
+  }
+
+  // The author publishes a draft, or takes a post down (it becomes a draft: nothing is deleted). Taking one down asks first.
+  async function handleTogglePublished() {
+    const next = !isPublished(post)
+    if (!next && !window.confirm(PUBLISH_WORDS.askUnpublish)) return
+    setPublishing(true)
+    setPublishNote(null)
+    try {
+      await setPublished(post.id, next)
+      setPost((p) => ({ ...p, published: next }))
+      setPublishNote({ ok: true, text: next ? PUBLISH_WORDS.nowPublished : PUBLISH_WORDS.nowDraft })
+    } catch (e) {
+      setPublishNote({ ok: false, text: e.message })
+    } finally {
+      setPublishing(false)
+    }
   }
 
   if (loading) return <p>Loading...</p>
@@ -122,16 +142,21 @@ export default function PostPage({ session }) {
         </div>
       )}
 
+      {isAuthor && !isPublished(post) && <p className="pg-draftnote">{PUBLISH_WORDS.draftNote}</p>}
       {isAuthor && (
         <div className="pg-actions">
           <Link to={`/edit/${post.id}`}>
             <button className="pg-btn">Edit</button>
           </Link>
+          <button className="pg-btn" onClick={handleTogglePublished} disabled={publishing}>
+            {publishing ? 'Saving...' : isPublished(post) ? 'Unpublish' : 'Publish'}
+          </button>
           <button className="pg-btn pg-btn--danger" onClick={handleDelete} disabled={deleting}>
             {deleting ? 'Deleting...' : 'Delete'}
           </button>
         </div>
       )}
+      {isAuthor && publishNote && <p className={`pg-draftnote${publishNote.ok ? '' : ' pg-draftnote--bad'}`} role={publishNote.ok ? 'status' : 'alert'}>{publishNote.text}</p>}
     </main>
   )
 }

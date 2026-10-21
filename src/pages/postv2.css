@@ -38,6 +38,19 @@
   margin-left: auto;
   margin-right: auto;
 }
+/* The note an author sees on a draft, and the answer after publishing or taking a post down */
+.pg-draftnote {
+  max-width: 880px;
+  margin: 16px auto 0;
+  padding: 10px 14px;
+  border-radius: 12px;
+  background: #ffe27a;
+  color: #0e1530;
+  font-weight: 700;
+}
+.pg-draftnote--bad {
+  background: #ffd9d9;
+}
 
 /* Posts have no picture on the right: the title uses the full banner width. */
 .pg-post--v2 .pb--post {

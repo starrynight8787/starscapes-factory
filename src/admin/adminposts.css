@@ -19,6 +19,8 @@
 .ap__chip--pass { background: var(--sf-blue, #1f6fa8); color: #fff; }
 .ap__date, .ap__tags { color: var(--sf-muted, #5b6585); font-size: 0.875rem; }
 .ap__where { font-size: 0.9375rem; }
+.ap__notice { margin: 0 0 12px; padding: 10px 14px; border-radius: 12px; background: #e3f4e6; color: #0e1530; font-weight: 700; }
+.ap__notice--bad { background: #ffd9d9; }
 .ap__buttons { display: flex; flex-wrap: wrap; gap: 8px; align-items: start; }
 .ap__buttons .pg-btn { display: inline-flex; align-items: center; text-decoration: none; }
 @media (min-width: 700px) {

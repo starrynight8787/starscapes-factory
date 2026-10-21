@@ -40,10 +40,11 @@ describe('Idea Hatchery: the liquids', () => {
       })
     })
   }
-  it('the dotted beaker (coming soon) and the empty glassware have no liquid', () => {
+  it('the dotted beaker (coming soon) has no liquid, and the only liquid in the base picture is the lilac one in the beaker where Writing Prompts used to be (kept as part of the drawing, not a link)', () => {
     expect(read('item-come-study-with-me.svg')).not.toMatch(/data-liquid/)
     const base = read('base.svg')
-    expect(base).not.toMatch(/data-liquid/)
+    expect(base.match(/data-liquid/g)).toHaveLength(1)
+    expect(base).toMatch(/<g id="beaker-writing-prompts">[\s\S]*?data-liquid="1"[^>]*fill="#B79CF2"/)
     // the empty beakers keep their white insides
     expect(base).toMatch(/id="beaker-empty-1"[\s\S]*?fill="#fff"/)
   })

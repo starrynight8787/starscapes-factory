@@ -35,6 +35,7 @@ export default function AdminOriginals() {
   const [message, setMessage] = useState({ text: '', kind: '' })
   const [busyId, setBusyId] = useState(null)
   const [confirming, setConfirming] = useState(null)
+  const [shownCollection, setShownCollection] = useState('all') // 'all', 'none' (not in a collection yet), or a collection's name
   const [editing, setEditing] = useState(null) // null, 'new', or the id being edited
   const [form, setForm] = useState(EMPTY)
   const [kept, setKept] = useState([]) // photos already saved with this piece
@@ -71,6 +72,12 @@ export default function AdminOriginals() {
     const rank = (o) => (!o.published ? 0 : isSold(o) ? 2 : 1)
     return originals.slice().sort((a, b) => rank(a) - rank(b) || String(a.title).localeCompare(String(b.title)))
   }, [originals])
+
+  const shownVisible = useMemo(() => {
+    if (shownCollection === 'all') return rows
+    if (shownCollection === 'none') return rows.filter((o) => !o.collection)
+    return rows.filter((o) => o.collection === shownCollection)
+  }, [rows, shownCollection])
 
   const counts = useMemo(() => {
     const sold = originals.filter(isSold).length
@@ -305,8 +312,19 @@ export default function AdminOriginals() {
           )}
 
           {rows.length === 0 && !editing && <p className="al-note">No originals yet. Choose Add an original to start.</p>}
+          {rows.length > 0 && (
+            <div className="al-orig-filter">
+              <label htmlFor="orig-filter">Show</label>
+              <select id="orig-filter" value={shownCollection} onChange={(e) => setShownCollection(e.target.value)}>
+                <option value="all">All originals ({rows.length})</option>
+                <option value="none">Not in a collection yet ({rows.filter((o) => !o.collection).length})</option>
+                {COLLECTION_NAMES.map((n) => <option key={n} value={n}>{n} ({rows.filter((o) => o.collection === n).length})</option>)}
+              </select>
+            </div>
+          )}
+          {rows.length > 0 && shownVisible.length === 0 && <p className="al-note">Nothing here. Choose another collection to see the rest.</p>}
           <ul className="al-orig-list">
-            {rows.map((o) => {
+            {shownVisible.map((o) => {
               const sold = isSold(o)
               const busy = busyId === o.id
               return (

@@ -47,12 +47,14 @@ export default function CartPage() {
 
   if (items.length === 0) {
     return (
-      <main className="cart legacy">
-        <h1>Your cart</h1>
-        <p className="cart-empty">Your cart is empty.</p>
-        <p>
-          <Link to="/art-loft">Browse the Art Loft</Link> · <Link to="/art-loft/prints">See all digital prints</Link>
-        </p>
+      <main className="cart legacy cart--v2">
+        <PageBanner art="plain" room="factory-floor" chip="Your cart" title="Nothing here yet" subtitle="Browse the Art Loft and add a print you love." />
+        <section className="cart-card cart-card--empty" aria-label="Your cart">
+          <p className="cart-empty">Your cart is empty.</p>
+          <p>
+            <Link to="/art-loft">Browse the Art Loft</Link> · <Link to="/art-loft/prints">See all digital prints</Link>
+          </p>
+        </section>
       </main>
     )
   }

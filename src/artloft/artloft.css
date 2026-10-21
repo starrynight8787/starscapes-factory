@@ -1302,11 +1302,22 @@ a.al-object:focus-visible {
   }
 }
 
-/* Manage originals: the list sits in two columns, each original on its own card, and drops to one column on a narrow screen */
+/* Manage originals: four columns of cards on a wide screen, fewer as it narrows; the Show box filters by collection */
 .al-orig-list {
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 14px;
+}
+.al-orig-filter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin: 12px 0 4px;
+  font-weight: 600;
+}
+.al-orig-filter select {
+  max-width: 100%;
 }
 .al-orig-list > li {
   padding: 14px;
@@ -1314,7 +1325,17 @@ a.al-object:focus-visible {
   border-radius: 12px;
   align-content: flex-start;
 }
+@media (max-width: 1200px) {
+  .al-orig-list {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
 @media (max-width: 860px) {
+  .al-orig-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
   .al-orig-list {
     grid-template-columns: 1fr;
   }

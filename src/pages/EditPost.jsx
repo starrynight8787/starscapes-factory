@@ -10,6 +10,7 @@ import { PASS_CHOICES, cleanPass, hasPassColumn, loadLockedBody, removeLockedBod
 import '../styles/pages.css'
 import '../styles/forms.css'
 import { resetPassIndex } from '../membership/passIndex'
+import { WORDS as PUBLISH_WORDS } from './postPublish'
 
 const IDS = { title: 'ep-title', content: 'ep-content', file: 'ep-file' }
 
@@ -34,10 +35,13 @@ export default function EditPost({ session }) {
   const [canPass, setCanPass] = useState(false)
   const [pass, setPass] = useState('')
   const [wasLocked, setWasLocked] = useState(false)
+  // Published: can visitors read this post? (A post with no choice recorded counts as published.) Only a change is saved.
+  const [published, setPublished] = useState(true)
+  const [wasPublished, setWasPublished] = useState(true)
 
   useEffect(() => {
     async function fetchPost() {
-      const columns = 'id, title, content, image_url, author_id, tags, channel'
+      const columns = 'id, title, content, image_url, author_id, tags, channel, published'
       // the database may not have been given the pinned_in or the pass column yet: ask with both, then with just pinned_in, then with neither, and carry on with whatever it has
       let data, error, used
       for (const asked of [columns + ', pinned_in, pass', columns + ', pinned_in', columns]) {
@@ -74,6 +78,8 @@ export default function EditPost({ session }) {
       setCanPass(hasPassColumn(data))
       setPass(lockedPass)
       setWasLocked(Boolean(lockedPass))
+      setPublished(data.published !== false)
+      setWasPublished(data.published !== false)
       setTitle(data.title)
       setContent(words)
       setImageUrl(data.image_url)
@@ -153,6 +159,7 @@ export default function EditPost({ session }) {
         tags: tagsArray,
         channel: channel || null,
       }
+      if (published !== wasPublished) changes.published = published
 
       // A post for a pass: its words go into the protected table FIRST (so they are safe), and the post itself is left with none. A post made free again gets its words back.
       const wantPass = canPass ? cleanPass(pass) : ''
@@ -265,6 +272,17 @@ export default function EditPost({ session }) {
             )}
           </fieldset>
         )}
+        <fieldset className="pin-box">
+          <legend>Who can see it</legend>
+          <label className="pin-switch">
+            <input type="checkbox" role="switch" checked={published} onChange={(e) => setPublished(e.target.checked)} />
+            <span className="pin-switch__track" aria-hidden="true" />
+            <span className="pin-switch__text">
+              <strong>Published</strong>
+              <small>{published ? PUBLISH_WORDS.switchOn : PUBLISH_WORDS.switchOff}</small>
+            </span>
+          </label>
+        </fieldset>
         {imageUrl && (
           <div>
             <p className="fm__small">Current picture:</p>

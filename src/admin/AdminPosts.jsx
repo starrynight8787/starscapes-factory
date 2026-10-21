@@ -7,6 +7,7 @@ import { formatDate } from '../rooms/postRules'
 import useTitle from '../pages/useTitle'
 import { useOwnerCheck } from './useIsOwner'
 import { fetchAllPosts } from './postsAdminApi'
+import { WORDS as PUBLISH_WORDS, isPublished, setPublished } from '../pages/postPublish'
 import { countByRoom, filterPosts, pagesOfRoom, roomName, whereIs } from './postsAdminRules'
 import '../styles/pages.css'
 import './admin.css'
@@ -24,6 +25,8 @@ export default function AdminPosts({ session }) {
   const [room, setRoom] = useState('all')
   const [show, setShow] = useState('all')
   const [search, setSearch] = useState('')
+  const [busy, setBusy] = useState(null) // the post that is being published or taken down
+  const [notice, setNotice] = useState(null) // { ok, text }: what happened the last time
 
   useEffect(() => {
     if (!owner) return undefined
@@ -36,6 +39,24 @@ export default function AdminPosts({ session }) {
   const shown = useMemo(() => filterPosts(posts, { room, show, search }), [posts, room, show, search])
   const known = new Set(channels.map((c) => c.slug))
   const odd = Object.keys(counts.rooms).filter((slug) => !known.has(slug)) // a room name on a post that is not one of the eight rooms
+
+  // Publish a draft, or take a post down (it becomes a draft: nothing is deleted). Taking one down asks first, and what happened is always said, including when nothing changed.
+  async function toggle(p) {
+    const next = !isPublished(p)
+    if (!next && !window.confirm(PUBLISH_WORDS.askUnpublish)) return
+    const name = p.title || 'This post'
+    setBusy(p.id)
+    setNotice(null)
+    try {
+      await setPublished(p.id, next)
+      setPosts((list) => list.map((x) => (x.id === p.id ? { ...x, published: next } : x)))
+      setNotice({ ok: true, text: `${name}: ${next ? PUBLISH_WORDS.nowPublished : PUBLISH_WORDS.nowDraft}` })
+    } catch (e) {
+      setNotice({ ok: false, text: `${name}: ${e.message}` })
+    } finally {
+      setBusy(null)
+    }
+  }
 
   if (checking) return <PageLoading label="Checking who you are…" />
   if (!owner) return <main className="ad"><h1>All posts</h1><p className="ad-note">This area is for the site owner.</p><p><Link to="/">Back to the homepage</Link></p></main>
@@ -77,6 +98,7 @@ export default function AdminPosts({ session }) {
       {status === 'error' && <p className="rp-note" role="alert">The posts could not load just now. Please try again in a moment.</p>}
       {status === 'ready' && <p className="ap__count" role="status">Showing {shown.length} of {posts.length} {posts.length === 1 ? 'post' : 'posts'}</p>}
       {status === 'ready' && shown.length === 0 && <p className="rp-note">No posts match.</p>}
+      {notice && <p className={`ap__notice${notice.ok ? '' : ' ap__notice--bad'}`} role={notice.ok ? 'status' : 'alert'}>{notice.text}</p>}
 
       <ul className="ap__list">
         {shown.map((p) => (
@@ -95,6 +117,9 @@ export default function AdminPosts({ session }) {
             <div className="ap__buttons">
               <Link className="pg-btn" to={`/edit/${p.id}`} aria-label={`Edit ${p.title || 'this post'}`}>Edit</Link>
               <Link className="pg-btn" to={`/post/${p.id}`} aria-label={`View ${p.title || 'this post'}`}>View</Link>
+              <button type="button" className="pg-btn" onClick={() => toggle(p)} disabled={busy === p.id} aria-label={`${isPublished(p) ? 'Unpublish' : 'Publish'} ${p.title || 'this post'}`}>
+                {busy === p.id ? 'Saving…' : isPublished(p) ? 'Unpublish' : 'Publish'}
+              </button>
             </div>
           </li>
         ))}
