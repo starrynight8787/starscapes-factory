@@ -103,12 +103,12 @@ export default function ProfilePanel() {
       <form className="pf__form" onSubmit={submit} noValidate>
         <div className="pf__field">
           <label htmlFor="pf-name">Name</label>
-          <input id="pf-name" type="text" autoComplete="name" value={form.name} onChange={set('name')} maxLength={MAX_NAME + 20} aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'pf-name-err' : undefined} />
+          <input className="pf__input" id="pf-name" type="text" autoComplete="name" value={form.name} onChange={set('name')} maxLength={MAX_NAME + 20} aria-invalid={Boolean(errors.name)} aria-describedby={errors.name ? 'pf-name-err' : undefined} />
           {errors.name && <small id="pf-name-err" className="pf__err" role="alert">{errors.name}</small>}
         </div>
         <div className="pf__field">
           <label htmlFor="pf-username">Username</label>
-          <input id="pf-username" type="text" autoComplete="username" autoCapitalize="none" spellCheck="false" value={form.username} onChange={set('username')} maxLength={24} aria-invalid={Boolean(errors.username)} aria-describedby={errors.username ? 'pf-username-err' : 'pf-username-help'} />
+          <input className="pf__input" id="pf-username" type="text" autoComplete="username" autoCapitalize="none" spellCheck="false" value={form.username} onChange={set('username')} maxLength={24} aria-invalid={Boolean(errors.username)} aria-describedby={errors.username ? 'pf-username-err' : 'pf-username-help'} />
           {errors.username ? (
             <small id="pf-username-err" className="pf__err" role="alert">{errors.username}</small>
           ) : (
@@ -117,7 +117,7 @@ export default function ProfilePanel() {
         </div>
         <div className="pf__field">
           <label htmlFor="pf-email">Email</label>
-          <input id="pf-email" type="email" autoComplete="email" value={form.email} onChange={set('email')} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'pf-email-err' : 'pf-email-help'} />
+          <input className="pf__input" id="pf-email" type="email" autoComplete="email" value={form.email} onChange={set('email')} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'pf-email-err' : 'pf-email-help'} />
           {errors.email ? (
             <small id="pf-email-err" className="pf__err" role="alert">{errors.email}</small>
           ) : (
@@ -151,7 +151,7 @@ export default function ProfilePanel() {
           <legend>Emails from Starscapes Factory</legend>
           {NEWSLETTER_CHOICES.map((c) => (
             <label key={c.value} className={`pf__choice${form.newsletter === c.value ? ' is-on' : ''}`}>
-              <input type="radio" name="pf-newsletter" value={c.value} checked={form.newsletter === c.value} onChange={() => pick('newsletter', c.value)} />
+              <input className="pf__radio" type="radio" name="pf-newsletter" value={c.value} checked={form.newsletter === c.value} onChange={() => pick('newsletter', c.value)} />
               <span>
                 <span className="pf__choicename">{c.label}</span>
                 <span className="pf__choiceblurb">{c.blurb}</span>

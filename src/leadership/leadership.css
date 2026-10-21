@@ -21,6 +21,7 @@
 .lb__o4 { order: 4; }
 .lb__o5 { order: 5; }
 .lb__o6 { order: 6; }
+.lb__o7 { order: 7; }
 .lb__card {
   display: grid;
   gap: 16px;
@@ -237,7 +238,7 @@ a.lb__block:focus-visible,
   }
 }
 
-/* The membership box, then the pinned post, then the most read, as one stack in the right-hand column */
+/* The membership box sits right under the Building Blocks; the pinned post and the most read come after the latest posts */
 .lb__nebula {
   display: grid;
   gap: 24px;

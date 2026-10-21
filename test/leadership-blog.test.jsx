@@ -186,11 +186,12 @@ describe('how it is wired in', () => {
     expect(read('src/rooms/RoomRoutes.jsx')).toMatch(/'leadership-lounge\/blog': LeadershipBlogPage/)
     expect(ROOMS['leadership-lounge'].areas.blog.name).toBe('Leadership Blog')
   })
-  it('puts the boxes in the order Featured, Building Blocks, ways in, Latest posts, More from the blog on a phone, and turns the two columns into one', () => {
+  it('puts the boxes in the order Featured, Building Blocks, Into the Nebula, ways in, Latest posts, More from the blog, Pinned and Most read on a phone, and turns the two columns into one', () => {
     const jsx = read('src/leadership/LeadershipBlogPage.jsx'), css = read('src/leadership/leadership.css')
     const order = (cls) => Number(jsx.match(new RegExp(`${cls}[^"]*lb__o(\\d)`))[1])
-    expect([order('lb__featured'), order('lb__blocks'), order('lb__ways'), order('lb__latest'), order('lb__more')]).toEqual([1, 2, 3, 4, 5])
-    for (let i = 1; i <= 5; i++) expect(css).toContain(`.lb__o${i} { order: ${i}; }`)
+    expect([order('lb__featured'), order('lb__blocks'), Number(jsx.match(/lb__o(\d) lb__nebula"><NebulaBox/)[1]), order('lb__ways'), order('lb__latest'), order('lb__more')]).toEqual([1, 2, 3, 4, 5, 6])
+    expect(jsx).toMatch(/lb__o7 lb__nebula[\s\S]*PinnedMostRead/) // the pinned post and most read come last
+    for (let i = 1; i <= 7; i++) expect(css).toContain(`.lb__o${i} { order: ${i}; }`)
     expect(css).toMatch(/@media \(max-width: 960px\)[\s\S]*\.lb__left,\s*\.lb__right \{\s*display: contents/)
   })
   it('shrinks its two columns together on a narrower screen instead of running off the side (no fixed widths that add up to more than the page)', () => {

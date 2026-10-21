@@ -62,7 +62,7 @@ export default function LeadershipBlogPage() {
             </section>
           )}
 
-          <section className="lb__ways lb__o3" aria-labelledby="lb-ways-title">
+          <section className="lb__ways lb__o4" aria-labelledby="lb-ways-title">
             <h2 id="lb-ways-title" className="lb__h2">More ways in</h2>
             <div className="lb__boxes">
               {WAYS.map((w) => (
@@ -81,7 +81,7 @@ export default function LeadershipBlogPage() {
           </section>
 
           {more.length > 0 && (
-            <section className="lb__more lb__o5" aria-labelledby="lb-more-title">
+            <section className="lb__more lb__o6" aria-labelledby="lb-more-title">
               <h2 id="lb-more-title" className="lb__h2">More from the blog</h2>
               <ul className="rp-entries">{more.map((p) => <li key={p.id}><Link className="rp-entry" to={`/post/${p.id}`} state={{ from }}><span className="rp-entry__title">{p.title}</span>{formatDate(p.created_at) && <span className="rp-entry__date">{formatDate(p.created_at)}</span>}</Link></li>)}</ul>
             </section>
@@ -112,7 +112,7 @@ export default function LeadershipBlogPage() {
           </section>
 
           {latest.length > 0 && (
-            <section className="lb__card lb__latest lb__o4" aria-labelledby="lb-latest-title">
+            <section className="lb__card lb__latest lb__o5" aria-labelledby="lb-latest-title">
               <h2 id="lb-latest-title" className="lb__h3">Latest posts</h2>
               <ul className="lb__latestlist">
                 {latest.map((p) => (
@@ -128,10 +128,8 @@ export default function LeadershipBlogPage() {
             </section>
           )}
 
-          <div className="lb__o6 lb__nebula">
-            <NebulaBox />
-            {status === 'ready' && <PinnedMostRead posts={posts} from={from} idPrefix="lb" />}
-          </div>
+          <div className="lb__o3 lb__nebula"><NebulaBox /></div>
+          {status === 'ready' && <div className="lb__o7 lb__nebula"><PinnedMostRead posts={posts} from={from} idPrefix="lb" /></div>}
         </div>
       </div>
     </main>
