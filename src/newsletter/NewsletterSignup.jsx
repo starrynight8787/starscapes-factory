@@ -45,7 +45,7 @@ export default function NewsletterSignup() {
   return (
     <section className="nl-signup" aria-labelledby="nl-signup-title">
       <h2 id="nl-signup-title" className="nl-signup__title">Newsletter</h2>
-      <p className="nl-signup__text">New posts and news from Starscapes Factory, by email.</p>
+      <p className="nl-signup__text">Free, with no account or pass needed. New posts and news from Starscapes Factory, by email.</p>
       <form className="nl-signup__form" onSubmit={submit} noValidate>
         {problem && <p className="nl-signup__summary" role="alert">{problem.message}</p>}
         <div className="nl-signup__field">

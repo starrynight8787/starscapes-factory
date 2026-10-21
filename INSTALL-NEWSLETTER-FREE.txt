@@ -1,0 +1,26 @@
+THE NEWSLETTER SAYS IT IS FREE   starscapes-newsletter-free-21oct.zip   (SFW-250)
+(One sentence on the sign-up box, and tests that keep it true. No Supabase step, nothing to set in Vercel.)
+
+THE ANSWER TO "CAN PEOPLE SIGN UP FOR FREE?"
+ Yes, it always was free in practice: all someone gives is an email address and a tick. No account, no pass, no payment. I checked every part of it: the box, the page that talks to the server, and the server's public side (sign up, confirm, leave) never ask who someone is, never look for a pass, and never touch Stripe.
+ What was missing was SAYING so. With passes on sale a few inches away, a visitor could reasonably wonder. Now the box reads:
+    Newsletter
+    Free, with no account or pass needed. New posts and news from Starscapes Factory, by email.
+ (The words people tick are unchanged, because they are recorded as proof and match the Privacy policy.)
+ Remember the box stays hidden until NEWSLETTER_OPEN is "yes" in Vercel, which waits for the Privacy policy.
+
+TESTS (7 new; I broke the sign-up 7 ways on purpose and every one was caught)
+ The box says free and "no account or pass needed"; it asks for nothing but an email and a tick (no name, password, card or pass); it works for a signed-out visitor who holds no pass; nothing in the box or the page that talks to the server mentions a sign-in, a session, a membership, a token or Stripe; the public server code never asks who someone is; the footer shows the box to everyone, with no condition; the words people agree to mention no price or pass.
+ I also looked at it in a real browser (with the newsletter pretending to be open): it reads clearly on the dark footer card.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-newsletter-free-21oct.zip
+ 3. python3 tools/add-newsletter-free.py       (it must print one line starting "changed"; if it says anything else it changed nothing: tell me)
+ 4. grep -c "Free, with no account or pass needed" src/newsletter/NewsletterSignup.jsx      (it must print 1)
+ 5. npm test                                    (it should end with exactly 1 failed: the contact address test)
+ 6. find . -name "*.before-newsletter-free" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (1 changed file: NewsletterSignup.jsx; new: the test, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "Newsletter: say on the sign-up box that it is free, with no account or pass needed"
+    git push
