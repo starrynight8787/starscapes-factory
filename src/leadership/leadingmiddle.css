@@ -1,12 +1,12 @@
 /* The Leading from the Middle page. Stands on its own. */
-.lm__intro { margin-top: 32px; max-width: 760px; }
+.lm__intro { margin-top: 32px; }
 .lm__big { margin: 0 0 12px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-weight: 700; font-size: clamp(1.9rem, 3.6vw, 2.8rem); line-height: 1.15; color: var(--sf-navy-700, #14306a); }
 .lm__rest { margin: 0; font-size: clamp(1.05rem, 1.5vw, 1.25rem); line-height: 1.6; color: var(--sf-ink, #0e1530); }
 .lm__hero { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 5fr); gap: 32px; align-items: center; margin-top: 40px; }
 .lm__hero:has(.lm__photo:only-child) { grid-template-columns: 1fr; }
 .lm__photo { margin: 0; border-radius: 10px; overflow: hidden; border: 2px solid var(--sf-navy-700, #14306a); box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6); line-height: 0; }
 .lm__photo img { display: block; width: 100%; height: auto; aspect-ratio: 3 / 2; object-fit: cover; }
-.lm__quote { margin: 0; padding: 0 0 0 24px; border-left: 5px solid var(--sf-pink, #ffa6cb); }
+.lm__quote { margin: 0; padding: 0; }
 .lm__quote p { margin: 0; font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive); font-size: clamp(1.5rem, 2.6vw, 2.1rem); line-height: 1.35; color: var(--sf-navy-700, #14306a); }
 .lm__block { margin-top: 56px; }
 .lm__h { margin: 0 0 8px; font-family: var(--sf-head, 'Josefin Sans', sans-serif); font-size: clamp(1.5rem, 2.4vw, 2rem); color: var(--sf-navy-700, #14306a); }

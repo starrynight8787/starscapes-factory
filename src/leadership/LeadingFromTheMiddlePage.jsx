@@ -76,7 +76,7 @@ export default function LeadingFromTheMiddlePage() {
           </figure>
         )}
         <blockquote className="lm__quote">
-          <p>{QUOTE}</p>
+          <p>{'\u201C'}{QUOTE}{'\u201D'}</p>
         </blockquote>
       </section>
 
