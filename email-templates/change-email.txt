@@ -1,0 +1,9 @@
+STARSCAPES FACTORY
+Confirm your new email
+Please confirm the change to your login email
+Hello,
+You asked to change the email you use to sign in to Starscapes Factory to this address. Press the button to confirm it.
+If it was not you, do nothing: your login stays as it is.
+Confirm my new email
+Or copy this link into your browser: {{ .ConfirmationURL }}
+Starscapes Factory Ltd. Questions? Reply to this email.
