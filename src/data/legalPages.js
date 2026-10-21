@@ -213,6 +213,12 @@ export const LEGAL_PAGES = fillContact([
         ]
       },
       {
+        "title": "Reading habits",
+        "paragraphs": [
+          "If you use the monthly reading check-in, we store how many extra books you tell us you read each month and, if you choose to add it, the genre. We only ever look at these as combined totals, and a month's totals are only shown once at least 5 members have checked in. We never look at one member's answers, and we never put them into an AI tool."
+        ]
+      },
+      {
         "title": "Cookies and similar technologies",
         "paragraphs": [
           "We only use what the site needs to work: your sign-in, your cart, and the choice you make on the passes page. All three are kept on your own device. We don't use advertising or analytics cookies, so we don't show a cookie banner. Nothing loads from YouTube until you press play. When you do, the video plays through YouTube's privacy-enhanced player, and YouTube may store its own cookies on your device and see your IP address, under its own policy. Stripe's payment page sets its own cookies under its own policy. Our fonts are kept on our own server, so drawing our lettering tells no other company about your visit. If we ever add analytics, we will ask your permission first and update this page. The full list is on our [Cookie policy](/page/cookies)."
