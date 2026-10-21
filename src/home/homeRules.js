@@ -1,5 +1,7 @@
 // The plain rules behind the home page's "Next event" and "Featured room": what an event may contain, working in London time, the calendar file, and which
 // event is "next". Nothing in here talks to the database, so the page, the admin tool and the database file all agree on the same limits (a test checks).
+import { CONTACT_EMAIL } from '../data/contact'
+
 
 export const LIMITS = { title: 120, description: 300 }
 export const DEFAULT_FEATURED = 'art-loft'
@@ -79,7 +81,7 @@ const stamp = (d) => new Date(d).toISOString().replace(/[-:]/g, '').replace(/\.\
 function fold(line) { const out = []; let rest = line; while (rest.length > 73) { out.push(rest.slice(0, 73)); rest = ' ' + rest.slice(73) } out.push(rest); return out.join('\r\n') }
 export function makeIcs(event, { siteUrl = '', now = new Date() } = {}) {
   const start = new Date(event.starts_at), end = new Date(start.getTime() + EVENT_MINUTES * 60000)
-  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Starscapes Factory//Events//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', `UID:${event.id || stamp(start)}@starscapesfactory.com`, `DTSTAMP:${stamp(now)}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`, `SUMMARY:${esc(event.title)}`]
+  const lines = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Starscapes Factory//Events//EN', 'CALSCALE:GREGORIAN', 'BEGIN:VEVENT', `UID:${event.id || stamp(start)}@${CONTACT_EMAIL.split('@')[1]}`, `DTSTAMP:${stamp(now)}`, `DTSTART:${stamp(start)}`, `DTEND:${stamp(end)}`, `SUMMARY:${esc(event.title)}`]
   if (event.description) lines.push(`DESCRIPTION:${esc(event.description)}`)
   const url = event.link_url || siteUrl
   if (url) lines.push(`URL:${url}`)

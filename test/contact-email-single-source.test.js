@@ -32,3 +32,32 @@ describe('the contact address', () => {
     expect(where('inspire@')).toEqual([])
   })
 })
+
+// The words on the pages are written with a placeholder and filled in from the contact file, so the pages must actually show the address,
+// and the placeholder must never be seen. (Added when the hand-written copies in the legal pages, the delivery page and the calendar file were removed.)
+import { LEGAL_PAGES } from '../src/data/legalPages'
+import { staticPages } from '../src/data/staticPages'
+import { makeIcs } from '../src/home/homeRules'
+
+describe('the pages show the contact address from the contact file', () => {
+  const words = (page) => [page.updated, ...(page.intro || []), ...(page.sections || []).flatMap((s) => [s.title, ...s.paragraphs])].filter((t) => typeof t === 'string').join('\n')
+  it('every legal page that offers an email address shows the real one, as plain text and as a mailto link, and none shows the placeholder', () => {
+    const withEmail = LEGAL_PAGES.filter((p) => words(p).includes(CONTACT_EMAIL))
+    expect(withEmail.map((p) => p.slug).sort()).toEqual(['ai-policy', 'privacy', 'returns', 'terms'])
+    for (const page of LEGAL_PAGES) {
+      expect(words(page), page.slug).not.toMatch(/\{\{|\}\}/)
+      if (withEmail.includes(page)) expect(words(page), page.slug).toContain(`(mailto:${CONTACT_EMAIL})`)
+    }
+  })
+  it('the delivery page shows it too, as a link', () => {
+    const delivery = staticPages.find((p) => p.slug === 'delivery')
+    expect(delivery.content).toContain(`[${CONTACT_EMAIL}](mailto:${CONTACT_EMAIL})`); expect(delivery.content).not.toMatch(/\$\{|\{\{/)
+  })
+  it('the calendar file still gives each event an id ending in the site domain, taken from the same constant', () => {
+    const ics = makeIcs({ id: 'abc-1', title: 'T', starts_at: '2026-12-05T19:00:00Z' }, { siteUrl: 'https://example.com', now: new Date('2026-10-01T00:00:00Z') })
+    expect(ics).toContain(`UID:abc-1@${CONTACT_EMAIL.split('@')[1]}`)
+  })
+  it('written out in a page once more by hand, the first test above would catch it (the legal pages file has no copy of the address)', () => {
+    expect(fs.readFileSync(path.resolve('src/data/legalPages.js'), 'utf8')).not.toContain('@starscapesfactory.com')
+  })
+})

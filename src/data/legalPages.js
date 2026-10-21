@@ -32,7 +32,12 @@
 //    another company, or adding analytics without this page (and the Privacy policy's short cookies section) being brought up to date. THE ONLY GAP LEFT is the [date]. The fonts are kept on this site (public/fonts, SFW-246, 21 October 2026), so Google Fonts is
 //    not named: if the site ever fetches fonts from another company again, put that line back (the test will say so). Gill asked for a separate page; the free-advice review (SFW-234) should
 //    confirm that no cookie banner is needed for sign-in, cart and the passes choice (they are needed for something the visitor asked for).
-export const LEGAL_PAGES = [
+import { CONTACT_EMAIL } from './contact'
+
+// The contact address is written ONCE, in src/data/contact.js. In the words below it is {{CONTACT_EMAIL}}, filled in here (test/contact-email-single-source.test.js fails if it is ever written out by hand).
+const fillContact = (v) => (typeof v === 'string' ? v.split('{{CONTACT_EMAIL}}').join(CONTACT_EMAIL) : Array.isArray(v) ? v.map(fillContact) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fillContact(x)])) : v)
+
+export const LEGAL_PAGES = fillContact([
   {
     "slug": "terms",
     "title": "Terms and conditions",
@@ -45,7 +50,7 @@ export const LEGAL_PAGES = [
       {
         "title": "About us",
         "paragraphs": [
-          "This website is run by Starscapes Factory Ltd (\"we\", \"us\"), a company registered in England and Wales with company number 14173440. Our registered office is 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ. Our VAT number is GB445903680. You can contact us at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com)."
+          "This website is run by Starscapes Factory Ltd (\"we\", \"us\"), a company registered in England and Wales with company number 14173440. Our registered office is 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ. Our VAT number is GB445903680. You can contact us at [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}})."
         ]
       },
       {
@@ -72,7 +77,7 @@ export const LEGAL_PAGES = [
           "We deliver free to the United Kingdom, Ireland, Germany, France, the United States and Canada. We can't deliver anywhere else at the moment.",
           "Every print is made to order and sent with tracked delivery. Framed or unframed, it usually reaches you within 6 to 10 working days of your order, which covers making it and delivering it. These are estimates, not promises. If we haven't agreed a delivery date with you, we will deliver within 30 days of your order. If we are late, contact us and we will put it right, and you may be able to cancel for a refund.",
           "We will email you when your order has been posted, with your tracking details.",
-          "If you need to change the delivery address, or want to stop an order before it is made, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) straight away. We send your order to the print studio very soon after you pay, so we can only cancel it if printing has not started, and we can only change the delivery address before it has been posted. This is separate from your legal right to cancel, which our Returns and refunds page explains.",
+          "If you need to change the delivery address, or want to stop an order before it is made, email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) straight away. We send your order to the print studio very soon after you pay, so we can only cancel it if printing has not started, and we can only change the delivery address before it has been posted. This is separate from your legal right to cancel, which our Returns and refunds page explains.",
           "The print is your responsibility once it has been delivered to you, or to someone you have asked us to deliver it to. Please check the parcel when it arrives and tell us straight away about any damage: see our Returns and refunds page."
         ]
       },
@@ -164,7 +169,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Complaints and the law",
         "paragraphs": [
-          "If you are unhappy with anything, email us at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) and we will do our best to put it right. These terms, and any dispute about them, are governed by the law of England and Wales, and the courts of England and Wales have jurisdiction. If you live in Scotland or Northern Ireland, you may also bring proceedings in your local courts. If you live outside the UK, the consumer laws of your own country continue to protect you as well."
+          "If you are unhappy with anything, email us at [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) and we will do our best to put it right. These terms, and any dispute about them, are governed by the law of England and Wales, and the courts of England and Wales have jurisdiction. If you live in Scotland or Northern Ireland, you may also bring proceedings in your local courts. If you live outside the UK, the consumer laws of your own country continue to protect you as well."
         ]
       }
     ]
@@ -181,7 +186,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Who we are",
         "paragraphs": [
-          "Starscapes Factory Ltd is the \"controller\" of your information, which means we decide how and why it is used. We are registered in England and Wales with company number 14173440, and our registered office is 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ. You can contact us about anything in this policy at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com)."
+          "Starscapes Factory Ltd is the \"controller\" of your information, which means we decide how and why it is used. We are registered in England and Wales with company number 14173440, and our registered office is 71-75 Shelton Street, Covent Garden, London, WC2H 9JQ. You can contact us about anything in this policy at [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}})."
         ]
       },
       {
@@ -241,7 +246,7 @@ export const LEGAL_PAGES = [
           "The law gives you rights over your information. You can ask us to:",
           "* tell you what we hold about you, and give you a copy\n* correct anything that is wrong\n* delete your information, where we have no good reason to keep it\n* limit how we use it\n* stop using it where we rely on our legitimate interest\n* give you your information in a form you can move elsewhere\n* take back your consent whenever you like, such as with the unsubscribe link in one of our emails",
           "You can object to us using your information where we rely on our legitimate interest. Tell us and we will stop, unless we have a strong reason not to. We do not use automated decision-making or profiling.",
-          "To use any of these, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com). We will reply within one month, and it is normally free. We will need to check who you are first. We may have to keep some records, such as invoices, even if you ask us to delete your information."
+          "To use any of these, email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}). We will reply within one month, and it is normally free. We will need to check who you are first. We may have to keep some records, such as invoices, even if you ask us to delete your information."
         ]
       },
       {
@@ -262,7 +267,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Keeping it safe",
         "paragraphs": [
-          "We use well-known providers and encrypted connections, and we keep access to your information limited to what is needed. No system is perfectly secure, so if you think something has gone wrong, tell us at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com). If there is a breach that puts your rights at risk, we will tell you and the regulator as the law requires. We do not put customers' personal details into AI tools, ever. See our AI policy."
+          "We use well-known providers and encrypted connections, and we keep access to your information limited to what is needed. No system is perfectly secure, so if you think something has gone wrong, tell us at [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}). If there is a breach that puts your rights at risk, we will tell you and the regulator as the law requires. We do not put customers' personal details into AI tools, ever. See our AI policy."
         ]
       },
       {
@@ -292,7 +297,7 @@ export const LEGAL_PAGES = [
         "title": "If you change your mind",
         "paragraphs": [
           "You have the legal right to cancel your order, without giving a reason. You can cancel from the moment you place your order until 14 days after the day your print is delivered to you (or to someone you have asked us to deliver it to).",
-          "**To cancel:** email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) in that time, with your name and order details. You can use the form at the end of this page, or simply write \"I am cancelling my order\" with the order details.",
+          "**To cancel:** email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) in that time, with your name and order details. You can use the form at the end of this page, or simply write \"I am cancelling my order\" with the order details.",
           "**To send it back:** post the print to [RETURN ADDRESS] within 14 days of telling us you are cancelling. Please use its original packaging where you can, and pack it carefully, especially if it is framed. You pay the cost of sending it back, and you are responsible for it until it reaches us, so we recommend a tracked and insured service.",
           "**Your refund:** we will refund the price you paid within 14 days of getting the print back (or of you showing proof that you posted it, if that is earlier). Delivery was free, so there is no delivery charge to refund. If the print comes back damaged or marked because it wasn't looked after, we may reduce the refund by the amount it has lost in value.",
           "**Items you can't cancel:** the right to cancel doesn't apply to anything made to your own specification or clearly personalised for you. We don't sell anything like that at the moment, and if that changes we will say so clearly before you order."
@@ -302,20 +307,20 @@ export const LEGAL_PAGES = [
         "title": "If your print is faulty or damaged",
         "paragraphs": [
           "Your print must be as described, of satisfactory quality and fit for purpose. If it arrives damaged, or has a printing fault:",
-          "1. Email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) within 30 days of delivery, with your order details and photos or a short video of the problem and the packaging.\n2. Keep the print and packaging until we have looked at it. We may ask you for more photos.\n3. We will arrange a replacement straight away, or refund you in full if you prefer. You don't pay for returning a faulty print or for the replacement.",
+          "1. Email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) within 30 days of delivery, with your order details and photos or a short video of the problem and the packaging.\n2. Keep the print and packaging until we have looked at it. We may ask you for more photos.\n3. We will arrange a replacement straight away, or refund you in full if you prefer. You don't pay for returning a faulty print or for the replacement.",
           "Your legal rights don't stop after 30 days. If a fault shows up later, contact us and we will work out a repair, replacement or partial refund with you."
         ]
       },
       {
         "title": "If your print isn't what you ordered",
         "paragraphs": [
-          "If you receive a different print, size or frame from the one you ordered, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) with clear photos, ideally within 14 days of delivery so we can check while it is fresh. We will compare your photos with the photos taken at the print studio before your order was packed. If the mistake was ours or the print studio's, we will refund you in full and arrange collection of the print at no cost to you. This doesn't limit your legal rights, described above."
+          "If you receive a different print, size or frame from the one you ordered, email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) with clear photos, ideally within 14 days of delivery so we can check while it is fresh. We will compare your photos with the photos taken at the print studio before your order was packed. If the mistake was ours or the print studio's, we will refund you in full and arrange collection of the print at no cost to you. This doesn't limit your legal rights, described above."
         ]
       },
       {
         "title": "If your print doesn't arrive",
         "paragraphs": [
-          "If your parcel hasn't arrived by the date we gave you, or within 30 days of your order if we gave none, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com). Every order is sent with tracked delivery, so you can follow your parcel. If the tracking stops moving for several days, email us. If it shows your parcel as delivered but you can't find it, please check with neighbours, reception or building management first, and give it 24 hours, because many turn up that way. If it still hasn't appeared, email us with your order number, and we will investigate with the courier and the print studio, without waiting for the courier's claim to be settled. If the print can't be found, we will send a replacement or refund you in full."
+          "If your parcel hasn't arrived by the date we gave you, or within 30 days of your order if we gave none, email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}). Every order is sent with tracked delivery, so you can follow your parcel. If the tracking stops moving for several days, email us. If it shows your parcel as delivered but you can't find it, please check with neighbours, reception or building management first, and give it 24 hours, because many turn up that way. If it still hasn't appeared, email us with your order number, and we will investigate with the courier and the print studio, without waiting for the courier's claim to be settled. If the print can't be found, we will send a replacement or refund you in full."
         ]
       },
       {
@@ -334,7 +339,7 @@ export const LEGAL_PAGES = [
         "title": "Cancellation form",
         "paragraphs": [
           "You don't have to use this, but you can copy it into an email:",
-          "> To Starscapes Factory Ltd, [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com): I am cancelling my contract for the sale of the following goods: (print name, size and frame). Ordered on (date). Received on (date). Name: (your name). Address: (your address). Date: (date)."
+          "> To Starscapes Factory Ltd, [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}): I am cancelling my contract for the sale of the following goods: (print name, size and frame). Ordered on (date). Received on (date). Name: (your name). Address: (your address). Date: (date)."
         ]
       }
     ]
@@ -383,7 +388,7 @@ export const LEGAL_PAGES = [
       {
         "title": "Questions, and changes to this page",
         "paragraphs": [
-          "If the way I use AI changes, I will update this page and its date. If you have a question about it, email [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com)."
+          "If the way I use AI changes, I will update this page and its date. If you have a question about it, email [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}})."
         ]
       }
     ]
@@ -438,4 +443,4 @@ export const LEGAL_PAGES = [
       }
     ]
   }
-]
+])

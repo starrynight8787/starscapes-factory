@@ -40,7 +40,7 @@ We email you when your order has been posted. If your parcel has a tracking numb
 
 ## If something goes wrong
 
-If your print arrives damaged, is not what you ordered, or has not arrived when you expected it, please write to us at [imagine@starscapesfactory.com](mailto:imagine@starscapesfactory.com) and we will look into it. Your rights to cancel an order and to return a print are explained on the [Returns and refunds](/page/returns) page.`,
+If your print arrives damaged, is not what you ordered, or has not arrived when you expected it, please write to us at [${CONTACT_EMAIL}](mailto:${CONTACT_EMAIL}) and we will look into it. Your rights to cancel an order and to return a print are explained on the [Returns and refunds](/page/returns) page.`,
   },
 ]
 

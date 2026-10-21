@@ -1,0 +1,29 @@
+THE CONTACT ADDRESS IN ONE PLACE   starscapes-contact-address-21oct.zip   (SFW-244, the last failing test)
+(Code and one test only. No Supabase step, nothing to set in Vercel. After this, "npm test" should end with NOTHING failed.)
+
+WHAT IT FIXES: the one test that has failed on every full run. The rule is that the contact address lives in ONE place (src/data/contact.js). It was still written out by hand in three files:
+ * the LEGAL PAGES (24 times): the words now carry a placeholder, {{CONTACT_EMAIL}}, which is filled in from the contact file when the page loads, so the pages look exactly the same;
+ * the DELIVERY PAGE (once): it now uses the constant it already imported;
+ * the CALENDAR FILE's event id (once): it is the site's domain, not the contact address, but it matched the same rule. It now takes its domain from the same constant.
+If you ever change the contact address, you now change it in ONE file and every page follows.
+
+NOTE FOR THE FUTURE: an installer written before this that matches the old literal text near an address in the legal pages will refuse (and change nothing). Anything I build from now on is written against the new text.
+
+THE DEN PHOTO TESTS: not in this package. Another session has already fixed them (commit 91ddf17, "allow the Clubhouse frame photo in picture tests"), so on your repository now the only failing test is this one. (I had built the same fix and dropped it rather than leave two competing exceptions.)
+
+TESTS: 8 new in test/contact-email-single-source.test.js: every legal page that offers an email shows the real address as plain text and as a mailto link and never the placeholder; the delivery page shows it as a link; the calendar id keeps its domain; the legal pages file has no copy of the address. 4 deliberate breakages, all caught: the placeholder never filled in; the pages filled with a different, hand-written address; a hand-written address back in the delivery page; the calendar id given the domain by hand again.
+WHOLE SUITE on a fresh copy of your newest commit (91ddf17) with this installed: 3,390 tests, 0 failing; build fine; 12 functions; health check passes.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-contact-address-21oct.zip
+ 3. python3 tools/add-contact-address.py     IT MUST PRINT "changed" LINES FOR 4 FILES. If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me.
+ 4. grep -c "imagine@starscapesfactory.com" src/data/legalPages.js        (it must print 0)
+ 5. npm test                                    (it should end with NOTHING failed)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-contact-address" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (4 changed files; new: the notes, the installer, its test and fixtures; nothing ending .before-)
+    git commit -m "The contact address lives in one file: the legal pages, the delivery page and the calendar id take it from there (SFW-244)"
+    git push
