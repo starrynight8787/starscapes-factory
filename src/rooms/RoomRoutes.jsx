@@ -13,6 +13,7 @@ import BookClubPage from '../bookclub/BookClubPage'
 import BookShelfPage from '../bookclub/BookShelfPage'
 import BookPage from '../bookclub/BookPage'
 import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
+import LeadingFromTheMiddlePage from '../leadership/LeadingFromTheMiddlePage'
 import WritingInTransitPage from '../entries/WritingInTransitPage'
 import LetsWriteStoryPage from '../stories/LetsWriteStoryPage'
 import './roompages.css'
@@ -50,6 +51,7 @@ const CUSTOM_PAGES = {
 // Pages with their own design that are always open (not behind a door), by "room/page".
 const CUSTOM_AREAS = {
   'leadership-lounge/blog': LeadershipBlogPage,
+  'leadership-lounge/leading-from-the-middle': LeadingFromTheMiddlePage,
   'explorers-bay/writing-in-transit': WritingInTransitPage,
   'idea-hatchery/lets-write-a-story': LetsWriteStoryPage,
 }

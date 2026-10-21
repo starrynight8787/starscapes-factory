@@ -154,12 +154,10 @@ describe('galleries and lists', () => {
     expect(card.querySelector('img')).toBeNull()
     expect(card.className).not.toContain('has-image')
   })
-  it('keeps a list page as compact rectangles with no pictures, even for a post that has one (and a notebook-style page uses the entry template)', async () => {
-    const { container } = open('/leadership-lounge/leading-from-the-middle')       // this post has a picture
-    await wait(container)
-    expect(titles(container)).toEqual(['What the middle is for'])
-    expect(container.querySelector('.rp-entries').className).not.toContain('gallery')
-    expect(container.querySelectorAll('.rp-entry img')).toHaveLength(0)
+  it('shows Leading from the Middle as its own explanation page, not a list of posts (and a notebook-style page uses the entry template)', async () => {
+    const { container } = open('/leadership-lounge/leading-from-the-middle')
+    expect(container.querySelector('.lm')).toBeTruthy()
+    expect(container.querySelector('.rp-entries')).toBeNull()
     // a notebook-style page (Writing in Transit) uses the entry template instead: its latest entry big, not the compact list
     const notebook = open('/explorers-bay/writing-in-transit')
     await vi.waitFor(() => expect(notebook.container.querySelector('.en__latest')).toBeTruthy())
