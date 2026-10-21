@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import RoomScene from '../src/rooms/RoomScene'
 import { ROOMS, buildRoomScene, SCENE_SIZE } from '../src/rooms/roomsData'
 import { GEOMETRY, OBJECT_PAD } from '../src/rooms/roomsGeometry'
+import { withoutLogo } from './allowedLogo'
 
 const dir = 'public/scenes/knowledge-nook/'
 const read = (f) => readFileSync(join(process.cwd(), dir + f), 'utf8')
@@ -71,7 +72,7 @@ describe('the Knowledge Nook pictures', () => {
       const svg = read(f)
       expect(svg.startsWith('<svg'), f).toBe(true)
       expect(svg, f).toContain('aria-hidden="true"')
-      expect(svg, f).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|<title|<desc|font-family/i)
+      expect(withoutLogo(f, svg), f).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|<title|<desc|font-family/i)
     }
   })
   it('are light enough to load quickly', () => {

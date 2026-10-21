@@ -7,6 +7,7 @@ import RoomScene from '../src/rooms/RoomScene'
 import { ROOMS, ROOM_SLUGS, SCENE_SIZE, buildRoomScene, AUDIOBOOK_URL, UDEMY_URL } from '../src/rooms/roomsData'
 import { GEOMETRY, OBJECT_PAD } from '../src/rooms/roomsGeometry'
 import { LOCK_TEXT, lockText, resolveItem, hasPlaque, plaqueAnchor, placement } from '../src/rooms/sceneRules'
+import { withoutLogo } from './allowedLogo'
 
 const publicFile = (rel) => fs.readFileSync(path.resolve('public', rel.replace(/^\//, '')), 'utf8')
 const css = fs.readFileSync(path.resolve('src/rooms/roomscene.css'), 'utf8')
@@ -129,7 +130,7 @@ describe('the pictures', () => {
     files.forEach((f) => {
       const svg = publicFile(f)
       expect(svg.startsWith('<svg'), f).toBe(true)
-      expect(svg, f).not.toMatch(/<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|\son[a-z]+=|javascript:|<style|url\(["']?https?:/i)
+      expect(withoutLogo(f, svg), f).not.toMatch(/<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|\son[a-z]+=|javascript:|<style|url\(["']?https?:/i)
       expect(svg, f).toContain('aria-hidden="true"')            // a picture only: the page does the talking
       expect(svg, f).not.toMatch(/<title|<desc/)
     })

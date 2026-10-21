@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 import { DOORS, doorsOf, findDoor, doorPath, doorArt, doorAreas, doorKey } from '../src/doors/doorsData'
 import { ROOMS } from '../src/rooms/roomsData'
+import { withoutLogo } from './allowedLogo'
 
 const read = (rel) => fs.readFileSync(path.resolve(rel), 'utf8')
 
@@ -85,6 +86,6 @@ describe('the untaped pictures', () => {
     if (!REDRAWN.includes(_)) expect(open.length).toBeLessThan(taped.length)
   })
   it('are only drawings, with nothing that runs, loads or links', () => {
-    for (const d of DOORS) expect(read(`public${doorArt(d)}`), d.id).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)
+    for (const d of DOORS) expect(withoutLogo(doorArt(d), read(`public${doorArt(d)}`)), d.id).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)
   })
 })

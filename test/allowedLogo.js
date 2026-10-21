@@ -1,0 +1,6 @@
+// The ONE image a room picture may hold: the Story Ledger logo on the TV screen (added 21 October 2026). It is stored INSIDE the picture as a data: address, so nothing is
+// ever fetched from anywhere, it is marked data-logo="1", and it is clipped to the screen. The picture tests take exactly this tag out before they check that a picture
+// is "only a drawing": any other image, script, link or outside address is still refused. test/picture-logo.test.js keeps the exception this narrow.
+export const LOGO = /<image data-logo="1" href="data:image\/webp;base64,[A-Za-z0-9+/=]+"(?: [a-zA-Z-]+="[^"]*")* \/>/g
+export const LOGO_MAX_DATA = 12000 // the most characters of picture data the logo may hold (it is about 5,300 now), so the pictures stay light
+export const withoutLogo = (name, svg) => (/story-ledger/.test(String(name)) ? String(svg).replace(LOGO, '') : String(svg))
