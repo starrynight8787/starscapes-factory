@@ -109,3 +109,9 @@
     transform: none;
   }
 }
+
+/* The Into the Nebula box under a list page that has no right-hand column (the Clubhouse Blog) */
+.rp-nebula {
+  max-width: 440px;
+  margin: 28px 0 8px;
+}
