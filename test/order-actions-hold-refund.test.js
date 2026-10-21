@@ -102,10 +102,10 @@ describe('mark_refunded: an order that cannot be made is cancelled once the paym
   it('refuses something that is not an order', async () => {
     expect((await call({ action: 'mark_refunded', id: 'nope', confirm_refunded: true })).status).toBe(400)
   })
-  it('refuses a test payment: no money was taken', async () => {
-    h.row = row({ livemode: false })
+  it('refuses a test payment that is in any state but "test_not_sent" (a test payment can only be practised on from there: see test/order-actions-practice.test.js)', async () => {
+    h.row = row({ livemode: false, status: 'held' })
     const out = await refund()
-    expect(out.status).toBe(409); expect(out.body.message).toMatch(/test payment/); expect(h.notice).not.toHaveBeenCalled()
+    expect(out.status).toBe(409); expect(out.body.message).toMatch(/test payment that cannot be practised on/); expect(h.notice).not.toHaveBeenCalled(); expect(h.patchCalls).toEqual([])
   })
   it('cannot be done twice: an order already refunded is refused and nobody is emailed again', async () => {
     h.row = row({ status: 'refunded' })

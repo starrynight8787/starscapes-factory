@@ -139,28 +139,49 @@ export default function OrdersPanel() {
 
   // Cancelling an order that cannot be made. The site NEVER moves money: the owner refunds the payment in Stripe herself (a link takes her to it), ticks a box to say she has, and only
   // then is the customer emailed that they have been refunded. For an order whose answer from Creative Hub was lost, she must also tick that she has looked and it is not there.
+  // On a TEST order the same journey is a PRACTICE (so a tester can rehearse it): the link goes to Stripe's TEST mode, nothing real is touched, and the email carries a TEST banner.
   function refundControl(o, who) {
+    const practice = !o.livemode
     const doubt = unsure(o)
     if (refunding !== o.id) {
-      return <button type="button" disabled={busy} onClick={() => { setRefunding(o.id); setTick({ refunded: false, notThere: false }) }} aria-label={`Cancel the order from ${who} and tell them they have been refunded`}>Cancel and refund…</button>
+      return practice
+        ? <button type="button" disabled={busy} onClick={() => { setRefunding(o.id); setTick({ refunded: false, notThere: false }) }} aria-label={`Practise cancelling the test order from ${who}`}>Practise cancel and refund…</button>
+        : <button type="button" disabled={busy} onClick={() => { setRefunding(o.id); setTick({ refunded: false, notThere: false }) }} aria-label={`Cancel the order from ${who} and tell them they have been refunded`}>Cancel and refund…</button>
     }
-    const stripeUrl = o.stripe_payment_intent ? `https://dashboard.stripe.com/payments/${encodeURIComponent(o.stripe_payment_intent)}` : ''
+    const stripeUrl = o.stripe_payment_intent ? `https://dashboard.stripe.com/${practice ? 'test/' : ''}payments/${encodeURIComponent(o.stripe_payment_intent)}` : ''
     const ready = tick.refunded && (!doubt || tick.notThere)
     return (
       <span className="al-tools__confirm al-tools__refund">
-        <strong>Refund the payment in Stripe first.</strong> This site never moves money.{' '}
-        {stripeUrl ? <a href={stripeUrl} target="_blank" rel="noopener noreferrer">Open this payment in Stripe (opens in a new tab)</a> : 'Find the payment in Stripe, under Payments.'}
-        <label className="al-tools__line"><input type="checkbox" checked={tick.refunded} onChange={(e) => setTick((t) => ({ ...t, refunded: e.target.checked }))} /> I have refunded this payment in Stripe</label>
+        {practice
+          ? <strong>This is a TEST payment, so this is practice. Refund it in Stripe with Test mode switched ON.</strong>
+          : <strong>Refund the payment in Stripe first.</strong>}{' '}
+        This site never moves money.{' '}
+        {stripeUrl
+          ? <a href={stripeUrl} target="_blank" rel="noopener noreferrer">{practice ? 'Open this test payment in Stripe (opens in a new tab)' : 'Open this payment in Stripe (opens in a new tab)'}</a>
+          : practice ? 'Find the payment in Stripe, with Test mode on, under Payments.' : 'Find the payment in Stripe, under Payments.'}
+        <label className="al-tools__line"><input type="checkbox" checked={tick.refunded} onChange={(e) => setTick((t) => ({ ...t, refunded: e.target.checked }))} /> {practice ? 'I have refunded this test payment in Stripe' : 'I have refunded this payment in Stripe'}</label>
         {doubt && <label className="al-tools__line"><input type="checkbox" checked={tick.notThere} onChange={(e) => setTick((t) => ({ ...t, notThere: e.target.checked }))} /> I have looked at Creative Hub, and this order is not there</label>}
-        <button type="button" disabled={busy || !ready} onClick={() => act('mark_refunded', { id: o.id, confirm_refunded: true, ...(doubt ? { confirm_not_there: true } : {}) })} aria-label={`Cancel the order from ${who} and email them that they have been refunded`}>Cancel the order and email the customer</button>{' '}
+        <button type="button" disabled={busy || !ready} onClick={() => act('mark_refunded', { id: o.id, confirm_refunded: true, ...(doubt ? { confirm_not_there: true } : {}) })} aria-label={practice ? `Cancel the test order from ${who} and email them` : `Cancel the order from ${who} and email them that they have been refunded`}>Cancel the order and email the customer</button>{' '}
         <button type="button" disabled={busy} onClick={() => setRefunding(null)}>Back</button>
       </span>
     )
   }
 
+  // For a TEST order only: send the owner a sample of each short customer email (with its TEST banner), so she can read the wording before approving it. They go to the address on the test order.
+  function sampleButtons(o, who) {
+    if (!o.customer_email) return null
+    return (
+      <span className="al-tools__sample">
+        <button type="button" disabled={busy} onClick={() => act('send_sample', { id: o.id, kind: 'received' })} aria-label={`Send me a sample of the payment received email, using the test order from ${who}`}>Sample: payment received email</button>{' '}
+        <button type="button" disabled={busy} onClick={() => act('send_sample', { id: o.id, kind: 'refused' })} aria-label={`Send me a sample of the order refused email, using the test order from ${who}`}>Sample: order refused email</button>
+      </span>
+    )
+  }
+
   function actions(o) {
-    if (!o.livemode) return null
     const who = o.customer_name || 'this customer'
+    // A TEST order: samples of the customer emails, and the refund journey as a practice. Nothing else (a test payment is never sent anywhere).
+    if (!o.livemode) return o.status === 'test_not_sent' ? <>{sampleButtons(o, who)}{refundControl(o, who)}</> : o.status === 'refunded' ? sampleButtons(o, who) : null
     if (o.status === 'sent' && o.creativehub_order_id) {
       return <button type="button" disabled={busy} onClick={() => act('refresh', { id: o.id })} aria-label={`Refresh status of the order from ${who}`}>Refresh status</button>
     }

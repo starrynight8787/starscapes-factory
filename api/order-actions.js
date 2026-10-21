@@ -6,6 +6,8 @@
 //   send     send an order to Creative Hub: a HELD order for the first time (automatic sending is off), or one that needs another go
 //   mark_refunded  record that an order Creative Hub does not have has been cancelled and refunded IN STRIPE (the site never moves money), and tell the customer
 //   sending_state  whether real payments go to Creative Hub by themselves, and whether the customer emails are ready
+//   send_sample    for a TEST order only: send the owner a sample of a short customer email (with its TEST banner), so she can read the wording before approving it
+//   (mark_refunded can also be PRACTISED on a TEST order, so a tester can rehearse the refund journey: no money was taken and nothing goes near Creative Hub)
 //   resend_confirmation  send the customer's confirmation email again (only if it has not gone)
 //   send_dispatch        send the customer the "your order has been posted" email, with a tracking link or number if you give one
 //
@@ -184,26 +186,54 @@ async function markRefunded(res, body) {
   if (body.confirm_refunded !== true) return bad(res, 409, 'Please tick the box to say you have refunded this payment in Stripe first. The customer is told they have been refunded, so it must be true.')
   const row = await loadOrder(body.id)
   if (!row) return bad(res, 404, 'That order could not be found.')
-  if (!row.livemode) return bad(res, 409, 'That is a test payment: no money was taken, so there is nothing to refund.')
+  // A TEST payment can be PRACTISED on (Gill, 21 October 2026, so a tester can rehearse the refund journey): only while it is "test_not_sent", and the owner still ticks that she refunded it in
+  // Stripe's TEST mode. No money was ever taken and nothing goes near Creative Hub; the customer email carries the TEST banner.
+  const practice = !row.livemode
+  if (practice && row.status !== 'test_not_sent' && row.status !== 'refunded') return bad(res, 409, 'That is a test payment that cannot be practised on from where it is.')
   if (row.status === 'refunded') return bad(res, 409, 'That order has already been cancelled and marked as refunded.')
   if (row.creativehub_order_id || row.status === 'sent') return bad(res, 409, 'That order is already with Creative Hub, so it cannot be cancelled here. Ask Creative Hub to cancel it before printing starts, and only then refund it.')
   const stillSending = row.status === 'sending' && Date.now() - new Date(row.created_at).getTime() < STUCK_AFTER_MS
   if (stillSending) return bad(res, 409, 'That order is still being sent. Give it a few minutes, then look for it at Creative Hub before cancelling it.')
   const unsure = row.status === 'check_creativehub' || row.status === 'sending'
-  if (unsure) {
+  if (practice) {
+    // nothing to look for at Creative Hub: a test payment never goes there
+  } else if (unsure) {
     if (body.confirm_not_there !== true) return bad(res, 409, 'It is not known whether Creative Hub already has this order, so it will not be cancelled until you have looked for it there and confirmed it is not there.')
   } else if (!REFUNDABLE.includes(row.status)) {
     return bad(res, 409, 'That order cannot be cancelled from where it is.')
   }
-  const saved = await patchOrder(`id=eq.${row.id}`, [row.status], { status: 'refunded', refunded_at: new Date().toISOString(), note: 'Cancelled, and refunded in Stripe by you. The customer is told.' })
+  const saved = await patchOrder(`id=eq.${row.id}`, [row.status], { status: 'refunded', refunded_at: new Date().toISOString(), note: practice ? 'PRACTICE: cancelled, and refunded in Stripe test mode. A TEST email was sent.' : 'Cancelled, and refunded in Stripe by you. The customer is told.' })
   if (!saved.ok || saved.rows.length !== 1) return bad(res, 409, 'That order changed while you were doing this, so nothing was changed. Refresh the orders and look again.')
   const told = await sendNotice('refused', { ...row, ...(saved.rows[0] || {}), status: 'refunded' }, { match: `id=eq.${row.id}` })
   return res.status(200).json({
     ok: true,
     outcome: 'refunded',
-    message: told.status === 'sent'
-      ? 'The order is cancelled and marked as refunded, and the customer has been emailed.'
-      : `The order is cancelled and marked as refunded, but the customer has NOT been emailed.${told.note ? ` ${told.note}` : ''} Please email them yourself.`,
+    message: practice
+      ? told.status === 'sent'
+        ? 'Practice done: this test order is marked as cancelled and refunded, and a TEST email has been sent to the address on it.'
+        : `Practice done: this test order is marked as cancelled and refunded, but the TEST email was NOT sent.${told.note ? ` ${told.note}` : ''}`
+      : told.status === 'sent'
+        ? 'The order is cancelled and marked as refunded, and the customer has been emailed.'
+        : `The order is cancelled and marked as refunded, but the customer has NOT been emailed.${told.note ? ` ${told.note}` : ''} Please email them yourself.`,
+  })
+}
+
+// ---------- a sample of a customer email, for a TEST order ----------
+// So the owner can READ the wording of each short customer email before approving it (Gill, 21 October 2026). TEST ORDERS ONLY: a real order is refused, so a real customer can never be sent
+// a sample by mistake. It goes to the address on the test order, carries the TEST banner, and changes nothing on the order but the note of which notice went.
+const SAMPLE_KINDS = ['received', 'refused']
+const SAMPLE_NAME = { received: 'payment received', refused: 'order refused' }
+async function sendSample(res, body) {
+  if (typeof body.id !== 'string' || !UUID.test(body.id)) return bad(res, 400, 'That is not an order.')
+  if (!SAMPLE_KINDS.includes(body.kind)) return bad(res, 400, 'That is not a sample I can send.')
+  const row = await loadOrder(body.id)
+  if (!row) return bad(res, 404, 'That order could not be found.')
+  if (row.livemode) return bad(res, 409, 'Samples are only sent for a test order, so that a real customer can never be sent one by mistake.')
+  const result = await sendNotice(body.kind, row, { match: `id=eq.${row.id}`, keySuffix: `-sample-${Date.now()}` })
+  return res.status(200).json({
+    ok: true,
+    outcome: result.status,
+    message: result.status === 'sent' ? `A sample of the "${SAMPLE_NAME[body.kind]}" email has been sent to the address on this test order. It carries a TEST banner.` : `The sample was not sent.${result.note ? ` ${result.note}` : ''}`,
   })
 }
 
@@ -265,7 +295,7 @@ async function sendDispatch(res, body) {
   return res.status(200).json({ ok: true, outcome: result.status, message: result.note || 'The email was not sent.' })
 }
 
-const ACTIONS = { refresh, check, link, send, mark_refunded: markRefunded, sending_state: sendingState, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
+const ACTIONS = { refresh, check, link, send, mark_refunded: markRefunded, send_sample: sendSample, sending_state: sendingState, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')

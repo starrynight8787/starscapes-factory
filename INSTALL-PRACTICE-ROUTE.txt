@@ -1,0 +1,55 @@
+PRACTICE THE CANCEL-AND-REFUND JOURNEY WITH TEST PAYMENTS, AND READ THE NEW EMAILS   starscapes-practice-route-21oct.zip   (SFW-252)
+(Code and tests only. No Supabase step. Released through a preview first.)
+
+!! INSTALL starscapes-order-alerts-returns-21oct.zip FIRST (which itself needs starscapes-order-safeguards-21oct.zip, already in). This installer refuses to run, changing nothing, if the one before it is not in.
+
+WHY (your "yes", 21 October 2026): your tester could not rehearse the cancel-and-refund journey, because test payments were never held and the site refused to "cancel and refund" something that took no money. Now a TEST order can be practised on, and you can read both new customer emails before approving their wording.
+
+WHAT CHANGES (only for TEST orders: a real order behaves exactly as before)
+ 1. "Practise cancel and refund..." on a TEST order. It says plainly "This is a TEST payment, so this is practice", and sends you to the payment in STRIPE'S TEST MODE (a different address from the live one), where you refund it. You tick "I have refunded this test payment in Stripe" and press the button: the order becomes "Cancelled and refunded", with a note that it was practice, and a TEST email "We could not accept your order: you have been refunded" goes to the address on the test order. No money was taken and nothing goes near Creative Hub. There is no "I have looked at Creative Hub" box, because a test order never goes there.
+ 2. TWO SAMPLE BUTTONS on a TEST order: "Sample: payment received email" and "Sample: order refused email". Each sends that email to the address on the test order, with a TEST banner and "[TEST]" in the subject, so you can read the wording before you approve it. You can press them as often as you like. THEY ARE REFUSED FOR A REAL ORDER, so a real customer can never be sent a sample by mistake.
+ 3. The test email only goes if the Resend key is set (RESEND_API_KEY in Vercel); if not, the panel says so.
+
+TESTS: 25 new tests in 2 new files (the practice and sample actions; the panel), and three older tests updated because they assumed a test order has no buttons or cannot be practised on. 18 deliberate breakages, ALL caught (including: a real order treated as practice, a sample sent for a real order, the practice pointing at LIVE Stripe, a real order pointing at TEST Stripe, samples on a real order, and a refunded test order being practised on twice).
+WHOLE SUITE with this installed on a copy of your newest commit (which already has the other order packages): 3,630 tests, 0 failing; build fine; 12 functions; health check passes.
+
+STEP A: THE CODE, THROUGH A PREVIEW FIRST
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-practice-route-21oct.zip
+ 4. python3 tools/add-practice-route.py     IT MUST PRINT "changed" LINES FOR 5 FILES AND "replaced" LINES FOR 2 TEST FILES. If it says to install the order alerts package first, do that and run this again. If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me.
+ 5. grep -c "send_sample" api/order-actions.js        (it must print 2)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-practice-route" -not -path "./node_modules/*" -delete
+10. git checkout -b practice-route
+    git add .
+    git status                                   (5 changed files; new: the notes, the installer, its test and fixtures, test/order-actions-practice.test.js, test/orders-panel-practice.test.jsx, tools/practice-route-files/; nothing ending .before-)
+    git commit -m "Practice the cancel and refund journey with test payments; samples of the new customer emails (SFW-252)"
+    git push -u origin practice-route
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "practice-route" and says Preview. Wait for Ready, press Visit, sign in as owner, open Art Loft, Admin, and press "Show recent orders". Any test order should now show the three new buttons. If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is Ready:
+    git checkout main
+    git merge practice-route
+    git push
+    git branch -d practice-route
+
+HOW TO RUN THE PRACTICE (for you and your tester)
+ BEFORE: check these in Vercel, Settings, Environment Variables (they are probably already right):
+   - STRIPE_SECRET_KEY must be a TEST key (it starts sk_test_), so no real money can move.
+   - STRIPE_WEBHOOK_SECRET must be the one for your TEST webhook, so the payment is recorded as an order.
+   - RESEND_API_KEY must be set, so the emails go.
+   - CHECKOUT_OPEN: until it is exactly yes, only YOU (signed in as owner) can start a checkout. If your tester is someone else, set it to yes for the practice, redeploy, and REMOVE IT AGAIN afterwards (delete the variable and redeploy), so checkout is closed to visitors again.
+ THE TESTER:
+   1. On starscapesfactory.com, add a print to the cart and go to checkout. Use the test card 4242 4242 4242 4242, any future expiry date, any 3 digits for the security code, any postcode, and THEIR OWN email address (the practice emails go to it). Choose a delivery address in one of the launch countries.
+   2. Tell you when it is done.
+ YOU (signed in as owner, Art Loft, Admin, "Show recent orders"):
+   1. The order appears tagged TEST, "Test payment: nothing ordered". It will have the confirmation email in the tester's inbox with a TEST banner.
+   2. Press "Sample: payment received email" and "Sample: order refused email". READ BOTH in the tester's inbox (or your own, if you placed the test order yourself): these are the two new customer emails whose wording you will be approving.
+   3. Press "Practise cancel and refund...". Press "Open this test payment in Stripe (opens in a new tab)". (Or sign in at dashboard.stripe.com, switch "Test mode" ON at the top right, click "Payments", and open the payment.)
+   4. In Stripe, click "Refund payment" (top right), choose the full amount, pick the reason "Other", and click "Refund".
+   5. Back in the panel, tick "I have refunded this test payment in Stripe" and press "Cancel the order and email the customer".
+   6. The order now says "Cancelled and refunded", with a note that it was practice, and the tester receives the TEST refund email.
+ Stripe's menus move around sometimes: look for "Payments" and a "Refund" button.

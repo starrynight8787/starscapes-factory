@@ -144,12 +144,11 @@ describe('Cancel and refund', () => {
     await userEvent.click(screen.getByRole('button', { name: /cancel the order from Jane Smith/i }))
     expect(screen.getByRole('checkbox', { name: /not there/ })).toBeInTheDocument()
   })
-  it('is NOT offered for an order already with Creative Hub, a refunded one, one still being sent, or a test payment', async () => {
+  it('is NOT offered (as a real cancel and refund) for an order already with Creative Hub, a refunded one, or one still being sent (a test payment has its own practice: see test/orders-panel-practice.test.jsx)', async () => {
     for (const o of [
       order({ status: 'sent', creativehub_order_id: 'ch1', creativehub_order_number: 'N1' }),
       order({ status: 'refunded' }),
       order({ status: 'sending', created_at: new Date(Date.now() - 30 * 1000).toISOString() }),
-      order({ status: 'test_not_sent', livemode: false }),
     ]) {
       h.orders = [o]
       const { unmount } = render(<OrdersPanel />)

@@ -38,7 +38,7 @@ describe('an order card', () => {
   })
   it('puts a button in the card of the order it belongs to, and acts on that order only', async () => {
     h.orders = [order({ id: 'o1', confirmation_status: 'sent' }), order({ id: 'o2', customer_name: 'Sam Lee', customer_email: 'sam@example.com', confirmation_status: 'failed', confirmation_note: 'Not sent: Resend answered 403.' })]; await load()
-    expect(within(cards()[0]).queryByRole('button')).toBeNull()
+    expect(within(cards()[0]).queryByRole('button', { name: /send the confirmation email/i })).toBeNull() // its confirmation went, so no such button (a test order has its own practice and sample buttons)
     await userEvent.click(within(cards()[1]).getByRole('button', { name: /send the confirmation email to Sam Lee/i }))
     expect(h.action).toHaveBeenCalledWith('resend_confirmation', { id: 'o2' })
   })
