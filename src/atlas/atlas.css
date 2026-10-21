@@ -1,0 +1,311 @@
+/* The Star Atlas (Figma: Starscapes Star Atlas, Style 1). Navy outlines, white cards, blue buttons, gold for stardust. Nothing is smaller than 14px. */
+.at {
+  --at-navy: #070b26;
+  --at-blue: var(--sf-blue, #1f6fa8);
+  --at-gold: #e59a12;
+  --at-muted: #4a5578;
+}
+.at__wrap {
+  box-sizing: border-box;
+  max-width: 1180px;
+  margin: 0 auto;
+  padding: 0 24px 48px;
+}
+.at__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 24px 0 20px;
+}
+.at__wrap--tabs {
+  padding-bottom: 0;
+}
+.at__wrap--tabs .at__tabs {
+  margin-bottom: 8px;
+}
+.at__tab {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0 18px;
+  border: 2px solid var(--at-navy, #070b26);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--at-navy, #070b26);
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-decoration: none;
+}
+.at__tab:hover {
+  background: #eef3ff;
+}
+.at__tab.is-on {
+  border-color: var(--sf-blue, #1f6fa8);
+  background: var(--sf-blue, #1f6fa8);
+  color: #fff;
+}
+.at__tab:focus-visible,
+.at__btn:focus-visible,
+.at__select:focus-visible {
+  outline: 3px solid #f2b200;
+  outline-offset: 2px;
+}
+.at__card {
+  box-sizing: border-box;
+  border: 3px solid var(--at-navy);
+  border-radius: 16px;
+  background: #fff;
+  padding: 20px 22px;
+}
+.at__galaxycard {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+  gap: 24px;
+  align-items: center;
+}
+.at__art {
+  overflow: hidden;
+  border-radius: 10px;
+  background: var(--at-navy);
+  aspect-ratio: 3 / 2;
+}
+.at__galaxy {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.at__kicker {
+  margin: 0 0 4px;
+  color: var(--at-muted);
+  font-size: 0.875rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.at__galaxyname {
+  margin: 0 0 14px;
+  color: var(--at-navy);
+  font-size: clamp(1.75rem, 3.4vw, 2.25rem);
+  line-height: 1.15;
+}
+.at__bar {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #cfd8f2;
+}
+.at__barfill {
+  display: block;
+  height: 100%;
+  min-width: 4px;
+  border-radius: 999px;
+  background: var(--at-gold);
+}
+.at__earned {
+  margin-top: 8px;
+  color: var(--at-navy);
+  font-weight: 600;
+}
+.at__small {
+  margin: 6px 0;
+  color: var(--at-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+}
+.at__pitch {
+  margin-top: 14px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: #fdf0dc;
+}
+.at__pitch p {
+  margin: 0 0 10px;
+  color: #3d3320;
+  font-size: 0.875rem;
+}
+.at__h2 {
+  margin: 32px 0 4px;
+  color: var(--at-navy);
+  font-size: 1.5rem;
+}
+.at__h3 {
+  margin: 0 0 6px;
+  color: var(--at-navy);
+  font-size: 1.125rem;
+}
+.at__intro {
+  margin-bottom: 14px;
+}
+.at__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0 20px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--sf-blue, #1f6fa8);
+  color: #fff;
+  font: inherit;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  text-decoration: none;
+  cursor: pointer;
+}
+.at__btn:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+.at__starter {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px 28px;
+  margin-bottom: 14px;
+  padding: 12px 18px;
+  border: 3px solid var(--at-navy);
+  border-radius: 14px;
+  background: #fff;
+}
+.at__starterlist {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 26px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.at__st {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.at__stamp {
+  font-size: 1.5rem;
+  line-height: 1;
+}
+.at__sttext {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+.at__stname {
+  color: var(--at-navy);
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+.at__stnote {
+  color: var(--at-muted);
+  font-size: 0.875rem;
+}
+.at__stline {
+  margin: 0;
+  color: var(--at-muted);
+  font-size: 0.875rem;
+}
+.at__country {
+  margin-bottom: 14px;
+}
+.at__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 12px;
+  margin-top: 10px;
+}
+.at__label {
+  color: var(--at-navy);
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.at__select {
+  min-height: 44px;
+  min-width: 220px;
+  max-width: 100%;
+  padding: 0 12px;
+  border: 2px solid var(--at-navy);
+  border-radius: 10px;
+  background: #fff;
+  color: var(--at-navy);
+  font: inherit;
+  font-size: 0.9375rem;
+}
+.at__problem {
+  margin: 10px 0 0;
+  color: #a31d2a;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+.at__rooms {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 14px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.at__room {
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  padding: 12px 14px;
+  border: 3px solid var(--at-navy);
+  border-radius: 14px;
+  background: #fff;
+}
+.at__roomhead {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.at__planet {
+  flex: none;
+}
+.at__roomname {
+  color: var(--at-navy);
+  font-size: 0.9375rem;
+  font-weight: 700;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+}
+.at__stars {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1px;
+  color: #9aa3c7;
+  font-size: 0.875rem;
+  line-height: 1.1;
+}
+.at__star.is-lit {
+  color: var(--room, var(--at-gold));
+  -webkit-text-stroke: 0.6px var(--at-navy);
+}
+.at__roomline {
+  color: var(--at-muted);
+  font-size: 0.875rem;
+}
+.at__pair {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
+  margin-top: 28px;
+}
+@media (max-width: 860px) {
+  .at__galaxycard {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .at__rooms {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 560px) {
+  .at__wrap {
+    padding: 0 16px 40px;
+  }
+  .at__pair {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .at__roomhead {
+    align-items: flex-start;
+  }
+}

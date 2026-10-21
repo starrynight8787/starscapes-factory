@@ -95,6 +95,7 @@ export const PAGES = {
   '/admin/promotions': { title: 'Promotions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin': { title: 'Manage prints', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin/originals': { title: 'Manage originals', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/membership/atlas': { title: 'Star Atlas', description: 'The stamps you have earned across the rooms.', image: 'site', index: false, client: true },
   '/membership/passes': { title: 'My passes', description: 'The passes you hold, and how to change or cancel them.', image: 'site', index: false, client: true },
   '/membership/change': { title: 'Change my passes', description: 'Add or remove a pass whenever you like.', image: 'site', index: false, client: true },
   '/membership/welcome': { title: 'Welcome', description: 'Your passes are open.', image: 'site', index: false, client: true },

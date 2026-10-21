@@ -12,6 +12,7 @@ import { formatPounds } from './pricing'
 import { accountView, priceNow, formatDate, unitWord } from './account'
 import { fetchMyMembership, fetchAccount, openBillingPortal, resumePasses } from './membershipApi'
 import ProfilePanel from './ProfilePanel'
+import AccountTabs from '../atlas/AccountTabs'
 import './membership.css'
 
 const ROOM_NAME = Object.fromEntries(channels.map((c) => [c.slug, c.name]))
@@ -256,6 +257,9 @@ export default function MyPassesPage({ owner = false }) {
   return (
     <main className="mb mb--account">
       <PageBanner art="plain" room="factory-floor" chip="Your account" title="My account" />
+      <div className="at__wrap at__wrap--tabs">
+        <AccountTabs />
+      </div>
       <div className="mb__acct">
         <ProfilePanel />
         <PassesContent owner={owner} />

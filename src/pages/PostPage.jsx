@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { recordRead } from '../entries/readsApi'
+import { claimFirstChaptersIfChapter } from '../atlas/atlasApi'
 import { WORDS as PUBLISH_WORDS, isPublished, setPublished } from './postPublish'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
@@ -42,6 +43,7 @@ export default function PostPage({ session }) {
       } else {
         setPost(data)
         recordRead(id)
+        if (session) claimFirstChaptersIfChapter(id) // chapter 3 of a story earns the First three chapters stamp in the Star Atlas (quiet: it never gets in the way)
         // A post that belongs to a pass keeps its words in a separate table that the database only opens for the right people
         if (hasPassColumn(data) && cleanPass(data.pass)) {
           try {

@@ -23,7 +23,7 @@ describe('the four drafts came across whole, and the cookie policy was added to 
     for (const p of LEGAL_PAGES) expect(resolvePage(p.slug).kind).toBe('legal')
   })
   it('each has the sections of its draft, with their titles', () => {
-    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
+    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', 'Reading habits', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
     expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
     expect(page('terms').sections).toHaveLength(19)

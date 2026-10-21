@@ -18,6 +18,7 @@ import MembershipPage from './membership/MembershipPage'
 import WelcomePage from './membership/WelcomePage'
 import MyPassesPage from './membership/MyPassesPage'
 import ChangePassesPage from './membership/ChangePassesPage'
+import AtlasPage from './atlas/AtlasPage'
 import TestersPage from './testers/TestersPage'
 import Footer from './components/Footer'
 import { useOwnerCheck } from './admin/useIsOwner'
@@ -88,6 +89,7 @@ export default function App() {
 <Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />
 <Route path="/membership/welcome" element={ <ProtectedRoute session={session}> <WelcomePage /> </ProtectedRoute> } />
 <Route path="/membership/passes" element={ <ProtectedRoute session={session}> <MyPassesPage owner={owner} /> </ProtectedRoute> } />
+<Route path="/membership/atlas" element={ <ProtectedRoute session={session}> <AtlasPage /> </ProtectedRoute> } />
 <Route path="/membership/change" element={ <ProtectedRoute session={session}> <ChangePassesPage owner={owner} /> </ProtectedRoute> } />
 <Route path="/products" element={<ProductGallery />} /> 
 <Route path="/products/:id" element={<ProductPage />} /> 
