@@ -8,6 +8,7 @@ import useDoors from '../doors/useDoors'
 import { StarMark } from '../components/Logo'
 import PageBanner from '../components/PageBanner'
 import NebulaBox from '../entries/NebulaBox'
+import PinnedMostRead from '../entries/PinnedMostRead'
 import { BANNER_CHIP, BANNER_PICTURE, BLOCKS_INTRO, ROOM, SUBTITLE, WAYS } from './leadershipData'
 import { blocksFrom, latestPosts, morePosts, pickFeatured } from './leadershipRules'
 import '../rooms/roompages.css'
@@ -127,7 +128,10 @@ export default function LeadershipBlogPage() {
             </section>
           )}
 
-          <div className="lb__o6"><NebulaBox /></div>
+          <div className="lb__o6 lb__nebula">
+            <NebulaBox />
+            {status === 'ready' && <PinnedMostRead posts={posts} from={from} idPrefix="lb" />}
+          </div>
         </div>
       </div>
     </main>

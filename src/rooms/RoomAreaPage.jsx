@@ -5,6 +5,8 @@ import './roomblog.css'
 import useTitle from './useTitle'
 import RoomEntry from './RoomEntry'
 import PageBanner from '../components/PageBanner'
+import NebulaBox from '../entries/NebulaBox'
+import PinnedMostRead from '../entries/PinnedMostRead'
 import { fetchRoomPosts } from './roomsApi'
 import { ROOMS } from './roomsData'
 import { inArea, safeImage } from './postRules'
@@ -16,7 +18,7 @@ const chunk = (list, n) => Array.from({ length: Math.ceil(list.length / n) }, (_
 
 // One area of a room, at /<room>/<area>: the room's published posts that belong to it, newest first.
 // A gallery shows each post's picture; a list is a compact column of rectangles.
-export default function RoomAreaPage({ room, areas, extra = null }) {
+export default function RoomAreaPage({ room, areas, extra = null, nebula = false }) {
   const config = ROOMS[room]
   const { area: areaKey } = useParams()
   const known = areas || config.areas // the room's own areas, or those plus the pages behind its doors
@@ -87,6 +89,12 @@ export default function RoomAreaPage({ room, areas, extra = null }) {
             </li>
           ))}
         </ul>
+      )}
+      {nebula && (
+        <div className="rp-nebula">
+          <NebulaBox />
+          {status === 'ready' && <PinnedMostRead posts={mine} from={here.pathname + here.search} idPrefix="rp" />}
+        </div>
       )}
       {extra}
     </main>

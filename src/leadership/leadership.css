@@ -236,3 +236,9 @@ a.lb__block:focus-visible,
     grid-template-columns: 1fr; /* a tablet keeps the three boxes in a row; a phone stacks them */
   }
 }
+
+/* The membership box, then the pinned post, then the most read, as one stack in the right-hand column */
+.lb__nebula {
+  display: grid;
+  gap: 24px;
+}
