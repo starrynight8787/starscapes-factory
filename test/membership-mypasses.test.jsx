@@ -20,9 +20,11 @@ const show = (owner = false, state) => render(<MemoryRouter initialEntries={[{ p
 beforeEach(() => { store.open = true; Object.values(api).forEach((f) => f.mockReset()); api.fetchAccount.mockResolvedValue({ card: null }) })
 
 describe('who sees it', () => {
-  it('shows a visitor the "not open yet" message while memberships are closed, and never reads anything', () => {
+  it('while memberships are closed, calls the page My account, keeps the profile, and says in a small box that memberships are not open yet, never reading any passes', async () => {
     store.open = false; show(false)
-    expect(screen.getByRole('heading', { level: 1, name: 'Memberships are not open yet' })).toBeInTheDocument(); expect(api.fetchMyMembership).not.toHaveBeenCalled()
+    expect(screen.getByRole('heading', { level: 1, name: 'My account' })).toBeInTheDocument()
+    expect(screen.getByRole('heading', { level: 2, name: 'Memberships are not open yet' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { name: 'Your profile' })).toBeInTheDocument(); expect(api.fetchMyMembership).not.toHaveBeenCalled()
   })
   it('shows the owner their own passes even while closed', async () => {
     store.open = false; api.fetchMyMembership.mockResolvedValue(row()); show(true)

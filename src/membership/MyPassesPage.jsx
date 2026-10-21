@@ -40,7 +40,7 @@ function PassesContent({ owner = false }) {
   const [problem, setProblem] = useState('')
   const [round, setRound] = useState(0)
   const justChanged = Boolean(location.state && location.state.changed)
-  useTitle(state.phase === 'ready' && accountView(state.row) === 'free' ? 'My membership' : 'My passes')
+  useTitle(!open && !owner ? 'My account' : state.phase === 'ready' && accountView(state.row) === 'free' ? 'My membership' : 'My passes')
 
   useEffect(() => {
     if (!open && !owner) return undefined
@@ -66,13 +66,16 @@ function PassesContent({ owner = false }) {
 
   if (!open && !owner) {
     return (
-      <div className="mb__pc mb--closed">
+      <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>Memberships are not open yet</h1>
-          <p>{MEMBERSHIP.textWhileClosed}</p>
-          <p>
-            <Link to="/">Back to the home page</Link>
-          </p>
+          <h1>My account</h1>
+          <section className="mb__sum mb__sum--plain mb--closed">
+            <h2 className="mb__wname">Memberships are not open yet</h2>
+            <p>{MEMBERSHIP.textWhileClosed}</p>
+            <p>
+              <Link to="/">Back to the home page</Link>
+            </p>
+          </section>
         </div>
       </div>
     )

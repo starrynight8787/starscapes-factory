@@ -6,6 +6,7 @@ import { join } from 'node:path'
 import RoomScene from '../src/rooms/RoomScene'
 import { ROOMS, buildRoomScene, SCENE_SIZE } from '../src/rooms/roomsData'
 import { GEOMETRY, OBJECT_PAD } from '../src/rooms/roomsGeometry'
+import { withoutLogo } from './allowedLogo'
 
 const dir = 'public/scenes/sarah-jrs-den/'
 const read = (f) => readFileSync(join(process.cwd(), dir + f), 'utf8')
@@ -61,19 +62,19 @@ describe('the Den page', () => {
 describe('the Den pictures', () => {
   it('are only drawings, with no real text and nothing that runs, loads or links', () => {
     for (const f of ['base.svg', ...KEYS.map((k) => `item-${k}.svg`)]) {
-      const svg = read(f)
+      const svg = withoutLogo(f, read(f))
       expect(svg.startsWith('<svg'), f).toBe(true)
       expect(svg, f).toContain('aria-hidden="true"')
       expect(svg, f).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|<title|<desc|font-family/i)
     }
   })
   it('are light enough to load quickly', () => {
-    for (const f of ['base.svg', ...KEYS.map((k) => `item-${k}.svg`)]) expect(statSync(join(process.cwd(), dir + f)).size, f).toBeLessThan(30 * 1024)
+    for (const f of ['base.svg', ...KEYS.map((k) => `item-${k}.svg`)]) expect(statSync(join(process.cwd(), dir + f)).size, f).toBeLessThan(f === 'base.svg' ? 80 * 1024 : 30 * 1024)
   })
-  it('hold the room: the framed picture with the drawn bear and dinosaur, the stars, the moon and three cones', () => {
+  it('hold the room: the framed photo of the bear and dinosaur, the stars, the moon and three cones', () => {
     const base = read('base.svg')
-    expect(base).toContain('fill="#B8E0E6"')                                  // the bear
-    expect(base).toContain('fill="#C9F29B"')                                  // Daryl
+    expect(base).toContain('data-photo="1"')                                  // the photo in the frame
+    expect(base).toContain('clip-path="url(#frame-photo)"')                    // clipped to the frame
     expect((base.match(/data-cone="1"/g) || []).length).toBe(3)
     expect((base.match(/fill="#E5484D"/g) || []).length).toBe(3)
     expect(base).toContain('M48 0C35.3 0 23.1 5.1')                           // the moon

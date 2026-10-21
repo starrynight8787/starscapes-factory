@@ -144,7 +144,7 @@ export default function Navbar({ session }) {
                 )}
                 {!isOwner && (
                   <Link to="/membership/passes" className="sf-link">
-                    My passes
+                    {MEMBERSHIP.open ? 'My passes' : 'My account'}
                   </Link>
                 )}
                 <button type="button" className="sf-link" onClick={handleLogout}>
@@ -212,7 +212,7 @@ export default function Navbar({ session }) {
               <>
                 {!isOwner && (
                   <Link to="/membership/passes" className="sf-btn" onClick={closeMenu}>
-                    My passes
+                    {MEMBERSHIP.open ? 'My passes' : 'My account'}
                   </Link>
                 )}
                 <button type="button" className="sf-btn" onClick={handleLogout}>

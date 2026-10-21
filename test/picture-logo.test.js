@@ -3,19 +3,27 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
-import { LOGO, LOGO_MAX_DATA, withoutLogo } from './allowedLogo'
+import { LOGO, LOGO_MAX_DATA, PHOTO, PHOTO_MAX_DATA, withoutLogo } from './allowedLogo'
 
 const root = process.cwd()
 const walk = (dir) => readdirSync(dir).flatMap((n) => { const p = join(dir, n); return statSync(p).isDirectory() ? walk(p) : [p] })
 const allPictures = walk(join(root, 'public')).filter((p) => p.endsWith('.svg')).map((p) => relative(root, p).split('\\').join('/'))
 const TV = ['public/scenes/knowledge-nook/item-story-ledger.svg', 'public/scenes/knowledge-nook/item-story-ledger-open.svg']
+const DEN = 'public/scenes/sarah-jrs-den/base.svg'
 const read = (rel) => readFileSync(join(root, rel), 'utf8')
 const FORBIDDEN = /<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|\son[a-z]+=|javascript:|<style|<title|<desc|font-family|url\(["']?https?:/i
 
 describe('the one image a picture may hold', () => {
-  it('only the two Story Ledger TV pictures (closed and open) hold an image at all; every other picture on the site is pure drawing', () => {
+  it('only the two Story Ledger TV pictures (closed and open) and the Clubhouse wall frame hold an image at all; every other picture on the site is pure drawing', () => {
     expect(allPictures.length).toBeGreaterThan(40)
-    for (const rel of allPictures) expect(/<image/i.test(read(rel)), rel).toBe(TV.includes(rel))
+    for (const rel of allPictures) expect(/<image/i.test(read(rel)), rel).toBe(TV.includes(rel) || rel === DEN)
+  })
+  it('the Clubhouse wall frame holds exactly one photo, in exactly the allowed shape: marked as the photo, stored inside the picture, clipped to the frame and not too heavy', () => {
+    const s = read(DEN)
+    expect((s.match(/<image/gi) || []).length).toBe(1); expect((s.match(PHOTO) || []).length).toBe(1)
+    const tag = s.match(PHOTO)[0]; const data = tag.match(/base64,([A-Za-z0-9+/=]+)/)[1]
+    expect(tag.replace(/base64,[A-Za-z0-9+/=]+/, 'base64,')).not.toMatch(/https?:|\/\//); expect(tag).toContain('clip-path="url(#frame-photo)"'); expect(data.length).toBeLessThan(PHOTO_MAX_DATA); expect(data.length).toBeGreaterThan(500)
+    expect(s.replace(PHOTO, '')).not.toMatch(FORBIDDEN)
   })
   it('each of those holds exactly one, in exactly the allowed shape: marked as the logo, clipped to the screen, and nothing else about it left open', () => {
     for (const rel of TV) { const s = read(rel); expect((s.match(/<image/gi) || []).length, rel).toBe(1); expect((s.match(LOGO) || []).length, rel).toBe(1) }
