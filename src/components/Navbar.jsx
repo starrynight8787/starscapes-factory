@@ -142,6 +142,11 @@ export default function Navbar({ session }) {
                     Admin
                   </Link>
                 )}
+                {!isOwner && (
+                  <Link to="/membership/passes" className="sf-link">
+                    My passes
+                  </Link>
+                )}
                 <button type="button" className="sf-link" onClick={handleLogout}>
                   Log out
                 </button>
@@ -204,9 +209,16 @@ export default function Navbar({ session }) {
           </div>
           <div className="sf-menu__actions">
             {session ? (
-              <button type="button" className="sf-btn" onClick={handleLogout}>
-                Log out
-              </button>
+              <>
+                {!isOwner && (
+                  <Link to="/membership/passes" className="sf-btn" onClick={closeMenu}>
+                    My passes
+                  </Link>
+                )}
+                <button type="button" className="sf-btn" onClick={handleLogout}>
+                  Log out
+                </button>
+              </>
             ) : (
               <>
                 <Link to="/login" className="sf-btn" onClick={closeMenu}>

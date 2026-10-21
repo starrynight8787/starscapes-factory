@@ -77,3 +77,21 @@ describe('the /admin page in the app', () => {
     expect(app).toMatch(/path="\/new"/)
   })
 })
+
+describe('the My passes button in the menu', () => {
+  it('shows to a signed-in member (not the owner) on the computer menu and the phone menu, going to their passes', async () => {
+    owner.value = false
+    const { container } = show(SIGNED_IN)
+    expect(within(container.querySelector('.sf-nav__actions')).getByRole('link', { name: 'My passes' }).getAttribute('href')).toBe('/membership/passes')
+    await userEvent.click(container.querySelector('.sf-burger'))
+    expect(within(container.querySelector('.sf-menu__actions')).getByRole('link', { name: 'My passes' }).getAttribute('href')).toBe('/membership/passes')
+  })
+  it('does not show to the owner or to someone signed out', () => {
+    owner.value = true
+    expect(show(SIGNED_IN).container.textContent).not.toMatch(/My passes/)
+  })
+  it('does not show to someone signed out', () => {
+    owner.value = false
+    expect(show(null).container.textContent).not.toMatch(/My passes/)
+  })
+})
