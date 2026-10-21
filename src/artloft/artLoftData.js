@@ -5,6 +5,8 @@
 // "box" is a position on that canvas, in pixels: [x, y, width, height]. The five canvases on the wall are different:
 // each frame is drawn to fit its own cover picture (see hangFrames below), so they have no fixed box.
 
+import { IMPORT_TAX_NOTE } from '../cart/launchCountries'
+
 export const SCENE = { width: 1200, height: 840 }
 
 // How the five frames hang. Every picture is given about the same AREA, so a panorama and a tall painting have the same visual weight
@@ -176,6 +178,7 @@ export const PRINT_FACTS = [
   'Made to order, and posted straight to you from the print studio in plain, unbranded packaging.',
   'Printed on Hahnemühle Photo Rag, a cotton fine art paper.',
   'Delivery cost is shown at checkout, which opens soon.',
+  IMPORT_TAX_NOTE,
 ]
 
 export function collectionBySlug(slug) {

@@ -3,12 +3,13 @@
 export const CONTACT_EMAIL = 'imagine@starscapesfactory.com'
 export const ACCESSIBILITY_REPLY_DAYS = '5' // working days: the accessibility statement promises a reply within this
 
-// The social accounts for the footer: Sarah Jr.'s. A blank one is simply not shown.
+// The social accounts for the footer: Sarah Jr.'s YouTube, Instagram and TikTok, and Gill's own Threads (@gillycreates_, chosen by Gill on 21 October 2026).
+// A blank one is simply not shown.
 export const SOCIAL_LINKS = {
   youtube: 'https://www.youtube.com/@sarahjradventures',
   instagram: 'https://www.instagram.com/sarahjradventures/',
   tiktok: 'https://www.tiktok.com/@sarahjradventures',
-  threads: '',
+  threads: 'https://www.threads.com/@gillycreates_', // Threads moved from threads.net to threads.com in 2025 (the old address still redirects)
 }
 
 // Gill's own Instagram, for the Photography page (Explorer's Bay)

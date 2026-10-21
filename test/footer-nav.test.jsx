@@ -50,10 +50,10 @@ describe('the footer links on the dark footer', () => {
 })
 
 describe('the footer\u2019s Follow column', () => {
-  it('has the heading from the design, and the accounts that have an address', () => {
+  it('has the heading from the design, and all four accounts', () => {
     const [, , follow] = navs()
     expect(within(follow).getByRole('heading', { level: 2, name: 'Follow' })).toBeInTheDocument()
-    expect(within(follow).getAllByRole('link')).toHaveLength(3)
+    expect(within(follow).getAllByRole('link').map((l) => l.textContent)).toEqual(['YouTube ↗', 'Instagram ↗', 'TikTok ↗', 'Threads ↗'])
   })
   it('still names the list for screen reader users', () => {
     const [, , follow] = navs()

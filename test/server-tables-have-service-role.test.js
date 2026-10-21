@@ -31,10 +31,6 @@ describe('every table the server touches lets the server\u2019s key in', () => {
       expect(code, table).not.toMatch(new RegExp(`grant[^;]*public\\.${table}[^;]*to[^;]*(anon|authenticated)`, 'i'))
     }
   })
-  it('gives the founding members table the same, since the server will manage it', () => {
-    const { code } = sqlFiles.find((s) => s.file === 'memberships.sql')
-    expect(code).toMatch(/^grant select, insert, update, delete on public\.founding_members to service_role;/m)
-  })
   it('never gives the server-only tables to visitors or signed-in people (the grant is for the server\u2019s key alone)', () => {
     for (const table of ['orders']) {
       const { code } = sqlFiles.find((s) => s.file === made.get(table))

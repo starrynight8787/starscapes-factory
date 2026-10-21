@@ -16,8 +16,8 @@ describe('the site\u2019s contact details', () => {
     expect(SOCIAL_LINKS.instagram).toBe('https://www.instagram.com/sarahjradventures/')
     expect(SOCIAL_LINKS.tiktok).toBe('https://www.tiktok.com/@sarahjradventures')
   })
-  it('leaves Threads blank until it is found, never a placeholder', () => {
-    expect(SOCIAL_LINKS.threads).toBe('')
+  it('uses Gill\u2019s own Threads, @gillycreates_, for the footer, on the current address (threads.com, not the old threads.net)', () => {
+    expect(SOCIAL_LINKS.threads).toBe('https://www.threads.com/@gillycreates_')
   })
   it('keeps each project\u2019s own accounts for its own pages', () => {
     expect(PROJECT_SOCIALS['drafting-desk']).toMatchObject({ name: 'The Drafting Desk', youtube: 'https://www.youtube.com/@thedraftingdesk', tiktok: 'https://www.tiktok.com/@thedraftingdesk' })
@@ -25,7 +25,7 @@ describe('the site\u2019s contact details', () => {
     expect(PROJECT_SOCIALS['sarah-jrs-den']).toMatchObject({ name: 'Sarah Jr Adventures', youtube: SOCIAL_LINKS.youtube, instagram: SOCIAL_LINKS.instagram, tiktok: SOCIAL_LINKS.tiktok })
   })
   it('only has real addresses on the right sites: no placeholders, and each one a proper account address', () => {
-    const hosts = { youtube: /^https:\/\/www\.youtube\.com\/@[\w.]+$/, tiktok: /^https:\/\/www\.tiktok\.com\/@[\w.]+$/, instagram: /^https:\/\/www\.instagram\.com\/[\w.]+\/?$/ }
+    const hosts = { youtube: /^https:\/\/www\.youtube\.com\/@[\w.]+$/, tiktok: /^https:\/\/www\.tiktok\.com\/@[\w.]+$/, instagram: /^https:\/\/www\.instagram\.com\/[\w.]+\/?$/, threads: /^https:\/\/www\.threads\.com\/@[\w.]+$/ }
     const all = [SOCIAL_LINKS, ...Object.values(PROJECT_SOCIALS)]
     for (const group of all) {
       for (const [key, value] of Object.entries(group)) {

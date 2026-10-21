@@ -188,7 +188,7 @@ const CHECKS = [
   ['Membership: the choose-your-passes page', 'src/membership/MembershipPage.jsx', /Continue to payment/, 'the membership page update (the add-membership-page script)'],
   ['Membership: the page styles', 'src/membership/membership.css', /\.mb__hero/, 'the membership page update (the add-membership-page script)'],
   ['Membership: the page is on the site', 'src/App.jsx', /MembershipPage/, 'the membership page update (the add-membership-page script)'],
-  ['Membership: the database file', 'sql/memberships.sql', /founding_members/, 'the membership page update (the add-membership-page script)'],
+  ['Membership: the database file', 'sql/memberships.sql', /create table if not exists public\.memberships/, 'the membership page update (the add-membership-page script)'],
   ['Membership: the payment function', 'api/membership-checkout.js', /MEMBERSHIP_OPEN/, 'the membership payment update (the add-membership-payment script)'],
   ['Membership: the membership webhook', 'api/membership-webhook.js', /STRIPE_MEMBERSHIP_WEBHOOK_SECRET/, 'the membership payment update (the add-membership-payment script)'],
   ['Membership: the shop webhook ignores memberships', 'api/stripe-webhook.js', /ignored: 'membership'/, 'the membership payment update (the add-membership-payment script)'],

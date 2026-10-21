@@ -1,0 +1,56 @@
+MEMBERSHIP TIDY: NO FOUNDING MEMBERS, AND BOOK CLUB COMMENTS STAY OPEN WHILE A PAYMENT IS RETRIED   starscapes-membership-tidy-21oct.zip   (SFW-206, SFW-249, SFW-209, SFW-247)
+(Code and tests, plus TWO short steps in Supabase. This is the first package to go out through a PREVIEW first, as you agreed.)
+
+1. FOUNDING MEMBERS IS REMOVED (your decision, 21 October 2026). It was only ever a database table (founding_members, made for a Founders' wall) with its rules and tests: there was no page, box or button for it on the site. Gone from sql/memberships.sql (which now makes only the memberships table, and carries one line that removes the old table if your database still has it), from its tests, from the health check, and from a note in the legal pages file. A new test fails if the table, a Founders' wall, or the words "founding member" ever come back. This also settles: SFW-206 question 3 (the Founding members' sessions and the wall), SFW-247's "include Founding members in the members list", and the Founding members part of SFW-209.
+
+2. BOOK CLUB COMMENTS NOW STAY OPEN WHILE A FAILED PAYMENT IS BEING RETRIED (your "yes", with your condition). Before, a Book Club member whose payment failed was shut out of comments the same day, though their other passes stayed open (and the Terms say "your passes stay open while it does"). Now the Book Club check counts a pass that is active, in a trial, or past due. Your condition (they lose access if they do not update their payment within two weeks) is already how Stripe is set up to work: Smart Retries for 2 weeks, then the subscription is CANCELLED (SFW-241, to be set in live mode too), and a cancelled pass is not counted. So access ends when Stripe gives up, after about two weeks. A test fails if "unpaid", "cancelled" or a different rule from the other passes ever creeps in, and the existing test that backs the Terms' promise now covers Book Club comments too.
+
+TESTS: 9 new in test/membership-tidy.test.js; 4 older tests updated by exact line edits (the memberships database test and the server-permissions test no longer describe the founding table; the Terms-promise test now also checks sql/book-details.sql). 8 deliberate breakages, all caught: the old table made again, access granted on it again, the line that removes it commented out, the Founders' wall mentioned again, the health check looking for it again, comments closing on a failed payment, staying open after Stripe gives up, or opening to every pass holder.
+WHOLE SUITE on a copy of your newest commit with this installed: 3,436 tests, 0 failing; build fine; 12 functions; health check passes.
+
+STEP A: THE CODE, THROUGH A PREVIEW FIRST
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-membership-tidy-21oct.zip
+ 4. python3 tools/add-membership-tidy.py     IT MUST PRINT "changed" LINES FOR 7 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The new test only moves into place if every edit succeeded.)
+ 5. grep -c "founding" sql/memberships.sql        (it must print 2)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-membership-tidy" -not -path "./node_modules/*" -delete
+10. git checkout -b membership-tidy
+    git add .
+    git status                                   (7 changed files; new: the notes, the installer, its test and fixtures, test/membership-tidy.test.js, tools/membership-tidy-files/; nothing ending .before-)
+    git commit -m "Membership tidy: no Founding members; Book Club comments stay open while a payment is retried (SFW-206, SFW-249)"
+    git push -u origin membership-tidy
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "membership-tidy" and says Preview. Wait for it to say Ready, then press Visit and click round: the home page, a room, the cart. Nothing should look any different (this change is about the database file and the tests). If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is Ready and looks right:
+    git checkout main
+    git merge membership-tidy
+    git push
+    git branch -d membership-tidy
+    Vercel then deploys it to the real site as usual.
+
+STEP B: SUPABASE (two short pieces of SQL; no deploy needed; either order, any time; each takes effect at once)
+ 1. Open supabase.com, sign in, open your Starscapes Factory project.
+ 2. In the left menu click "SQL Editor", then "New query".
+ 3. Paste ALL of this, then press Run (bottom right). It should say "Success. No rows returned":
+
+create or replace function public.is_book_club_member() returns boolean
+language sql stable security definer set search_path = public as $$
+  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'gillian@gillianbennet.com'
+    or exists (select 1 from public.memberships m where m.user_id = auth.uid() and m.status in ('active', 'trialing', 'past_due') and 'book-club' = any (m.passes));
+$$;
+revoke all on function public.is_book_club_member() from public;
+grant execute on function public.is_book_club_member() to authenticated;
+
+ 4. Click "New query" again, paste this, press Run. It should say "Success. No rows returned" (it is safe even if the table is not there):
+
+drop table if exists public.founding_members;
+
+ 5. To check both worked, click "New query", paste this and Run. The first column should show text containing 'past_due', and the second should show nothing (an empty cell), meaning the old table is gone:
+
+select position('past_due' in pg_get_functiondef('public.is_book_club_member()'::regprocedure)) > 0 as comments_follow_the_rule, to_regclass('public.founding_members') as old_table;
+
+   (The first column should say true; the second should be empty.)

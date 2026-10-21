@@ -37,37 +37,13 @@ describe('the memberships table', () => {
   })
 })
 
-describe('the founding members table', () => {
-  it('has one row per founder, tied to their account, with a name only when they say it may show', () => {
-    expect(code).toMatch(/create table if not exists public\.founding_members \(\s*user_id uuid primary key references auth\.users \(id\) on delete cascade/)
-    expect(code).toMatch(/show_name boolean not null default false/)
-    expect(code).toMatch(/check \(not show_name or \(display_name is not null and length\(btrim\(display_name\)\) > 0\)\)/)
-  })
-  it('lets anyone read the NAME of a founder who opted in, one column at a time, and never who they are (no user_id)', () => {
-    expect(code).toMatch(/create policy "anyone can see the names on the wall" on public\.founding_members for select to anon, authenticated using \(show_name = true\)/)
-    const grants = [...code.matchAll(/^grant select \(([^)]*)\) on public\.founding_members to ([^;]+);$/gm)]
-    expect(grants.length).toBeGreaterThan(0)
-    for (const g of grants) expect(g[1], 'columns anyone can read').not.toMatch(/user_id/)
-    expect(code).not.toMatch(/^grant select on public\.founding_members/m) // never the whole table
-  })
-  it('lets a founder choose whether their name shows and what it is, on their own row only', () => {
-    expect(code).toMatch(/create policy "choose whether your name shows" on public\.founding_members for update to authenticated\s+using \(user_id = auth\.uid\(\)\)\s+with check \(user_id = auth\.uid\(\)\)/)
-    expect(code).toMatch(/^grant update \(display_name, show_name\) on public\.founding_members to authenticated;$/m)
-  })
-  it('gives nobody the right to add or delete founders from a browser', () => {
-    expect(code).not.toMatch(/on public\.founding_members for (insert|delete)/)
-    expect(code).not.toMatch(/grant [a-z, ]*(insert|delete|all)[a-z, ]* on public\.founding_members to [^;]*\b(anon|authenticated)\b/i) // only the server's own key may add or delete founders
-    expect(code).toMatch(/^grant select, insert, update, delete on public\.founding_members to service_role;/m)
-  })
-})
-
 describe('the file as a whole', () => {
   it('is safe to run twice (every policy is dropped first, every table is "if not exists")', () => {
-    for (const name of ['see your own membership', 'see your own founding status', 'anyone can see the names on the wall', 'choose whether your name shows']) expect(code, name).toMatch(new RegExp(`drop policy if exists "${name}" on public\\.`))
-    expect((code.match(/create table if not exists/g) || []).length).toBe(2)
+    for (const name of ['see your own membership']) expect(code, name).toMatch(new RegExp(`drop policy if exists "${name}" on public\\.`))
+    expect((code.match(/create table if not exists/g) || []).length).toBe(1)
   })
   it('explains why the permission lines are there, and how to undo it', () => {
     expect(sql).toMatch(/PERMISSIONS: a table made in the SQL editor cannot be read by the website/)
-    expect(sql).toMatch(/drop table if exists public\.founding_members/); expect(sql).toMatch(/drop table if exists public\.memberships/)
+    expect(sql).toMatch(/drop table if exists public\.memberships/)
   })
 })

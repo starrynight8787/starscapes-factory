@@ -261,7 +261,7 @@ describe('the Terms for passes say what the passes really do (SFW-182)', () => {
   })
   it('only says passes stay open while a failed payment is tried again because the database really lets a past-due member read and vote; they close once Stripe marks it unpaid or cancelled', () => {
     expect(part('Paying for passes')).toMatch(/If a payment fails, Stripe tries again and your passes stay open while it does\. If it still fails, your passes close\./)
-    for (const file of ['sql/locked-posts.sql', 'sql/story-votes.sql']) { const sql = read(file); expect(sql, file).toMatch(/'active', 'trialing', 'past_due'/); expect(sql, file).not.toMatch(/'active', 'trialing', 'past_due', 'unpaid'/) }
+    for (const file of ['sql/locked-posts.sql', 'sql/story-votes.sql', 'sql/book-details.sql']) { const sql = read(file); expect(sql, file).toMatch(/'active', 'trialing', 'past_due'/); expect(sql, file).not.toMatch(/'active', 'trialing', 'past_due', 'unpaid'/) }
   })
   it('points to the same place to cancel as My passes does', () => {
     expect(part('Cancelling passes and your right to change your mind')).toContain('"Manage payment or cancel"')

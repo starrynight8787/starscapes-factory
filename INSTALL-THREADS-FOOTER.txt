@@ -1,0 +1,37 @@
+THREADS IN THE FOOTER   starscapes-threads-footer-21oct.zip   (SFW-205)
+(Four small edits. Nothing to do in Supabase, Vercel or Stripe.)
+
+YOUR DECISION (21 October 2026): the footer's Threads link is @gillycreates_.
+
+WHAT CHANGES
+ - src/data/contact.js: the Threads address is now https://www.threads.com/@gillycreates_ (Threads moved from threads.net to threads.com in 2025; the old address still redirects, but the new one is the right one to publish). The comment above it now says the YouTube, Instagram and TikTok links are Sarah Jr.'s and Threads is yours.
+ - The footer's Follow column now shows FOUR links: YouTube, Instagram, TikTok and Threads. (A link only ever shows once it has an address; nothing else in the footer changes.)
+ - Three tests that said "Threads is blank until it is found" or "exactly three accounts" are updated: test/contact-details.test.js (also adds the rule that a Threads address must be a threads.com profile), test/foundations.test.jsx and test/footer-nav.test.jsx.
+
+NOTE: this puts your own Threads (@gillycreates_) next to Sarah Jr.'s three accounts in the one "Follow" list. That was your choice; if you would rather label it, say so and I will change it ("Gill on Threads", say).
+
+TESTS: the updated tests check the exact address, that it is a threads.com profile (not the old address), that the footer shows all four links and that the Threads link points to @gillycreates_. 4 deliberate breakages, all caught: Threads blank again, the old threads.net address, Sarah Jr.'s handle by mistake, and the footer list dropping Threads.
+WHOLE SUITE on a fresh copy of your newest commit with this installed: 3,429 tests, 0 failing; build fine; 12 functions; health check passes.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-threads-footer-21oct.zip
+ 4. python3 tools/add-threads-footer.py     IT MUST PRINT "changed" LINES FOR 4 FILES. If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me.
+ 5. grep -c "threads.com/@gillycreates_" src/data/contact.js        (it must print 1)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-threads-footer" -not -path "./node_modules/*" -delete
+10. git checkout -b threads-footer
+    git add .
+    git status                                   (4 changed files; new: the notes, the installer, its test and fixtures; nothing ending .before-)
+    git commit -m "Footer: add Gill's Threads, @gillycreates_ (SFW-205)"
+    git push -u origin threads-footer
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "threads-footer" and says Preview. Wait for Ready, press Visit, scroll to the footer and check the Follow column shows YouTube, Instagram, TikTok and Threads; click Threads: it should open @gillycreates_ in a new tab. If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is right:
+    git checkout main
+    git merge threads-footer
+    git push
+    git branch -d threads-footer

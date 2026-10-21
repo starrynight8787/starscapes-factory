@@ -16,7 +16,7 @@
 //  * THE PRIVACY POLICY was brought up to date on 20 October 2026 (SFW-233): passes, the suggest and vote boxes, story votes, the free ebook (it now joins the newsletter list: one list, one tick box that says yes to both),
 //    the YouTube player and the browser storage. Decided 20 October: Resend is the mailing tool, and emails and messages to us are kept 2 years. THE ONLY GAP LEFT is the [date]. STILL TO DO BEFORE IT GOES LIVE: the ebook and the newsletter are
 //    now ONE list, kept in Supabase (21 October 2026); check which region the Resend account sends from
-//    and its plan limits (SFW-188); the Founders' wall (display names, opt-in) needs its own lines when built (the newsletter's lines were added on 21 October 2026, with a daily job that deletes sign-ups nobody confirms after 30 days); and the solicitor should check the YouTube wording, the proof that someone agreed to open their passes
+//    and its plan limits (SFW-188); the newsletter's lines were added on 21 October 2026, with a daily job that deletes sign-ups nobody confirms after 30 days; and the solicitor should check the YouTube wording, the proof that someone agreed to open their passes
 //    straight away (deleted with the account, though Stripe keeps a copy), and the sentence that we do not look at who voted for what (Gill's promise): see SFW-234. Re-check against the ICO's right-to-be-informed checklist near launch:
 //    the ICO says its guidance is under review after the Data (Use and Access) Act.
 //    A sentence about links to other websites such as the Substack was added on 20 October (SFW-236). If the Substack link in src/draftingdesk/draftingData.js is ever removed, take the sentence out too.
@@ -84,7 +84,7 @@ export const LEGAL_PAGES = fillContact([
       {
         "title": "Orders from outside the UK",
         "paragraphs": [
-          "If you live outside the UK, your country may charge import taxes, customs duties or handling fees when your parcel arrives. They are not included in our prices, we don't control them, and you are responsible for paying them. If you refuse a parcel or don't collect it, we may take the cost of returning it out of any refund. We are not responsible for delays caused by customs. Please check your country's rules before you order."
+          "Each print is made in the region it is delivered to: in the UK for orders to the UK, in Germany for orders to the EU, and in the United States for orders to the US. A print that is made and delivered within the same region carries no import taxes or customs charges. Orders to Canada are made in the United States and cross the border, so Canadian import tax and a courier handling fee may be charged when the parcel arrives. They are not included in our prices, we don't control them, we can't predict the amount, and you are responsible for paying them. If you refuse a parcel or don't collect it, we may take the cost of returning it out of any refund. We are not responsible for delays caused by customs. Please check your country's rules before you order."
         ]
       },
       {
@@ -326,7 +326,7 @@ export const LEGAL_PAGES = fillContact([
       {
         "title": "If you ordered from outside the UK",
         "paragraphs": [
-          "The same rights apply wherever you live. Import taxes and duties are paid to your country's customs, not to us, so we can't refund them. If you send a print back from abroad, you may be able to claim them back from customs: ask your local customs office. If you refuse a parcel or don't collect it, we may take the cost of returning it out of your refund. The consumer laws of your own country may give you extra rights."
+          "The same rights apply wherever you live. Orders delivered within the UK, the EU and the US are made in that region and carry no import taxes. If you are in Canada and were charged import tax or a courier handling fee when your parcel arrived, that was paid to your country's customs and the courier, not to us, so we can't refund it. If you send a print back, you may be able to claim the tax back from customs: ask your local customs office. If you refuse a parcel or don't collect it, we may take the cost of returning it out of your refund. The consumer laws of your own country may give you extra rights."
         ]
       },
       {
@@ -357,7 +357,8 @@ export const LEGAL_PAGES = fillContact([
         "title": "What is always made by me",
         "paragraphs": [
           "The following are my own work, from start to finish. I don't use AI image generators or AI writing tools to create them, or to change them:",
-          "* every original artwork, and every print sold in the Art Loft, which is printed from my own artwork files\n* my photographs\n* my stories, books and other creative writing, including my courses and leadership material"
+          "* every original artwork, and every print sold in the Art Loft, which is printed from my own artwork files\n* my photographs\n* my stories, books and other creative writing, including my courses and leadership material",
+          "The line-drawn scenes that frame the shop, such as the Art Loft, are not on this list. Claude helps me draw those, and the next section, \"Where I do use AI\", says how. The artwork, photographs and writing above are never made that way."
         ]
       },
       {

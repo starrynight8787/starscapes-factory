@@ -15,7 +15,7 @@
 // CLOSED TO VISITORS BY DEFAULT: until CHECKOUT_OPEN is set to exactly yes in Vercel, only the signed-in shop owner
 // can start a checkout, and everyone else is told it opens soon. The cart page asks GET /api/checkout whether it is open.
 
-import { LAUNCH_COUNTRIES } from '../src/cart/launchCountries.js'
+import { LAUNCH_COUNTRIES, IMPORT_TAX_NOTE } from '../src/cart/launchCountries.js'
 import { requireOwner } from '../lib/ownerGuard.js'
 import { confirmationProblems } from '../lib/orderConfirmation.js'
 
@@ -158,7 +158,7 @@ export default async function handler(req, res) {
   form.set('success_url', `${returnTo}/checkout/success?session_id={CHECKOUT_SESSION_ID}`)
   form.set('cancel_url', `${returnTo}/cart?checkout=cancelled`)
   form.set('phone_number_collection[enabled]', 'true')
-  form.set('custom_text[shipping_address][message]', 'Delivery is free. Each print is made to order and posted straight to you from the print studio.')
+  form.set('custom_text[shipping_address][message]', `Delivery is free. Each print is made to order and posted straight to you from the print studio. ${IMPORT_TAX_NOTE}`)
   LAUNCH_COUNTRIES.forEach((code, i) => form.set(`shipping_address_collection[allowed_countries][${i}]`, code))
   lines.forEach(({ row, product, qty, pence }, i) => {
     const finish = row.framed ? `${row.frame_colour || 'framed'} frame` : 'unframed'

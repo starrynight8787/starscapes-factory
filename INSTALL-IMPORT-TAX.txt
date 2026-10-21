@@ -1,0 +1,32 @@
+IMPORT TAXES: TELLING THE BUYER, BEFORE THEY PAY   starscapes-import-tax-21oct.zip   (SFW-16)
+(Code, wording and one test. No Supabase step, nothing to set in Vercel. Nothing to change in Creative Hub: duty-paid delivery stays OFF.)
+
+THE DECISION (Gill, 21 October 2026: "a for launch"): leave duty-paid delivery (DDP) off for Canada, and tell the buyer plainly, before they pay, that Canadian orders may carry import tax and a courier fee on delivery.
+
+WHAT CREATIVE HUB'S OWN HELP PAGES SAY (read 21 October; the pages are 70 to 135 days old, so confirm in Creative Hub, Settings, Fulfilment): UK, EU and US orders carry NO customs charge, because each print is made inside that region (studios in the UK, Germany and the US). DDP exists for only seven countries (Canada, Australia, Norway, New Zealand, Switzerland, Iceland, Mexico), adds a flat courier handling fee per order plus the duty and tax (worked out from the production value and shipping, not your retail price), and needs "Upgrade to Courier" on. So of your six free-delivery countries, only CANADA (printed in the US, shipped across the border) can produce a customs bill.
+
+WHAT CHANGES
+ 1. THE WORDING, ONCE (src/cart/launchCountries.js): "Delivering to Canada: your country's import tax and a courier handling fee may be charged when the parcel arrives. They are not included in our prices. Orders to the UK, Ireland, Germany, France and the US have none."
+ 2. WHERE THE BUYER SEES IT: as a fourth fact under Add to cart on every print page; in the cart, under the line about free delivery; and on Stripe's own address step, where the country is chosen (added to the message that already says delivery is free).
+ 3. THE TERMS ("Orders from outside the UK") now say each print is made in the region it is delivered to (UK, Germany for the EU, the US for the US), so there are no import taxes within those regions; Canada is the exception, and the buyer is responsible. It replaces the old line that suggested any order outside the UK could be charged. THE RETURNS page ("If you ordered from outside the UK") says the same, and that Canadian charges are paid to customs and the courier, so we cannot refund them. Both pages are still drafts, owner-only.
+ 4. A SAFETY CATCH: if a country is ever added to the free-delivery list that is NOT printed in its own region (for example Switzerland or Norway, which SFW-187 may add), a test fails until its import tax wording has been decided (and duty-paid delivery considered).
+
+NOT CHANGED: the print pages' own delivery line ("Delivery cost is shown at checkout, which opens soon") is still waiting for your wording (SFW-9, then SFW-10).
+TO TURN DUTY-PAID ON LATER (SFW-16): switch DDP on for Canada in Creative Hub (Settings, Fulfilment; it needs Upgrade to Courier), then tell me, and I will remove the Canada warning and update the Terms and Returns.
+
+TESTS: 10 new in test/import-tax-note.test.js: only Canada can carry an import bill; a new non-local free-delivery country is refused until decided; the note says what it must; it is on every print page and in the cart; what the checkout REALLY sends to Stripe carries the note after the free-delivery line, still limits the address to exactly the launch countries, and switches on nothing duty-paid; the Terms and Returns say the same as the shop. 8 deliberate breakages, all caught: Australia added to free delivery with no decision; the note missing from the print pages, the cart, or Stripe's step; duty-paid switched on; the courier handling fee dropped from the note; the Terms or Returns losing the Canada explanation.
+WHOLE SUITE on a fresh copy of your newest commit with this installed: 3,442 tests, 0 failing; build fine; 12 functions; health check passes.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-import-tax-21oct.zip
+ 3. python3 tools/add-import-tax.py     IT MUST PRINT "changed" LINES FOR 5 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The new test only moves into place if every edit succeeded.)
+ 4. grep -c "IMPORT_TAX_NOTE" api/checkout.js        (it must print 2)
+ 5. npm test                                    (it should end with NOTHING failed)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-import-tax" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (5 changed files; new: the notes, the installer, its test and fixtures, test/import-tax-note.test.js, tools/import-tax-files/; nothing ending .before-)
+    git commit -m "Import taxes: tell Canadian buyers before they pay; the Terms and Returns say no import taxes within the UK, EU and US (SFW-16)"
+    git push
