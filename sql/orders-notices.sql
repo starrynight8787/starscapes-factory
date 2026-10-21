@@ -8,3 +8,5 @@ alter table public.orders add column if not exists notice_status text;         -
 alter table public.orders add column if not exists notice_note text;           -- why it did not go, in plain words
 alter table public.orders add column if not exists notice_sent_at timestamptz; -- when it went
 alter table public.orders add column if not exists refunded_at timestamptz;    -- when you said an order was cancelled and refunded
+alter table public.orders add column if not exists owner_alert_status text;    -- 'sent', 'failed' or 'not_sent': the email to YOU that a paid order needs you
+alter table public.orders add column if not exists owner_alert_sent_at timestamptz; -- when it went

@@ -20,6 +20,8 @@ const DISPATCH = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT', sending
 // Whether the short notices went: "we have received your payment" (kind received) or "we could not accept your order, you have been refunded" (kind refused) (added with sql/orders-notices.sql)
 const NOTICE = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT' }
 const NOTICE_NAME = { received: 'Payment-received email', refused: 'Refund email' }
+// Whether the email to the OWNER about a paid order that needs her went (added with sql/orders-notices.sql)
+const ALERT = { sent: 'sent', failed: 'FAILED', not_sent: 'NOT SENT (no Resend key)' }
 // An order still "sending" after this long is no longer in flight: its answer was lost
 const STUCK_MS = 5 * 60 * 1000
 
@@ -262,6 +264,9 @@ export default function OrdersPanel() {
                     )}
                     {isStuck(o) && <><br /><small>This order was never marked as sent and its answer was lost. It may or may not be at Creative Hub.</small></>}
                     {o.note && !isStuck(o) && <><br /><small>{o.note}</small></>}
+                    {o.owner_alert_status && (
+                      <><br /><small>Alert to you: <strong>{ALERT[o.owner_alert_status] || o.owner_alert_status}</strong></small></>
+                    )}
                     {o.notice_status && (
                       <><br /><small>{NOTICE_NAME[o.notice_kind] || 'Notice email'}: <strong>{NOTICE[o.notice_status] || o.notice_status}</strong>{o.notice_note && o.notice_status !== 'sent' ? `. ${o.notice_note}` : ''}</small></>
                     )}

@@ -18,6 +18,7 @@
 //     Creative Hub has accepted the order. Until then the customer gets a short "we have received your payment, this is not yet your confirmation" email instead, once.
 //     A TEST payment gets its confirmation straight away (with a TEST banner) so the wording can be looked at. A problem with any email never stops the order being placed:
 //     it is written on the order, and the owner has a button to send it again.
+//   - The OWNER is emailed (with no customer details in it) when a real paid order needs her: held, could not be ordered, refused, or Creative Hub's answer lost (lib/ownerAlert.js).
 //   - If something temporary goes wrong BEFORE the order is saved (Stripe or the database cannot be reached), it answers with an
 //     error so Stripe sends the message again later. It never throws a paid order away.
 
@@ -27,6 +28,7 @@ import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, buildPayload } f
 import { placeAndNotify } from '../lib/orderFlow.js'
 import { confirmOrder, sendNotice } from '../lib/orderConfirmation.js'
 import { autoSendIsOn, HELD_NOTE } from '../lib/orderSending.js'
+import { sendOwnerAlert } from '../lib/ownerAlert.js'
 
 // Stripe signs the exact bytes it sends, so the body must reach us untouched. This uses the standard web request form
 // (request.text() gives the raw body), which is the way Vercel's own guide recommends for webhooks.
@@ -193,7 +195,13 @@ export async function POST(request) {
 
     // A REAL payment that is held (automatic sending is off) or could not be ordered: the customer is told their payment has arrived and that this is not yet the
     // confirmation. It never throws, and never holds up the answer to Stripe.
+    // The owner is also emailed (no customer details in it), because while payments are held nothing else tells her one has arrived.
     if (order.status !== 'sending') {
+      try {
+        await sendOwnerAlert(order.status === 'held' ? 'held' : 'needs_attention', order, { detail: order.note })
+      } catch (e) {
+        // as above
+      }
       try {
         await sendNotice('received', order)
       } catch (e) {
@@ -204,7 +212,7 @@ export async function POST(request) {
 
     // 2. A REAL payment, with automatic sending on: send it now. This never throws, and never makes Stripe repeat the message: if what comes back is lost, the order says
     //    so and waits for you, rather than being sent a second time. The customer is emailed the confirmation only once Creative Hub has accepted it.
-    const sent = await placeAndNotify(order, `stripe_session_id=eq.${encodeURIComponent(order.stripe_session_id)}`)
+    const sent = await placeAndNotify(order, `stripe_session_id=eq.${encodeURIComponent(order.stripe_session_id)}`, { alert: sendOwnerAlert })
     return reply(200, { ok: true, order: outcome, creativehub: sent.patch.status })
   } catch (e) {
     // The detail is one of this file's own short messages (never a key), and only Stripe, with a valid signature, ever sees it

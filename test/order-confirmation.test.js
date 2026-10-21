@@ -82,11 +82,12 @@ describe('when things go wrong', () => {
 })
 
 describe('confirmationProblems (what keeps real checkout closed)', () => {
-  it('lists the missing key, the unapproved wording and the open gaps', () => {
+  it('lists the missing key and the unapproved wording, and no gap about returns (nothing is left to decide there: Gill, 21 October 2026)', () => {
     const problems = confirmationProblems({})
     expect(problems.join(' ')).toMatch(/RESEND_API_KEY/)
     expect(problems.join(' ')).toMatch(/not been approved/)
-    expect(problems.join(' ')).toMatch(/Still to decide/)
+    expect(problems.join(' ')).not.toMatch(/Still to decide/)
+    expect(problems).toHaveLength(2)
   })
   it('is never empty while the wording is unapproved, even with the key set', () => {
     expect(confirmationProblems({ RESEND_API_KEY: KEY }).length).toBeGreaterThan(0)

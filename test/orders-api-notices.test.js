@@ -15,7 +15,7 @@ import handler from '../api/orders.js'
 
 const get = async () => { const out = { status: null, body: null }; const res = { setHeader() {}, status(n) { out.status = n; return res }, json(b) { out.body = b; return res } }; await handler({ method: 'GET', headers: {}, query: {} }, res); return out }
 const columnsOf = (path) => decodeURIComponent(path).match(/select=([^&]*)/)[1].split(',')
-const NEW = ['notice_kind', 'notice_status', 'notice_note', 'notice_sent_at', 'refunded_at']
+const NEW = ['notice_kind', 'notice_status', 'notice_note', 'notice_sent_at', 'refunded_at', 'owner_alert_status', 'owner_alert_sent_at']
 beforeEach(() => { h.asked = []; h.failFirst = 0 })
 
 describe('the orders list', () => {
@@ -52,8 +52,8 @@ describe('sql/orders-notices.sql', () => {
     expect(sql).not.toMatch(/drop |delete |truncate /i)
   })
   it('puts the dates in timestamp columns and the rest in text', () => {
-    for (const c of ['notice_sent_at', 'refunded_at']) expect(sql).toMatch(new RegExp(`add column if not exists ${c} timestamptz`))
-    for (const c of ['notice_kind', 'notice_status', 'notice_note']) expect(sql).toMatch(new RegExp(`add column if not exists ${c} text`))
+    for (const c of ['notice_sent_at', 'refunded_at', 'owner_alert_sent_at']) expect(sql).toMatch(new RegExp(`add column if not exists ${c} timestamptz`))
+    for (const c of ['notice_kind', 'notice_status', 'notice_note', 'owner_alert_status']) expect(sql).toMatch(new RegExp(`add column if not exists ${c} text`))
   })
   it('needs no new permission or status rule (the orders table has no status restriction), and the orders file lists the statuses in use', () => {
     const statements = sql.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n') // the SQL itself, not its comments

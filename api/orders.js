@@ -11,7 +11,7 @@ const CONFIRMATION = 'confirmation_status,confirmation_note,confirmation_sent_at
 // And the "your order has been posted" email (sql/orders-dispatch.sql).
 const DISPATCH = 'dispatch_status,dispatch_note,dispatch_sent_at,tracking_url,tracking_number'
 // And the "we have received your payment" and "we could not accept your order" notices, and when a refund was recorded (sql/orders-notices.sql).
-const NOTICES = 'notice_kind,notice_status,notice_note,notice_sent_at,refunded_at'
+const NOTICES = 'notice_kind,notice_status,notice_note,notice_sent_at,refunded_at,owner_alert_status,owner_alert_sent_at'
 
 // A customer's own invoice, found by the Stripe session id from their thank-you page or confirmation email. Open to anyone holding that id (it cannot be guessed),
 // and it only ever returns what belongs on an invoice.

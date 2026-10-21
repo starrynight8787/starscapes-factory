@@ -13,10 +13,12 @@ const h = vi.hoisted(() => ({
   confirm: vi.fn(async () => ({ status: 'sent' })),
   notice: vi.fn(async () => ({ status: 'sent' })),
   place: vi.fn(async () => ({ patch: { status: 'sent' } })),
+  alert: vi.fn(async () => ({ status: 'sent' })),
 }))
 vi.mock('../lib/serviceKey.js', () => ({ serviceFetch: async (_path, init) => { h.saved.push(JSON.parse(init.body)); return { ok: true, status: 201, json: async () => h.rows } } }))
 vi.mock('../lib/orderConfirmation.js', () => ({ confirmOrder: (...a) => h.confirm(...a), sendNotice: (...a) => h.notice(...a) }))
 vi.mock('../lib/orderFlow.js', () => ({ placeAndNotify: (...a) => h.place(...a) }))
+vi.mock('../lib/ownerAlert.js', () => ({ sendOwnerAlert: (...a) => h.alert(...a) }))
 
 import { POST } from '../api/stripe-webhook.js'
 
@@ -42,7 +44,8 @@ const live = (extra = {}) => { Object.assign(process.env, { STRIPE_SECRET_KEY: '
 
 beforeEach(() => {
   h.rows = [{ id: 1 }]; h.saved = []
-  for (const m of [h.confirm, h.notice, h.place]) m.mockClear()
+  for (const m of [h.confirm, h.notice, h.place, h.alert]) m.mockClear()
+  h.alert.mockImplementation(async () => ({ status: 'sent' }))
   h.confirm.mockImplementation(async () => ({ status: 'sent' }))
   h.notice.mockImplementation(async () => ({ status: 'sent' }))
   h.place.mockImplementation(async () => ({ patch: { status: 'sent' } }))
@@ -129,6 +132,44 @@ describe('a real payment with automatic sending ON', () => {
     live({ SEND_ORDERS_AUTOMATICALLY: 'yes' }); h.rows = []
     await send(true)
     expect(h.place).not.toHaveBeenCalled()
+  })
+})
+
+describe('the alert to the owner (no customer details in it: see test/owner-alert.test.js)', () => {
+  it('a HELD order alerts her once, with the kind "held" and the reason from the order, and the customer is still told "received"', async () => {
+    live()
+    await send(true)
+    expect(h.alert).toHaveBeenCalledTimes(1)
+    expect(h.alert.mock.calls[0][0]).toBe('held')
+    expect(h.alert.mock.calls[0][1]).toMatchObject({ stripe_session_id: 'cs_live_abc123', status: 'held' })
+    expect(h.alert.mock.calls[0][2]).toEqual({ detail: expect.stringMatching(/Held: automatic sending is switched off/) })
+    expect(h.notice).toHaveBeenCalledTimes(1)
+  })
+  it('an order that could not be placed at all (no key) alerts her with "needs_attention"', async () => {
+    live({ SEND_ORDERS_AUTOMATICALLY: 'yes' }); delete process.env.CREATIVEHUB_API_KEY; delete process.env.CREATIVEHUB_API_TOKEN
+    await send(true)
+    expect(h.alert).toHaveBeenCalledTimes(1); expect(h.alert.mock.calls[0][0]).toBe('needs_attention')
+  })
+  it('with automatic sending on, the alert is handed to the flow, which uses it only if Creative Hub does not accept the order', async () => {
+    live({ SEND_ORDERS_AUTOMATICALLY: 'yes' })
+    await send(true)
+    expect(h.alert).not.toHaveBeenCalled() // the listener itself does not alert: the flow does, on a refusal
+    const options = h.place.mock.calls[0][2]
+    expect(typeof options.alert).toBe('function')
+    await options.alert('needs_attention', {}, {})
+    expect(h.alert).toHaveBeenCalledWith('needs_attention', {}, {})
+  })
+  it('a test payment never alerts her, and neither does a repeat of a message', async () => {
+    process.env.STRIPE_SECRET_KEY = 'sk_test_x'
+    await send(false)
+    live(); h.rows = []
+    await send(true)
+    expect(h.alert).not.toHaveBeenCalled()
+  })
+  it('an alert that throws changes nothing: the order stays held, the customer is still told, and Stripe still gets 200', async () => {
+    live(); h.alert.mockImplementation(async () => { throw new Error('email exploded') })
+    const res = await send(true)
+    expect(res.status).toBe(200); expect(h.saved[0].status).toBe('held'); expect(h.notice).toHaveBeenCalledTimes(1)
   })
 })
 

@@ -1,0 +1,58 @@
+ALERT WHEN A PAID ORDER NEEDS YOU, AND THE NEW RETURNS WORDING   starscapes-order-alerts-returns-21oct.zip   (SFW-252, SFW-185)
+(Code, tests, ONE short step in Supabase. Released through a preview first.)
+
+!! INSTALL starscapes-order-safeguards-21oct.zip FIRST. This package builds on it, and its installer refuses to run (and changes nothing) if that one is not in. Both can go in the same sitting, one after the other, each through its own preview.
+
+YOUR DECISIONS (21 October 2026): "yes" to an email alert for a held order, and the returns wording approved: no return address is published; customers email first and we tell them how and where to send it.
+
+WHAT CHANGES
+ 1. AN EMAIL TO YOU WHEN A REAL PAID ORDER NEEDS YOU. It goes to imagine@starscapesfactory.com when: a payment is HELD (automatic sending is off, which is the default); an order could not be sent; Creative Hub refused it; or Creative Hub's answer was lost. It says the order number, the amount, how many items, why it needs you, what to press, and gives the link to the Orders panel (starscapesfactory.com/art-loft/admin). IT NEVER CONTAINS A CUSTOMER'S NAME, EMAIL, PHONE OR ADDRESS: you read those in the panel. A test payment never sends one. It needs only the Resend key (RESEND_API_KEY, already needed for the other emails); it is not held back by the customer-email approval. The panel shows "Alert to you: sent / FAILED / NOT SENT" on each order. A problem sending it never changes what happens to the order. Your own Send button does not alert you about an order you are looking at.
+ 2. THE RETURNS WORDING, in the confirmation email and on the Returns page. The email now says: "If you cancel, we will tell you how and where to send the print back. You must send it back without delay, and no later than 14 days after you tell us you are cancelling. You pay the cost of sending it back." The Returns page's "To send it back" paragraph now says: email us first, and we will tell you how and where to send the print back; then send it within 14 days of telling us; the cost is the customer's. BOTH carry your large framed prints note: "Large framed prints can cost a lot to post back and need careful packing, so please email us before you send one: we will tell you the best way to do it." The [RETURN ADDRESS] placeholder is gone everywhere, and so is the "address a print is sent back to" gap that kept the confirmation email unapproved. The only gap left on the legal pages is the [date]. This settles SFW-185 completely: no address is needed from Creative Hub.
+ It is a first draft for the solicitor to check, and not legal advice.
+
+STILL KEEPING REAL CHECKOUT CLOSED (unchanged): the customer-email wording has not been approved yet (WORDING_APPROVED), and the Resend key must be set. Nothing about returns is left to decide.
+
+TESTS: 26 new tests in two new files (the alert; the returns wording) and new cases in the existing tests for the flow, the payment listener, the orders list and the panel; four older tests were updated because they counted the return address as a known gap. 24 deliberate breakages, ALL caught (including: customer details in the alert, an alert for a test payment, an alert for an accepted order, a missing "check" kind, the old address wording coming back, and the page and the email drifting apart).
+WHOLE SUITE with this installed on a copy of your newest commit (which already has the order safeguards): 3,595 tests, 0 failing; build fine; 12 functions; health check passes.
+
+STEP A: THE CODE, THROUGH A PREVIEW FIRST
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-order-alerts-returns-21oct.zip
+ 4. python3 tools/add-order-alerts-returns.py     IT MUST PRINT "changed" LINES FOR 15 FILES AND "replaced" LINES FOR 2 TEST FILES. If it says to install the order safeguards package first, do that and run this again. If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The two new tests only move into place if every edit succeeded.)
+ 5. grep -c "sendOwnerAlert" api/stripe-webhook.js        (it must print 3)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-order-alerts-returns" -not -path "./node_modules/*" -delete
+10. git checkout -b order-alerts-returns
+    git add .
+    git status                                   (15 changed files; new: lib/ownerAlert.js, test/owner-alert.test.js, test/returns-wording.test.js, the notes, the installer, its test and fixtures, tools/order-alerts-returns-files/; nothing ending .before-)
+    git commit -m "Alert the owner when a paid order needs her; no return address: customers email first (SFW-252, SFW-185)"
+    git push -u origin order-alerts-returns
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "order-alerts-returns" and says Preview. Wait for Ready, then press Visit. Check: the Returns page (it is a draft only you can see, so sign in as owner, then open it from the footer or by its address /page/returns): under "If you change your mind", "To send it back" now says to email us first. If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is Ready and right:
+    git checkout main
+    git merge order-alerts-returns
+    git push
+    git branch -d order-alerts-returns
+
+STEP B: SUPABASE (no deploy needed; do it any time)
+ If you ran the order safeguards SQL already, run only these two lines; if not, run them too (all "if not exists", so running them twice is harmless).
+ 1. Open supabase.com, sign in, open your Starscapes Factory project, click "SQL Editor", then "New query".
+ 2. Paste ALL of this and press Run. It should say "Success. No rows returned":
+
+alter table public.orders add column if not exists owner_alert_status text;
+alter table public.orders add column if not exists owner_alert_sent_at timestamptz;
+
+ 3. To check, run this in a new query. You should see 2 rows:
+
+select column_name from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name in ('owner_alert_status', 'owner_alert_sent_at') order by column_name;
+
+ (Without this step the alert emails still go; only the "Alert to you: sent" note on each order is not recorded.)
+
+GOOD TO KNOW
+ - The alert comes from the shop's own email address and goes to the same address, imagine@starscapesfactory.com. Check that mailbox: it is where "held" alerts will arrive. If it lands in spam the first time, mark it "not spam".
+ - Resend's free plan allows 100 emails a day in total. Alerts are few (one per held order), but they share that allowance with the customer emails.
+ - To test it for real you need a real paid order, which is not possible until live checkout is open. A test payment never sends an alert.

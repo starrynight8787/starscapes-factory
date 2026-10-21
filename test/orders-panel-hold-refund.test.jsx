@@ -190,3 +190,19 @@ describe('the new statuses and notices', () => {
     expect(within(screen.getByRole('list', { name: /orders/i })).queryByRole('button', { name: /cancel the order/i })).toBeNull()
   })
 })
+
+describe('the alert to the owner on the panel', () => {
+  it.each([
+    ['sent', /Alert to you:.*sent/],
+    ['failed', /Alert to you:.*FAILED/],
+    ['not_sent', /Alert to you:.*NOT SENT \(no Resend key\)/],
+  ])('says whether the email to the owner went (%s)', async (status, pattern) => {
+    h.orders = [order({ owner_alert_status: status })]
+    await load()
+    expect(screen.getByText(/Alert to you:/)).toHaveTextContent(pattern)
+  })
+  it('shows nothing about it for an order with no record of one', async () => {
+    await load()
+    expect(screen.queryByText(/Alert to you:/)).toBeNull()
+  })
+})

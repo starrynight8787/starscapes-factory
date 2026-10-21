@@ -74,9 +74,9 @@ describe('the Cookie policy', () => {
 })
 
 describe('everything is still a draft', () => {
-  it('none of the five pages is switched on, each still waits for its date, and the only placeholder besides the date is the return address', () => {
+  it('none of the five pages is switched on, each still waits for its date, and the date is the only placeholder left', () => {
     expect(LEGAL_PAGES.filter((p) => ['terms', 'privacy', 'returns', 'ai-policy', 'cookies'].includes(p.slug))).toHaveLength(5)
     for (const slug of ['terms', 'privacy', 'returns', 'ai-policy', 'cookies']) { expect(page(slug).ready, slug).toBe(false); expect(page(slug).updated, slug).toBe('[date]') }
-    const gaps = new Set(LEGAL_PAGES.flatMap((p) => [p.updated, ...p.intro, ...p.sections.flatMap((s) => s.paragraphs)]).join('\n').replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').match(/\[[^\]\n]+\]/g)); expect([...gaps].sort()).toEqual(['[RETURN ADDRESS]', '[date]'])
+    const gaps = new Set(LEGAL_PAGES.flatMap((p) => [p.updated, ...p.intro, ...p.sections.flatMap((s) => s.paragraphs)]).join('\n').replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').match(/\[[^\]\n]+\]/g)); expect([...gaps].sort()).toEqual(['[date]'])
   })
 })

@@ -111,3 +111,42 @@ describe('an email problem never changes what happened to the order', () => {
     expect(order_of_events).toEqual(['recorded', 'email'])
   })
 })
+
+describe('the alert to the owner (only when the caller asks for it)', () => {
+  const withAlert = () => ({ ...mocks(), alert: vi.fn(async () => ({ status: 'sent' })) })
+  it('REFUSED: the owner is alerted ("needs_attention", with the reason from the order note), and the customer is still told "received"', async () => {
+    const m = withAlert()
+    const out = await placeAndNotify(order(), MATCH, { fetchImpl: refused(), confirm: m.confirm, notice: m.notice, alert: m.alert })
+    expect(out.patch.status).toBe('needs_attention')
+    expect(m.alert).toHaveBeenCalledTimes(1)
+    expect(m.alert.mock.calls[0][0]).toBe('needs_attention')
+    expect(m.alert.mock.calls[0][1]).toMatchObject({ stripe_session_id: 'cs_live_abc123' })
+    expect(m.alert.mock.calls[0][2]).toMatchObject({ match: MATCH, detail: expect.stringMatching(/Nothing was ordered/) })
+    expect(m.notice).toHaveBeenCalledTimes(1); expect(m.confirm).not.toHaveBeenCalled()
+  })
+  it('LOST ANSWER: the owner is alerted with the "check" kind', async () => {
+    const m = withAlert()
+    await placeAndNotify(order(), MATCH, { fetchImpl: lost(), confirm: m.confirm, notice: m.notice, alert: m.alert })
+    expect(m.alert).toHaveBeenCalledTimes(1); expect(m.alert.mock.calls[0][0]).toBe('check')
+  })
+  it('ACCEPTED: nobody needs the owner, so there is no alert (just the confirmation)', async () => {
+    const m = withAlert()
+    await placeAndNotify(order(), MATCH, { fetchImpl: accepted(), confirm: m.confirm, notice: m.notice, alert: m.alert })
+    expect(m.alert).not.toHaveBeenCalled(); expect(m.confirm).toHaveBeenCalledTimes(1)
+  })
+  it('is NOT sent when no alert is asked for (the owner\u2019s own Send button does not alert her about what she is looking at)', async () => {
+    const m = withAlert()
+    await placeAndNotify(order(), MATCH, { fetchImpl: refused(), confirm: m.confirm, notice: m.notice })
+    expect(m.alert).not.toHaveBeenCalled(); expect(m.notice).toHaveBeenCalledTimes(1)
+  })
+  it('an alert that throws never stops the customer notice, the record, or the result', async () => {
+    const m = withAlert(); m.alert.mockImplementation(async () => { throw new Error('email exploded') })
+    const out = await placeAndNotify(order(), MATCH, { fetchImpl: refused(), confirm: m.confirm, notice: m.notice, alert: m.alert })
+    expect(out.patch.status).toBe('needs_attention'); expect(h.patches[0].body.status).toBe('needs_attention'); expect(m.notice).toHaveBeenCalledTimes(1)
+  })
+  it('a notice that throws never stops the alert', async () => {
+    const m = withAlert(); m.notice.mockImplementation(async () => { throw new Error('email exploded') })
+    await placeAndNotify(order(), MATCH, { fetchImpl: refused(), confirm: m.confirm, notice: m.notice, alert: m.alert })
+    expect(m.alert).toHaveBeenCalledTimes(1)
+  })
+})

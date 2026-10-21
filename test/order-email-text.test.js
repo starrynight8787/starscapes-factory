@@ -146,14 +146,13 @@ describe('the approval rail', () => {
   it('can never be switched on while a gap is still open', () => {
     if (WORDING_APPROVED) {
       expect(pendingItems()).toEqual([])
-      expect(RETURN.address).not.toBe('')
       expect(RETURN.largeFramedNote).not.toBe('')
     }
   })
-  it('shows a visible marker for each open gap, so a test email cannot hide one', () => {
+  it('has no gap left open about returns (Gill decided, 21 October 2026: no address is published; customers email first), so nothing is marked in the email', () => {
+    expect(pendingItems()).toEqual([])
     const { text } = buildConfirmation(order())
-    if (!RETURN.address) expect(text).toMatch(/\[RETURN ADDRESS/)
-    if (!RETURN.largeFramedNote) expect(text).toMatch(/\[LARGE FRAMED PRINTS/)
+    expect(text).not.toMatch(/\[RETURN ADDRESS|\[LARGE FRAMED PRINTS/)
     expect(text).toMatch(/DRAFT WORDING/)
   })
 })

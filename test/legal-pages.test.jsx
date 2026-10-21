@@ -61,7 +61,7 @@ describe('they agree with the rest of the site', () => {
     for (const p of LEGAL_PAGES) for (const m of textOf(p).matchAll(/\]\(([^)]+)\)/g)) expect(m[1], `${p.slug}: ${m[1]}`).toMatch(/^(\/|https:\/\/|mailto:)/)
   })
   it('the only gaps left in [square brackets] are the known ones, so a stray placeholder cannot slip in', () => {
-    const known = new Set(['[date]', '[RETURN ADDRESS]'])
+    const known = new Set(['[date]'])
     for (const p of LEGAL_PAGES) for (const m of textOf(p).replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)) expect(known.has(m[0]), `${p.slug}: ${m[0]}`).toBe(true)
     for (const p of LEGAL_PAGES) expect(countGaps(textOf(p)), p.slug).toBeGreaterThanOrEqual(0)
   })
