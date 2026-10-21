@@ -1,0 +1,39 @@
+THE LEGAL WORDING, PUT IN PROPERLY, WITH YOUR LINE   starscapes-legal-wording-fix-21oct.zip   (SFW-181)
+(Wording and tests only. No Supabase step, nothing to set in Vercel. All five pages stay DRAFTS.)
+
+WHAT HAPPENED (so it does not catch you out)
+ The first legal wording package went in at the same moment as another session's "My passes profile card" work, which had added a new section to the Privacy policy. My installer did exactly what it is built to do: it saw the legal pages had changed under it and REFUSED to change them. But the unzip had already swapped one test file for my older copy, and git add . took everything. So the repository now has my older tests against the newer policy (7 tests failing) and my wording is NOT in the policy. This package puts it right, on top of what is really there.
+ It is also built so this cannot happen again: the replacement tests travel inside tools/legal-wording-fix-files and the installer copies them into place ONLY after the legal pages edit has succeeded. If it refuses, it changes nothing at all.
+
+YOUR LINE (the AI promise)
+ AI policy, "Handling your information": "I do not put customers' personal details into AI tools, ever."
+ Privacy policy, "Keeping it safe": "We do not put customers' personal details into AI tools, ever. See our AI policy." (the Privacy policy speaks as "we"; say if you want "I" there too.)
+ The heading stays "What I never use AI for". There are no exceptions, so the promise has to be kept with none:
+ THE RULE THAT KEEPS IT TRUE: (a) I only look at counts, order numbers, statuses, amounts and test data in your database and payments, never a customer's name, email, address or phone number; (b) if an order goes wrong, we work from the order number and its status, and anything that needs a customer's own details is done by you outside any AI tool; (c) please do not paste a customer's email, address or screenshot into a chat with me: I cannot unsee it. Say "remember that" and I will save this rule to the project's memory.
+ What the site itself does: nothing in its code sends anything to an AI service, and a test checks it.
+
+THE REST OF THE APPROVED WORDING (unchanged from the report)
+ Privacy: what you must give to order (name, email, delivery address, phone number: checkout really asks for all four); the website-logs rule (the site keeps no log of its own); "We will acknowledge your complaint within 30 days, look into it, and tell you what we found"; the right to object in its own paragraph; "We do not use automated decision-making or profiling." Returns: you can cancel from the moment you place your order until 14 days after delivery. Cookie policy: "The law treats these like cookies, and none of them needs your consent, because each is needed for something you asked the site to do."
+
+TESTS
+ Replaced by the installer: test/legal-pages.test.jsx (the other session's version, restored, with my one Returns line, and the count of "how long we keep it" points corrected from 8 to 9 for their profile point), test/legal-check-wording.test.js (14 tests; 14 deliberate breakages caught in all: the promise given an exception again or losing "ever", the site made to call an AI service, each other wording reverted, checkout changed, a log table added, a page switched on early), and test/newsletter-privacy.test.js (the table now has eleven rows because of the profile row).
+
+STILL OPEN, NOT MINE
+ * src/membership/ProfilePanel.jsx has a bare input: the styles test (legacy-styles) fails on it. That is the other session's file, so I have left it alone: ask that session to give the input a class, or tell me and I will.
+ * The contact address test still waits for the legal review.
+ * [RETURN ADDRESS] on the Returns page: it needs the address from Creative Hub (SFW-17).
+ * After this, "npm test" should end with exactly 2 failed: the contact address one and the ProfilePanel one.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-legal-wording-fix-21oct.zip
+ 3. python3 tools/add-legal-wording-fix.py     IT MUST PRINT "changed       src/data/legalPages.js" AND THREE LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me.
+ 4. grep -c "into AI tools, ever" src/data/legalPages.js        (it must print 2)
+ 5. npm test                                    (it should end with exactly 2 failed: the contact address and the ProfilePanel styles one)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-legal-wording-fix" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (legalPages.js and three tests changed; new: the install notes, the installer, its test and fixtures, the tools/legal-wording-fix-files folder; nothing ending .before-)
+    git commit -m "Legal wording: the AI promise says ever, what you must give, logs, complaints, cancelling from the order; tests follow the policy"
+    git push

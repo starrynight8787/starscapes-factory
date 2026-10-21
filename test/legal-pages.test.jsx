@@ -25,7 +25,7 @@ describe('the four drafts came across whole, and the cookie policy was added to 
   it('each has the sections of its draft, with their titles', () => {
     expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
-    expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I do not use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
+    expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
     expect(page('terms').sections).toHaveLength(19)
   })
   it('each has the introduction that comes before its first section (Terms\u2019 was left out at first)', () => {
@@ -115,7 +115,7 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (8), how long it keeps things (9), your rights (7)', () => {
+  it('lists are lists: the people Privacy shares with (8), how long it keeps things (9: the member profile has its own point), your rights (7)', () => {
     const { container } = open('privacy')
     expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([8, 9, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
@@ -298,7 +298,8 @@ describe('the Terms on delivery say what Creative Hub confirmed in writing on 20
 })
 
 describe('the Privacy policy covers the member profile', () => {
-  const section = (title) => page('privacy').sections.find((s) => s.title === title).paragraphs.join('\n')
+  const privacy = () => page('privacy')
+  const section = (title) => privacy().sections.find((s) => s.title === title).paragraphs.join('\n')
   it('says what the profile holds, what other people see, and what changing the email does', () => {
     const p = section('Your profile and what other people see')
     expect(p).toMatch(/name, choose a username, pick an icon/); expect(p).toMatch(/only parts of your profile that other people can see/); expect(p).toMatch(/Your name and email address are never shown to other members/)

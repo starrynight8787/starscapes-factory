@@ -10,20 +10,24 @@ const page = (slug) => LEGAL_PAGES.find((p) => p.slug === slug)
 const section = (slug, title) => page(slug).sections.find((s) => s.title === title).paragraphs.join('\n')
 const everything = LEGAL_PAGES.flatMap((p) => p.sections.flatMap((s) => s.paragraphs)).join('\n')
 
-describe('the AI promise says what really happens, the same way on both pages', () => {
-  const ai = () => section('ai-policy', 'What I do not use AI for'); const safe = () => section('privacy', 'Keeping it safe')
-  it('both pages say customers\u2019 details stay out of AI tools except to fix a problem with their own order or account, and then only what is needed', () => {
-    expect(ai()).toMatch(/I do not put customers' personal details into AI tools, except where I need to fix a problem with your own order or account, and then only what is needed/)
-    expect(safe()).toMatch(/We do not put customers' personal details into AI tools, except where we need to fix a problem with your own order or account, and then only what is needed/)
+describe('the AI promise: customers\u2019 personal details never go into AI tools, said the same way on both pages', () => {
+  const ai = () => section('ai-policy', 'What I never use AI for'); const safe = () => section('privacy', 'Keeping it safe')
+  it('both pages say it plainly and without exceptions: "ever"', () => {
+    expect(ai()).toMatch(/\*\*Handling your information\.\*\* I do not put customers' personal details into AI tools, ever\./)
+    expect(safe()).toMatch(/We do not put customers' personal details into AI tools, ever\./)
   })
-  it('neither page, nor any other, makes the old absolute promise any more (it could not be kept while the site is worked on through live connections)', () => {
-    expect(everything).not.toMatch(/I never put customers/); expect(everything).not.toMatch(/We don't put customers' personal details into AI tools/); expect(everything).not.toMatch(/never put[^.]*AI tool/i)
+  it('neither page, nor any other, softens it with an exception, or still makes the older, narrower wording', () => {
+    for (const text of [ai(), safe()]) { expect(text).not.toMatch(/except where/); expect(text).not.toMatch(/only what is needed/) }
+    expect(everything).not.toMatch(/I never put customers/); expect(everything).not.toMatch(/We don't put customers' personal details into AI tools/)
   })
-  it('keeps the heading honest: it is no longer a list of things that are "never" done', () => {
-    expect(page('ai-policy').sections.map((s) => s.title)).toContain('What I do not use AI for'); expect(page('ai-policy').sections.map((s) => s.title)).not.toContain('What I never use AI for')
+  it('keeps the heading that matches it, and the other things it promises: no chatbot, no decisions about you, no AI reviews, no training on the work', () => {
+    expect(page('ai-policy').sections.map((s) => s.title)).toContain('What I never use AI for'); const t = ai()
+    for (const piece of ['I don\'t use a chatbot', 'Nothing about your order, your account or your payment is decided by an AI system', 'I don\'t use AI to write reviews or testimonials', 'I don\'t give permission for my artwork or writing to be used to train AI models']) expect(t, piece).toContain(piece)
   })
-  it('keeps the other things it does promise: no chatbot, no decisions about you, no AI reviews, no training on the work', () => {
-    const t = ai(); for (const piece of ['I don\'t use a chatbot', 'Nothing about your order, your account or your payment is decided by an AI system', 'I don\'t use AI to write reviews or testimonials', 'I don\'t give permission for my artwork or writing to be used to train AI models']) expect(t, piece).toContain(piece)
+  it('is true of the site itself: nothing in its code sends anything to an AI service (the rest is how it is worked on, which the AI policy explains and the promise covers)', () => {
+    const walk = (dir) => readdirSync(join(process.cwd(), dir), { withFileTypes: true }).flatMap((e) => (e.isDirectory() ? walk(`${dir}/${e.name}`) : /\.(js|jsx|mjs)$/.test(e.name) ? [`${dir}/${e.name}`] : []))
+    const files = [...walk('api'), ...walk('lib'), ...walk('src')]; expect(files.length).toBeGreaterThan(100)
+    expect(files.filter((f) => /api\.anthropic\.com|api\.openai\.com|generativelanguage\.googleapis\.com|@anthropic-ai|from 'openai'/.test(read(f)))).toEqual([])
   })
 })
 
