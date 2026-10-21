@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
+import PostitFrame from '../rooms/PostitFrame'
 import HomeLink from '../components/HomeLink'
 import { Link } from 'react-router-dom'
 import './artloft.css'
@@ -80,6 +81,7 @@ export default function ArtLoftScene() {
   const hung = canvases.map((c, i) => ({ ...c, frame: frames[i] }))
 
   return (
+    <PostitFrame>
     <main className="al">
       <HomeLink className="al-home" />
       <header className="al-head">
@@ -248,5 +250,6 @@ export default function ArtLoftScene() {
         </ul>
       </div>
     </main>
+    </PostitFrame>
   )
 }
