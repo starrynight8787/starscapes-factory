@@ -12,7 +12,7 @@ export default function NotFound() {
   return (
     <main className="sp">
       <PageBanner art="plain" room="explorers-bay" chip="404" title="That room isn't on the plan." />
-      <RoomIcon room="explorers-bay" size={96} />
+      <div className="sp-boat"><RoomIcon room="explorers-bay" size={96} /></div>
       <p className="sp-lead">We can't find that page. It may have moved, or the address may have a typo.</p>
       <div className="sp-actions">
         <Link className="sp-btn sp-btn--solid" to="/">

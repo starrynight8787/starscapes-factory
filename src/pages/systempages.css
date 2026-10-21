@@ -257,3 +257,14 @@
   display: block;
   margin: 0 auto 8px;
 }
+
+/* the sailboat on the 404 page sits in the middle, under the banner */
+.sp-boat {
+  display: flex;
+  justify-content: center;
+  margin: 20px 0 8px;
+}
+.sp-boat .sf-room-icon {
+  display: block;
+  margin: 0 auto;
+}
