@@ -40,17 +40,23 @@ describe('the bookshelf rules', () => {
 const shelf = (url) => render(<MemoryRouter initialEntries={[url]}><Routes><Route path="*" element={<BookShelfPage />} /></Routes></MemoryRouter>)
 
 describe('the bookshelf page', () => {
-  it('shows a shelf for each genre, with the books as links to their own pages and a bookend on empty shelves', async () => {
+  it('shows a shelf for each genre that has books, with the books as links to their own pages, and hides the empty shelves', async () => {
     shelf('/shelf')
     const fiction = await screen.findByRole('region', { name: 'Fiction' })
     expect(within(fiction).getByRole('link', { name: 'A is for Alibi by Sue Grafton' })).toHaveAttribute('href', '/knowledge-nook/book-club/book/a1')
     expect(within(fiction).getByRole('link', { name: /B is for Burglar.*reading now/ })).toBeInTheDocument()
-    expect(within(screen.getByRole('region', { name: 'Memoir' })).getByText('Nothing on this shelf yet')).toBeInTheDocument()
+    expect(screen.queryByRole('region', { name: 'Memoir' })).toBeNull() // no memoirs yet, so no memoir shelf
+    expect(screen.queryByRole('button', { name: /Memoir/ })).toBeNull() // and it is not in the jump list either
   })
   it('highlights the chosen genre', async () => {
     shelf('/shelf?genre=leadership')
     const lead = await screen.findByRole('region', { name: 'Leadership' })
     expect(within(lead).getByText('You picked this shelf')).toBeInTheDocument()
+  })
+  it('says so, and still shows the shelves that have books, when a link points at a genre with no books yet', async () => {
+    shelf('/shelf?genre=memoir')
+    expect(await screen.findByText(/There are no books on the Memoir shelf yet/)).toBeInTheDocument()
+    expect(screen.getByRole('region', { name: 'Fiction' })).toBeInTheDocument()
   })
   it('keeps only matching books when searching by author, and says so when nothing matches', async () => {
     shelf('/shelf')

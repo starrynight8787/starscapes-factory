@@ -29,8 +29,10 @@ export default function BookShelfPage() {
   const all = useMemo(() => genreShelves(books), [books])
   const shelves = useMemo(() => genreShelves(books, query), [books, query])
   const searching = query.trim() !== ''
-  const visible = searching ? shelves.filter((s) => s.books.length > 0) : shelves
+  const visible = shelves.filter((s) => s.books.length > 0) // a shelf with no books is not shown (the page would be mostly empty shelves)
   const countOf = (key) => (all.find((s) => s.key === key) || { books: [] }).books.length
+  const menu = [...GENRES, ...(all.some((x) => x.other) ? [{ key: 'other', label: 'No genre yet' }] : [])].filter((g) => countOf(g.key) > 0) // only the genres that have books
+  const chosenEmpty = status === 'ready' && !searching && genre && countOf(genre) === 0 // a link to a genre that has no books yet
 
   // Bring the chosen genre's shelf into view (once for each choice, after the books have loaded)
   useEffect(() => {
@@ -58,7 +60,7 @@ export default function BookShelfPage() {
         <nav className="bs__jump" aria-label="Jump to a shelf">
           <span className="bs__jumplabel">Jump to a shelf</span>
           <div className="bs__tabs">
-            {[...GENRES, ...(all.some((x) => x.other) ? [{ key: 'other', label: 'No genre yet' }] : [])].map((g) => (
+            {menu.map((g) => (
               <button key={g.key} type="button" className="bs__tab" aria-pressed={genre === g.key} onClick={() => choose(g.key)}>
                 {g.label} <span className="bs__count">{countOf(g.key)}</span>
               </button>
@@ -68,7 +70,7 @@ export default function BookShelfPage() {
             <label htmlFor="bs-genre" className="bs__jumplabel">Jump to a shelf</label>
             <select id="bs-genre" className="bs__selectbox" value={genre} onChange={(e) => choose(e.target.value)}>
               <option value="">All shelves</option>
-              {[...GENRES, ...(all.some((x) => x.other) ? [{ key: 'other', label: 'No genre yet' }] : [])].map((g) => <option key={g.key} value={g.key}>{g.label} · {countOf(g.key)} {countOf(g.key) === 1 ? 'book' : 'books'}</option>)}
+              {menu.map((g) => <option key={g.key} value={g.key}>{g.label} · {countOf(g.key)} {countOf(g.key) === 1 ? 'book' : 'books'}</option>)}
             </select>
           </div>
         </nav>
@@ -84,6 +86,8 @@ export default function BookShelfPage() {
         <p className="bc__muted">One shelf for each genre.{genre ? ' The shelf you chose is highlighted.' : ''}</p>
         {status === 'error' && <p className="rp-note" role="alert">The books could not load just now. Please try again in a moment.</p>}
         {status === 'loading' && <p className="rp-note">Loading the shelves…</p>}
+        {chosenEmpty && <p className="rp-note" role="status">There are no books on the {((GENRES.find((g) => g.key === genre) || {}).label || 'that')} shelf yet. Here are the shelves that have books.</p>}
+        {status === 'ready' && !searching && visible.length === 0 && <p className="rp-note" role="status">No books on the shelf yet. Check back soon.</p>}
         {status === 'ready' && searching && visible.length === 0 && <p className="rp-note" role="status">No books match &ldquo;{query.trim()}&rdquo;. Try part of an author&apos;s name or a title.</p>}
         {status === 'ready' && visible.map((s) => (
           <section key={s.key} id={`shelf-${s.key}`} className={`bs__shelf${genre === s.key ? ' bs__shelf--on' : ''}`} aria-labelledby={`bs-h-${s.key}`}>
