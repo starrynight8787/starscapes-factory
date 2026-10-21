@@ -34,7 +34,7 @@ export default function RoomScene({ scene }) {
     <div className="sf-home rs-sky">
       <div className="sf-hero rs-hero">
         <StarryBackdrop />
-        {page}
+        <div className="rs-frame">{page}</div>
       </div>
     </div>
   )
