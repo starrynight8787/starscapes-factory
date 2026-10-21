@@ -33,19 +33,19 @@ export default function ChannelPage() {
 
   if (!channel) {
     return (
-      <div>
+      <main>
         <p>
           <Link to="/">&larr; Back home</Link>
         </p>
         <p>Channel not found.</p>
-      </div>
+      </main>
     )
   }
 
   const [featuredPost, ...restPosts] = posts
 
   return (
-    <div>
+    <main>
       <p>
         <Link to="/">&larr; Back to all channels</Link>
       </p>
@@ -96,6 +96,6 @@ export default function ChannelPage() {
           ))}
         </div>
       )}
-    </div>
+    </main>
   )
 }

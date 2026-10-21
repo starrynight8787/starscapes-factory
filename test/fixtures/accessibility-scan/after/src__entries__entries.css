@@ -1,0 +1,217 @@
+/* The entry template (Writing in Transit now; Archive Entries and the Author's Notebook later). Stands on its own: nothing here depends on the old index.css rules. */
+.rp.en {
+  max-width: 1232px;
+}
+.container:has(> .rp.en) {
+  max-width: 1272px; /* the page column is only 720 pixels wide otherwise, however wide the page inside it wants to be */
+}
+.en__cols {
+  display: grid;
+  grid-template-columns: minmax(0, 836fr) minmax(0, 332fr);
+  gap: 32px;
+  align-items: start;
+  margin-top: 24px;
+}
+.en__left {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+.en__right {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.en__o1 { order: 1; }
+.en__o2 { order: 2; }
+.en__o3 { order: 3; }
+.en__o4 { order: 4; }
+.en__card,
+.en__item {
+  background: #fff;
+  color: var(--sf-ink, #0e1530);
+  border: 2px solid var(--sf-navy-700, #14306a);
+  border-radius: 10px;
+  box-shadow: 6px 8px 0 rgba(184, 204, 245, 0.6);
+}
+.en__card {
+  display: grid;
+  gap: 16px;
+  align-content: start;
+  padding: 24px;
+}
+.en__pinned {
+  padding: 16px;
+  gap: 12px;
+}
+.en__img,
+.en__itemimg {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 6px;
+  border: 1px solid var(--sf-border, #dde3f0);
+  background: var(--sf-star, #dce6ff);
+}
+.en__img--empty {
+  display: grid;
+  place-items: center;
+}
+.en__meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.en__label {
+  font-size: 0.875rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1a62a0; /* 5.1:1 on the pale blue chip (the site blue, #1f6fa8, was 4.3:1; the minimum is 4.5:1) */
+}
+.en__title {
+  margin: 0;
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  font-size: 1.875rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.en__pinnedtitle {
+  margin: 0;
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-weight: 400;
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.en__buttons {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+.en__card .pg-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+.en__pinned .pg-btn {
+  width: 100%;
+}
+.en__more {
+  display: grid;
+  gap: 16px;
+}
+.en__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.en__item {
+  padding: 12px;
+}
+.en__itemlink {
+  display: grid;
+  gap: 10px;
+  color: inherit;
+  text-decoration: none;
+}
+.en__itemlink:focus-visible {
+  outline: 3px solid var(--sf-focus, #14306a);
+  outline-offset: 3px;
+}
+.en__itemtitle {
+  font-family: var(--sf-school, 'Schoolbell', 'Caveat', cursive);
+  font-size: 1.25rem;
+  line-height: 1.25;
+  color: var(--sf-navy-700, #14306a);
+  overflow-wrap: anywhere;
+}
+.en__itemdate {
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.en__morebtn {
+  display: none !important;
+  justify-self: start;
+}
+.en__morebtn--always {
+  display: inline-flex !important;
+}
+/* The Author's Notebook box under the pinned entry on Archive Entries */
+.en__notebook {
+  background: var(--sf-star, #dce6ff);
+}
+.en__notebooktitle {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.375rem;
+  color: var(--sf-navy-700, #14306a);
+}
+.en__text {
+  margin: 0;
+  line-height: 1.55;
+}
+.en__caption {
+  margin: 0;
+  color: var(--sf-muted, #5b6585);
+  font-size: 0.95rem;
+}
+.en__notebook button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+.en__notebook .pg-btn {
+  width: 100%;
+}
+@media (min-width: 961px) {
+  .en__right--under > .en__o4 { order: 1; } /* the membership box first, then the pinned entry, then the most read (the pinned and most read keep their own order: 2) */
+}
+@media (max-width: 960px) {
+  .en__cols {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch; /* the wide-screen rule lines the boxes up at the top, which would leave each box only as wide as its words */
+    gap: 24px;
+  }
+  .en__left,
+  .en__right {
+    display: contents; /* so the boxes of both columns can be put in one order on a phone */
+  }
+  .en__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr)); /* a tablet: two to a row */
+  }
+  .en__grid:not(.is-expanded) .en__item:nth-child(n + 5) {
+    display: none;
+  }
+  .en__morebtn {
+    display: inline-flex !important;
+    width: 100%;
+    justify-content: center;
+  }
+  .en__card {
+    padding: 16px;
+  }
+  .en__title {
+    font-size: 1.625rem;
+  }
+  .en__card .pg-btn {
+    width: 100%;
+  }
+}
+@media (max-width: 720px) {
+  .en__grid {
+    grid-template-columns: 1fr; /* a phone: one under another */
+  }
+}

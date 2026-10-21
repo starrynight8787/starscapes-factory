@@ -286,6 +286,10 @@ a.al-object:focus-visible {
   border-color: var(--sf-blue, #1f6fa8);
 }
 .al-list .is-soon {
+  background: #f4f6fb; /* not open yet: a softer box and a faded picture, but the writing stays at full strength (fading the whole item gave its text only 2.5:1 contrast; the minimum is 4.5:1) */
+  border-style: dashed;
+}
+.al-list .is-soon .al-list__thumb {
   opacity: 0.6;
 }
 .al-list strong {

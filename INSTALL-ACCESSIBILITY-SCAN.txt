@@ -1,0 +1,39 @@
+THE ACCESSIBILITY SCAN, AND WHAT IT FOUND   starscapes-accessibility-scan-21oct.zip   (SFW-190)
+(Code, styles and tests only. No Supabase step, nothing to set in Vercel.)
+
+WHAT I DID
+ Scanned 38 kinds of page, as a first-time visitor sees them, and 14 pages that show real content (a post, feeds, galleries, products, the Leadership pages), at desktop and phone size, in a real browser with axe (WCAG 2.2 AA plus best practice): about 100 scans. The first pass found a problem on EVERY page, from four causes; content found five more. Everything below is fixed, and a rescan of all of it comes back with ZERO problems.
+
+WHAT WAS FOUND, AND FIXED
+ 1. THE LOGO (every page, header and footer): the two words were run together in the markup, so what is written ("StarscapesFactory") did not match what is said aloud ("Starscapes Factory home"). A space. (WCAG 2.5.3, label in name.)
+ 2. FAINT GREY WRITING ("No posts yet", taglines): 4.2:1 contrast, needs 4.5. Now #666 (5.4:1).
+ 3. NO MAIN LANDMARK on the home page, the channel pages, the old shop, and a single product (including their "Loading" and "not found" messages). A screen reader user jumps to main to skip the menu. All now have one.
+ 4. "NOT OPEN YET" ITEMS (the Art Loft list and the phone lists in every room): the whole item was faded with opacity, which dragged its words to 2.5:1 and 3.1:1 contrast. Now only the picture fades and the box is dashed and softer; the words stay at full strength.
+ 5. THE DRAFTING DESK PAPERS: the spoken label was in a different order from the written words, and the name and description had no space between them. Both fixed, for every room (the label now reads name, description, note about access, then "(locked)" or "(opens in a new tab)").
+ 6. HEADING ORDER: post cards (channel pages) and product cards (shop) used a level-3 heading straight under the page's level-1 heading. Now level 2, so people who move by headings are not lost.
+ 7. A SINGLE PRODUCT PAGE had a second "banner" (its starry banner sat outside any landmark): fixed by the main landmark in 3.
+ 8. ARCHIVE ENTRIES: the small blue label ("Author's Notebook") was 4.3:1: now #1a62a0 (5.1:1).
+
+TESTS (new: test/accessibility-scan.test.jsx, 13 tests; 18 deliberate breakages, all caught)
+ The logo's name; one main on each page in every state; the grey and the blue meet 4.5:1 (computed from the real stylesheet); "not open yet" items never fade their words; every Drafting Desk paper says its written words aloud (with a guard so it cannot pass by checking nothing); heading order on every kind of channel and on the shop and a product. Updated to the new wording: rooms-data, nook-scene and rooms tests (exact line edits, refused if those files have changed).
+ Two of my first tests turned out to check nothing; I found that by breaking things on purpose, and replaced them.
+
+THE SCAN TOOL (tools/accessibility-scan/): so you can re-run all of this yourself. README.md in that folder says how. Run it after adding a new kind of page.
+
+WHAT IT CANNOT SEE: checkout (it is on Stripe's own pages); the admin pages; My passes while signed in; the post editor; and anything only a person can judge: keyboard use, zoom to 200 percent, reduced motion, and a real screen reader. Worth a manual pass before opening.
+
+STILL OPEN, NOT MINE: the Clubhouse commit put a 61 KB photo inside the Den picture (base.svg), which five picture checks do not allow (they permit one image: the Story Ledger logo, and keep pictures light). They fail with or without this package: den-scene (3 tests), picture-logo (1), rooms-data (1). I can allow the one photo the same way the Story Ledger logo is allowed: say so. The contact address test also still waits for the legal review. So "npm test" should end with exactly 6 failed.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-accessibility-scan-21oct.zip
+ 3. python3 tools/add-accessibility-scan.py     IT MUST PRINT "changed" LINES FOR 15 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The new test only moves into place if every edit succeeded.)
+ 4. grep -c "sf-logo__word\">Starscapes</span>{' '}" src/components/Logo.jsx        (it must print 1)
+ 5. npm test                                    (it should end with exactly 6 failed: the contact address, and five Den picture ones)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-accessibility-scan" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (15 changed files; new: the notes, the installer, its test and fixtures, test/accessibility-scan.test.jsx, tools/accessibility-scan/, tools/accessibility-scan-fixes-files/; nothing ending .before-)
+    git commit -m "Accessibility scan (SFW-190): logo name, main landmarks, contrast, faded items, label order, heading order; scan tool and tests"
+    git push

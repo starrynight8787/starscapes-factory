@@ -41,7 +41,7 @@ describe('a room scene', () => {
   it('writes each item\'s name and its line of description on it, in the order given', () => {
     const { container } = show()
     const labels = Array.from(stage(container).querySelectorAll('.rs-label')).map((l) => l.textContent)
-    expect(labels).toEqual(['Open pageOpens here.', 'Other siteOpens elsewhere.', 'Not yetNot open yet.', 'Members pageFor members.'])
+    expect(labels).toEqual(['Open page Opens here.', 'Other site Opens elsewhere.', 'Not yet Not open yet.', 'Members page For members.']) // a space between the name and the description, so the written words read as words
   })
 
   describe('a page that opens here', () => {
@@ -76,7 +76,7 @@ describe('a room scene', () => {
     it('says why it is locked, in words, both to the eye and to a screen reader', () => {
       const { container } = show()
       const item = within(stage(container)).getByRole('group', { name: /Not yet/ })
-      expect(item).toHaveAccessibleName('Not yet, locked, starting soon. Not open yet.')
+      expect(item).toHaveAccessibleName('Not yet. Not open yet. Starting soon (locked)')
       expect(within(item).getByRole('note')).toHaveTextContent('Starting soon')
     })
   })
@@ -85,7 +85,7 @@ describe('a room scene', () => {
       const { container } = show()
       const link = within(stage(container)).getByRole('link', { name: /Members page/ })
       expect(link).toHaveAttribute('href', '/test/d')
-      expect(link).toHaveAccessibleName('Members page, paid members only. For members.')
+      expect(link).toHaveAccessibleName('Members page. For members. Paid members only')
       expect(within(link).getByRole('note')).toHaveTextContent('Paid members only')
     })
   })
@@ -169,8 +169,8 @@ describe('the words for a lock', () => {
   it('describes each kind of item for a screen reader', () => {
     expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'page' })).toBe('A. About A.')
     expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'external' })).toBe('A. About A. (opens in a new tab)')
-    expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'locked', lock: 'paid' })).toBe('A, locked, paid members only. About A.')
-    expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'page', lock: 'paid' })).toBe('A, paid members only. About A.')
+    expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'locked', lock: 'paid' })).toBe('A. About A. Paid members only (locked)')
+    expect(itemLabel({ name: 'A', blurb: 'About A.', kind: 'page', lock: 'paid' })).toBe('A. About A. Paid members only')
   })
 })
 

@@ -235,9 +235,9 @@ describe('each room as a visitor meets it', () => {
       if (i.kind !== 'locked') {
         const link = stage.getByRole('link', { name: new RegExp(`^${i.name}\\b`) })
         expect(link, i.id).toHaveAttribute('href', i.kind === 'page' ? i.to : i.href)
-        expect(link, i.id).toHaveAccessibleName(`${i.name}. ${i.blurb}${i.kind === 'external' ? ' (opens in a new tab)' : ''}`)
+        expect(link, i.id).toHaveAccessibleName(`${i.name}. ${i.blurb}${i.lock ? ` ${lockText(i.lock)}` : ''}${i.kind === 'external' ? ' (opens in a new tab)' : ''}`)
       } else {
-        const closed = stage.getByRole('group', { name: new RegExp(`^${i.name}, locked`) })
+        const closed = stage.getByRole('group', { name: new RegExp(`^${i.name}\\. .*\\(locked\\)$`) })
         expect(closed, i.id).toHaveAttribute('tabindex', '0')
         expect(within(container.querySelector('.rs-stage')).queryByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toBeNull()
       }
@@ -286,7 +286,7 @@ describe('each room as a visitor meets it', () => {
     const { container } = show('leadership-lounge', EMPTY)
     const stage = within(container.querySelector('.rs-stage'))
     ;['Audiobook', 'Udemy Course'].forEach((name) => {
-      expect(stage.getByRole('group', { name: new RegExp(`^${name}, locked, opening soon`) })).toBeInTheDocument()
+      expect(stage.getByRole('group', { name: new RegExp(`^${name}\\. .*Opening soon \\(locked\\)$`) })).toBeInTheDocument()
       expect(stage.queryByRole('link', { name: new RegExp(`^${name}`) })).toBeNull()
     })
   })
@@ -331,7 +331,7 @@ describe('each room as a visitor meets it', () => {
       const { container, unmount } = show('leadership-lounge', { audiobookUrl: bad, udemyUrl: bad })
       const stage = within(container.querySelector('.rs-stage'))
       expect(stage.queryByRole('link', { name: /^Audiobook\b/ }), bad).toBeNull()
-      expect(stage.getByRole('group', { name: /^Audiobook, locked/ }), bad).toBeInTheDocument()
+      expect(stage.getByRole('group', { name: /^Audiobook\. .*\(locked\)$/ }), bad).toBeInTheDocument()
       unmount()
     }
   })

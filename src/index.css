@@ -38,6 +38,6 @@ body {
 }
 
 .muted {
-  color: #777;
+  color: #666; /* 5.4:1 on the page tint and 5.7:1 on white (the minimum is 4.5:1); the old #777 was 4.2:1 */
   font-size: 14px;
 }

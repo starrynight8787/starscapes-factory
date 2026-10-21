@@ -112,7 +112,7 @@ export default function ChannelDirectory() {
   }
 
   return (
-    <div className="sf-home">
+    <main className="sf-home">
       {/* ---------- Hero with the floor plan ---------- */}
       <section className="sf-hero" aria-labelledby="sf-hero-title">
         <HeroArt />
@@ -195,6 +195,6 @@ export default function ChannelDirectory() {
       {/* ---------- Next event, membership, the featured room and the latest post ---------- */}
       <HomeSections event={extras.event} featured={extras.featured} post={extras.post} posts={extras.posts} pictures={extras.pictures} />
       </div>
-    </div>
+    </main>
   )
 }

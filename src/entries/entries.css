@@ -72,7 +72,7 @@
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--sf-blue, #1f6fa8);
+  color: #1a62a0; /* 5.1:1 on the pale blue chip (the site blue, #1f6fa8, was 4.3:1; the minimum is 4.5:1) */
 }
 .en__title {
   margin: 0;

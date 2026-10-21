@@ -24,7 +24,7 @@ export default function Logo({ dark = false, onClick }) {
       aria-label="Starscapes Factory home"
     >
       <StarMark color={dark ? '#DCE6FF' : '#2E8FD0'} />
-      <span className="sf-logo__word">Starscapes</span>
+      <span className="sf-logo__word">Starscapes</span>{' '}
       <span className="sf-logo__script">Factory</span>
     </Link>
   )

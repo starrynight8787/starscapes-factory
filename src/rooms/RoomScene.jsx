@@ -65,10 +65,11 @@ function SceneItem({ item, scene }) {
       <img className="rs-art" src={item.art} alt="" />
       {!plaque && (
         <span className="rs-label">
-          <strong>{item.name}</strong>
+          <strong>{item.name}</strong>{' '}
           <small>{item.blurb}</small>
         </span>
       )}
+      {!plaque && why ? ' ' : null}
       {!plaque && why && <span className="rs-tip" role="note">{why}</span>}
       {plaque && (
         <span className={`rs-plaque${item.kind === 'locked' ? ' is-locked' : ''}`} aria-hidden="true">

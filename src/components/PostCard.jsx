@@ -16,7 +16,7 @@ export default function PostCard({ post, variant = 'feed' }) {
             style={{ width: '100%', aspectRatio: '1', objectFit: 'cover', borderRadius: 8 }}
           />
         )}
-        <h3 className="sf-article-title" style={{ margin: '10px 0 4px', fontSize: 18 }}>{post.title}</h3>
+        <h2 className="sf-article-title" style={{ margin: '10px 0 4px', fontSize: 18 }}>{post.title}</h2>
         <PassChip postId={post.id} />
         <p className="muted" style={{ fontSize: 14, margin: 0 }}>
           {excerpt}
@@ -94,7 +94,7 @@ export default function PostCard({ post, variant = 'feed' }) {
         />
       )}
       <div>
-        <h3 className="sf-article-title" style={{ margin: '0 0 4px', fontSize: 20 }}>{post.title}</h3>
+        <h2 className="sf-article-title" style={{ margin: '0 0 4px', fontSize: 20 }}>{post.title}</h2>
         <PassChip postId={post.id} />
         <p className="muted" style={{ fontSize: 14, margin: '0 0 6px' }}>
           {new Date(post.created_at).toLocaleDateString()}

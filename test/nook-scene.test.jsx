@@ -56,7 +56,7 @@ describe('the Knowledge Nook page', () => {
       expect(d.getAttribute('aria-label')).toMatch(/locked/)
     }
     expect(container.querySelectorAll('.rs-stage a')).toHaveLength(0)
-    expect(doors[1].getAttribute('aria-label')).toBe('Come Read With Me, locked, starting soon. Read alongside me. Starting soon.')
+    expect(doors[1].getAttribute('aria-label')).toBe('Come Read With Me. Read alongside me. Starting soon. Starting soon (locked)')
   })
   it('gives phones the same five doors as a plain list', () => {
     const { container } = show()

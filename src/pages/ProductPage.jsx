@@ -29,14 +29,14 @@ export default function ProductPage() {
     fetchProduct()
   }, [id])
 
-  if (loading) return <p>Loading...</p>
-  if (error) return <p className="error">{error}</p>
-  if (!product) return <p>Product not found.</p>
+  if (loading) return <main className="legacy"><p>Loading...</p></main>
+  if (error) return <main className="legacy"><p className="error">{error}</p></main>
+  if (!product) return <main className="legacy"><p>Product not found.</p></main>
 
   const images = product.images && product.images.length > 0 ? product.images : []
 
   return (
-    <div className="legacy">
+    <main className="legacy">
       <p>
         <Link to="/products">&larr; Back to The Art Loft</Link>
       </p>
@@ -84,6 +84,6 @@ export default function ProductPage() {
           Buy — coming soon
         </button>
       </div>
-    </div>
+    </main>
   )
 }

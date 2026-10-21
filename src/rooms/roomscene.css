@@ -305,7 +305,11 @@ a.rs-item:focus-visible .rs-art {
   border-color: var(--sf-blue, #1f6fa8);
 }
 .rs-list .is-locked {
-  opacity: 0.7;
+  background: #f4f6fb; /* not open yet: a softer box and a faded picture, but the writing stays at full strength (fading the whole item gave its text only 3.1:1 contrast; the minimum is 4.5:1) */
+  border-style: dashed;
+}
+.rs-list .is-locked img {
+  opacity: 0.6;
 }
 .rs-list strong {
   display: block;

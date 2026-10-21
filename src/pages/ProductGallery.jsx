@@ -40,11 +40,11 @@ export default function ProductGallery() {
     setSearchParams({})
   }
 
-  if (loading) return <p>Loading products...</p>
-  if (error) return <p className="error">{error}</p>
+  if (loading) return <main className="legacy"><p>Loading products...</p></main>
+  if (error) return <main className="legacy"><p className="error">{error}</p></main>
 
   return (
-    <div className="legacy">
+    <main className="legacy">
       <h1>🎨 The Art Loft</h1>
 
       {activeCollection && (
@@ -78,13 +78,13 @@ export default function ProductGallery() {
                 style={{ width: '100%', borderRadius: 8, aspectRatio: '1', objectFit: 'cover' }}
               />
             )}
-            <h3 style={{ margin: '10px 0 4px', fontSize: 15 }}>{product.title}</h3>
+            <h2 style={{ margin: '10px 0 4px', fontSize: 15 }}>{product.title}</h2>
             <p className="muted" style={{ margin: 0, fontSize: 14 }}>
               £{Number(product.price).toFixed(2)}
             </p>
           </Link>
         ))}
       </div>
-    </div>
+    </main>
   )
 }

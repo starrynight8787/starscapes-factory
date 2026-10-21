@@ -30,15 +30,16 @@ export function resolveItem(item) {
   return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon' }
 }
 
-// What a screen reader says for an item
+// What a screen reader says for an item. It follows the order of the writing on the item (name, description, then the note about access), because a spoken label that does not
+// contain the written words, in that order, fails people who use voice control and screen readers together (WCAG 2.5.3, "label in name"). What the writing does not say comes
+// after it: that a locked item is not a link, and that a link opens a new tab.
 export function itemLabel(item) {
   const why = lockText(item.lock)
-  const parts = [item.name]
-  if (item.kind === 'locked') parts.push(`locked, ${why.toLowerCase()}`)
-  else if (why) parts.push(why.toLowerCase())
-  const head = parts.join(', ')
-  const tail = item.kind === 'external' ? ' (opens in a new tab)' : ''
-  return `${head}. ${item.blurb}${tail}`
+  let label = `${item.name}. ${item.blurb}`
+  if (why) label += ` ${why}`
+  if (item.kind === 'locked') label += ' (locked)'
+  if (item.kind === 'external') label += ' (opens in a new tab)'
+  return label
 }
 
 const pc = (n) => `${Math.round(n * 10000) / 100}%`
