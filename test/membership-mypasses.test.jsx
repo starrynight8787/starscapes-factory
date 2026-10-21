@@ -28,7 +28,7 @@ describe('who sees it', () => {
   })
   it('shows the owner their own passes even while closed', async () => {
     store.open = false; api.fetchMyMembership.mockResolvedValue(row()); show(true)
-    expect(await screen.findByRole('heading', { level: 1, name: 'My passes' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'My passes' })).toBeInTheDocument()
   })
   it('says kindly, with a way to try again, when it cannot find the passes', async () => {
     api.fetchMyMembership.mockRejectedValueOnce(new Error('permission denied')).mockResolvedValue(row()); show()
@@ -107,14 +107,14 @@ describe('someone who has cancelled but whose passes are still open', () => {
 describe('the other views', () => {
   it('shows a free member the short page, with the passes named (all five) and a link to choose', async () => {
     api.fetchMyMembership.mockResolvedValue(null); show()
-    expect(await screen.findByRole('heading', { level: 1, name: 'My membership' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'My membership' })).toBeInTheDocument()
     expect(screen.getByText('Free member')).toBeInTheDocument(); expect(screen.getByText('You can read every public entry.')).toBeInTheDocument()
     expect(screen.getByText("Passes start at £5 a month: The Author's Notebook, Early drafts and book background, Come Write With Me, Blueprints, and Book Club.")).toBeInTheDocument()
     expect(screen.getByRole('link', { name: 'Choose your passes' })).toHaveAttribute('href', '/membership')
   })
   it('treats a payment that never finished as no membership', async () => {
     api.fetchMyMembership.mockResolvedValue(row({ status: 'incomplete' })); show()
-    expect(await screen.findByRole('heading', { level: 1, name: 'My membership' })).toBeInTheDocument()
+    expect(await screen.findByRole('heading', { level: 2, name: 'My membership' })).toBeInTheDocument()
   })
   it('says passes have ended, with the date once that date has passed, and offers to choose again', async () => {
     api.fetchMyMembership.mockResolvedValue(row({ status: 'canceled', current_period_end: '2026-09-16T10:00:00Z' })); show()

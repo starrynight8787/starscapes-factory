@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom'
 import useTitle from '../pages/useTitle'
 import RoomIcon from '../components/RoomIcon'
 import PageLoading from '../components/PageLoading'
+import PageBanner from '../components/PageBanner'
 import { channels } from '../data/channels'
 import { MEMBERSHIP } from '../data/membership'
 import { redirectTo } from '../cart/redirect'
@@ -68,7 +69,6 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My account</h1>
           <section className="mb__sum mb__sum--plain mb--closed">
             <h2 className="mb__wname">Memberships are not open yet</h2>
             <p>{MEMBERSHIP.textWhileClosed}</p>
@@ -85,7 +85,7 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My passes</h1>
+          <h2 className="mb__title">My passes</h2>
           <p className="mb__lead">We could not find your passes just now. Please try again in a moment.</p>
           <button type="button" className="mb__wbtn" onClick={() => setRound((n) => n + 1)}>
             Try again
@@ -130,7 +130,7 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My membership</h1>
+          <h2 className="mb__title">My membership</h2>
           <section className="mb__sum">
             <span className="pg-chip">Free member</span>
             <p className="mb__lead">You can read every public entry.</p>
@@ -151,7 +151,7 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My passes</h1>
+          <h2 className="mb__title">My passes</h2>
           <section className="mb__sum">
             <span className="pg-chip">Cancelled</span>
             <p className="mb__lead">{`Your passes are cancelled. They stay open until ${formatDate(row.current_period_end)}, and you will not be charged again.`}</p>
@@ -169,7 +169,7 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My passes</h1>
+          <h2 className="mb__title">My passes</h2>
           <section className="mb__sum">
             <span className="pg-chip">Ended</span>
             <p className="mb__lead">{row.current_period_end && Date.parse(row.current_period_end) <= Date.now() ? `Your passes ended on ${formatDate(row.current_period_end)}.` : 'Your passes have ended.'} You can choose passes again whenever you like.</p>
@@ -186,7 +186,7 @@ function PassesContent({ owner = false }) {
     return (
       <div className="mb__pc mb--welcome">
         <div className="mb__w">
-          <h1>My passes</h1>
+          <h2 className="mb__title">My passes</h2>
           <section className="mb__sum">
             <span className="pg-chip">Payment needed</span>
             <p className="mb__lead">We could not take your last payment. Stripe will try again, and you can check or change your card now.</p>
@@ -207,7 +207,7 @@ function PassesContent({ owner = false }) {
   return (
     <div className="mb__pc mb--welcome">
       <div className="mb__w">
-        <h1>My passes</h1>
+        <h2 className="mb__title">My passes</h2>
         {justChanged && (
           <p className="mb__note" role="status">
             Your passes are changed. Your new price starts from your next payment.
@@ -255,6 +255,7 @@ function PassesContent({ owner = false }) {
 export default function MyPassesPage({ owner = false }) {
   return (
     <main className="mb mb--account">
+      <PageBanner art="plain" room="factory-floor" chip="Your account" title="My account" />
       <div className="mb__acct">
         <ProfilePanel />
         <PassesContent owner={owner} />

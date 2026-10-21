@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useTitle from '../pages/useTitle'
 import RoomIcon from '../components/RoomIcon'
+import PageBanner from '../components/PageBanner'
 import { channels } from '../data/channels'
 import { MEMBERSHIP } from '../data/membership'
 import { redirectTo } from '../cart/redirect'
@@ -46,8 +47,8 @@ export default function MembershipPage({ owner = false, session = null }) {
 export function NotOpen() {
   return (
     <main className="mb mb--closed">
+      <PageBanner art="plain" room="factory-floor" chip="Membership passes" title="Memberships are not open yet" />
       <div className="mb__body mb__body--narrow">
-        <h1>Memberships are not open yet</h1>
         <p>{MEMBERSHIP.textWhileClosed}</p>
         <p>
           <Link to="/">Back to the home page</Link>
