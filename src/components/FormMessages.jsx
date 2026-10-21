@@ -61,9 +61,23 @@ export function CheckField({ id, label, error, checked, onChange }) {
 // errors: [{ id: 'email', message: 'Enter your email address' }], where id is the field's id. Nothing is drawn when there are none.
 export function ErrorSummary({ errors, title = 'There is a problem', intro = 'Fix these, then send the form again.' }) {
   const box = useRef(null)
+  const lastSaid = useRef('') // the problems the box last took the focus for
+  const justSent = useRef(false) // a form on the page has just been sent
+  // Most forms build a NEW list of problems every time they are drawn, so every letter typed would draw it again. The box takes the focus only when the problems
+  // are different from last time, or when a form has just been sent (so a screen reader hears that the form was not accepted, even if the problem has not changed),
+  // and never merely because the form was drawn again: otherwise anyone typing to fix a problem would be pulled out of the field after every letter.
   useEffect(() => {
-    if (errors.length > 0 && box.current) box.current.focus()
-  }, [errors])
+    const noteSent = (event) => { if (event.target && event.target.closest && event.target.closest('main')) justSent.current = true } // a form on the page (not the menu or the footer)
+    document.addEventListener('submit', noteSent, true)
+    return () => document.removeEventListener('submit', noteSent, true)
+  }, [])
+  const said = errors.map((e) => `${e.id}: ${e.message}`).join('\n')
+  useEffect(() => {
+    if (errors.length === 0) { lastSaid.current = ''; justSent.current = false; return }
+    if (box.current && (said !== lastSaid.current || justSent.current)) box.current.focus()
+    lastSaid.current = said
+    justSent.current = false
+  })
   if (errors.length === 0) return null
   const goTo = (event, id) => {
     event.preventDefault()

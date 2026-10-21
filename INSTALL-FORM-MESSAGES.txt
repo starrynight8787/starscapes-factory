@@ -1,0 +1,30 @@
+FORM MESSAGES FOR NEW PRODUCT, AND A FOCUS BUG FIXED ON EVERY FORM   starscapes-form-messages-21oct.zip   (SFW-201)
+(Code and tests only. No Supabase step, nothing to set in Vercel.)
+
+1. THE NEW PRODUCT FORM now says what is wrong in plain words, the same way New post does (the last half of SFW-201):
+   * sent with a problem, a box at the top says "There is a problem" and lists each one as a link to its field; each field shows its own message under it, with the red outline and exclamation mark; nothing is saved until it is put right;
+   * what it asks for: a title ("Write a title for the product."), a description ("Write a description of the product."), a price ("Enter the price in pounds, for example 35.00." and, for nothing or less or not a number, "Enter a price above £0, for example 35.00."), and that anything added in Images is a picture ("terms.pdf is not a picture. Choose pictures only.");
+   * the browser's own pop-up messages are turned off (the form is "novalidate"), as on New post, so these are the ones people see;
+   * what it saves, and what it says when the database refuses ("The product was not saved"), are exactly as before.
+   (The footer's social links and Accessibility link, the other half of SFW-201, were already in place: I checked.)
+
+2. A BUG FOUND ON THE WAY, AND FIXED FOR EVERY FORM. My first test of the new messages failed in an odd way: after a failed send, typing "A print" into the title left only "A". The cause is in the shared summary box (src/components/FormMessages.jsx), not in the new form. It moved the keyboard focus to itself whenever it was given a NEW list of problems, and most forms on the site build a new list every time they are drawn, which is every keystroke. So once a form had shown a problem, EVERY LETTER TYPED TO FIX IT pulled the person out of the field and back to the summary. That affects, among others, the free ebook and newsletter sign-up, the suggestion box, New post and Edit post, and the admin forms. It is easy to miss with a mouse and a quick test, and very disruptive for anyone using a keyboard or a screen reader.
+   Now the box takes the focus only when (a) its problems are different from last time, or (b) a form on the page has just been sent (so a screen reader still hears "there is a problem" if the same problem comes back), and never just because the form was drawn again. A form elsewhere on the page, such as the footer's sign-up box, does not set it off.
+   One older test in test/form-messages.test.jsx simulated "the form failed again" by merely drawing the summary again with an identical list: that is exactly the situation that caused the bug. It now simulates what really happens (the form is sent, then the same problems come back). Its meaning is unchanged.
+
+TESTS: 12 new for the New product form (test/new-product-form.test.jsx: every check, the summary, the messages and focus, nothing saved until fixed, the browser's pop-ups off, typing a long title after a failed send, the saved row and uploads as before, and a database refusal); 6 new for the focus behaviour in test/form-messages.test.jsx, on a generic form, including a test that first FAILED on the old code and now passes. 10 deliberate breakages, all caught: the form losing its summary, its message under a field, its "novalidate", or saving despite problems; a price of exactly nothing, or a file that is not a picture, being accepted; the summary going back to taking focus on every redraw (the original bug), no longer refocusing when a form is sent with the same problems, being set off by a footer form, or not taking focus for a new problem.
+WHOLE SUITE on a fresh copy of your newest commit with this installed: 3,423 tests, 0 failing; build fine; 12 functions; health check passes.
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-form-messages-21oct.zip
+ 3. python3 tools/add-form-messages.py     IT MUST PRINT "changed" LINES FOR 3 FILES AND TWO LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The two new files only move into place if every edit succeeded.)
+ 4. grep -c "justSent" src/components/FormMessages.jsx        (it must print 5)
+ 5. npm test                                    (it should end with NOTHING failed)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-form-messages" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (3 changed files; new: the notes, the installer, its test and fixtures, src/pages/productFormRules.js, test/new-product-form.test.jsx, tools/form-messages-files/; nothing ending .before-)
+    git commit -m "New product form: plain-words problems like New post (SFW-201); the error summary no longer takes the focus while someone types"
+    git push

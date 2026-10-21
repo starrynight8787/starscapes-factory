@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { describe, it, expect } from 'vitest'
-import { render, screen, within } from '@testing-library/react'
+import { render, screen, within, fireEvent } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { Field, CheckField, FieldError, ErrorSummary, SuccessMessage, FailureMessage } from '../src/components/FormMessages'
 
@@ -70,11 +71,13 @@ describe('the summary at the top of a form that failed', () => {
     render(<ErrorSummary errors={errors} />)
     expect(document.activeElement).toBe(screen.getByRole('alert'))
   })
-  it('takes the focus again each time the form fails again', () => {
-    const { rerender } = render(<><input aria-label="elsewhere" /><ErrorSummary errors={errors} /></>)
+  it('takes the focus again each time the form fails again: the form is sent and the same problems come back (a re-draw alone does not count: see the typing test at the end)', () => {
+    const page = (list) => <main><form onSubmit={(e) => e.preventDefault()}><input aria-label="elsewhere" /></form><ErrorSummary errors={list} /></main>
+    const { rerender, container } = render(page(errors))
     screen.getByLabelText('elsewhere').focus()
     expect(document.activeElement).not.toBe(screen.getByRole('alert'))
-    rerender(<><input aria-label="elsewhere" /><ErrorSummary errors={[...errors]} /></>)
+    fireEvent.submit(container.querySelector('form'))
+    rerender(page([...errors]))
     expect(document.activeElement).toBe(screen.getByRole('alert'))
   })
   it('moves the focus into the field when a problem is clicked, without leaving the page', async () => {
@@ -112,3 +115,51 @@ describe('a failure message', () => {
   })
 })
 
+// A form that, like most on the site, builds its list of problems afresh each time it is drawn (so the list is a NEW list on every keystroke).
+function Harness() {
+  const [text, setText] = useState('')
+  const [problems, setProblems] = useState([])
+  return (
+    <main>
+      <ErrorSummary errors={problems.map((message, i) => ({ id: `f${i}`, message }))} />
+      <form onSubmit={(e) => { e.preventDefault(); setProblems(text ? [] : ['Write something.']) }} noValidate>
+        <input aria-label="the field" id="f0" value={text} onChange={(e) => setText(e.target.value)} />
+        <button type="submit">Send</button>
+      </form>
+      <form onSubmit={(e) => e.preventDefault()}><button type="submit">Unrelated</button></form>
+    </main>
+  )
+}
+
+describe('the summary and the keyboard focus (found 21 October 2026 by a test on the New product form)', () => {
+  it('moves the focus to the summary when a form is sent and has a problem', async () => {
+    const user = userEvent.setup(); render(<Harness />); await user.click(screen.getByRole('button', { name: 'Send' }))
+    expect(screen.getByRole('alert')).toHaveFocus()
+  })
+  it('does NOT take the focus back while the person types to fix the problem: every letter lands, in the field, with the summary still showing', async () => {
+    const user = userEvent.setup(); render(<Harness />); await user.click(screen.getByRole('button', { name: 'Send' }))
+    await user.click(screen.getByLabelText('the field')); await user.keyboard('hello world')
+    expect(screen.getByLabelText('the field')).toHaveValue('hello world'); expect(screen.getByLabelText('the field')).toHaveFocus(); expect(screen.getByRole('alert')).toBeInTheDocument()
+  })
+  it('takes the focus again each time the form is sent with the problem still there (so a screen reader hears that nothing was accepted)', async () => {
+    const user = userEvent.setup(); render(<Harness />); const send = screen.getByRole('button', { name: 'Send' })
+    await user.click(send); expect(screen.getByRole('alert')).toHaveFocus()
+    await user.click(screen.getByLabelText('the field')); expect(screen.getByLabelText('the field')).toHaveFocus()
+    await user.click(send); expect(screen.getByRole('alert')).toHaveFocus()
+  })
+  it('is not set off by a different form elsewhere on the page, such as a sign-up box in the footer: sending that one does not pull the focus out of the field being fixed', async () => {
+    const user = userEvent.setup(); render(<><Harness /><footer><form onSubmit={(e) => e.preventDefault()}><button type="submit">Join the newsletter</button></form></footer></>)
+    await user.click(screen.getByRole('button', { name: 'Send' })); await user.click(screen.getByRole('button', { name: 'Join the newsletter' }))
+    await user.click(screen.getByLabelText('the field')); await user.keyboard('still typing')
+    expect(screen.getByLabelText('the field')).toHaveValue('still typing'); expect(screen.getByLabelText('the field')).toHaveFocus()
+  })
+  it('leaves once the problem is put right: the summary goes away when the form is sent correctly', async () => {
+    const user = userEvent.setup(); render(<Harness />); await user.click(screen.getByRole('button', { name: 'Send' }))
+    await user.type(screen.getByLabelText('the field'), 'ok'); await user.click(screen.getByRole('button', { name: 'Send' }))
+    expect(screen.queryByRole('alert')).toBeNull()
+  })
+  it('takes the focus when a different problem appears while it is already showing', async () => {
+    const { rerender } = render(<ErrorSummary errors={[{ id: 'a', message: 'First problem' }]} />); const box = screen.getByRole('alert'); box.blur(); document.body.focus()
+    rerender(<ErrorSummary errors={[{ id: 'a', message: 'First problem' }, { id: 'b', message: 'Second problem' }]} />); expect(screen.getByRole('alert')).toHaveFocus()
+  })
+})

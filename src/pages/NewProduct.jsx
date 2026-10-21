@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
-import { Field, FailureMessage } from '../components/FormMessages'
+import { Field, ErrorSummary, FailureMessage } from '../components/FormMessages'
+import { productProblems } from './productFormRules'
+import { summaryOf } from './postFormRules'
 import '../styles/pages.css'
 import '../styles/forms.css'
 
@@ -13,6 +15,8 @@ const COLLECTIONS = [
   'Unique One of a Kind',
 ]
 
+const IDS = { title: 'npr-title', description: 'npr-description', price: 'npr-price', files: 'npr-images' }
+
 export default function NewProduct({ session }) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -21,12 +25,19 @@ export default function NewProduct({ session }) {
   const [collection, setCollection] = useState('')
   const [files, setFiles] = useState([])
   const [error, setError] = useState(null)
+  const [errors, setErrors] = useState({}) // a plain-words problem under each field that needs fixing
   const [saving, setSaving] = useState(false)
   const navigate = useNavigate()
 
   async function handleSubmit(e) {
     e.preventDefault()
     setError(null)
+    const found = productProblems({ title, description, price, files })
+    if (Object.keys(found).length > 0) {
+      setErrors(found)
+      return
+    }
+    setErrors({})
     setSaving(true)
 
     try {
@@ -73,16 +84,17 @@ export default function NewProduct({ session }) {
   return (
     <main className="fm">
       <h1 className="fm__title">New product</h1>
+      <ErrorSummary errors={summaryOf(errors, IDS)} />
       {error && <FailureMessage title="The product was not saved">{error}</FailureMessage>}
-      <form className="fm__form" onSubmit={handleSubmit}>
-        <Field id="npr-title" label="Title">
+      <form className="fm__form" onSubmit={handleSubmit} noValidate>
+        <Field id="npr-title" label="Title" error={errors.title}>
           {(p) => <input {...p} type="text" placeholder="Title" value={title} onChange={(e) => setTitle(e.target.value)} required />}
         </Field>
-        <Field id="npr-description" label="Description">
+        <Field id="npr-description" label="Description" error={errors.description}>
           {(p) => <textarea {...p} placeholder="Description" rows={6} value={description} onChange={(e) => setDescription(e.target.value)} required />}
         </Field>
         <div className="fm__row">
-          <Field id="npr-price" label="Price (£)">
+          <Field id="npr-price" label="Price (£)" error={errors.price}>
             {(p) => <input {...p} type="number" step="0.01" placeholder="Price (£)" value={price} onChange={(e) => setPrice(e.target.value)} required />}
           </Field>
           <Field id="npr-type" label="Kind of product">
@@ -107,7 +119,7 @@ export default function NewProduct({ session }) {
             </select>
           )}
         </Field>
-        <Field id="npr-images" label="Images" help="3 to 6 recommended. The first one becomes the thumbnail.">
+        <Field id="npr-images" label="Images" help="3 to 6 recommended. The first one becomes the thumbnail." error={errors.files}>
           {(p) => <input {...p} type="file" accept="image/*" multiple onChange={(e) => setFiles(Array.from(e.target.files))} />}
         </Field>
         <div className="fm__actions">
