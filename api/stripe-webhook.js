@@ -5,23 +5,28 @@
 //   - One payment, one order: the payment's reference is unique in the orders table, so if Stripe repeats a message
 //     (it does, sometimes), the second copy changes nothing.
 //   - A TEST payment is recorded and marked "test, not sent". It never orders anything.
-//   - A REAL payment is recorded FIRST, as "sending", and only then sent to Creative Hub. Creative Hub has no reference field to
+//   - A REAL payment is HELD unless automatic sending has been switched on (SEND_ORDERS_AUTOMATICALLY=yes in Vercel; lib/orderSending.js): it is saved as "held" and waits for
+//     the owner's OK in the Orders panel. Nothing is ordered, charged or printed until she presses Send (Gill, 21 October 2026).
+//   - A REAL payment, with automatic sending on, is recorded FIRST, as "sending", and only then sent to Creative Hub. Creative Hub has no reference field to
 //     stop a duplicate, so this is the protection: the order row exists before anything is sent, and a repeated message from
 //     Stripe finds it already there and does nothing.
 //   - What Creative Hub answers is written on the order in plain words: "sent", "needs attention" (it definitely said no, so it is
 //     safe to try again), or "check Creative Hub" (the answer was lost, so it may or may not exist, and it is never resent blindly).
 //   - A REAL payment that cannot be ordered (an item that cannot be matched, an incomplete address, no Creative Hub key) is
 //     recorded as "needs attention" with the reason, so it can never go unnoticed.
-//   - The customer's confirmation email (which the law requires) is sent ONCE, for a new order only, right after it is saved. A problem
-//     with it never stops the order being placed: it is written on the order, and the owner has a button to send it again.
+//   - The customer's CONFIRMATION email (which the law requires, and which under our Terms is the moment the contract begins) is sent ONCE, and for a REAL payment only after
+//     Creative Hub has accepted the order. Until then the customer gets a short "we have received your payment, this is not yet your confirmation" email instead, once.
+//     A TEST payment gets its confirmation straight away (with a TEST banner) so the wording can be looked at. A problem with any email never stops the order being placed:
+//     it is written on the order, and the owner has a button to send it again.
 //   - If something temporary goes wrong BEFORE the order is saved (Stripe or the database cannot be reached), it answers with an
 //     error so Stripe sends the message again later. It never throws a paid order away.
 
 import { createHmac, timingSafeEqual } from 'node:crypto'
 import { serviceFetch } from '../lib/serviceKey.js'
 import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, buildPayload } from '../lib/creativehubOrders.js'
-import { placeAndRecord } from '../lib/orderFlow.js'
-import { confirmOrder } from '../lib/orderConfirmation.js'
+import { placeAndNotify } from '../lib/orderFlow.js'
+import { confirmOrder, sendNotice } from '../lib/orderConfirmation.js'
+import { autoSendIsOn, HELD_NOTE } from '../lib/orderSending.js'
 
 // Stripe signs the exact bytes it sends, so the body must reach us untouched. This uses the standard web request form
 // (request.text() gives the raw body), which is the way Vercel's own guide recommends for webhooks.
@@ -99,6 +104,9 @@ function buildOrder(event, session, readFully) {
     if (reason) {
       status = 'needs_attention'
       note = `Paid for real, but nothing was ordered. ${reason}`
+    } else if (!autoSendIsOn()) {
+      status = 'held'
+      note = HELD_NOTE
     } else {
       status = 'sending'
       note = 'Sending to Creative Hub…'
@@ -170,21 +178,33 @@ export async function POST(request) {
     // 1. Save the order first. For a real payment this is also the "claim": if a repeat of this message finds the order already
     //    there, it does nothing, so one payment can never become two orders at Creative Hub.
     const outcome = await saveOrder(order)
-    // The confirmation email: once, for a NEW order only (a repeat of this message finds the order already saved and stops just below).
-    // It never throws and never holds up the Creative Hub order.
-    if (outcome === 'saved') {
+    // A repeat of this message finds the order already saved and stops here, so nothing is sent or emailed twice.
+    if (outcome === 'duplicate') return reply(200, { ok: true, order: outcome })
+
+    // A TEST payment: its confirmation (with a TEST banner) goes straight away so the wording can be looked at. Nothing is ever ordered. It never throws.
+    if (!order.livemode) {
       try {
         await confirmOrder(order)
       } catch (e) {
-        // It should never throw. But if it somehow did, answering with an error would make Stripe send this again, the repeat would find the
-        // order already saved and stop, and the order would never reach Creative Hub. So nothing here is allowed to get in the way.
+        // nothing here is allowed to get in the way of answering Stripe
       }
+      return reply(200, { ok: true, order: outcome })
     }
-    if (outcome === 'duplicate' || order.status !== 'sending') return reply(200, { ok: true, order: outcome })
 
-    // 2. Only now send it. This never throws, and never makes Stripe repeat the message: if what comes back is lost, the order says
-    //    so and waits for you, rather than being sent a second time.
-    const sent = await placeAndRecord(order, `stripe_session_id=eq.${encodeURIComponent(order.stripe_session_id)}`)
+    // A REAL payment that is held (automatic sending is off) or could not be ordered: the customer is told their payment has arrived and that this is not yet the
+    // confirmation. It never throws, and never holds up the answer to Stripe.
+    if (order.status !== 'sending') {
+      try {
+        await sendNotice('received', order)
+      } catch (e) {
+        // as above
+      }
+      return reply(200, { ok: true, order: outcome })
+    }
+
+    // 2. A REAL payment, with automatic sending on: send it now. This never throws, and never makes Stripe repeat the message: if what comes back is lost, the order says
+    //    so and waits for you, rather than being sent a second time. The customer is emailed the confirmation only once Creative Hub has accepted it.
+    const sent = await placeAndNotify(order, `stripe_session_id=eq.${encodeURIComponent(order.stripe_session_id)}`)
     return reply(200, { ok: true, order: outcome, creativehub: sent.patch.status })
   } catch (e) {
     // The detail is one of this file's own short messages (never a key), and only Stripe, with a valid signature, ever sees it

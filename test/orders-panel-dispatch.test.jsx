@@ -28,7 +28,7 @@ describe('the posted email on the Orders panel', () => {
     await load()
     await userEvent.click(screen.getByRole('button', { name: /send the posted email/i }))
     await userEvent.click(screen.getByRole('button', { name: /^cancel$/i }))
-    expect(h.action).not.toHaveBeenCalled()
+    expect(h.action.mock.calls.filter(([name]) => name !== 'sending_state')).toEqual([]) // loading the orders also asks (read-only) whether automatic sending is on; nothing was SENT
     expect(screen.getByRole('button', { name: /send the posted email/i })).toBeInTheDocument()
   })
   it('says it was sent (with the tracking number), and offers no button', async () => {

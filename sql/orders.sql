@@ -6,7 +6,7 @@ create table if not exists public.orders (
   stripe_session_id text not null unique,   -- one payment, one row: a repeated message from Stripe can never make a second order
   stripe_payment_intent text,
   livemode boolean not null default false,  -- false = a test payment
-  status text not null default 'paid',      -- test_not_sent | needs_attention | sent
+  status text not null default 'paid',      -- test_not_sent | held | sending | needs_attention | check_creativehub | sent | refunded
   customer_name text,
   customer_email text,
   customer_phone text,

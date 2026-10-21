@@ -3,13 +3,15 @@ import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
 import { buildInvoice, isSessionId } from '../lib/invoiceData.js'
 
-const COLUMNS = 'id,created_at,status,livemode,customer_name,customer_email,shipping,amount_total,currency,items,creativehub_order_id,creativehub_status,note'
+const COLUMNS = 'id,created_at,status,livemode,stripe_payment_intent,customer_name,customer_email,shipping,amount_total,currency,items,creativehub_order_id,creativehub_status,note'
 // Added later (sql/orders-creativehub.sql). If that has not been run yet, the list is read without them rather than not at all.
 const EXTRA = 'creativehub_order_number,creativehub_due,creativehub_checked_at,sent_at'
 // Added later still (sql/orders-confirmation.sql): whether the customer's confirmation email went.
 const CONFIRMATION = 'confirmation_status,confirmation_note,confirmation_sent_at'
 // And the "your order has been posted" email (sql/orders-dispatch.sql).
 const DISPATCH = 'dispatch_status,dispatch_note,dispatch_sent_at,tracking_url,tracking_number'
+// And the "we have received your payment" and "we could not accept your order" notices, and when a refund was recorded (sql/orders-notices.sql).
+const NOTICES = 'notice_kind,notice_status,notice_note,notice_sent_at,refunded_at'
 
 // A customer's own invoice, found by the Stripe session id from their thank-you page or confirmation email. Open to anyone holding that id (it cannot be guessed),
 // and it only ever returns what belongs on an invoice.
@@ -40,7 +42,8 @@ export default async function handler(req, res) {
   }
   try {
     const read = (columns) => serviceFetch(`/rest/v1/orders?select=${columns}&order=created_at.desc&limit=50`, { headers: { Accept: 'application/json' } })
-    let response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION},${DISPATCH}`)
+    let response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION},${DISPATCH},${NOTICES}`)
+    if (response.status === 400) response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION},${DISPATCH}`)
     if (response.status === 400) response = await read(`${COLUMNS},${EXTRA},${CONFIRMATION}`)
     if (response.status === 400) response = await read(`${COLUMNS},${EXTRA}`)
     if (response.status === 400) response = await read(COLUMNS)

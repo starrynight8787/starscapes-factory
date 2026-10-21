@@ -3,7 +3,9 @@
 //   refresh  ask Creative Hub where one order (or every order sent so far) stands, and write it down
 //   check    look through Creative Hub's recent orders for one that looks like this order (changes nothing)
 //   link     tell the shop "this order IS that Creative Hub order", once you have found it there
-//   send     send an order to Creative Hub (again)
+//   send     send an order to Creative Hub: a HELD order for the first time (automatic sending is off), or one that needs another go
+//   mark_refunded  record that an order Creative Hub does not have has been cancelled and refunded IN STRIPE (the site never moves money), and tell the customer
+//   sending_state  whether real payments go to Creative Hub by themselves, and whether the customer emails are ready
 //   resend_confirmation  send the customer's confirmation email again (only if it has not gone)
 //   send_dispatch        send the customer the "your order has been posted" email, with a tracking link or number if you give one
 //
@@ -18,8 +20,9 @@
 import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
 import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, getOrder, listOrders, summariseOrder, candidatesFor, isSafeOrderId, buildPayload } from '../lib/creativehubOrders.js'
-import { patchOrder, claimOrder, placeAndRecord } from '../lib/orderFlow.js'
-import { confirmOrder } from '../lib/orderConfirmation.js'
+import { patchOrder, claimOrder, placeAndNotify } from '../lib/orderFlow.js'
+import { confirmOrder, sendNotice, confirmationProblems } from '../lib/orderConfirmation.js'
+import { autoSendIsOn, AUTO_SEND_SETTING } from '../lib/orderSending.js'
 import { dispatchOrder } from '../lib/dispatchEmail.js'
 import { cleanTracking } from '../lib/dispatchEmailText.js'
 
@@ -157,7 +160,7 @@ async function send(res, body, settings) {
     if (body.confirm_not_there !== true) {
       return bad(res, 409, "It is not known whether Creative Hub already has this order, so it will not be sent until you have looked for it there and confirmed it is not there.")
     }
-  } else if (row.status !== 'needs_attention') {
+  } else if (row.status !== 'needs_attention' && row.status !== 'held') {
     return bad(res, 409, 'That order cannot be sent from where it is.')
   }
   if (!settingsUsable(settings)) return bad(res, 503, SETTINGS_PROBLEM)
@@ -166,8 +169,47 @@ async function send(res, body, settings) {
 
   const claim = await claimOrder(`id=eq.${row.id}`, [row.status])
   if (!claim.won) return bad(res, 409, 'That order changed while you were doing this, so it was not sent. Refresh the orders and look again.')
-  const { patch } = await placeAndRecord({ ...row, ...(claim.row || {}) }, `id=eq.${row.id}`)
+  // The customer is emailed the CONFIRMATION only once Creative Hub has accepted the order; if it has not, they are told their payment has arrived (once).
+  const { patch } = await placeAndNotify({ ...row, ...(claim.row || {}) }, `id=eq.${row.id}`)
   return res.status(200).json({ ok: true, outcome: patch.status, message: patch.note })
+}
+
+// ---------- cancel an order that cannot be made, once the payment has been refunded in Stripe ----------
+// The site NEVER moves money: the owner refunds the payment herself in Stripe, then says so here (and ticks a box to confirm it). Only then is the customer emailed that
+// we could not accept the order and they have been refunded. Only an order that Creative Hub does NOT have can be cancelled this way: one that is held, one Creative Hub refused
+// ("needs attention"), or one whose answer was lost, once the owner has looked at Creative Hub and confirmed it is not there. An order already with Creative Hub cannot.
+const REFUNDABLE = ['held', 'needs_attention']
+async function markRefunded(res, body) {
+  if (typeof body.id !== 'string' || !UUID.test(body.id)) return bad(res, 400, 'That is not an order.')
+  if (body.confirm_refunded !== true) return bad(res, 409, 'Please tick the box to say you have refunded this payment in Stripe first. The customer is told they have been refunded, so it must be true.')
+  const row = await loadOrder(body.id)
+  if (!row) return bad(res, 404, 'That order could not be found.')
+  if (!row.livemode) return bad(res, 409, 'That is a test payment: no money was taken, so there is nothing to refund.')
+  if (row.status === 'refunded') return bad(res, 409, 'That order has already been cancelled and marked as refunded.')
+  if (row.creativehub_order_id || row.status === 'sent') return bad(res, 409, 'That order is already with Creative Hub, so it cannot be cancelled here. Ask Creative Hub to cancel it before printing starts, and only then refund it.')
+  const stillSending = row.status === 'sending' && Date.now() - new Date(row.created_at).getTime() < STUCK_AFTER_MS
+  if (stillSending) return bad(res, 409, 'That order is still being sent. Give it a few minutes, then look for it at Creative Hub before cancelling it.')
+  const unsure = row.status === 'check_creativehub' || row.status === 'sending'
+  if (unsure) {
+    if (body.confirm_not_there !== true) return bad(res, 409, 'It is not known whether Creative Hub already has this order, so it will not be cancelled until you have looked for it there and confirmed it is not there.')
+  } else if (!REFUNDABLE.includes(row.status)) {
+    return bad(res, 409, 'That order cannot be cancelled from where it is.')
+  }
+  const saved = await patchOrder(`id=eq.${row.id}`, [row.status], { status: 'refunded', refunded_at: new Date().toISOString(), note: 'Cancelled, and refunded in Stripe by you. The customer is told.' })
+  if (!saved.ok || saved.rows.length !== 1) return bad(res, 409, 'That order changed while you were doing this, so nothing was changed. Refresh the orders and look again.')
+  const told = await sendNotice('refused', { ...row, ...(saved.rows[0] || {}), status: 'refunded' }, { match: `id=eq.${row.id}` })
+  return res.status(200).json({
+    ok: true,
+    outcome: 'refunded',
+    message: told.status === 'sent'
+      ? 'The order is cancelled and marked as refunded, and the customer has been emailed.'
+      : `The order is cancelled and marked as refunded, but the customer has NOT been emailed.${told.note ? ` ${told.note}` : ''} Please email them yourself.`,
+  })
+}
+
+// ---------- the state of automatic sending ----------
+async function sendingState(res) {
+  return res.status(200).json({ ok: true, auto_send: autoSendIsOn(), setting: AUTO_SEND_SETTING, email_problems: confirmationProblems() })
 }
 
 // ---------- resend the confirmation email ----------
@@ -223,7 +265,7 @@ async function sendDispatch(res, body) {
   return res.status(200).json({ ok: true, outcome: result.status, message: result.note || 'The email was not sent.' })
 }
 
-const ACTIONS = { refresh, check, link, send, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
+const ACTIONS = { refresh, check, link, send, mark_refunded: markRefunded, sending_state: sendingState, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')

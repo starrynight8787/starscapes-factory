@@ -1,0 +1,72 @@
+ORDER SAFEGUARDS: HOLD SWITCH, CONFIRMATION AFTER ACCEPTANCE, AND CANCEL AND REFUND   starscapes-order-safeguards-21oct.zip   (SFW-252)
+(Code, tests, ONE short step in Supabase, and a Vercel setting to know about. Released through a preview first.)
+
+WHY (the launch review, 21 October 2026): a real payment went to Creative Hub the moment it arrived, with nothing holding it back until Creative Hub's written reply exists; the customer's confirmation email went out BEFORE Creative Hub had said yes (and your Terms say the contract begins when we email the confirmation); and the site had no way to deal with an order Creative Hub refused. You said yes to all three safeguards.
+
+!! THE ONE THING THAT CHANGES FOR YOU: AFTER THIS IS INSTALLED, A REAL PAYMENT IS HELD BY DEFAULT. Nothing is ordered, charged or printed at Creative Hub until you press "Send to Creative Hub" on that order in the Orders panel. Automatic sending is switched on only by a Vercel setting called SEND_ORDERS_AUTOMATICALLY, set to exactly the word yes (see STEP C). You do NOT need to set anything to stay safe: not setting it is the safe state. Test payments are not affected (they never go to Creative Hub).
+
+WHAT CHANGES
+ 1. THE HOLD SWITCH. A real payment is saved as "HELD: waiting for your OK". The Orders panel says plainly whether automatic sending is ON or OFF and how to switch it. Press "Send to Creative Hub" (it asks you to confirm) and it goes, exactly as before.
+ 2. THE CONFIRMATION EMAIL COMES AFTER CREATIVE HUB ACCEPTS. For a real order, the customer is emailed the confirmation only once Creative Hub has said yes. Until then they get a short "We have received your payment" email that says clearly it is NOT yet the confirmation, that we refund everything if we cannot make the order, and to email us after 2 working days if they hear nothing. It is sent once, and only if the order is not accepted straight away (held, refused, or Creative Hub's answer lost). A test payment still gets its confirmation straight away, with the TEST banner.
+ 3. CANCEL AND REFUND. On a held order, an order Creative Hub refused ("needs attention"), or one whose answer was lost, there is a "Cancel and refund..." button. THE SITE NEVER MOVES MONEY: it shows a link straight to the payment in Stripe; you refund it there; you tick "I have refunded this payment in Stripe"; and only then does the order become "Cancelled and refunded" and the customer get "We could not accept your order: you have been refunded" (no contract was made, nothing will be made or posted, refunded to the card). If Creative Hub's answer was lost you must also tick that you have looked at Creative Hub and the order is not there. An order already with Creative Hub cannot be cancelled here: ask Creative Hub to cancel it first (before printing starts).
+ 4. THE NEW EMAILS ARE UNDER THE SAME RULE AS THE CONFIRMATION: a REAL customer is only sent them once the wording of the customer emails has been approved (WORDING_APPROVED in lib/orderEmailText.js). Until then, for a real order they are "NOT SENT" and the panel tells you to email the customer yourself. Live checkout stays closed until that approval, as before.
+ 5. The orders list now reads the Stripe payment reference (for the refund link) and the new columns, and falls back safely if the new columns are not there yet.
+
+NOT CHANGED, BUT KNOW THIS: the confirmation email's own wording is still unapproved, and it still has placeholders: "the address a print is sent back to" and "what to say about the cost of sending a large framed print back". Your decision that customers email first to arrange a return means the first placeholder should become "email us and we will tell you where to send it". That is a separate small change I still owe you (it blocks opening checkout), together with your approval of the wording.
+
+TESTS: 89 new or rewritten tests across 8 files: the listener (held by default; anything but exactly "yes" stays held; a repeat does nothing; email trouble never changes the answer to Stripe); the flow (confirmation only after acceptance and after the order is recorded; "received" once; never both); the owner's buttons (every guard on cancel and refund, including: confirm required, test payments refused, already-with-Creative-Hub refused, lost answer needs "I have looked", nothing emailed if the order changed, cannot be done twice); the two emails (wording, TEST and DRAFT banners, no promise of delivery or tracking, real customers only after approval); the panel in every state; the orders list; and the SQL file. 36 deliberate breakages, ALL caught. The webhook test was rewritten, because it described the old rule (confirmation before Creative Hub answers), and one panel test was adjusted.
+WHOLE SUITE on a copy of your newest commit with this installed: 3,544 tests, 0 failing; build fine; 12 functions; health check passes.
+
+STEP A: THE CODE, THROUGH A PREVIEW FIRST
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-order-safeguards-21oct.zip
+ 4. python3 tools/add-order-safeguards.py     IT MUST PRINT "changed" LINES FOR 11 FILES AND "replaced" LINES FOR 7 TEST FILES. If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me. (The new tests only move into place if every edit succeeded.)
+ 5. grep -c "autoSendIsOn" api/stripe-webhook.js        (it must print 2)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-order-safeguards" -not -path "./node_modules/*" -delete
+10. git checkout -b order-safeguards
+    git add .
+    git status                                   (11 changed files; new: lib/orderSending.js, sql/orders-notices.sql, the 7 new test files, the notes, the installer, its test and fixtures, tools/order-safeguards-files/; nothing ending .before-)
+    git commit -m "Order safeguards: real payments held by default, confirmation after Creative Hub accepts, cancel and refund (SFW-252)"
+    git push -u origin order-safeguards
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "order-safeguards" and says Preview. Wait for Ready, press Visit, sign in as the owner, open Art Loft, Admin and press "Show recent orders". You should see the line "Automatic sending is OFF..." and your test orders as before. (The preview uses the same database, so Step B should be done first or the new column fallback is used: both are fine.) If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is Ready:
+    git checkout main
+    git merge order-safeguards
+    git push
+    git branch -d order-safeguards
+
+STEP B: SUPABASE (no deploy needed; do it any time)
+ 1. Open supabase.com, sign in, open your Starscapes Factory project, click "SQL Editor" in the left menu, then "New query".
+ 2. Paste ALL of this and press Run. It should say "Success. No rows returned":
+
+alter table public.orders add column if not exists notice_kind text;
+alter table public.orders add column if not exists notice_status text;
+alter table public.orders add column if not exists notice_note text;
+alter table public.orders add column if not exists notice_sent_at timestamptz;
+alter table public.orders add column if not exists refunded_at timestamptz;
+
+ 3. To check, click "New query", paste this and press Run. You should see 5 rows:
+
+select column_name from information_schema.columns where table_schema = 'public' and table_name = 'orders' and column_name in ('notice_kind', 'notice_status', 'notice_note', 'notice_sent_at', 'refunded_at') order by column_name;
+
+   (Without this step everything still works; only the notes of which notice went, and the date of a refund, are not recorded.)
+
+STEP C: VERCEL (ONLY WHEN YOU ARE READY FOR REAL ORDERS TO GO BY THEMSELVES; NOT NEEDED NOW)
+ Switch automatic sending on only when ALL THREE are true: (1) Creative Hub's written reply to your four questions has arrived and is saved on SFW-252; (2) the supervised first order (SFW-8) has gone through; (3) the wording of the customer emails is approved.
+ 1. In Vercel open the starscapes-factory project, then Settings, then Environment Variables.
+ 2. Add a variable: Name SEND_ORDERS_AUTOMATICALLY, Value yes (exactly), for Production. Save.
+ 3. Redeploy so it takes effect: Deployments, the newest Production deployment, the three dots, Redeploy.
+ 4. Open the Orders panel: it should now say "Automatic sending is ON".
+ To switch it off again at any time: delete the variable (or change it to anything else), and redeploy.
+
+HOW TO REFUND IN STRIPE (what to do when "Cancel and refund..." sends you there)
+ 1. Press "Open this payment in Stripe" in the Orders panel (it opens the payment). Or sign in at dashboard.stripe.com, and make sure the "Test mode" switch (top right) is OFF for a real order, click "Payments" in the left menu, and search for it.
+ 2. On the payment's page, click "Refund payment" (top right), choose the full amount, pick the reason "Other", and click "Refund".
+ 3. Back in the Orders panel, tick "I have refunded this payment in Stripe" and press "Cancel the order and email the customer".
+ Stripe's menus move around sometimes: look for "Payments" and a "Refund" button. Stripe may not return its own processing fee on a refund (check their pricing page), so each refused order can cost a small fee.
+ A DRILL BEFORE OPENING (optional, costs one small Stripe fee): with the hold on, place one cheap REAL order to yourself. It will arrive HELD. Press "Cancel and refund...", refund it in Stripe, tick the box, and see it become "Cancelled and refunded". (If the email wording is not approved yet, the panel will say the notice was NOT SENT and tell you to email the customer yourself: that is correct.)

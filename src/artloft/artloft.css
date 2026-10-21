@@ -728,6 +728,12 @@ a.al-object:focus-visible {
 .al-tools__status.is-sent {
   color: #1c6b3a;
 }
+.al-tools__status.is-held {
+  color: #8a4b00;
+}
+.al-tools__status.is-refunded {
+  color: #4a4f63;
+}
 .al-tools__table small {
   color: var(--sf-muted, #5b6585);
 }
