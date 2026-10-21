@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Link, useSearchParams } from 'react-router-dom'
 import useTitle from '../pages/useTitle'
 import { isToken } from './newsletterRules'
+import { EBOOK } from '../ebook/ebookConfig'
 import { confirmSubscription, unsubscribe } from './newsletterApi'
 import '../styles/pages.css'
 import './newsletter.css'
@@ -28,14 +29,30 @@ function LinkPage({ title, button, working, run, done, explain, noToken }) {
           {state.phase === 'error' && <p className="nlp__error" role="alert">{state.message}</p>}
         </>
       )}
-      {state.phase === 'done' && <p className="nlp__text" role="status">{state.message}</p>}
+      {state.phase === 'done' && <div className="nlp__text" role="status">{state.message}</div>}
       <p><Link to="/">Back to the homepage</Link></p>
     </main>
   )
 }
 
+// After confirming: someone who asked for the free ebook also gets it here (or is told it is still being finished). It is the same list for everyone.
+function Confirmed({ already, ebook }) {
+  const thanks = already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.'
+  if (!ebook) return thanks
+  return (
+    <>
+      <p>{thanks}</p>
+      {EBOOK.file ? (
+        <p><a className="pg-btn nlp__button" href={EBOOK.file} download>Download the free ebook (PDF)</a> <small>{EBOOK.fileNote}</small></p>
+      ) : (
+        <p>Your free ebook is still being finished. I will email you the link as soon as it is ready.</p>
+      )}
+    </>
+  )
+}
+
 export function NewsletterConfirmPage() {
-  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={(r) => (r.state === 'already' ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.')} noToken="That link does not look right. Please open the link in the email we sent you." />
+  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={(r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} />} noToken="That link does not look right. Please open the link in the email we sent you." />
 }
 
 export function NewsletterUnsubscribePage() {

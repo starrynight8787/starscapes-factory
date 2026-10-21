@@ -2,6 +2,7 @@
 // (as you type, and for the preview) and by the server (again, before anything is stored or sent), so they can never disagree. Nothing here touches the screen or the network, so all
 // of it is tested directly. The list lives in the shop's own database; Resend only delivers the emails (lib/newsletter.js, lib/newsletterAdmin.js).
 import { COMPANY, companyLine } from '../data/company'
+import { EBOOK } from '../ebook/ebookConfig.js'
 
 export const SUBJECT_MAX = 150
 export const BODY_MAX = 20000
@@ -11,6 +12,11 @@ export const TOKEN_PATTERN = /^[a-f0-9]{48}$/
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const CONSENT_TEXT = 'Send me the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.'
 export const SITE = 'https://starscapesfactory.com'
+
+// Where a sign-up came from: the footer box ('site') or the free ebook page ('ebook'). Both join the SAME list. The words recorded as their agreement are the ones on the box they ticked,
+// chosen here on the server and never taken from the browser.
+export const sourceOf = (input) => (input && input.source === 'ebook' ? 'ebook' : 'site')
+export const consentFor = (source) => (source === 'ebook' ? EBOOK.consent : CONSENT_TEXT)
 
 export const isToken = (t) => TOKEN_PATTERN.test(String(t === null || t === undefined ? '' : t))
 export const isUuid = (t) => UUID_PATTERN.test(String(t === null || t === undefined ? '' : t))
@@ -25,7 +31,7 @@ export function cleanSubscribe(input) {
   const email = text(f.email).trim().toLowerCase()
   if (!email) return bad('email', 'Please enter your email address.')
   if (email.length > 254 || !EMAIL.test(email)) return bad('email', 'That does not look like an email address. Please check it.')
-  if (f.consent !== true) return bad('consent', 'Please tick the box to say you would like the newsletter.')
+  if (f.consent !== true) return bad('consent', sourceOf(f) === 'ebook' ? 'Please tick the box to say you would like the free ebook and the newsletter.' : 'Please tick the box to say you would like the newsletter.')
   return { ok: true, email }
 }
 
@@ -98,11 +104,24 @@ export function renderNewsletter({ subject, body, unsubscribeUrl, company = COMP
 }
 
 // The email that asks someone to confirm: they are only added once they press the link (double opt-in)
-export function confirmationEmail({ confirmUrl, company = COMPANY }) {
+export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site' }) {
   const line = companyLine(company)
-  const subject = 'Please confirm you would like the Starscapes Factory newsletter'
-  const text = `Hello,\n\nSomeone, hopefully you, asked for the Starscapes Factory newsletter to be sent to this address.\n\nTo say yes, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for the Starscapes Factory newsletter to be sent to this address.</p>\n<p style="${P}">To say yes, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Yes, send me the newsletter</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
+  const ebook = source === 'ebook' // asked for the free ebook, which joins the same list
+  const what = ebook ? 'the free ebook and the Starscapes Factory newsletter' : 'the Starscapes Factory newsletter'
+  const subject = ebook ? 'Please confirm to get your free ebook and the Starscapes Factory newsletter' : 'Please confirm you would like the Starscapes Factory newsletter'
+  const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${ebook ? ' and get the ebook' : ''}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${ebook ? ' and get the ebook' : ''}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${ebook ? 'Yes, send me the free ebook and the newsletter' : 'Yes, send me the newsletter'}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
+  const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+  return { subject, html: FRAME(subject, inner, footerHtml), text }
+}
+
+// For someone who is ALREADY on the list and asks for the ebook (nothing to confirm, so it just gives the link). The page never says whether an address was already signed up: they find out in their inbox.
+export function ebookLinkEmail({ file, company = COMPANY, site = SITE }) {
+  const line = companyLine(company)
+  const link = `${site}${file}`
+  const subject = `Your free ebook: ${EBOOK.title.replace(/:.*$/, '')}`
+  const text = `Hello,\n\nHere is the free ebook you asked for:\n${link}\n\n${EBOOK.fileNote}\n\nYou are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.\n\n--\n${line}\n`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ebook you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ebook (PDF)</a></p>\n<p style="${P}">${esc(EBOOK.fileNote)}</p>\n<p style="${P}">You are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.</p>`
   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
   return { subject, html: FRAME(subject, inner, footerHtml), text }
 }

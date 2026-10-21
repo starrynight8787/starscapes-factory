@@ -1,18 +1,20 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { Field, CheckField, ErrorSummary, FailureMessage } from '../components/FormMessages'
 import useTitle from '../rooms/useTitle'
 import PageBanner from '../components/PageBanner'
 import { EBOOK } from './ebookConfig'
 import { cleanSignup } from './ebookRules'
+import { fetchOpen, subscribe } from '../newsletter/newsletterApi'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './ebook.css'
 import './ebookv2.css'
 
 // The Free Ebook pages behind the Lounge's door (Figma: "Download page: Free Ebook, sign up with email" and "thank you and download").
-// Someone gives their email and ticks the box, the server keeps both, and they get the download. Until there is a PDF (src/ebook/ebookConfig.js) the
-// thank-you says the ebook is being finished instead of offering a download that is not there.
+// The free ebook and the newsletter are ONE list: asking for the ebook signs someone up to the newsletter (the tick box says so), with the same email that asks them to confirm. Once they
+// press the button in it, the page it opens gives them the download (src/newsletter/NewsletterLinkPage.jsx). Until there is a PDF (src/ebook/ebookConfig.js) it says the ebook is being finished.
+// It works only while the newsletter is open, like the sign-up box in the footer.
 export default function FreeEbookPage() {
   useTitle('Free ebook')
   const [email, setEmail] = useState('')
@@ -21,7 +23,14 @@ export default function FreeEbookPage() {
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [problem, setProblem] = useState('')
-  const [done, setDone] = useState(null)
+  const [done, setDone] = useState(false)
+  const [open, setOpen] = useState(null) // is the newsletter (and so this sign-up) open: null while we ask
+
+  useEffect(() => {
+    let alive = true
+    fetchOpen().then((o) => { if (alive) setOpen(o) })
+    return () => { alive = false }
+  }, [])
 
   async function submit(event) {
     event.preventDefault()
@@ -31,13 +40,11 @@ export default function FreeEbookPage() {
     setErrors({})
     setSaving(true)
     try {
-      const response = await fetch('/api/ebook-signup', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email: check.email, consent: true, website: robot }) })
-      const body = await response.json().catch(() => null)
-      if (response.ok && body && body.ok) setDone({ file: typeof body.file === 'string' ? body.file : '', emailed: body.emailed === true })
-      else if (body && body.errors) setErrors(body.errors)
-      else setProblem('That did not go through just now. Please try again in a moment.')
+      await subscribe({ email: check.email, consent: true, website: robot, source: 'ebook' })
+      setDone(true)
     } catch (e) {
-      setProblem('That did not go through just now. Please try again in a moment.')
+      if (e && (e.field === 'email' || e.field === 'consent')) setErrors({ [e.field]: e.message })
+      else setProblem((e && e.message) || 'That did not go through just now. Please try again in a moment.')
     } finally {
       setSaving(false)
     }
@@ -50,23 +57,15 @@ export default function FreeEbookPage() {
     return (
       <main className="rp eb eb--v2">
         {back}
-        <PageBanner chip="You are in" title={done.file ? 'Thank you. Your ebook is ready.' : 'Thank you. Your ebook is being finished.'} art="mountain" room="leadership-lounge" />
+        <PageBanner chip="Nearly there" title="Check your email" art="mountain" room="leadership-lounge" />
         <div className="eb__layout">
           <div className="eb__side">{cover}</div>
           <div className="eb__card">
-            {done.file ? (
-              <>
-                <p className="eb__text">Use the button to download it.</p>
-                <a className="pg-btn sg-btn--primary eb__download" href={done.file} download>Download the ebook (PDF)</a>
-                <p className="eb__small">{EBOOK.fileNote}</p>
-              </>
-            ) : (
-              <p className="eb__text">It is not quite ready to download. I have kept your address, and I will email you the link as soon as it is.</p>
-            )}
             <div className="eb__ok" role="status">
-              <p className="eb__ok-title">You are in. The first post is on its way.</p>
-              {done.emailed && <p>We have also emailed you the link, in case you want it again. If it does not arrive, check your spam folder.</p>}
+              <p className="eb__ok-title">Thank you. I have sent you an email.</p>
+              <p>Press the button in it to confirm. You will not get the ebook, or the newsletter, until you do. If it does not arrive in a few minutes, check your spam folder.</p>
             </div>
+            <p className="eb__text">{EBOOK.file ? 'The download will be waiting for you on the page the button opens.' : 'The ebook is not quite ready to download. As soon as it is, I will email you the link.'}</p>
             <p><Link to="/leadership-lounge">← Back to Leadership Lounge</Link></p>
           </div>
         </div>
@@ -87,6 +86,7 @@ export default function FreeEbookPage() {
         </div>
         <div className="eb__card">
           <h2 className="eb__h2">Where shall I send it?</h2>
+          {open === false ? <p className="eb__text" role="status">The free ebook is not open just yet. Please come back soon.</p> : (
           <form className="eb__form" onSubmit={submit} noValidate>
             <ErrorSummary errors={summary} />
             {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
@@ -98,8 +98,9 @@ export default function FreeEbookPage() {
             </div>
             <CheckField id="eb-consent" label={EBOOK.consent} error={errors.consent} checked={consent} onChange={(e) => setConsent(e.target.checked)} />
             <button type="submit" className="pg-btn sg-btn--primary eb__submit" disabled={saving}>{saving ? 'Sending…' : 'Get the free ebook'}</button>
-            <p className="eb__small">You get the download straight away. Your email is only used to send you the posts, and is never shared. See the <Link to="/page/privacy">Privacy policy</Link>.</p>
+            <p className="eb__small">You will get an email asking you to confirm. Once you do, the ebook is yours, and you will also get the newsletter: new posts and news, by email. Your email is never shared, and you can unsubscribe at any time. See the <Link to="/page/privacy">Privacy policy</Link>.</p>
           </form>
+          )}
         </div>
       </div>
     </main>

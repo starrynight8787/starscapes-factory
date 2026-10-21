@@ -1,3 +1,5 @@
+-- RETIRED on 21 October 2026: the free ebook now joins the NEWSLETTER list (newsletter_subscribers, sql/newsletter.sql, source 'ebook'), so this table is no longer used by the site.
+-- It had no sign-ups in it. It is safe to leave, or to remove with:  drop table public.ebook_signups;
 -- FREE EBOOK SIGN-UPS: run this once in the Supabase SQL editor. It is safe to run more than once.
 --
 -- WHAT IT DOES: it makes the table that keeps each email address that signed up for the free ebook, with the exact words they agreed to and when.

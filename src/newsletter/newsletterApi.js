@@ -26,6 +26,6 @@ export function fetchOpen() {
   return openAnswer
 }
 
-export const subscribe = ({ email, consent, website }) => ask('subscribe', { body: { email, consent, website, source: 'site' } })
+export const subscribe = ({ email, consent, website, source }) => ask('subscribe', { body: { email, consent, website, source: source === 'ebook' ? 'ebook' : 'site' } })
 export const confirmSubscription = (token) => ask('confirm', { body: { token } })
 export const unsubscribe = (token) => ask('unsubscribe', { body: { token } })

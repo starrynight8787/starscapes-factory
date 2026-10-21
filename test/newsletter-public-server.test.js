@@ -129,7 +129,7 @@ describe('confirming', () => {
   })
   it('says "already" the second time, and changes nothing more', async () => {
     const w = world({ rows: [row({ status: 'confirmed', confirmed_at: '2026-10-01T00:00:00Z' })] }); const out = await confirm(T1)
-    expect(out.body).toEqual({ ok: true, state: 'already' }); expect(w.db[0].confirmed_at).toBe('2026-10-01T00:00:00Z')
+    expect(out.body).toEqual({ ok: true, state: 'already', source: 'site' }); expect(w.db[0].confirmed_at).toBe('2026-10-01T00:00:00Z') // it also says where they came from, so the page can offer the ebook to those who asked for it
   })
   it('does NOT bring back someone who has unsubscribed: they must sign up again', async () => {
     const w = world({ rows: [row({ status: 'unsubscribed' })] }); const out = await confirm(T1)
@@ -192,13 +192,13 @@ describe('the small helpers and how it is wired in', () => {
     expect(readBody({ body: { a: 1 } })).toEqual({ a: 1 }); expect(readBody({ body: '{"a":1}' })).toEqual({ a: 1 }); expect(readBody({ body: 'List-Unsubscribe=One-Click' })).toEqual({ 'List-Unsubscribe': 'One-Click' })
     for (const body of [null, undefined, [1], 5, 'x'.repeat(5000)]) expect(readBody({ body }), String(body).slice(0, 10)).toBeNull()
   })
-  it('does not disturb the ebook sign-up: with no ?newsletter, the old behaviour is unchanged', async () => {
-    const w = world(); const out = await call({ query: {}, body: { email: '', consent: false } }); expect(out.status).toBe(400); expect(out.body.errors).toBeTruthy(); expect(w.calls).toHaveLength(0)
-    expect((await call({ method: 'GET', query: {} })).status).toBe(405)
+  it('has no separate ebook sign-up any more: with no ?newsletter the address says "not found" and does nothing (the free ebook joins the newsletter list)', async () => {
+    const w = world(); const out = await call({ query: {}, body: { email: 'ann@example.com', consent: true } }); expect(out.status).toBe(404); expect(out.body).toEqual({ ok: false, message: 'Not found.' }); expect(w.calls).toHaveLength(0)
+    expect((await call({ method: 'GET', query: {} })).status).toBe(404)
   })
-  it('is handed over before the ebook code, inside the same function: there is no 13th function', () => {
+  it('is handed over inside the one function that already existed (it keeps its old name, which is in every unsubscribe link): there is no 13th function', () => {
     const code = readFileSync(join(process.cwd(), 'api/ebook-signup.js'), 'utf8')
-    expect(code).toContain("import { handleNewsletter } from '../lib/newsletter.js'"); expect(code.indexOf('handleNewsletter(req, res)')).toBeLessThan(code.indexOf("if (req.method !== 'POST')"))
+    expect(code).toContain("import { handleNewsletter } from '../lib/newsletter.js'"); expect(code).toContain('if (req.query && req.query.newsletter) return handleNewsletter(req, res)'); expect(code).not.toMatch(/ebookSignup|handleSignup/)
     expect(readdirSync(join(process.cwd(), 'api')).filter((f) => f.endsWith('.js'))).toHaveLength(12)
   })
   it('knows no other request, and says nothing about it', async () => {

@@ -111,7 +111,7 @@ const CHECKS = [
   ['YouTube Series: the feed reader', 'lib/youtubeFeed.js', /export function parseFeed/, 'the ebook and YouTube update'],
   ['YouTube Series: the page', 'src/den/YouTubeSeriesPage.jsx', /youtube-nocookie/, 'the ebook and YouTube update'],
   ['YouTube Series: its door', 'src/doors/doorsData.js', /id: 'youtube-series'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
-  ['Free Ebook: the sign-up on the server', 'lib/ebookSignup.js', /export async function handleSignup/, 'the ebook and YouTube update'],
+  ['Free Ebook: the sign-up joins the newsletter list', 'lib/newsletter.js', /source = sourceOf\(body\)/, 'the one list update (the ebook and the newsletter are one list)'],
   ['Free Ebook: the database file', 'sql/ebook-signups.sql', /enable row level security/, 'the ebook and YouTube update'],
   ['Free Ebook: the page', 'src/ebook/FreeEbookPage.jsx', /Get the free ebook/, 'the ebook and YouTube update'],
   ['Free Ebook: its door', 'src/doors/doorsData.js', /id: 'free-ebook'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],

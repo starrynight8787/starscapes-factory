@@ -16,7 +16,7 @@ for (const f of [...walk('api'), ...walk('lib')].filter((p) => /\.(js|mjs)$/.tes
 describe('every table the server touches lets the server\u2019s key in', () => {
   const tables = [...touchedByServer].filter((t) => made.has(t)) // a table made some other way (the starter\u2019s products) is not in these files
   it('finds the tables this checks (so the check cannot quietly check nothing)', () => {
-    expect(tables).toEqual(expect.arrayContaining(['orders', 'memberships', 'ebook_signups']))
+    expect(tables).toEqual(expect.arrayContaining(['orders', 'memberships']))
   })
   for (const table of tables) {
     it(`${table} (made in sql/${made.get(table)}) grants the server's key select, insert, update and delete`, () => {
@@ -24,12 +24,19 @@ describe('every table the server touches lets the server\u2019s key in', () => {
       expect(code, `${table}: grant select, insert, update, delete ... to service_role`).toMatch(new RegExp(`^grant\\s+select,\\s*insert,\\s*update,\\s*delete\\s+on\\s+public\\.${table}\\s+to\\s+service_role;`, 'im'))
     })
   }
+  it('gives the newsletter list (which the free ebook now joins, so there is no separate ebook table) and its issues and sends the same: the server\u2019s key only, never visitors or signed-in people', () => {
+    const { code } = sqlFiles.find((s) => s.file === 'newsletter.sql')
+    for (const table of ['newsletter_subscribers', 'newsletter_issues', 'newsletter_sends']) {
+      expect(code, table).toMatch(new RegExp(`^grant\\s+select,\\s*insert,\\s*update,\\s*delete\\s+on\\s+public\\.${table}\\s+to\\s+service_role;`, 'im'))
+      expect(code, table).not.toMatch(new RegExp(`grant[^;]*public\\.${table}[^;]*to[^;]*(anon|authenticated)`, 'i'))
+    }
+  })
   it('gives the founding members table the same, since the server will manage it', () => {
     const { code } = sqlFiles.find((s) => s.file === 'memberships.sql')
     expect(code).toMatch(/^grant select, insert, update, delete on public\.founding_members to service_role;/m)
   })
   it('never gives the server-only tables to visitors or signed-in people (the grant is for the server\u2019s key alone)', () => {
-    for (const table of ['orders', 'ebook_signups']) {
+    for (const table of ['orders']) {
       const { code } = sqlFiles.find((s) => s.file === made.get(table))
       expect(code, table).not.toMatch(new RegExp(`grant[^;]*public\\.${table}[^;]*to[^;]*(anon|authenticated)`, 'i'))
     }

@@ -1,0 +1,49 @@
+THE FREE EBOOK AND THE NEWSLETTER ARE NOW ONE LIST   starscapes-ebook-one-list-21oct.zip   (SFW-235, SFW-250)
+(One Supabase step is OPTIONAL: removing a table that is no longer used. Nothing to set in Vercel.)
+
+WHAT YOU DECIDED
+ "Have it as one." Before, the free ebook had its own sign-up, its own table, its own tick box and its own wording; the newsletter had another. Now there is ONE list.
+
+HOW IT WORKS NOW
+ * The Free Ebook page signs people up to the newsletter list (marked as coming from the ebook, so you can tell). Its tick box says yes to both: "Yes, send me the free ebook and the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email."
+ * They get one email asking them to confirm (the ebook version: "Please confirm to get your free ebook and the Starscapes Factory newsletter"). They are not on the list, and get nothing, until they press the button.
+ * The page the button opens (the confirm page) is where the ebook is given: a "Download the free ebook (PDF)" button once the PDF exists, or "Your free ebook is still being finished. I will email you the link as soon as it is ready." until then.
+ * Someone ALREADY on the list who asks for the ebook is emailed the link (once the PDF exists). The page says the same thing to everyone, so it never tells anyone whether an address was already signed up.
+ * The free ebook page now works only while the newsletter is open (the same NEWSLETTER_OPEN switch as the footer box); until then it says "The free ebook is not open just yet."
+ * The old separate ebook sign-up is removed: lib/ebookSignup.js is deleted (the installer does it, keeping a copy), and the address /api/ebook-signup says "not found" to anything that is not the newsletter. It keeps its name because it is in the unsubscribe link of every email, and the free plan allows only 12 functions.
+ * The daily tidy-up (sign-ups nobody confirms are deleted after 30 days) treats ebook sign-ups exactly like any other.
+
+THE PRIVACY POLICY, SIMPLIFIED TO MATCH (still a draft)
+ * The table loses its separate ebook row (ten rows again): the newsletter row now covers "the newsletter or the free ebook".
+ * Resend's line: "if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter."
+ * How long we keep it: one point, "Newsletter and free ebook sign-ups (they are one list)".
+ * Marketing: "If you sign up for the newsletter, or ask for the free ebook, you are saying yes to the newsletter ... The free ebook and the newsletter are one list, so asking for the ebook also signs you up to the newsletter, and the tick box says so."
+ * NEW QUESTION FOR THE FREE-ADVICE REVIEW (SFW-234): is it fine that asking for the free ebook also signs someone up to the newsletter, because the one tick box says so? (It is common practice, but it is the review's call.)
+
+WHEN THE EBOOK PDF IS READY (nothing about this changes)
+ Save it in public/downloads/, set "file" in src/ebook/ebookConfig.js, push. From then the confirm page offers the download to everyone who asked for it, and people already on the list who ask get the link by email. Everyone who signed up for the ebook BEFORE the PDF existed is on the list: send them a newsletter from Admin, Newsletter, with the link (you can see who came for the ebook in the list: they are the ones whose sign-up came from the ebook).
+
+CHECKED (not tried with the real Resend yet: your first real send is the live test)
+ * 28 new tests, the ebook's own tests rewritten (22), five older test files brought up to date, and 20 deliberate breakages, all caught: the ebook's words not recorded; a browser being able to choose the recorded words; an ebook sign-up recorded as a footer one; the plain email sent for an ebook sign-up; people already on the list never getting the link; the page telling someone they are already signed up (it would reveal who is); the link going to someone who has not confirmed; the confirm page forgetting where someone came from or offering the ebook to footer sign-ups; the ebook page handing over the download before confirming, ignoring "closed", or no longer saying the sign-up came from the ebook; the old address answering again; the tidy-up skipping ebook sign-ups; the old table being written to; and the policy wording going back to two lists.
+ * The health check points at the new code; the service-role test now also checks the newsletter tables (it could not see them before).
+
+OPTIONAL SUPABASE STEP (the old ebook table is no longer used, and has no sign-ups in it; it is harmless to leave)
+ To remove it: Supabase, your project, SQL Editor (left menu), New query, paste this one line, click Run ("Success. No rows returned."):
+    drop table if exists public.ebook_signups;
+ To check it first (there should be 0): select count(*) from public.ebook_signups;
+ (Do this AFTER the package is installed and live, so nothing can still be writing to it.)
+
+INSTALL (from the project folder; ONLY run git add . at the very end)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. unzip -o ~/Downloads/starscapes-ebook-one-list-21oct.zip
+ 3. python3 tools/add-ebook-one-list.py        (it checks ten files first; if anything is unexpected it changes nothing and says which. It must print ten lines starting "changed" and one "removed")
+ 4. ls lib/ebookSignup.js                       (it must say: No such file or directory)
+ 5. npm test                                    (it should end with exactly 1 failed: the contact address test)
+ 6. npm run build
+ 7. ls api/*.js | wc -l                         (it must still print 12)
+ 8. find . -name "*.before-ebook-one-list" -not -path "./node_modules/*" -delete
+    git add .
+    git status                                   (10 changed files, lib/ebookSignup.js deleted, 5 changed tests, 2 new tests, the install notes, the installer and its test; nothing ending .before-)
+    git commit -m "The free ebook and the newsletter are one list; the policy says so"
+    git push
+ 9. After Vercel says Ready: with the newsletter still closed, the ebook page should say "The free ebook is not open just yet." (that is right). When you open the newsletter (NEWSLETTER_OPEN = yes), try the ebook page with two of your own addresses: you should get the confirm email, press the button, and see the "still being finished" message.
