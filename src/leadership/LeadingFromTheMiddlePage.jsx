@@ -4,6 +4,8 @@ import useTitle from '../rooms/useTitle'
 import PageBanner from '../components/PageBanner'
 import NebulaBox from '../entries/NebulaBox'
 import { UDEMY_URL, AUDIOBOOK_URL } from '../rooms/roomsData'
+import useDoors from '../doors/useDoors'
+import { EBOOK } from '../ebook/ebookConfig'
 import { INTRO, QUOTE, PHOTO, COURSE_WEEKS, OUTCOMES, CIRCLE_CENTRE, CIRCLE } from './leadingMiddleData'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -59,6 +61,8 @@ function Circle() {
 export default function LeadingFromTheMiddlePage() {
   useTitle('Leading from the Middle')
   const [photoOk, setPhotoOk] = useState(true)
+  const { isOpen } = useDoors()
+  const ebookOpen = isOpen('leadership-lounge', 'free-ebook') // the ebook's door: a real button once it is open
   return (
     <main className="rp lm">
       <p className="rp-back"><Link to="/leadership-lounge">← Back to Leadership Lounge</Link></p>
@@ -104,7 +108,17 @@ export default function LeadingFromTheMiddlePage() {
         </p>
       </section>
 
-      <div className="lm__nebula"><NebulaBox /></div>
+      <div className="lm__pair">
+        <section className="lm__ebook" aria-labelledby="lm-ebook-title">
+          <p className="lm__ebookmeta"><span className="lm__label">Free ebook</span>{!ebookOpen && <span className="pg-chip">Opening soon</span>}</p>
+          <h2 id="lm-ebook-title" className="lm__ebooktitle">Leading from the Middle</h2>
+          <p className="lm__text">{EBOOK.summary}</p>
+          {ebookOpen
+            ? <Link className="pg-btn fm-btn--primary" to="/leadership-lounge/free-ebook">Get the free ebook</Link>
+            : <button type="button" className="pg-btn fm-btn--primary" disabled>Get the free ebook</button>}
+        </section>
+        <NebulaBox />
+      </div>
     </main>
   )
 }

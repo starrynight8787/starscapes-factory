@@ -4,6 +4,7 @@ import { MemoryRouter } from 'react-router-dom'
 import LeadingFromTheMiddlePage from '../src/leadership/LeadingFromTheMiddlePage'
 import { OUTCOMES, CIRCLE, QUOTE } from '../src/leadership/leadingMiddleData'
 
+vi.mock('../src/doors/useDoors', () => ({ default: () => ({ isOpen: () => false }) }))
 vi.mock('../src/entries/NebulaBox', () => ({ default: () => <div>Into the Nebula</div> }))
 
 describe('Leading from the Middle page', () => {
@@ -16,6 +17,16 @@ describe('Leading from the Middle page', () => {
     const img = screen.getByRole('img', { name: /five ideas/ })
     CIRCLE.forEach((c) => expect(img.getAttribute('aria-label')).toContain(c.label))
     expect(screen.getByText('Into the Nebula')).toBeTruthy()
+    expect(screen.getByRole('button', { name: 'Get the free ebook' })).toBeDisabled() // the ebook's door is closed
+    expect(screen.getByText('Opening soon')).toBeTruthy()
+  })
+  it('links to the ebook page once its door is open', async () => {
+    vi.resetModules()
+    vi.doMock('../src/doors/useDoors', () => ({ default: () => ({ isOpen: () => true }) }))
+    const { default: Page } = await import('../src/leadership/LeadingFromTheMiddlePage')
+    render(<MemoryRouter><Page /></MemoryRouter>)
+    expect(screen.getByRole('link', { name: 'Get the free ebook' })).toHaveAttribute('href', '/leadership-lounge/free-ebook')
+    vi.doUnmock('../src/doors/useDoors')
   })
   it('spells the ideas correctly and keeps the river quote', () => {
     expect(CIRCLE[0].label).toBe('Unconscious Bias')
