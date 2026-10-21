@@ -23,7 +23,7 @@ describe('the four drafts came across whole, and the cookie policy was added to 
     for (const p of LEGAL_PAGES) expect(resolvePage(p.slug).kind).toBe('legal')
   })
   it('each has the sections of its draft, with their titles', () => {
-    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
+    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
     expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
     expect(page('terms').sections).toHaveLength(19)
@@ -101,7 +101,7 @@ describe('they show properly', () => {
     const { container } = open('privacy')
     const table = container.querySelector('table')
     expect([...table.querySelectorAll('th')].map((h) => h.textContent)).toEqual(['What', 'When', 'Why', 'Our legal reason'])
-    expect(table.querySelectorAll('tbody tr')).toHaveLength(10); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(11); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
     expect(container.querySelector('.md-tablewrap')).toBeTruthy()
   })
   it('a table scrolls inside a box a keyboard can reach and a screen reader can name, with a short hint for people on a phone', () => {
@@ -294,5 +294,21 @@ describe('the Terms on delivery say what Creative Hub confirmed in writing on 20
     const t = delivery()
     expect(t).toMatch(/If you need to change the delivery address, or want to stop an order before it is made, email/); expect(t).toMatch(/we can only cancel it if printing has not started, and we can only change the delivery address before it has been posted/)
     expect(t).toMatch(/This is separate from your legal right to cancel/)
+  })
+})
+
+describe('the Privacy policy covers the member profile', () => {
+  const privacy = () => page('privacy')
+  const section = (title) => privacy().sections.find((s) => s.title === title).paragraphs.join('\n')
+  it('says what the profile holds, what other people see, and what changing the email does', () => {
+    const p = section('Your profile and what other people see')
+    expect(p).toMatch(/name, choose a username, pick an icon/); expect(p).toMatch(/only parts of your profile that other people can see/); expect(p).toMatch(/Your name and email address are never shown to other members/)
+    expect(p).toMatch(/If you change your email address, we send a link to the new address, and it only changes once you press it/)
+  })
+  it('lists the profile in the table, the retention list, the sharing list and the marketing section', () => {
+    expect(section('What we collect and why')).toMatch(/Your profile: your name, your username, the icon you choose/)
+    expect(section('How long we keep it')).toMatch(/Your profile \(name, username, icon and email choice\):\*\* until you ask us to delete your account/)
+    expect(section('Who we share your information with')).toMatch(/holds your account, your profile and your order details/)
+    expect(section('Marketing')).toMatch(/Choosing free updates there signs you up to the newsletter/)
   })
 })
