@@ -8,6 +8,8 @@
 --   get_my_profile()          their profile (and their login email); for someone with no profile yet, it works out the newsletter setting from the newsletter list.
 --   save_my_profile(...)      checks and saves it. A username must be 3 to 20 letters, numbers or underscores, and unique (capitals do not count: Gill and gill are the same).
 --   username_available(text)  true if nobody else has that username.
+-- Changing the login email: the page asks Supabase to send a link to the new address (it changes once they press it). Next time they open My passes, get_my_profile moves their
+-- newsletter sign-up to the new address.
 -- Saving the email choice also updates the newsletter list: "Free updates" adds them as confirmed (they are signed in with a checked email); "News about my passes only"
 -- and "No emails" take them off the general newsletter, so the general newsletter never goes to them.
 --
@@ -21,9 +23,11 @@ create table if not exists public.member_profiles (
     'art-loft', 'drafting-desk', 'explorers-bay', 'factory-floor', 'idea-hatchery', 'knowledge-nook', 'leadership-lounge', 'sarah-jrs-den',
     'comet', 'crescent-moon', 'planets', 'starry-sky', 'cogs', 'hanging-lamp', 'starburst', 'book-stack')),
   newsletter text not null default 'none' check (newsletter in ('free', 'passes', 'none')),
+  newsletter_email text, -- the email their newsletter choice was last saved under; if they change their login email, the newsletter list is moved across next time they open My passes
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now()
 );
+alter table public.member_profiles add column if not exists newsletter_email text; -- for a table made by an earlier version of this file
 create unique index if not exists member_profiles_username_key on public.member_profiles (lower(username));
 
 alter table public.member_profiles enable row level security;
@@ -37,6 +41,15 @@ begin
   select email into em from auth.users where id = uid;
   select * into r from public.member_profiles where user_id = uid;
   if found then
+    -- they changed their login email since the newsletter choice was saved: move the newsletter sign-up to the new address (or, if the new address is already on the list, take the old one off)
+    if r.newsletter_email is not null and em is not null and r.newsletter_email <> lower(em) then
+      if exists (select 1 from public.newsletter_subscribers where email = lower(em)) then
+        update public.newsletter_subscribers set status = 'unsubscribed', unsubscribed_at = now() where email = r.newsletter_email and status <> 'unsubscribed';
+      else
+        update public.newsletter_subscribers set email = lower(em) where email = r.newsletter_email;
+      end if;
+      update public.member_profiles set newsletter_email = lower(em) where user_id = uid;
+    end if;
     return json_build_object('name', r.name, 'username', r.username, 'icon', r.icon, 'newsletter', r.newsletter, 'email', em);
   end if;
   select status into sub from public.newsletter_subscribers where email = lower(em);
@@ -70,14 +83,14 @@ begin
   if un is not null and exists (select 1 from public.member_profiles where lower(username) = lower(un) and user_id <> uid) then
     return json_build_object('ok', false, 'error', 'username_taken');
   end if;
+  select email into em from auth.users where id = uid;
   begin
-    insert into public.member_profiles (user_id, name, username, icon, newsletter)
-    values (uid, nm, un, p_icon, p_newsletter)
-    on conflict (user_id) do update set name = excluded.name, username = excluded.username, icon = excluded.icon, newsletter = excluded.newsletter, updated_at = now();
+    insert into public.member_profiles (user_id, name, username, icon, newsletter, newsletter_email)
+    values (uid, nm, un, p_icon, p_newsletter, lower(em))
+    on conflict (user_id) do update set name = excluded.name, username = excluded.username, icon = excluded.icon, newsletter = excluded.newsletter, newsletter_email = excluded.newsletter_email, updated_at = now();
   exception when unique_violation then
     return json_build_object('ok', false, 'error', 'username_taken');
   end;
-  select email into em from auth.users where id = uid;
   if em is not null then
     if p_newsletter = 'free' then
       insert into public.newsletter_subscribers (email, status, token, consent_text, source, confirmed_at)

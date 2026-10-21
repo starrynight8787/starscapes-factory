@@ -35,6 +35,7 @@ export const iconByKey = Object.fromEntries(MEMBER_ICONS.map((i) => [i.key, i]))
 
 export const USERNAME_RE = /^[A-Za-z0-9_]{3,20}$/
 export const MAX_NAME = 80
+export const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 
 // What the member can choose for email. Saved as free / passes / none (the database checks these three words).
 export const NEWSLETTER_CHOICES = [
@@ -50,4 +51,7 @@ export const SAY = {
   name_long: `Your name can be up to ${MAX_NAME} characters.`,
   signed_out: 'Please log in again to save your details.',
   generic: 'That did not save just now. Please try again in a moment.',
+  email_invalid: 'That does not look like an email address. Please check it.',
+  email_failed: 'We could not change to that address. Please check it, or try a different one.',
+  email_wait: 'Please wait a minute before asking for another link.',
 }

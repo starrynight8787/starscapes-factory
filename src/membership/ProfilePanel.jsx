@@ -1,15 +1,15 @@
 import { useEffect, useState } from 'react'
 import MemberIcon from './MemberIcon'
-import { MEMBER_ICONS, NEWSLETTER_CHOICES, USERNAME_RE, MAX_NAME, SAY } from './memberIcons'
-import { fetchProfile, saveProfile } from './profileApi'
+import { MEMBER_ICONS, NEWSLETTER_CHOICES, USERNAME_RE, MAX_NAME, EMAIL_RE, SAY } from './memberIcons'
+import { fetchProfile, saveProfile, changeEmail } from './profileApi'
 import './profile.css'
 
-// "Your profile", the left side of My passes (Figma: 25 My passes and profile): name, username (shown beside their comments), email (read only, it is how they log in),
+// "Your profile", the left side of My passes (Figma: 25 My passes and profile): name, username (shown beside their comments), email (how they log in; changing it sends a link to the new address),
 // an icon for the message board, and which emails they want. Each person sees and changes only their own.
 export default function ProfilePanel() {
   const [phase, setPhase] = useState('loading') // loading, ready, error
   const [email, setEmail] = useState('')
-  const [form, setForm] = useState({ name: '', username: '', icon: '', newsletter: 'none' })
+  const [form, setForm] = useState({ name: '', username: '', icon: '', newsletter: 'none', email: '' })
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
@@ -22,7 +22,7 @@ export default function ProfilePanel() {
       .then((p) => {
         if (stopped) return
         setEmail(p.email)
-        setForm({ name: p.name, username: p.username, icon: p.icon, newsletter: p.newsletter })
+        setForm({ name: p.name, username: p.username, icon: p.icon, newsletter: p.newsletter, email: p.email })
         setPhase('ready')
       })
       .catch(() => !stopped && setPhase('error'))
@@ -48,14 +48,28 @@ export default function ProfilePanel() {
     const found = {}
     if (name.length > MAX_NAME) found.name = SAY.name_long
     if (username && !USERNAME_RE.test(username)) found.username = SAY.username_invalid
+    const newEmail = form.email.trim()
+    const emailChanged = newEmail.toLowerCase() !== email.toLowerCase()
+    if (emailChanged && !EMAIL_RE.test(newEmail)) found.email = SAY.email_invalid
     setErrors(found)
     if (Object.keys(found).length > 0) return
     setSaving(true)
     setMessage('')
     try {
-      await saveProfile({ ...form, name, username })
+      await saveProfile({ name, username, icon: form.icon, newsletter: form.newsletter })
       setForm((f) => ({ ...f, name, username }))
-      setMessage('Saved. Thank you.')
+      if (emailChanged) {
+        try {
+          await changeEmail(newEmail)
+          setForm((f) => ({ ...f, email }))
+          setMessage(`Saved. We have sent a link to ${newEmail}. Your log-in email changes once you press it. You may also get a link at your current address.`)
+        } catch (err) {
+          setErrors({ email: err.message })
+          setMessage('Your other details are saved.')
+        }
+      } else {
+        setMessage('Saved. Thank you.')
+      }
     } catch (err) {
       if (err.field) setErrors({ [err.field]: err.message })
       else setMessage(err.message)
@@ -103,8 +117,12 @@ export default function ProfilePanel() {
         </div>
         <div className="pf__field">
           <label htmlFor="pf-email">Email</label>
-          <input id="pf-email" type="text" value={email} readOnly aria-describedby="pf-email-help" className="pf__readonly" />
-          <small id="pf-email-help">The email you log in with. Contact us if you need to change it.</small>
+          <input id="pf-email" type="email" autoComplete="email" value={form.email} onChange={set('email')} aria-invalid={Boolean(errors.email)} aria-describedby={errors.email ? 'pf-email-err' : 'pf-email-help'} />
+          {errors.email ? (
+            <small id="pf-email-err" className="pf__err" role="alert">{errors.email}</small>
+          ) : (
+            <small id="pf-email-help">The email you log in with. If you change it, we send a link to the new address, and it changes once you press it.</small>
+          )}
         </div>
 
         <fieldset className="pf__icons">

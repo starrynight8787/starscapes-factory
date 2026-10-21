@@ -202,7 +202,7 @@ export const LEGAL_PAGES = [
         "title": "Your profile and what other people see",
         "paragraphs": [
           "On the My passes page you can add your name, choose a username, pick an icon, and choose which emails you want. Your username and icon are the only parts of your profile that other people can see, and only beside something you write on the site, such as a comment. Your name and email address are never shown to other members. A username has to be unique, so we check it against the others. If you would rather not be known, don't use your real name.",
-          "You can change your username, icon and email choice whenever you like. If you change your email address, we send a link to the new address, and it only changes once you press it. We then move your newsletter sign-up to the new address, so you are not emailed at the old one.",
+          "You can change your username, icon and email choice whenever you like. If you change your email address, we send a link to the new address, and it only changes once you press it. We then move your newsletter sign-up to the new address the next time you open My passes, so you are not emailed at the old one for long.",
           "Your email choice decides what we send you: free updates (the general newsletter), news about your passes only, or no emails. The last two take you off the general newsletter. Emails about your orders, account and passes are not marketing, and are still sent."
         ]
       },

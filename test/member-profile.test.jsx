@@ -4,22 +4,22 @@ import { render, screen, within, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { readFileSync } from 'node:fs'
 
-const api = vi.hoisted(() => ({ fetchProfile: vi.fn(), saveProfile: vi.fn() }))
-vi.mock('../src/membership/profileApi', () => ({ fetchProfile: api.fetchProfile, saveProfile: api.saveProfile }))
+const api = vi.hoisted(() => ({ fetchProfile: vi.fn(), saveProfile: vi.fn(), changeEmail: vi.fn() }))
+vi.mock('../src/membership/profileApi', () => ({ fetchProfile: api.fetchProfile, saveProfile: api.saveProfile, changeEmail: api.changeEmail }))
 
 import ProfilePanel from '../src/membership/ProfilePanel'
 import { MEMBER_ICONS, ICON_KEYS, USERNAME_RE, SAY } from '../src/membership/memberIcons'
 
 const profile = (over = {}) => ({ name: 'Gillian Bennet', username: 'gill_reads', icon: 'planets', newsletter: 'free', email: 'gillian@gillianbennet.com', ...over })
-beforeEach(() => { api.fetchProfile.mockReset(); api.saveProfile.mockReset(); api.fetchProfile.mockResolvedValue(profile()) })
+beforeEach(() => { api.fetchProfile.mockReset(); api.saveProfile.mockReset(); api.changeEmail.mockReset(); api.fetchProfile.mockResolvedValue(profile()) })
 
 describe('the profile card', () => {
-  it('shows their name, username and login email, with the email read only', async () => {
+  it('shows their name, username and login email, and the email can be changed', async () => {
     render(<ProfilePanel />)
     expect(await screen.findByLabelText('Name')).toHaveValue('Gillian Bennet')
     expect(screen.getByLabelText('Username')).toHaveValue('gill_reads')
     const email = screen.getByLabelText('Email')
-    expect(email).toHaveValue('gillian@gillianbennet.com'); expect(email).toHaveAttribute('readonly')
+    expect(email).toHaveValue('gillian@gillianbennet.com'); expect(email).not.toHaveAttribute('readonly'); expect(email).toHaveAttribute('type', 'email')
   })
   it('offers sixteen icons, the eight room pictures then the eight drawn ones, with the chosen one marked', async () => {
     render(<ProfilePanel />)
@@ -72,6 +72,32 @@ describe('saving', () => {
     api.fetchProfile.mockResolvedValue(profile({ username: '' })); api.saveProfile.mockResolvedValue(true); render(<ProfilePanel />)
     await userEvent.click(await screen.findByRole('button', { name: 'Save my details' }))
     await waitFor(() => expect(api.saveProfile).toHaveBeenCalled())
+  })
+})
+
+describe('changing the email', () => {
+  const type = async (value) => { const box = await screen.findByLabelText('Email'); await userEvent.clear(box); await userEvent.type(box, value) }
+  it('asks for a link to the new address, says so, and keeps showing the current email until it is confirmed', async () => {
+    api.saveProfile.mockResolvedValue(true); api.changeEmail.mockResolvedValue(true); render(<ProfilePanel />)
+    await type('new.me@example.com'); await userEvent.click(screen.getByRole('button', { name: 'Save my details' }))
+    await waitFor(() => expect(api.changeEmail).toHaveBeenCalledWith('new.me@example.com'))
+    expect(await screen.findByText(/We have sent a link to new\.me@example\.com\. Your log-in email changes once you press it/)).toBeInTheDocument()
+    expect(screen.getByLabelText('Email')).toHaveValue('gillian@gillianbennet.com')
+  })
+  it('does not ask for a link when the email is unchanged (capitals do not count)', async () => {
+    api.saveProfile.mockResolvedValue(true); render(<ProfilePanel />)
+    await type('Gillian@GillianBennet.com'); await userEvent.click(screen.getByRole('button', { name: 'Save my details' }))
+    expect(await screen.findByText('Saved. Thank you.')).toBeInTheDocument(); expect(api.changeEmail).not.toHaveBeenCalled()
+  })
+  it('refuses something that is not an email before saving anything', async () => {
+    render(<ProfilePanel />)
+    await type('not-an-email'); await userEvent.click(screen.getByRole('button', { name: 'Save my details' }))
+    expect(await screen.findByRole('alert')).toHaveTextContent(SAY.email_invalid); expect(api.saveProfile).not.toHaveBeenCalled(); expect(api.changeEmail).not.toHaveBeenCalled()
+  })
+  it('says the other details are saved, and why the email did not change, when the link could not be sent', async () => {
+    api.saveProfile.mockResolvedValue(true); api.changeEmail.mockRejectedValue(new Error(SAY.email_failed)); render(<ProfilePanel />)
+    await type('new.me@example.com'); await userEvent.click(screen.getByRole('button', { name: 'Save my details' }))
+    expect(await screen.findByText('Your other details are saved.')).toBeInTheDocument(); expect(screen.getByRole('alert')).toHaveTextContent(SAY.email_failed)
   })
 })
 

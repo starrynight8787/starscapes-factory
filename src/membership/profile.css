@@ -88,7 +88,8 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
-.pf__field input[type='text'] {
+.pf__field input[type='text'],
+.pf__field input[type='email'] {
   box-sizing: border-box;
   width: 100%;
   max-width: none;

@@ -14,6 +14,20 @@ export async function fetchProfile() {
   return { name: data.name || '', username: data.username || '', icon: data.icon || '', newsletter: data.newsletter || 'none', email: data.email || '' }
 }
 
+// Asks to change the email they log in with. Supabase emails a link to the new address (and may also email the current one); the login email only changes once the link is pressed.
+// A refusal never says whether the address already belongs to someone, so this cannot be used to find out who has an account.
+export async function changeEmail(newEmail) {
+  let result
+  try {
+    result = await supabase.auth.updateUser({ email: newEmail }, { emailRedirectTo: `${window.location.origin}/membership/passes` })
+  } catch (e) {
+    throw new Error(SAY.generic)
+  }
+  const { error } = result || {}
+  if (error) throw new Error(/rate|too many|seconds|after/i.test(error.message || '') ? SAY.email_wait : SAY.email_failed)
+  return true
+}
+
 export async function saveProfile({ name, username, icon, newsletter }) {
   let result
   try {
