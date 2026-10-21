@@ -461,9 +461,8 @@ a.rs-item:focus-visible .rs-art {
     max-width: 100%;
     padding: 20px;
   }
-  .rs-sky .rs[data-room='drafting-desk'],
-  .rs-sky .rs[data-room='knowledge-nook'] {
-    --rs-above: 360px;
-    --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 360px)) * var(--rs-ratio, 1.4286))));
+  /* every room but the Leadership Lounge: the picture takes the width of the screen (up to 1200px, the size the pictures are drawn at) and the page scrolls, instead of shrinking to fit the screen's height */
+  .rs-sky .rs[data-room]:not([data-room='leadership-lounge']) {
+    --rs-stage-w: min(1200px, max(560px, calc(100vw - 2 * (24px + clamp(16px, 3vw, 40px)) - 66px)));
   }
 }
