@@ -5,7 +5,7 @@ import { MemoryRouter } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const h = vi.hoisted(() => ({ on: true, user: null, owner: false, rows: [], tally: {}, mine: new Set(), calls: [], failAdd: false, failList: false }))
+const h = vi.hoisted(() => ({ on: true, user: null, owner: false, rows: [], tally: {}, mine: new Set(), calls: [], failAdd: false, failList: false, membership: { status: 'active', passes: ['book-club'] }, membershipFails: false, membershipPending: false }))
 vi.mock('../src/suggest/suggestApi', () => ({
   fetchSpaceOn: vi.fn(async () => h.on),
   fetchSuggestions: vi.fn(async () => { if (h.failList) throw new Error('The list could not load just now. Please try again in a moment.'); return { rows: h.rows, tally: h.tally, mine: h.mine } }),
@@ -14,11 +14,14 @@ vi.mock('../src/suggest/suggestApi', () => ({
 }))
 vi.mock('../src/suggest/useUser', () => ({ default: () => ({ loading: false, user: h.user }) }))
 vi.mock('../src/doors/useCurrentOwner', () => ({ default: () => ({ checking: false, owner: h.owner }) }))
+vi.mock('../src/membership/membershipApi', () => ({
+  fetchMyMembership: vi.fn(() => { if (h.membershipPending) return new Promise(() => {}); if (h.membershipFails) return Promise.reject(new Error('could not read')); return Promise.resolve(h.membership) }),
+}))
 import SuggestPanel from '../src/suggest/SuggestPanel'
 
 const show = (space = 'story-ledger') => render(<MemoryRouter><SuggestPanel space={space} /></MemoryRouter>)
 const row = (id, title, status = 'approved', extra = {}) => ({ id, title, status, kind: 'show', why: null, created_at: `2026-10-0${id.length}`, ...extra })
-beforeEach(() => { Object.assign(h, { on: true, user: null, owner: false, rows: [], tally: {}, mine: new Set(), calls: [], failAdd: false, failList: false }) })
+beforeEach(() => { Object.assign(h, { on: true, user: null, owner: false, rows: [], tally: {}, mine: new Set(), calls: [], failAdd: false, failList: false, membership: { status: 'active', passes: ['book-club'] }, membershipFails: false, membershipPending: false }) })
 
 describe('when the box is switched off', () => {
   it('shows visitors nothing at all', async () => {
@@ -45,6 +48,7 @@ describe('signed out', () => {
     expect(screen.queryByRole('button', { name: 'Suggest it' })).toBeNull()
     expect(screen.getByRole('button', { name: /Vote for Knight Rider/ })).toBeDisabled()
     expect(screen.getByRole('button', { name: /41 votes/ })).toBeInTheDocument()
+    expect(screen.getByText(/Suggesting and voting are for Book Club members/)).toBeInTheDocument()
   })
 })
 
@@ -130,6 +134,77 @@ describe('signed in', () => {
     h.failList = true
     show()
     expect(await screen.findByRole('alert')).toHaveTextContent(/could not load just now/)
+  })
+})
+
+describe('signed in, but without a Book Club pass (suggesting and voting are for Book Club members only: Gill, 21 October 2026)', () => {
+  const EXPLAINED = 'Suggesting and voting are for Book Club members.'
+  beforeEach(() => { h.user = { id: 'u1' }; h.rows = [row('a', 'Knight Rider')]; h.tally = { a: 41 }; h.membership = null })
+  it('sees the list and the totals, a plain explanation and a way to choose passes, and no form', async () => {
+    show()
+    expect(await screen.findByText(EXPLAINED)).toBeInTheDocument()
+    expect(screen.getByText('Knight Rider')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /41 votes/ })).toBeInTheDocument()
+    expect(screen.getByText(/Everyone can see what has been suggested/)).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Choose your passes' })).toHaveAttribute('href', '/membership')
+    expect(screen.queryByRole('button', { name: 'Suggest it' })).toBeNull()
+    expect(screen.queryByLabelText('What should I audit?')).toBeNull()
+  })
+  it('cannot vote: the buttons are off and nothing is sent', async () => {
+    show()
+    await screen.findByText(EXPLAINED)
+    const vote = screen.getByRole('button', { name: /Vote for Knight Rider/ })
+    expect(vote).toBeDisabled(); fireEvent.click(vote)
+    expect(h.calls).toEqual([])
+  })
+  it('gets the same on the Book Club page, which is for members too', async () => {
+    show('book-club')
+    expect(await screen.findByText(EXPLAINED)).toBeInTheDocument()
+    expect(screen.queryByLabelText('Which book?')).toBeNull()
+  })
+  it('is not let in by another pass', async () => {
+    h.membership = { status: 'active', passes: ['blueprints', 'come-write-with-me', 'authors-notebook'] }
+    show()
+    expect(await screen.findByText(EXPLAINED)).toBeInTheDocument()
+  })
+  it.each(['canceled', 'unpaid', 'incomplete'])('is not let in by a Book Club pass that is %s', async (status) => {
+    h.membership = { status, passes: ['book-club'] }
+    show()
+    expect(await screen.findByText(EXPLAINED)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Suggest it' })).toBeNull()
+  })
+  it('is treated as having no pass when the membership cannot be read, never as a member', async () => {
+    h.membershipFails = true
+    show()
+    expect(await screen.findByText(EXPLAINED)).toBeInTheDocument()
+    expect(screen.queryByRole('button', { name: 'Suggest it' })).toBeNull()
+  })
+})
+
+describe('Book Club members, and the owner', () => {
+  beforeEach(() => { h.user = { id: 'u1' }; h.rows = [row('a', 'Knight Rider')]; h.tally = { a: 41 } })
+  it.each(['active', 'trialing', 'past_due'])('a Book Club pass that is %s can suggest, and vote', async (status) => {
+    h.membership = { status, passes: ['blueprints', 'book-club'] }
+    show()
+    expect(await screen.findByLabelText('What should I audit?')).toBeInTheDocument()
+    expect(screen.queryByText('Suggesting and voting are for Book Club members.')).toBeNull()
+    fireEvent.click(screen.getByRole('button', { name: /Vote for Knight Rider/ }))
+    await screen.findByRole('button', { name: /Take back your vote for Knight Rider. 42 votes/ })
+    expect(h.calls).toEqual([['vote', 'a', true]])
+  })
+  it('the owner can suggest and vote without any pass', async () => {
+    h.owner = true; h.membership = null
+    show('book-club')
+    expect(await screen.findByLabelText('Which book?')).toBeInTheDocument()
+    expect(screen.queryByText('Suggesting and voting are for Book Club members.')).toBeNull()
+    expect(screen.getByRole('button', { name: /Vote for Knight Rider/ })).not.toBeDisabled()
+  })
+  it('shows neither the form nor the explanation while it is still finding out who this is, so nothing flashes the wrong way', async () => {
+    h.membershipPending = true
+    show()
+    expect(await screen.findByText('Knight Rider')).toBeInTheDocument()
+    expect(screen.queryByText('Suggesting and voting are for Book Club members.')).toBeNull()
+    expect(screen.queryByLabelText('What should I audit?')).toBeNull()
   })
 })
 

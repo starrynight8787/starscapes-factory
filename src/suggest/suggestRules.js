@@ -3,6 +3,14 @@
 
 export const LIMITS = { titleMin: 2, titleMax: 120, whyMax: 300, perDay: 3 }
 
+// WHO MAY GIVE INPUT (Gill's decision, 21 October 2026): suggesting AND voting are for Book Club members only, on BOTH spaces (what to read next, and what to audit next).
+// Everyone can still see what has been suggested and the totals: the Story Ledger is free to watch. The database enforces it (is_book_club_member() in
+// sql/book-details.sql, called by the rules in sql/suggestions.sql); this is the same rule for the page: a Book Club pass that is active, in a trial, or past due (a payment
+// being retried still counts, as for every other pass). The owner can always suggest and vote.
+export const INPUT_PASS = 'book-club'
+const HOLDING = ['active', 'trialing', 'past_due']
+export const holdsInputPass = (row) => Boolean(row) && HOLDING.includes(row.status) && Array.isArray(row.passes) && row.passes.includes(INPUT_PASS)
+
 // One entry per page that has the box. "kinds" are the things a visitor can suggest; the key must match what the database allows.
 export const SPACES = {
   'story-ledger': {
@@ -54,7 +62,7 @@ export function rankSuggestions(rows, tally = {}, mine = new Set()) {
 // What to tell someone when the database refuses, in plain words (and never the database's own message)
 export function plainProblem(error) {
   const text = String((error && (error.message || error.code)) || '')
-  if (/row-level security|42501|violates/i.test(text)) return `That did not go through. You can suggest up to ${LIMITS.perDay} a day, and only while the box is open.`
+  if (/row-level security|42501|violates/i.test(text)) return `That did not go through. Suggesting and voting are for Book Club members. You can suggest up to ${LIMITS.perDay} a day, and only while the box is open.`
   if (/duplicate|23505/i.test(text)) return 'You have already done that.'
   return 'That did not go through just now. Please try again in a moment.'
 }

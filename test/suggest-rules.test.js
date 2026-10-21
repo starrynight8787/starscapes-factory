@@ -3,7 +3,7 @@
 import { describe, it, expect } from 'vitest'
 import fs from 'node:fs'
 import path from 'node:path'
-import { SPACES, LIMITS, cleanSuggestion, rankSuggestions, plainProblem } from '../src/suggest/suggestRules'
+import { SPACES, LIMITS, cleanSuggestion, rankSuggestions, plainProblem, holdsInputPass, INPUT_PASS } from '../src/suggest/suggestRules'
 
 describe('what each space asks', () => {
   it('has Story Ledger (a show or a stat) and Book Club (a book), each with plain words', () => {
@@ -78,9 +78,30 @@ describe('putting the list in order', () => {
 describe('plain words for a problem', () => {
   it('explains the daily limit, a repeat, and anything else, and never repeats the database', () => {
     expect(plainProblem({ message: 'new row violates row-level security policy for table "suggestions"' })).toMatch(/up to 3 a day/)
+    expect(plainProblem({ message: 'new row violates row-level security policy for table "suggestions"' })).toMatch(/Suggesting and voting are for Book Club members/)
     expect(plainProblem({ code: '23505' })).toMatch(/already done that/)
     const other = plainProblem({ message: 'connection to server at db.secret.example failed' })
     expect(other).toMatch(/try again/)
     expect(other).not.toMatch(/secret|connection/)
+  })
+})
+
+describe('who may suggest and vote (Gill, 21 October 2026: Book Club members only, on both spaces)', () => {
+  const row = (status, passes) => ({ status, passes })
+  it('is the Book Club pass', () => { expect(INPUT_PASS).toBe('book-club') })
+  it('counts a Book Club pass that is active, in a trial, or past due (a payment being retried), like every other pass', () => {
+    for (const status of ['active', 'trialing', 'past_due']) expect(holdsInputPass(row(status, ['book-club'])), status).toBe(true)
+    expect(holdsInputPass(row('active', ['blueprints', 'book-club', 'come-write-with-me']))).toBe(true)
+  })
+  it('does not count anyone without it: another pass, a pass that has ended, no row at all, or a row that cannot be read', () => {
+    expect(holdsInputPass(row('active', ['blueprints', 'come-write-with-me']))).toBe(false)
+    for (const status of ['canceled', 'unpaid', 'incomplete', 'incomplete_expired', 'paused']) expect(holdsInputPass(row(status, ['book-club'])), status).toBe(false)
+    for (const bad of [null, undefined, {}, { status: 'active' }, { status: 'active', passes: 'book-club' }, { status: 'active', passes: [] }]) expect(holdsInputPass(bad)).toBe(false)
+  })
+  it('is the same rule as the database: the statuses it counts are the ones sql/book-details.sql counts', async () => {
+    const fs = await import('node:fs'); const sqlText = fs.readFileSync('sql/book-details.sql', 'utf8'); const i = sqlText.indexOf('create or replace function public.is_book_club_member')
+    const statuses = (sqlText.slice(i, sqlText.indexOf('$$;', i)).match(/m\.status in \(([^)]*)\)/) || [])[1]
+    expect(statuses).toBe("'active', 'trialing', 'past_due'")
+    for (const status of statuses.split(',').map((x) => x.trim().replace(/'/g, ''))) expect(holdsInputPass(row(status, ['book-club'])), status).toBe(true)
   })
 })

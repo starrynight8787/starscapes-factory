@@ -3,17 +3,19 @@ import { Link } from 'react-router-dom'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
 import useCurrentOwner from '../doors/useCurrentOwner'
 import useUser from './useUser'
-import { SPACES, cleanSuggestion, rankSuggestions } from './suggestRules'
+import { SPACES, cleanSuggestion, rankSuggestions, holdsInputPass } from './suggestRules'
+import { fetchMyMembership } from '../membership/membershipApi'
 import { addSuggestion, fetchSpaceOn, fetchSuggestions, setVote } from './suggestApi'
 import '../styles/pages.css'
 import './suggest.css'
 
 // The "suggest and vote" box, drawn in Figma (page 06 Room pages, "Suggest and vote"). It appears on a page only while its space is switched on
-// in Admin, Suggestions. A signed-in visitor can suggest (the owner approves it first) and vote once for each approved suggestion.
+// in Admin, Suggestions. A Book Club member (or the owner) can suggest (the owner approves it first) and vote once for each approved suggestion; everyone else can see the list and
+// the totals, and is told plainly that suggesting and voting are for Book Club members (Gill's decision, 21 October 2026).
 export default function SuggestPanel({ space }) {
   const config = SPACES[space]
   const { loading: whoLoading, user } = useUser()
-  const { owner } = useCurrentOwner()
+  const { owner, checking } = useCurrentOwner()
   const [on, setOn] = useState(null)
   const [data, setData] = useState({ rows: [], tally: {}, mine: new Set() })
   const [listProblem, setListProblem] = useState('')
@@ -24,6 +26,7 @@ export default function SuggestPanel({ space }) {
   const [saving, setSaving] = useState(false)
   const [thanks, setThanks] = useState(false)
   const [problem, setProblem] = useState('')
+  const [member, setMember] = useState(null) // is this person a Book Club member? null until we know, so the box never flashes the wrong state
 
   useEffect(() => {
     let alive = true
@@ -43,11 +46,23 @@ export default function SuggestPanel({ space }) {
     if (on && !whoLoading) load()
   }, [on, whoLoading, load])
 
+  useEffect(() => {
+    let alive = true
+    if (!userId) { setMember(null); return undefined }
+    setMember(null)
+    fetchMyMembership().then((row) => alive && setMember(holdsInputPass(row))).catch(() => alive && setMember(false)) // a membership that cannot be read counts as no pass, never as a member
+    return () => {
+      alive = false
+    }
+  }, [userId])
+
   const items = useMemo(() => rankSuggestions(data.rows, data.tally, data.mine), [data])
   if (!config || on === null) return null
   if (on === false) {
     return owner ? <p className="sg-off" role="note">The suggest and vote box is switched off here. <Link to="/admin/suggestions">Switch it on in Admin</Link></p> : null
   }
+  const canGive = Boolean(user) && (owner || member === true)
+  const finding = Boolean(user) && (checking || (!owner && member === null)) // still finding out whether this is a member or the owner: show neither the form nor the explanation
   const current = config.kinds.find((k) => k.key === kind) || config.kinds[0]
   const summary = Object.entries(errors).filter(([k]) => k !== 'form').map(([k, message]) => ({ id: k === 'kind' ? 'sg-kind' : `sg-${k}`, message }))
 
@@ -69,7 +84,7 @@ export default function SuggestPanel({ space }) {
   }
 
   async function toggle(item) {
-    if (!user) return
+    if (!canGive) return
     setProblem('')
     const next = !item.voted
     setData((d) => {
@@ -93,7 +108,7 @@ export default function SuggestPanel({ space }) {
       {!whoLoading && !user && (
         <div className="sg__login">
           <p className="sg__login-title">Log in to suggest or vote.</p>
-          <p className="sg__login-text">You can read everything without an account. An account just lets me count one vote per person.</p>
+          <p className="sg__login-text">You can read everything without an account. Suggesting and voting are for Book Club members.</p>
           <div className="sg__login-buttons">
             <Link className="pg-btn sg-btn--primary" to="/login">Log in</Link>
             <Link className="pg-btn" to="/signup">Sign up</Link>
@@ -101,7 +116,17 @@ export default function SuggestPanel({ space }) {
         </div>
       )}
 
-      {user && (
+      {user && !finding && !canGive && (
+        <div className="sg__login">
+          <p className="sg__login-title">Suggesting and voting are for Book Club members.</p>
+          <p className="sg__login-text">Everyone can see what has been suggested. To suggest something or vote, you need the Book Club pass.</p>
+          <div className="sg__login-buttons">
+            <Link className="pg-btn sg-btn--primary" to="/membership">Choose your passes</Link>
+          </div>
+        </div>
+      )}
+
+      {user && canGive && (
         <form className="sg__form" onSubmit={submit} noValidate>
           <ErrorSummary errors={summary} />
           {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
@@ -151,7 +176,7 @@ export default function SuggestPanel({ space }) {
                   className={`pg-btn sg__vote${item.voted ? ' sg-btn--primary' : ''}`}
                   aria-pressed={item.voted}
                   aria-label={`${item.voted ? 'Take back your vote for' : 'Vote for'} ${item.title}. ${item.votes} ${item.votes === 1 ? 'vote' : 'votes'} so far.`}
-                  disabled={!user || chosen}
+                  disabled={!canGive || chosen}
                   onClick={() => toggle(item)}
                 >
                   ▲ {item.votes}{item.voted ? ' · Voted' : ''}

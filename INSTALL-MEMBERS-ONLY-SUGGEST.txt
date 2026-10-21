@@ -1,0 +1,84 @@
+SUGGESTING AND VOTING ARE FOR BOOK CLUB MEMBERS   starscapes-members-only-suggest-21oct.zip   (SFW-206, SFW-249)
+(Code, tests, and TWO short steps in Supabase. Released through a preview first.)
+
+YOUR DECISIONS (21 October 2026): suggesting AND voting are for Book Club members only, on BOTH boxes (Book Club: what to read next; Story Ledger: what to audit next). The Story Ledger stays free to watch: everyone can still see what has been suggested and the vote totals. You (the owner) can always suggest and vote.
+
+WHAT CHANGES
+ - THE PAGE (src/suggest): a signed-out visitor still gets "Log in to suggest or vote" (its second line now says suggesting and voting are for Book Club members). A signed-in visitor WITHOUT a Book Club pass sees the list and totals, the vote buttons switched off, and a plain box: "Suggesting and voting are for Book Club members. Everyone can see what has been suggested. To suggest something or vote, you need the Book Club pass." with a "Choose your passes" button to the membership page. A Book Club member, or you, sees the form and working vote buttons as before. While the page is still finding out who someone is, it shows neither (so nothing flashes the wrong way). A membership that cannot be read counts as NO pass, never as a member.
+ - WHO COUNTS: a Book Club pass that is active, in a trial, or past due while Stripe retries a failed payment (about two weeks), the same rule as every other pass. A cancelled or unpaid pass does not.
+ - THE DATABASE (sql/suggestions.sql): the rule for adding a suggestion and for casting a vote now also requires is_book_club_member() (which counts you, the owner). The two old rules that let any signed-in visitor in are replaced (their old names are dropped). Seeing the list and totals is unchanged: still open to everyone. Taking your own vote back is still allowed for anyone.
+ - sql/book-details.sql gets the same one-line change as the membership tidy package (a pass that is past due still counts as a member). It is in BOTH packages on purpose: the page's rule and the database's rule must say the same thing, and a test checks it. Whichever package you install first makes the change; the second one says "already done". Nothing breaks either way.
+ - The "That did not go through" message now also says that suggesting and voting are for Book Club members.
+
+NOTHING PUBLIC CHANGES TODAY IF THE BOXES ARE STILL SWITCHED OFF (they start off; you switch each on in Admin, Suggestions). Check there before you switch either on.
+
+TESTS: the panel is tested in every state: signed out; signed in without a pass; with another pass only; with a cancelled, unpaid or incomplete Book Club pass; with a membership that cannot be read; a member whose pass is active, in a trial, or past due; the owner without any pass; and while it is still finding out. The database file is tested for: both rules call is_book_club_member(), no space is let off, the old rules are gone, and everyone can still see the list. 13 deliberate breakages, all caught (including the page and the database disagreeing about past due, and anyone signed in being let in again).
+WHOLE SUITE on a copy of your newest commit with this installed: 3,444 tests, 0 failing; build fine; 12 functions; health check passes.
+WITH THE MEMBERSHIP TIDY PACKAGE ALSO INSTALLED (in either order): 3,463 tests, 0 failing.
+
+STEP A: THE CODE, THROUGH A PREVIEW FIRST
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-members-only-suggest-21oct.zip
+ 4. python3 tools/add-members-only-suggest.py     IT MUST PRINT "changed" LINES FOR 7 FILES (a line may say "already done" for sql/book-details.sql if you installed the membership tidy package first; that is fine). If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add, and paste it to me.
+ 5. grep -c "is_book_club_member" sql/suggestions.sql        (it must print 3)
+ 6. npm test                                    (it should end with NOTHING failed)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-members-only-suggest" -not -path "./node_modules/*" -delete
+10. git checkout -b members-only-suggest
+    git add .
+    git status                                   (7 changed files, or 6 if book-details.sql was already done; new: the notes, the installer, its test and fixtures; nothing ending .before-)
+    git commit -m "Suggesting and voting are for Book Club members (SFW-206)"
+    git push -u origin members-only-suggest
+11. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "members-only-suggest" and says Preview. Wait for Ready, then press Visit and click round: the home page, the Story Ledger page and the Book Club page. If the boxes are switched off you will see nothing new there (you, as owner, see a note saying the box is switched off). If the build fails (Error), do NOT merge: tell me, and paste the first error from the build log.
+12. THE RELEASE: once the preview is Ready:
+    git checkout main
+    git merge members-only-suggest
+    git push
+    git branch -d members-only-suggest
+
+STEP B: SUPABASE (no deploy needed; do it right after the release, or before: either order is safe)
+ 1. Open supabase.com, sign in, open your Starscapes Factory project, click "SQL Editor" in the left menu, then "New query".
+ 2. First a check. Paste this and press Run. It should show one row containing: is_book_club_member
+    (if the cell is EMPTY, tell me and do not go on):
+
+select to_regprocedure('public.is_book_club_member()') as the_function;
+
+ 3. Click "New query" again. Paste ALL of this (it makes sure the member check counts a payment being retried, then swaps the two rules) and press Run. It should say "Success. No rows returned":
+
+create or replace function public.is_book_club_member() returns boolean
+language sql stable security definer set search_path = public as $$
+  select lower(coalesce(auth.jwt() ->> 'email', '')) = 'gillian@gillianbennet.com'
+    or exists (select 1 from public.memberships m where m.user_id = auth.uid() and m.status in ('active', 'trialing', 'past_due') and 'book-club' = any (m.passes));
+$$;
+revoke all on function public.is_book_club_member() from public;
+grant execute on function public.is_book_club_member() to authenticated;
+
+drop policy if exists "signed-in people suggest, three a day, while the space is on" on public.suggestions;
+drop policy if exists "Book Club members suggest, three a day, while the space is on" on public.suggestions;
+create policy "Book Club members suggest, three a day, while the space is on" on public.suggestions for insert to authenticated
+  with check (
+    public.is_book_club_member()
+    and user_id = auth.uid()
+    and status = 'pending'
+    and exists (select 1 from public.suggestion_spaces s where s.space = suggestions.space and s.enabled)
+    and (select count(*) from public.suggestions x where x.user_id = auth.uid() and x.created_at > now() - interval '1 day') < 3
+  );
+
+drop policy if exists "vote for an approved suggestion in a space that is on" on public.suggestion_votes;
+drop policy if exists "Book Club members vote for an approved suggestion in a space that is on" on public.suggestion_votes;
+create policy "Book Club members vote for an approved suggestion in a space that is on" on public.suggestion_votes for insert to authenticated
+  with check (
+    public.is_book_club_member()
+    and user_id = auth.uid()
+    and exists (
+      select 1 from public.suggestions g join public.suggestion_spaces s on s.space = g.space
+      where g.id = suggestion_votes.suggestion_id and g.status in ('approved', 'chosen') and s.enabled
+    )
+  );
+
+ 4. To check, click "New query", paste this and press Run. You should see 7 rows. NONE of them may be called "signed-in people suggest, three a day, while the space is on" or "vote for an approved suggestion in a space that is on". Two should start with "Book Club members":
+
+select tablename, policyname, cmd from pg_policies where tablename in ('suggestions', 'suggestion_votes') order by tablename, policyname;

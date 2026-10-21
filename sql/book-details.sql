@@ -20,11 +20,11 @@ alter table public.books add column if not exists series_name text check (series
 alter table public.books add column if not exists series_number smallint check (series_number is null or series_number between 1 and 999);
 alter table public.books add column if not exists series_total smallint check (series_total is null or series_total between 1 and 999);
 
--- Is the signed-in person a Book Club member (an active Book Club pass) or the owner?
+-- Is the signed-in person a Book Club member (a Book Club pass that is active, in a trial, or past due while Stripe retries a failed payment: the same rule as every other pass; it ends when Stripe gives up and cancels) or the owner?
 create or replace function public.is_book_club_member() returns boolean
 language sql stable security definer set search_path = public as $$
   select lower(coalesce(auth.jwt() ->> 'email', '')) = 'gillian@gillianbennet.com'
-    or exists (select 1 from public.memberships m where m.user_id = auth.uid() and m.status in ('active', 'trialing') and 'book-club' = any (m.passes));
+    or exists (select 1 from public.memberships m where m.user_id = auth.uid() and m.status in ('active', 'trialing', 'past_due') and 'book-club' = any (m.passes));
 $$;
 revoke all on function public.is_book_club_member() from public;
 grant execute on function public.is_book_club_member() to authenticated;

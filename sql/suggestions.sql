@@ -5,13 +5,15 @@
 --
 -- WHO CAN DO WHAT:
 --   * Everyone can see which spaces are switched on, and the suggestions you have approved, with how many votes each has.
---   * A signed-in visitor can suggest something (it starts as "pending": only they and you can see it until you approve it), at most 3 a day,
---     and only while that space is switched on. They can vote once for each approved suggestion, and take the vote back.
+--   * A Book Club member (or you) can suggest something (it starts as "pending": only they and you can see it until you approve it), at most 3 a day,
+--     and only while that space is switched on. They can vote once for each approved suggestion, and take the vote back. This is the same on both spaces:
+--     suggesting and voting are for Book Club members only (Gill's decision, 21 October 2026). Everyone else can still see what has been suggested and the totals.
 --   * Only the account with the email below can switch a space on or off, approve, hide, choose or delete a suggestion. The same rule as your
 --     doors, products and posts.
 --   * Who voted for what is private: the website only ever sees the totals (the suggestion_tally view), plus each person's own votes.
 --
 -- BEFORE YOU RUN IT: check the email below is the one you sign in with, the same one as in doors.sql.
+-- It also needs sql/book-details.sql to have been run first: that makes the function is_book_club_member(), which the suggest and vote rules below call.
 -- Both spaces start SWITCHED OFF, so nothing appears on any page until you turn it on in Admin, Suggestions.
 -- To undo it at any time, run the lines at the very bottom. Nothing else depends on these tables.
 
@@ -60,14 +62,16 @@ create policy "only the owner changes the switches" on public.suggestion_spaces 
 
 -- the suggestions
 drop policy if exists "see approved suggestions, your own, and (as owner) all" on public.suggestions;
-drop policy if exists "signed-in people suggest, three a day, while the space is on" on public.suggestions;
+drop policy if exists "signed-in people suggest, three a day, while the space is on" on public.suggestions; -- the old name, from before suggesting was for Book Club members only
+drop policy if exists "Book Club members suggest, three a day, while the space is on" on public.suggestions;
 drop policy if exists "only the owner changes suggestions" on public.suggestions;
 drop policy if exists "only the owner deletes suggestions" on public.suggestions;
 create policy "see approved suggestions, your own, and (as owner) all" on public.suggestions for select to anon, authenticated
   using (status in ('approved', 'chosen') or user_id = auth.uid() or lower(auth.jwt() ->> 'email') = 'gillian@gillianbennet.com');
-create policy "signed-in people suggest, three a day, while the space is on" on public.suggestions for insert to authenticated
+create policy "Book Club members suggest, three a day, while the space is on" on public.suggestions for insert to authenticated
   with check (
-    user_id = auth.uid()
+    public.is_book_club_member()
+    and user_id = auth.uid()
     and status = 'pending'
     and exists (select 1 from public.suggestion_spaces s where s.space = suggestions.space and s.enabled)
     and (select count(*) from public.suggestions x where x.user_id = auth.uid() and x.created_at > now() - interval '1 day') < 3
@@ -80,13 +84,15 @@ create policy "only the owner deletes suggestions" on public.suggestions for del
 
 -- the votes
 drop policy if exists "see your own votes" on public.suggestion_votes;
-drop policy if exists "vote for an approved suggestion in a space that is on" on public.suggestion_votes;
+drop policy if exists "vote for an approved suggestion in a space that is on" on public.suggestion_votes; -- the old name, from before voting was for Book Club members only
+drop policy if exists "Book Club members vote for an approved suggestion in a space that is on" on public.suggestion_votes;
 drop policy if exists "take your own vote back" on public.suggestion_votes;
 create policy "see your own votes" on public.suggestion_votes for select to authenticated
   using (user_id = auth.uid() or lower(auth.jwt() ->> 'email') = 'gillian@gillianbennet.com');
-create policy "vote for an approved suggestion in a space that is on" on public.suggestion_votes for insert to authenticated
+create policy "Book Club members vote for an approved suggestion in a space that is on" on public.suggestion_votes for insert to authenticated
   with check (
-    user_id = auth.uid()
+    public.is_book_club_member()
+    and user_id = auth.uid()
     and exists (
       select 1 from public.suggestions g join public.suggestion_spaces s on s.space = g.space
       where g.id = suggestion_votes.suggestion_id and g.status in ('approved', 'chosen') and s.enabled
