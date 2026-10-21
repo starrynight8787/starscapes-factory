@@ -119,9 +119,9 @@ describe('the genres, as books on a bookshelf', () => {
     const links = await within(shelf).findAllByRole('link')
     const hrefs = links.map((l) => l.getAttribute('href'))
     expect(hrefs[0]).toBe('/knowledge-nook/book-club/shelf') // the link to every book comes first
-    const shown = hrefs.slice(1) // only the eight featured genres show at first, in the order of the genre list
+    const shown = hrefs.slice(1) // only the ten featured genres show at first, in the order of the genre list
     expect(shown).toEqual(GENRES.filter((g) => FEATURED_GENRES.includes(g.key)).map((g) => `/knowledge-nook/book-club/shelf?genre=${g.key}`))
-    expect(shown).toHaveLength(8); expect(links[1]).toHaveTextContent(GENRES.find((g) => FEATURED_GENRES.includes(g.key)).label)
+    expect(shown).toHaveLength(10); expect(links[1]).toHaveTextContent(GENRES.find((g) => FEATURED_GENRES.includes(g.key)).label)
     expect(within(shelf).getByText('Every book on this shelf is a genre. Pick one to see my notes.')).toBeInTheDocument()
   })
   it('gives the books five looks between them, repeating in order along the shelf', () => {

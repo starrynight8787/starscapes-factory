@@ -63,7 +63,7 @@ describe('the genres', () => {
     fireEvent.click(screen.getByRole('button', { name: 'More genres' }))
     const lead = await screen.findByRole('link', { name: /Leadership/ })
     expect(lead).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=leadership')
-    expect(screen.getByRole('link', { name: /Self-growth/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=self-growth')
+    expect(screen.getByRole('link', { name: /Young Adult/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=young-adult')
     expect(screen.getByRole('link', { name: /Children's/ })).toHaveAttribute('href', '/knowledge-nook/book-club/shelf?genre=childrens')
   })
 })

@@ -5,14 +5,14 @@ export const GENRES = [
   { key: 'leadership', label: 'Leadership' },
   { key: 'fiction', label: 'Fiction' },
   { key: 'memoir', label: 'Memoir' },
-  { key: 'self-growth', label: 'Self-growth' },
+  { key: 'young-adult', label: 'Young Adult' },
   { key: 'childrens', label: "Children's" },
   { key: 'business', label: 'Business' },
   { key: 'creativity', label: 'Creativity & Writing' },
   { key: 'productivity', label: 'Productivity' },
   { key: 'parenting', label: 'Parenting' },
   { key: 'mindset', label: 'Mindset & Psychology' },
-  { key: 'biography', label: 'Biography' },
+  { key: 'biography', label: 'Biography & Self Help' },
   { key: 'fantasy', label: 'Fantasy' },
   { key: 'mystery', label: 'Mystery' },
   { key: 'thriller', label: 'Thriller' },
@@ -27,7 +27,7 @@ export const GENRES = [
 ]
 
 // The genres shown on the Book Club page under "Choose a genre" (the rest are still real genres: they have shelves on the bookshelf page and can be chosen in Admin).
-export const FEATURED_GENRES = ['mystery', 'thriller', 'romance', 'sci-fi', 'fantasy', 'fiction', 'classics', 'translated']
+export const FEATURED_GENRES = ['mystery', 'thriller', 'romance', 'sci-fi', 'fantasy', 'fiction', 'classics', 'translated', 'young-adult', 'biography']
 // A book can sit in up to three genres (it crosses genres: a historical mystery is both). The book's own genre column keeps the first of them, for older pages.
 export const MAX_GENRES = 3
 export const genresOf = (book) => (book && Array.isArray(book.genres) && book.genres.length ? book.genres : book && book.genre ? [book.genre] : [])
