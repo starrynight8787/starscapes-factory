@@ -72,7 +72,7 @@ export default function LeadingFromTheMiddlePage() {
       <section className="lm__hero" aria-label="The idea in one line">
         {photoOk && (
           <figure className="lm__photo">
-            <img src={PHOTO.src} alt={PHOTO.alt} width="2000" height="1324" loading="eager" onError={() => setPhotoOk(false)} />
+            <img src={PHOTO.src} alt={PHOTO.alt} width="750" height="497" loading="eager" onError={() => setPhotoOk(false)} />
           </figure>
         )}
         <blockquote className="lm__quote">
