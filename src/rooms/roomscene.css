@@ -25,6 +25,14 @@
   margin-right: 0;
 }
 
+.container:has(> .rs-sky) {
+  max-width: none;
+  padding-left: 0;
+  padding-right: 0;
+  margin-left: 0;
+  margin-right: 0;
+}
+
 .rs {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
@@ -450,4 +458,46 @@ a.rs-item:focus-visible .rs-art {
   a.rs-item:focus-visible {
     transform: translate(-50%, -50%) rotate(var(--rot, 0deg));
   }
+}
+
+/* A room shown as a Post-it: the room's picture, exactly as it was, on the same lavender "post-it" panel the homepage's floor plan sits on, on the homepage's night sky.
+   (The sky comes from the homepage's own classes, sf-home and sf-hero, and StarryBackdrop.) On a phone there is no picture, so none of this shows. */
+@media (min-width: 821px) {
+  .rs-sky { --sf-focus: #fff; }
+  .rs-sky .rs-hero.sf-hero {
+    display: block;
+    padding: 40px 24px 72px;
+    text-align: left;
+  }
+  .rs-sky .rs {
+    --rs-above: 330px;
+    --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 330px)) * var(--rs-ratio, 1.4286))));
+    --sf-focus: var(--sf-navy-700, #14306a);
+    width: calc(var(--rs-stage-w) + 2 * clamp(16px, 3vw, 40px));
+    max-width: 100%;
+    margin: 0 auto;
+    padding: clamp(16px, 3vw, 40px);
+    border-radius: 28px;
+    background: var(--sf-postit, #dce6ff);
+    box-shadow: 0 24px 48px rgba(0, 0, 40, 0.35);
+  }
+  .rs-sky .rs[data-room='drafting-desk'],
+  .rs-sky .rs[data-room='knowledge-nook'] {
+    --rs-above: 420px;
+    --rs-stage-w: min(var(--rs-max, 1440px), max(560px, calc((100vh - var(--rs-above, 420px)) * var(--rs-ratio, 1.4286))));
+  }
+  /* the room's writing keeps its own colours (the sky's rules would turn it white) */
+  .rs-sky .rs-head h1 { color: #0e1530; font-weight: 700; }
+}
+@media (max-width: 820px) {
+  .rs-sky { background: none; }
+  .rs-sky::before,
+  .rs-sky::after { display: none; }
+  .rs-sky .rs-hero.sf-hero {
+    background: none;
+    padding: 0;
+    overflow: visible;
+    animation: none;
+  }
+  .rs-sky .rs-hero > .sf-hero__art { display: none; }
 }

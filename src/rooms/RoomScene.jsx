@@ -1,6 +1,7 @@
 import '../components/pagebanner-rooms.css'
 import { Link } from 'react-router-dom'
 import HomeLink from '../components/HomeLink'
+import StarryBackdrop from '../components/StarryBackdrop'
 import { BannerPicture } from '../components/PageBanner'
 import './roomscene.css'
 import { resolveItem, itemLabel, lockText, placement, hasPlaque } from './sceneRules'
@@ -21,7 +22,25 @@ const BANNER = {
   'sarah-jrs-den': { chip: 'Stories', art: 'sarah-jr' },
 }
 
+// The rooms shown as a Post-it note on the homepage's starry backdrop. Rooms are added here one at a time, as each is checked.
+export const POSTIT_ROOMS = ['leadership-lounge']
+
 export default function RoomScene({ scene }) {
+  const room = roomOf(scene)
+  const postit = POSTIT_ROOMS.includes(room)
+  const page = <RoomScenePage scene={scene} />
+  if (!postit) return page
+  return (
+    <div className="sf-home rs-sky">
+      <div className="sf-hero rs-hero">
+        <StarryBackdrop />
+        {page}
+      </div>
+    </div>
+  )
+}
+
+function RoomScenePage({ scene }) {
   const items = scene.items.map(resolveItem)
   const banner = BANNER[roomOf(scene)]
   return (
