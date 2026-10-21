@@ -30,7 +30,7 @@ describe('the sign-in pages: one card each, as designed', () => {
   it('log in: a card with the heading, "Welcome back.", a full-width primary button, and the two links on one row', () => {
     const { container } = at('/login', <Login />)
     expect(container.querySelector('main.fm.fm--auth .fm__card')).not.toBeNull()
-    expect(screen.getByRole('heading', { level: 1, name: 'Log in' })).toHaveClass('fm__title')
+    expect(screen.getByRole('heading', { level: 1, name: 'Log in' })).toHaveClass('pb__title')
     expect(screen.getByText('Welcome back.')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Log in' })).toHaveClass('pg-btn', 'fm-btn--primary', 'fm__submit')
     const links = container.querySelector('.fm__links')
@@ -69,7 +69,7 @@ describe('the sign-in pages: one card each, as designed', () => {
   it('reset password, while it checks the link: the same card, with a status message', () => {
     const { container } = at('/reset-password', <ResetPassword />)
     expect(container.querySelector('main.fm--auth .fm__card')).not.toBeNull()
-    expect(screen.getByRole('heading', { level: 1, name: 'Reset your password' })).toHaveClass('fm__title')
+    expect(screen.getByRole('heading', { level: 1, name: 'Reset your password' })).toHaveClass('pb__title')
     expect(screen.getByRole('status')).toHaveTextContent('Checking your link…')
   })
   it('reset password: the card, both fields, and the button', async () => {

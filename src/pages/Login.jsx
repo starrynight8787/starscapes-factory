@@ -5,6 +5,7 @@ import { Field, ErrorSummary, FailureMessage } from '../components/FormMessages'
 import { emailProblem, loginMessage } from './formRules'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import PageBanner from '../components/PageBanner'
 
 export default function Login() {
   const [email, setEmail] = useState('')
@@ -51,8 +52,8 @@ export default function Login() {
 
   return (
     <main className="fm fm--auth">
+     <PageBanner art="plain" room="factory-floor" chip="Your account" title="Log in" />
      <div className="fm__card">
-      <h1 className="fm__title">Log in</h1>
       <p className="fm__sub">Welcome back.</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't log you in">{failure}</FailureMessage>}

@@ -5,6 +5,7 @@ import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../componen
 import { emailProblem } from './formRules'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import PageBanner from '../components/PageBanner'
 
 // Step 1 of getting back in: ask for a reset link by email.
 export default function ForgotPassword() {
@@ -48,8 +49,8 @@ export default function ForgotPassword() {
   if (status === 'sent') {
     return (
       <main className="fm fm--auth">
+        <PageBanner art="plain" room="factory-floor" chip="Your account" title="Check your email" />
         <div className="fm__card">
-          <h1 className="fm__title">Check your email</h1>
           <SuccessMessage title="If there is an account for that email address, we've sent a link to reset your password.">
             It can take a few minutes, and it might land in your spam folder.
           </SuccessMessage>
@@ -66,8 +67,8 @@ export default function ForgotPassword() {
 
   return (
     <main className="fm fm--auth">
+     <PageBanner art="plain" room="factory-floor" chip="Your account" title="Forgot your password?" />
      <div className="fm__card">
-      <h1 className="fm__title">Forgot your password?</h1>
       <p className="fm__sub">Enter your email and we'll send you a link to choose a new one.</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't send the email">{failure}</FailureMessage>}

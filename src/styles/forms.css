@@ -109,3 +109,12 @@ input[type='file'].sf-input {
   font-size: 0.95rem;
   line-height: 1.5;
 }
+
+/* The sign-in pages: a starry banner on top, with the form card narrower and centred beneath it */
+.fm--auth {
+  max-width: 760px;
+}
+.fm--auth .fm__card {
+  max-width: 480px;
+  margin: 24px auto 0;
+}

@@ -364,3 +364,18 @@
     padding: 18px;
   }
 }
+
+/* The banner at the top of the order-confirmation page keeps the banner's own heading look */
+.cart .pb .pb__title {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  letter-spacing: normal;
+  font-size: 2.75rem;
+  line-height: 1.1;
+  color: #fff;
+}
+@media (max-width: 720px) {
+  .cart .pb .pb__title {
+    font-size: 2rem;
+  }
+}

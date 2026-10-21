@@ -19,7 +19,7 @@ export function ShelfBooks() {
   )
 }
 
-export default function PageBanner({ chip, title, subtitle, picture, art, room, shelf, children }) {
+export default function PageBanner({ chip, title, subtitle, picture, art, room, shelf, titleRef, children }) {
   // art: the name of a starry line-art picture (see BannerArt), or 'plain' for stars only. It makes the banner starry and replaces the picture panel.
   // room: the room this page belongs to. Its full-width starry background (public/banners/<room>-d.webp and -m.webp) replaces the picture on the right.
   const inRoom = Boolean(room) && !shelf
@@ -27,7 +27,7 @@ export default function PageBanner({ chip, title, subtitle, picture, art, room, 
     <header className={`pb${art || shelf || inRoom ? ' pb--starry' : ''}${shelf ? ' pb--shelf' : ''}${inRoom ? ` pb--room pb--room-${room}` : ''}`}>
       <div className="pb__text">
         {chip && <p className="pb__chip">{chip}</p>}
-        <h1 className="pb__title">{title}</h1>
+        <h1 className="pb__title" ref={titleRef} tabIndex={titleRef ? -1 : undefined}>{title}</h1>
         {subtitle && <p className="pb__subtitle">{subtitle}</p>}
         {children && <div className="pb__buttons">{children}</div>}
       </div>

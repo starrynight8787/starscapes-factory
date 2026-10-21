@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
+import PageBanner from '../components/PageBanner'
 
 export default function ProductPage() {
   const { id } = useParams()
@@ -39,6 +40,7 @@ export default function ProductPage() {
       <p>
         <Link to="/products">&larr; Back to The Art Loft</Link>
       </p>
+      <PageBanner art="plain" room="art-loft" chip="The Art Loft" title={product.title} />
 
       <div style={{ maxWidth: 500, margin: '0 auto' }}>
         {images.length > 0 && (
@@ -72,7 +74,6 @@ export default function ProductPage() {
           </>
         )}
 
-        <h1 style={{ marginBottom: 4 }}>{product.title}</h1>
         {product.collection && <p className="muted">{product.collection}</p>}
         <p style={{ fontSize: 20, fontWeight: 600, margin: '12px 0' }}>
           £{Number(product.price).toFixed(2)}

@@ -1,6 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { CONTACT_EMAIL } from '../data/contact'
+import PageBanner from '../components/PageBanner'
 import useTitle from './useTitle'
 import './systempages.css'
 
@@ -15,10 +16,7 @@ export default function ErrorPage({ onRetry, email = CONTACT_EMAIL }) {
   const retry = onRetry || (() => window.location.reload())
   return (
     <main className="sp">
-      <p className="sp-eyebrow sp-eyebrow--error">Something went wrong</p>
-      <h1 ref={heading} tabIndex={-1}>
-        Something went wrong on our side.
-      </h1>
+      <PageBanner art="plain" room="factory-floor" chip="Something went wrong" title="Something went wrong on our side." titleRef={heading} />
       <p className="sp-lead">It is not you. Please try again in a moment. If it keeps happening, tell us and we will sort it out.</p>
       <div className="sp-actions">
         <button type="button" className="sp-btn sp-btn--solid" onClick={retry}>

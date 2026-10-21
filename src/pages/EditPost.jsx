@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { channels } from '../data/channels'
+import AdminBanner from '../admin/AdminBanner'
 import { FACTORY, SECTIONS, kindOf } from '../factoryfloor/factoryData'
 import './pinswitch.css'
 import { Field, ErrorSummary } from '../components/FormMessages'
@@ -205,8 +206,8 @@ export default function EditPost({ session }) {
   if (error) return <p className="error">{error}</p>
 
   return (
-    <main className="fm">
-      <h1 className="fm__title">Edit post</h1>
+    <main className="fm ad--wide">
+      <AdminBanner chip="Write" title="Edit post" subtitle="Change the post, switch it on or off, or pin it. Nothing changes for readers until you save." icon="post" />
       <ErrorSummary errors={summaryOf(errors, IDS)} />
       <form className="fm__form" onSubmit={handleSubmit} noValidate>
         <Field id="ep-title" label="Title" error={errors.title}>

@@ -231,3 +231,29 @@
     position: static;
   }
 }
+
+/* The banner at the top of the 404 and error pages: left-aligned like every other banner, and its heading keeps the banner's own look */
+.sp .pb {
+  margin-bottom: 28px;
+  text-align: left;
+}
+.sp .pb .pb__title {
+  margin: 0;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 2.75rem;
+  line-height: 1.1;
+  color: #fff;
+}
+.sp .pb .pb__title:focus {
+  outline: none;
+}
+@media (max-width: 720px) {
+  .sp .pb .pb__title {
+    font-size: 2rem;
+  }
+}
+
+.sp .pb ~ img {
+  display: block;
+  margin: 0 auto 8px;
+}

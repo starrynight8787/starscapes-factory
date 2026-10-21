@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, SuccessMessage } from '../components/FormMessages'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import PageBanner from '../components/PageBanner'
 
 // Step 2: the page the emailed link opens. Supabase signs you in briefly from the link, and this page lets you choose a new password.
 export default function ResetPassword({ waitMs = 1500 }) {
@@ -56,8 +57,8 @@ export default function ResetPassword({ waitMs = 1500 }) {
   if (phase === 'checking') {
     return (
       <main className="fm fm--auth">
+        <PageBanner art="plain" room="factory-floor" chip="Your account" title="Reset your password" />
         <div className="fm__card">
-          <h1 className="fm__title">Reset your password</h1>
           <p className="fm__sub" role="status">Checking your link…</p>
         </div>
       </main>
@@ -67,8 +68,8 @@ export default function ResetPassword({ waitMs = 1500 }) {
   if (phase === 'expired') {
     return (
       <main className="fm fm--auth">
+        <PageBanner art="plain" room="factory-floor" chip="Your account" title="This link has expired" />
         <div className="fm__card">
-          <h1 className="fm__title">This link has expired</h1>
           <p className="fm__sub">The link may be old, or it may already have been used. Reset links only work once.</p>
           <p className="fm__links"><Link to="/forgot-password">Send me a new link</Link></p>
         </div>
@@ -79,8 +80,8 @@ export default function ResetPassword({ waitMs = 1500 }) {
   if (phase === 'done') {
     return (
       <main className="fm fm--auth">
+        <PageBanner art="plain" room="factory-floor" chip="Your account" title="Password updated" />
         <div className="fm__card">
-          <h1 className="fm__title">Password updated</h1>
           <SuccessMessage title="Your new password is saved and you're signed in." />
           <p className="fm__links"><Link to="/">Continue to the homepage</Link></p>
         </div>
@@ -90,8 +91,8 @@ export default function ResetPassword({ waitMs = 1500 }) {
 
   return (
     <main className="fm fm--auth">
+     <PageBanner art="plain" room="factory-floor" chip="Your account" title="Choose a new password" />
      <div className="fm__card">
-      <h1 className="fm__title">Choose a new password</h1>
       <p className="fm__sub">Use at least 8 characters. If it isn't strong enough, you'll be told what's missing.</p>
       <ErrorSummary errors={summary} />
       <form className="fm__form" onSubmit={handleSubmit} noValidate>

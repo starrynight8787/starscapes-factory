@@ -4,6 +4,7 @@ import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, FailureMessage, SuccessMessage } from '../components/FormMessages'
 import '../styles/pages.css'
 import '../styles/forms.css'
+import PageBanner from '../components/PageBanner'
 import { emailProblem, signupMessage } from './formRules'
 
 export default function Signup() {
@@ -51,8 +52,8 @@ export default function Signup() {
 
   return (
     <main className="fm fm--auth">
+     <PageBanner art="plain" room="factory-floor" chip="Your account" title="Sign up" />
      <div className="fm__card">
-      <h1 className="fm__title">Sign up</h1>
       <p className="fm__sub">So you can follow along, and keep your orders in one place.</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't create your account">{failure}</FailureMessage>}
