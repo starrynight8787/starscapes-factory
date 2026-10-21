@@ -4,7 +4,7 @@
 // THE BANNER EACH EMAIL USES (change one in the table below, or pass a different `banner` where the email is built):
 //   art-loft          order confirmation, dispatch ("has been posted")
 //   leadership-lounge the free ebook email with the download link
-//   general           pass reminders, the newsletter, the newsletter sign-up confirmation
+//   general           (the admin-page banner) pass reminders, the newsletter, the newsletter sign-up confirmation
 //
 // The pictures are plain JPGs in public/email/ (email programs cannot show the pages' WebP banners). They are loaded from the live site, so they
 // only appear once the site has been pushed. If a mail program blocks pictures, the navy colour behind the words is shown instead.
@@ -14,7 +14,8 @@ import { SITE_URL } from '../ebook/ebookConfig.js'
 const esc = (v) => String(v === null || v === undefined ? '' : v).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 export const BANNERS = {
-  general: 'banner-general.jpg',
+  general: 'banner-admin.jpg', // the same starry factory-floor banner as the admin pages
+  admin: 'banner-admin.jpg',
   'art-loft': 'banner-art-loft.jpg',
   'leadership-lounge': 'banner-leadership-lounge.jpg',
 }

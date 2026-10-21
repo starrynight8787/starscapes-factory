@@ -15,14 +15,14 @@ describe('the shared email look', () => {
   })
   it('has a real picture file for every banner, loaded from the live site', () => {
     for (const [key, file] of Object.entries(BANNERS)) { expect(fs.existsSync(`public/email/${file}`), key).toBe(true); expect(bannerUrl(key)).toBe(`https://starscapesfactory.com/email/${file}`) }
-    expect(bannerUrl('nonsense')).toContain('banner-general.jpg')
+    expect(bannerUrl('nonsense')).toContain('banner-admin.jpg')
   })
   it('uses the banner each email is meant to have', () => {
     const order = { stripe_session_id: 'cs_1', customer_name: 'Jane Doe', customer_email: 'j@example.com', amount_total: 8900, currency: 'gbp', livemode: false, items: [{ title: 'Afternoon Sun', qty: 1, unit_amount: 8900 }], shipping: { address: { country: 'GB' } } }
     expect(buildConfirmation(order).html).toContain('banner-art-loft.jpg')
     expect(buildDispatch(order, {}).html).toContain('banner-art-loft.jpg')
-    expect(renderNewsletter({ subject: 'Hi', body: 'x', unsubscribeUrl: 'https://starscapesfactory.com/u' }).html).toContain('banner-general.jpg')
-    expect(confirmationEmail({ confirmUrl: 'https://starscapesfactory.com/c' }).html).toContain('banner-general.jpg')
+    expect(renderNewsletter({ subject: 'Hi', body: 'x', unsubscribeUrl: 'https://starscapesfactory.com/u' }).html).toContain('banner-admin.jpg')
+    expect(confirmationEmail({ confirmUrl: 'https://starscapesfactory.com/c' }).html).toContain('banner-admin.jpg')
     expect(ebookLinkEmail({ file: '/downloads/a.pdf' }).html).toContain('banner-leadership-lounge.jpg')
   })
 })
