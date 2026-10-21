@@ -41,6 +41,9 @@
 .al-v2 .al-admin__pictures,
 .al-v2 .al-admin__group,
 .al-v2 .al-orig-form {
+  max-width: none; /* the old .legacy form rule caps forms at 400px; this one runs the full width of the banner */
+  width: 100%;
+  box-sizing: border-box;
   padding: 18px 20px;
   margin: 0;
   border: 1.5px solid #dce6ff;
