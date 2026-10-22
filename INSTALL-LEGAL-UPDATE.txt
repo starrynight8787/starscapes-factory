@@ -1,0 +1,70 @@
+THE LEGAL PAGES UPDATE   starscapes-legal-update-22oct.zip   (SFW-181, from the review against free official guidance)
+(Wording, one new small file, and tests. No Supabase step. Released through a preview first. THE PAGES STAY DRAFTS: only you, signed in as the owner, can see them, so nothing goes public.)
+
+WHAT IT CHANGES, PAGE BY PAGE (each is a finding in the review attached to SFW-181; the decisions D1 to D8 are Gill's)
+ RETURNS AND REFUNDS
+  * Section 1, "To send it back": for framed prints in the large sizes (A1, 60 x 80 cm and 70 x 100 cm) WE arrange the return and pay for it, so please don't send one back yourself; for every other print the customer pays (D5).
+    The old "large framed prints can cost a lot to post back" sentence is gone. THE SAME SENTENCE is used in the order confirmation email, built in one place (src/data/returns.js) from the real list of acrylic sizes.
+  * Section 1, "Your refund": cancelling BEFORE the print is posted is covered (refund within 14 days of telling us), and we email to confirm we have received a cancellation (S2).
+  * Section 2: a refund for a faulty print is given within 14 days of agreeing it is owed (S1).
+  * Section 3: the unconfirmed claim that the print studio photographs orders before packing is replaced by "We will check your order with the print studio" (M3, D2).
+  * Section 7: the cancellation form is now the official model-form wording, the same as the order email, with the trader's name, address and email (M2).
+ TERMS: the print studio is "Creative Hub (the trading name of Printspace Studios Limited)" (S9); "a long time" becomes "more than 30 days" (S3); changes affecting passes you hold need 30 days' email notice and the right to cancel (S4).
+ PRIVACY: Cloudflare's bot check is named (recipients, abroad, the technical-details row, and the cookies section, which no longer says the site keeps only three things) (M4); backups are kept 3 months (S6);
+  the "no automated decision-making" sentence now explains Stripe's and Cloudflare's fraud and bot checks (M6); complaints can be made any way (S7).
+ COOKIE POLICY: a Cloudflare (security check) entry that says it may keep a small piece of information in the browser, on the sign-up, log-in and forgot-password pages only (M4). The earlier "it does not leave a cookie" wording is NOT used:
+  Chrome showed Cloudflare storing data, and Cloudflare's own documentation says Turnstile relies on cookies and local storage.
+ AI POLICY: the fraud and bot checks are Stripe's and Cloudflare's systems (M6).
+ THE ORDER EMAIL: the "You pay the cost of sending it back" line is replaced by the shared sentence above.
+
+WHAT IS NOT IN IT (on purpose)
+  * Privacy section 12 (Children): already done in the Children's Code package (SFW-264).
+  * The ADR line for the Terms (S5): not verified from an official source, so it is not added.
+  * The checkout Terms tick box and returns summary (SFW-14, finding M1): a separate job, and it must carry the same large-framed-returns sentence.
+  * The email to people who open passes (S8): built with the passes (SFW-209).
+  * The pages are NOT published: the [date] is still to fill in and ready stays false (a test checks this).
+
+TESTS: 26 new in test/legal-update.test.js: the large-framed sentence (the three sizes taken from the real list; used by the page and the email; the old wording gone); the form (official phrases in BOTH the page and the email, the trader's address, blanks in round brackets so
+they are not counted as gaps); each Returns, Terms, Privacy, Cookie and AI policy change; and TWO GUARDS for the Cloudflare check: (1) if the site loads anything from challenges.cloudflare.com the Cookie policy and Privacy policy must name Cloudflare (and must not
+claim it if the site stops), and (2) the bot check may be used ONLY on the Sign up, Log in and Forgot password pages, never site-wide and never on the Clubhouse. Six existing tests that pinned the old wording were updated to the new wording, not loosened (including the one that checks the
+email and the Returns page agree). 19 deliberate breakages, ALL caught.
+WHOLE SUITE on a copy of your newest commit (67b5527) with this installed: 4,067 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-legal-update-22oct.zip
+ 5. python3 tools/add-legal-update.py       IT MUST PRINT "changed" LINES FOR 6 FILES AND TWO LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "LARGE_FRAMED_RETURN" src/data/legalPages.js          (it must print 2)
+    grep -c "Cloudflare" src/data/legalPages.js                   (it must print 8)
+    grep -c "Backups:" src/data/legalPages.js                     (it must print 1)
+    grep -c "src/data/returns.js" lib/orderEmailText.js           (it must print 2)
+    ls src/data/returns.js test/legal-update.test.js              (both must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-legal-update" -not -path "./node_modules/*" -delete
+11. git checkout -b legal-update
+    git add .
+    git status                                   (6 changed files: lib/orderEmailText.js, src/data/legalPages.js and four test files; new: src/data/returns.js, test/legal-update.test.js, the notes, the installer, its test and fixtures, tools/legal-update-files/; nothing ending .before-)
+    git commit -m "Legal pages: large framed prints returned at our cost, official cancellation form, Cloudflare named in the Privacy and Cookie policies, and the smaller fixes from the review"
+    git push -u origin legal-update
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "legal-update" and says Preview. WAIT for Ready, THEN OPEN IT AND LOOK before merging. Sign in as the owner (the pages are drafts), then open each page from the footer and check:
+      a. Returns and refunds, section 1 ("If you change your mind"): the "To send it back" paragraph says "For framed prints in the large sizes (A1, 60 x 80 cm and 70 x 100 cm), we will arrange the return for you and pay for it..." and ends "...we recommend a tracked and insured service."
+      b. Returns, the last section (Cancellation form): it starts "To Starscapes Factory Ltd, 71-75 Shelton Street..." and has "I / We (*) hereby give notice..." and ends "(*) Delete as appropriate."
+      c. Returns, section 3: it says "We will check your order with the print studio." and nothing about photos taken at the print studio.
+      d. Cookie policy, section 3: a "Cloudflare (security check)" point after Stripe, saying it may keep a small piece of information in your browser, on three pages only.
+      e. Privacy policy, "Who we share your information with": a Cloudflare point; "How long we keep it": a Backups point saying 3 months.
+      f. Terms, section 2: "Creative Hub (the trading name of Printspace Studios Limited)".
+    If the build fails (Error), or any of a to f is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git merge legal-update
+    git push
+    git branch -d legal-update
+
+AFTER IT IS MERGED (Gill)
+  * Send the Creative Hub email with the FIFTH question (SFW-252): "Do you photograph each order before it is packed, and could you share that photo if a customer says they received the wrong print?"
+  * Tell Claude it is merged, so the tickets can be updated. Next: the checkout tick box and returns summary (SFW-14), which must carry the large-framed-returns sentence.

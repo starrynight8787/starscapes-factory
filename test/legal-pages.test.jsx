@@ -115,16 +115,16 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (8), how long it keeps things (10: the member profile and the Star Atlas each have their own point), your rights (7)', () => {
+  it('lists are lists: the people Privacy shares with (9, Cloudflare included), how long it keeps things (11: the member profile and the Star Atlas each have their own point, and backups), your rights (7)', () => {
     const { container } = open('privacy')
-    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([8, 10, 7])
+    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([9, 11, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
   })
   it('the Returns steps are a numbered list of three, and the cancellation form is a quote', () => {
     const { container } = open('returns')
     expect(container.querySelectorAll('.lg-text ol li')).toHaveLength(3)
     const quote = container.querySelector('blockquote')
-    expect(quote).toHaveTextContent('I am cancelling my contract for the sale of the following goods: (print name, size and frame).')
+    expect(quote).toHaveTextContent('I / We (*) hereby give notice that I / We (*) cancel my / our contract of sale of the following goods (*): (print name, size and frame).'); expect(quote).toHaveTextContent('71-75 Shelton Street, Covent Garden, London, WC2H 9JQ'); expect(quote).toHaveTextContent('(*) Delete as appropriate.')
     expect(within(quote).getByRole('link', { name: CONTACT_EMAIL })).toHaveAttribute('href', `mailto:${CONTACT_EMAIL}`)
   })
   it('the AI policy lists what is always made by hand (3) and what AI is never used for (6)', () => {
@@ -207,7 +207,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
   })
   it('lists the people it shares with, including the mailing tool and YouTube, and Stripe for passes', () => {
     const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
-    expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube\)/)
+    expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube, and Cloudflare, which runs our security check\)/)
   })
   it('says that links to other websites, such as the Substack, leave this site and have their own privacy policies, and the site really does link to the Substack', () => {
     expect(section('Who we share your information with')).toMatch(/Our site links to other websites, such as our Substack\. Once you follow a link you have left this site, and that website.s own privacy policy applies\./)

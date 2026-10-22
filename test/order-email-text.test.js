@@ -41,7 +41,9 @@ describe('the confirmation email carries what the law asks for', () => {
   it('explains the 14-day right to cancel, how to use it, who pays to send it back, and the refund', () => {
     expect(text).toMatch(/right to cancel this contract within 14 days without giving any reason/)
     expect(text).toContain(`email ${CONTACT_EMAIL}`)
-    expect(text).toMatch(/You pay the cost of sending it back/)
+    expect(text).toMatch(/we will arrange the return for you and pay for it/)
+    expect(text).toMatch(/For every other print you pay the cost of sending it back/)
+    expect(text).not.toMatch(/Large framed prints can cost a lot/)
     expect(text).toMatch(/within 14 days of getting the print back or of you showing us proof/)
     expect(text).toMatch(/cannot charge any other fee/)
   })

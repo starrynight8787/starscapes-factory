@@ -46,10 +46,10 @@ describe('the Privacy policy says what the ICO checklist asks, and it matches th
   it('promises to acknowledge a complaint within 30 days and to say what was found, while keeping the way to the ICO', () => {
     const c = section('privacy', 'Complaints'); expect(c).toMatch(/We will acknowledge your complaint within 30 days, look into it, and tell you what we found/); expect(c).toMatch(/Information Commissioner/); expect(c).toMatch(/0303 123 1113/)
   })
-  it('puts the right to object in a paragraph of its own (not only a bullet), and says there are no automated decisions or profiling', () => {
+  it('puts the right to object in a paragraph of its own (not only a bullet), and explains the automated decisions position (no significant automated decisions; Stripe and Cloudflare run fraud and bot checks)', () => {
     const paragraphs = page('privacy').sections.find((s) => s.title === 'Your rights').paragraphs
     expect(paragraphs.some((p) => /^You can object to us using your information where we rely on our legitimate interest\. Tell us and we will stop, unless we have a strong reason not to\./.test(p))).toBe(true)
-    expect(everything).toMatch(/We do not use automated decision-making or profiling/)
+    expect(everything).toMatch(/We do not make decisions about you with a legal or similarly significant effect by automated means/); expect(everything).toMatch(/Stripe and Cloudflare run automatic fraud and bot checks on payments and sign-ins/)
   })
 })
 
@@ -57,7 +57,7 @@ describe('Returns: the right to cancel starts when you order', () => {
   it('says so, and still gives 14 days after delivery, the refund time, who pays the return, and the cancellation form', () => {
     const r = page('returns').sections.map((s) => s.paragraphs.join('\n')).join('\n')
     expect(r).toMatch(/You can cancel from the moment you place your order until 14 days after the day your print is delivered/); expect(r).toMatch(/\*\*To cancel:\*\* email .* in that time, with your name and order details/)
-    expect(r).toMatch(/within 14 days of getting the print back/); expect(r).toMatch(/You pay the cost of sending it back/); expect(page('returns').sections.map((s) => s.title)).toContain('Cancellation form')
+    expect(r).toMatch(/within 14 days of getting the print back/); expect(r).toMatch(/For every other print you pay the cost of sending it back/); expect(r).toMatch(/we will arrange the return for you and pay for it/); expect(page('returns').sections.map((s) => s.title)).toContain('Cancellation form')
   })
   it('keeps the 30-day right to reject a faulty print, and the line that legal rights do not stop after 30 days', () => {
     const r = section('returns', 'If your print is faulty or damaged'); expect(r).toMatch(/within 30 days of delivery/); expect(r).toMatch(/Your legal rights don't stop after 30 days/)
