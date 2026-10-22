@@ -38,9 +38,12 @@ describe('the Star Atlas section', () => {
     expect(atlas()).toContain('Your name, email address, location and reading answers are never put into AI tools: AI tools only ever see the totals')
     expect(whole()).toMatch(/We do not put customers' personal details into AI tools, ever/)
   })
-  it('says it is not shared, except with the database provider that stores it, and that deleting an account deletes it', () => {
+  it('says it is not shared, except with the database provider that stores it', () => {
     expect(atlas()).toContain("We don't share your atlas or your reading answers with anyone else, apart from our database provider, which stores them for us")
-    expect(atlas()).toContain('your atlas, your check-ins and your survey answers are deleted with it')
+  })
+  it('says members can have their check-ins deleted at any time, that they are deleted when an account is closed, and that the rest of the atlas and the survey answers go then too (the wording from the Star Atlas review, 22 October 2026)', () => {
+    expect(atlas()).toContain("You can ask us to delete your check-ins at any time, and they're deleted if you close your account.")
+    expect(atlas()).toContain('The rest of your atlas and your survey answers are deleted then too.')
   })
   it('only describes what the brief says is part of the launch (it says nothing of the later Explorers Map, cities, leaderboards or comparisons between members)', () => {
     expect(atlas()).not.toMatch(/map|city|cities|leaderboard|rank|compare/i)
@@ -84,9 +87,9 @@ describe('the table of what is collected and why', () => {
 })
 
 describe('how long it is kept', () => {
-  it('has its own point: until the account is deleted', () => {
+  it('has its own point: until you ask us to delete them, or to delete your account (check-ins can be deleted on request at any time)', () => {
     const keep = section('How long we keep it').paragraphs.join('\n')
-    expect(keep).toContain('* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete your account.')
+    expect(keep).toContain('* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete them, or to delete your account.')
   })
 })
 

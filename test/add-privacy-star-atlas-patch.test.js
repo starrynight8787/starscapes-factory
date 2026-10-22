@@ -77,7 +77,7 @@ describe('the privacy policy Star Atlas wording', () => {
     const dir = project({ newFiles: false })
     const r = run(dir)
     expect(r.code).toBe(1)
-    expect(r.out).toMatch(/Unzip starscapes-privacy-star-atlas-22oct\.zip/)
+    expect(r.out).toMatch(/Unzip starscapes-privacy-star-atlas-v2-22oct\.zip/)
     for (const rel of FILES) expect(read(dir, rel)).toBe(before(rel))
   })
 

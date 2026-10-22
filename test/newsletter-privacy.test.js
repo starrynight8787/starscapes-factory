@@ -19,7 +19,7 @@ describe('what the policy says it keeps', () => {
     expect(r[0]).toMatch(/email address/); expect(r[0]).toMatch(/date and wording you agreed to/); expect(r[0]).toMatch(/whether and when you confirmed it/); expect(r[0]).toMatch(/if you leave, that you left/)
     expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/if you asked for it, the free ebook/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
     expect(r[3]).toMatch(/Your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
-    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(13) // the heading line, the divider line, and eleven rows: the newsletter and the free ebook are ONE list (one row), and the member profile is the eleventh
+    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook are ONE list (one row), and the member profile is the eleventh
   })
   it('keeps exactly what the table in the database keeps: the address, the words agreed to, when, whether confirmed, and whether they left (and no name, no phone, nothing else)', () => {
     const sql = read('sql/newsletter.sql'); const table = between(sql, 'create table if not exists public.newsletter_subscribers', 'create table if not exists public.newsletter_issues')

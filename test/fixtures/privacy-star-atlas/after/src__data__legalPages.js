@@ -37,9 +37,9 @@ import { CONTACT_EMAIL } from './contact'
 // The contact address is written ONCE, in src/data/contact.js. In the words below it is {{CONTACT_EMAIL}}, filled in here (test/contact-email-single-source.test.js fails if it is ever written out by hand).
 const fillContact = (v) => (typeof v === 'string' ? v.split('{{CONTACT_EMAIL}}').join(CONTACT_EMAIL) : Array.isArray(v) ? v.map(fillContact) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fillContact(x)])) : v)
 
-// THE STAR ATLAS (the stamps, the monthly reading check-in, the optional genre and the optional survey) is designed but NOT BUILT YET. The privacy policy describes it (Gill, 22 October 2026),
-// so the policy must not be published before the atlas is live. Set this to true on the day the Star Atlas goes live; until then a test refuses to let the privacy policy be switched on.
-// (If the atlas is dropped, take its section, its table rows and its retention line out of the privacy policy instead.)
+// THE STAR ATLAS (the stamps, the monthly reading check-in, the optional genre and the optional survey) is being built (the foundations are in; the reading check-in is not). The privacy policy
+// describes all of it (Gill, 22 October 2026), so the policy must not be published before the atlas is live. Set this to true on the day the Star Atlas goes live; until then a test refuses
+// to let the privacy policy be switched on. (If the atlas is dropped, take its section, its table rows and its retention line out of the privacy policy instead.)
 export const STAR_ATLAS_LIVE = false
 
 export const LEGAL_PAGES = fillContact([
@@ -222,7 +222,8 @@ export const LEGAL_PAGES = fillContact([
         "paragraphs": [
           "The Star Atlas is your own record of the stamps you earn in the rooms of the site. We keep what you earned and when, the stardust you spend, the dates of your free taste week and the country you choose. If you hold a pass and do the monthly reading check-in, we keep the number of extra books you give (0 to 3) and, only if you choose, a genre. If you answer the optional year-one survey, we keep your answers too. Only you can see and change your own atlas.",
           "We only ever look at reading habits as totals. Our admin page shows how many members checked in each month, how many books they read, and which genres, but only once at least 5 members have checked in that month. Until then it shows \"Fewer than 5 so far\", and the download follows the same rule. A genre chosen by fewer than 5 members is grouped under \"Other\". We could see one member's answers by looking directly in our database, but we don't, and the admin page has no way to show them.",
-          "The genre is optional, and your stardust counts either way. Your name, email address, location and reading answers are never put into AI tools: AI tools only ever see the totals. We don't share your atlas or your reading answers with anyone else, apart from our database provider, which stores them for us. If you ask us to delete your account, your atlas, your check-ins and your survey answers are deleted with it."
+          "The genre is optional, and your stardust counts either way. Your name, email address, location and reading answers are never put into AI tools: AI tools only ever see the totals. We don't share your atlas or your reading answers with anyone else, apart from our database provider, which stores them for us.",
+          "You can ask us to delete your check-ins at any time, and they're deleted if you close your account. The rest of your atlas and your survey answers are deleted then too."
         ]
       },
       {
@@ -249,7 +250,7 @@ export const LEGAL_PAGES = fillContact([
       {
         "title": "How long we keep it",
         "paragraphs": [
-          "* **Order and invoice records:** six years, because tax law requires it.\n* **Your account:** until you ask us to delete it.\n* **Your passes record:** until you ask us to delete your account. Payment records for passes are kept for six years, like order records.\n* **Suggestions and votes:** until you ask us to delete your account.\n* **Your profile (name, username, icon and email choice):** until you ask us to delete your account.\n* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete your account.\n* **Newsletter and free ebook sign-ups (they are one list):** until you unsubscribe or ask us to delete your email address. If you sign up but never press the link to confirm, we delete your address after 30 days.\n* **If you unsubscribe from the newsletter:** we keep your email address, marked as unsubscribed, so that we never email you again by mistake. If you would rather we deleted it completely, ask us and we will.\n* **Emails and messages to us:** 2 years, then deleted.\n* **Website logs:** only as long as needed to keep the site secure and fix faults. Our hosting provider sets this, and we do not keep our own copy.",
+          "* **Order and invoice records:** six years, because tax law requires it.\n* **Your account:** until you ask us to delete it.\n* **Your passes record:** until you ask us to delete your account. Payment records for passes are kept for six years, like order records.\n* **Suggestions and votes:** until you ask us to delete your account.\n* **Your profile (name, username, icon and email choice):** until you ask us to delete your account.\n* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete them, or to delete your account.\n* **Newsletter and free ebook sign-ups (they are one list):** until you unsubscribe or ask us to delete your email address. If you sign up but never press the link to confirm, we delete your address after 30 days.\n* **If you unsubscribe from the newsletter:** we keep your email address, marked as unsubscribed, so that we never email you again by mistake. If you would rather we deleted it completely, ask us and we will.\n* **Emails and messages to us:** 2 years, then deleted.\n* **Website logs:** only as long as needed to keep the site secure and fix faults. Our hosting provider sets this, and we do not keep our own copy.",
           "Stripe, Creative Hub and our other providers keep information under their own policies."
         ]
       },
