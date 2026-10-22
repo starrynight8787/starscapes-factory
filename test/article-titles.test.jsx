@@ -97,7 +97,7 @@ describe('the article pages keep working', () => {
     h.posts = [post(1)]
     inRouter(<Home />)
     expect(await screen.findByRole('link', { name: 'A post called number 1' })).toHaveAttribute('href', '/post/p1')
-    expect(screen.getByRole('button', { name: 'art' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Art' })).toBeInTheDocument()
   })
   it('the post page shows Edit and Delete only to the author', async () => {
     h.post = post(1)

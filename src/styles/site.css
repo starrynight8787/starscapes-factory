@@ -788,6 +788,9 @@ html body h3 {
   gap: 12px 28px;
 }
 .sf-footer__links a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px;
   color: rgba(255, 255, 255, 0.82);
   font-size: 14px;
   text-decoration: none;

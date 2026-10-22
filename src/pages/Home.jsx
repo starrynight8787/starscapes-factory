@@ -8,6 +8,7 @@ import '../styles/pages.css'
 import '../styles/articles.css'
 import PassChip from '../membership/PassChip'
 import { GENRES, shelfPath } from '../bookclub/bookRules'
+import { friendlyTag, hiddenFromBlog } from './blogTags'
 
 // Every published post from every room, newest first, at /blog. The tags found on the posts become the filter above the list.
 // The rows are the same cards as on the room pages (roompages.css), with the whole row a link.
@@ -38,7 +39,7 @@ export default function Home() {
     }
   }, [])
 
-  const allTags = useMemo(() => [...new Set(posts.flatMap((p) => (Array.isArray(p.tags) ? p.tags : [])))].sort((a, b) => a.localeCompare(b)), [posts])
+  const allTags = useMemo(() => [...new Set(posts.flatMap((p) => (Array.isArray(p.tags) ? p.tags : [])))].filter((t) => !hiddenFromBlog(t)).sort((a, b) => a.localeCompare(b)), [posts])
   const shown = activeTag ? posts.filter((p) => Array.isArray(p.tags) && p.tags.includes(activeTag)) : posts
 
   // The Book Club's genres used to link here (as a tag). Old links and bookmarks such as /blog?tag=fiction now go to that genre's shelf, unless some post really carries the tag.
@@ -58,7 +59,7 @@ export default function Home() {
           </button>
           {allTags.map((tag) => (
             <button key={tag} type="button" className="pg-chip" aria-pressed={activeTag === tag} onClick={() => setSearchParams({ tag })}>
-              {tag}
+              {friendlyTag(tag)}
             </button>
           ))}
         </div>

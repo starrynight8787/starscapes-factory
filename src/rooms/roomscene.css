@@ -300,6 +300,12 @@ a.rs-item:focus-visible .rs-art {
   color: inherit;
   text-decoration: none;
   min-height: 44px;
+  text-align: left; /* the writing sits to the left, title above its line, not centred inside its own box */
+}
+.rs-list a > span,
+.rs-list .is-locked > span {
+  flex: 1 1 auto;
+  min-width: 0;
 }
 .rs-list a:hover {
   border-color: var(--sf-blue, #1f6fa8);

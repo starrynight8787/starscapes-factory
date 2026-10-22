@@ -39,6 +39,9 @@
   list-style: none;
 }
 .ft__col a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 24px; /* a comfortable tap size (WCAG 2.2: at least 24 pixels) */
   color: rgba(255, 255, 255, 0.82);
   font-size: 0.875rem;
   text-decoration: none;

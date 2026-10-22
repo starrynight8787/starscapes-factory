@@ -45,7 +45,7 @@ export default function ProductGallery() {
 
   return (
     <main className="legacy">
-      <h1>🎨 The Art Loft</h1>
+      <h1>Art Loft prints</h1>
 
       {activeCollection && (
         <p className="muted">
