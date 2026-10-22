@@ -32,6 +32,30 @@
   border-radius: 16px;
   color: #fff;
 }
+.sl__hero--banner {
+  /* the banner picture covers the whole box, edge to edge; the words stay in the page for screen readers */
+  position: relative;
+  padding: 0;
+  gap: 0;
+  aspect-ratio: 16 / 7;
+  overflow: hidden;
+}
+.sl__banner {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+.sl__hero--banner > :not(.sl__banner) {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
 .sl__logo {
   display: block;
   width: min(100%, 360px);
@@ -300,6 +324,9 @@
   .sl__hero {
     padding: 24px 16px;
   }
+  .sl__hero--banner {
+    padding: 0;
+  }
   .sl__card,
   .sl__half {
     padding: 20px;
@@ -313,6 +340,9 @@
 }
 @media (max-width: 720px) {
   /* a phone: one box under another */
+  .sl__hero--banner {
+    aspect-ratio: 16 / 9;
+  }
   .sl__row--wide,
   .sl__row--even {
     grid-template-columns: minmax(0, 1fr);

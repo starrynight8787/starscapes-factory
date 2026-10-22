@@ -25,6 +25,7 @@ function Picture({ post, className }) {
 export default function StoryLedgerPage() {
   useTitle('Story Ledger')
   const [logoOk, setLogoOk] = useState(true)
+  const [bannerOk, setBannerOk] = useState(true)
   const [posts, setPosts] = useState([])
   const [status, setStatus] = useState('loading')
   const socials = PROJECT_SOCIALS['story-ledger'] || {}
@@ -47,7 +48,8 @@ export default function StoryLedgerPage() {
     <main className="rp sl">
       <p className="rp-back"><Link to="/knowledge-nook">← Back to Knowledge Nook</Link></p>
 
-      <header className="sl__hero">
+      <header className={bannerOk ? 'sl__hero sl__hero--banner' : 'sl__hero'}>
+        {bannerOk ? <img className="sl__banner" src="/story-ledger/banner.png" alt="" onError={() => setBannerOk(false)} /> : null}
         <h1 className={logoOk ? 'sl__sr' : 'sl__title'}>Story Ledger</h1>
         {logo}
         <p className="sl__tagline">{TAGLINE}</p>
