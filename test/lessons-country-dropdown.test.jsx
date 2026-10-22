@@ -38,3 +38,16 @@ describe('the country dropdown', () => {
     expect(screen.queryByText('Temple')).toBeNull()
   })
 })
+
+describe('the pictures', () => {
+  it('shows each lesson’s picture across the top, two cards across', async () => {
+    h.posts = [{ ...lesson('1', 'Bear', 'AU', 2012), image_url: 'https://example.com/bear.jpg' }, lesson('2', 'Temple', 'JP', 2019)]
+    page()
+    await screen.findByText('Bear')
+    expect(document.querySelector('ul.rp-entries--gallery.xb-lessons')).not.toBeNull()
+    const imgs = document.querySelectorAll('a.rp-entry img.rp-entry__img')
+    expect(imgs).toHaveLength(1)
+    expect(imgs[0]).toHaveAttribute('src', 'https://example.com/bear.jpg')
+    expect(imgs[0]).toHaveAttribute('alt', '')
+  })
+})

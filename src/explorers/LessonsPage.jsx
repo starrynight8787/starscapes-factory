@@ -49,12 +49,12 @@ export default function LessonsPage() {
         </div>
       )}
       {status === 'ready' && chosen && shown.length === 0 && <p className="rp-note">No lessons for that country yet.</p>}
-      <ul className="rp-entries">
+      <ul className="rp-entries rp-entries--gallery xb-lessons">
         {shown.map((p) => {
           const t = travelOf(p)
           return (
             <li key={p.id}>
-              <RoomEntry post={p} from={here.pathname + here.search} meta={[t.country && countryName(t.country), t.year].filter(Boolean).join(' · ')} />
+              <RoomEntry post={p} picture from={here.pathname + here.search} meta={[t.country && countryName(t.country), t.year].filter(Boolean).join(' · ')} />
             </li>
           )
         })}

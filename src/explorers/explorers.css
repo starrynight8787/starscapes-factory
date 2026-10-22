@@ -34,6 +34,8 @@
 
 .xb-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
 .xb-filter__label { font-weight: 700; }
+.rp--room .rp-entries.xb-lessons { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+@media (max-width: 700px) { .rp--room .rp-entries.xb-lessons { grid-template-columns: minmax(0, 1fr); } }
 .xb-select { min-width: 220px; background: #fff; }
 .xb-filter .pg-chip { cursor: pointer; }
 .xb-filter .pg-chip[aria-pressed='true'] { background: var(--sf-navy-700, #14306a); color: #fff; }
