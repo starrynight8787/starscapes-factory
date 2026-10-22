@@ -90,6 +90,20 @@ input[type='file'].sf-input {
 .fm__submit {
   display: inline-flex;
   align-items: center;
+  text-decoration: none; /* so a link can be drawn as the button */
+}
+.fm__done:focus {
+  outline: none; /* the box takes the keyboard focus when the form has gone; it is not something to press */
+}
+.fm__textbtn {
+  padding: 6px 2px;
+  border: 0;
+  background: none;
+  color: var(--sf-blue, #1f6fa8);
+  font: inherit;
+  font-weight: 700;
+  text-decoration: underline;
+  cursor: pointer;
 }
 .fm__links {
   display: flex;

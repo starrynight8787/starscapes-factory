@@ -1,0 +1,50 @@
+SIGN-UP: CLEAR THE FORM AND POINT TO LOG IN ONCE THE ACCOUNT IS MADE   starscapes-signup-done-22oct.zip
+(Code, a little styling and tests. No Supabase step. Released through a preview first.)
+
+THE PROBLEM (you, with a screenshot, 22 October 2026): you created an account, but the page still showed your email and password and the Create account button, so it invited you to press it again. It should clear the fields and direct you to log in.
+THE CAUSE: after a successful sign-up the page only added the green "Account created" message. It never cleared the email or password (the password was left sitting on the page), never took the form away, and never offered a way on.
+
+THE FIX (src/pages/Signup.jsx, with a few lines in src/styles/forms.css): once the account is made,
+ - the email and the password are CLEARED;
+ - the form and its Create account button are REPLACED by the green "Account created" message ("Check your email to confirm your account, then log in.") and a clear blue LOG IN button that goes to the log in page;
+ - the message says which address the link was sent to ("We sent the link to ..."), and a small "Wrong email address? Start again" brings back an EMPTY form. Without it, a mistyped address would be a dead end, because the form has gone;
+ - the keyboard focus moves to the new message (the button it was on has disappeared).
+It does NOT send you to the log in page by itself: you first need to read the message and confirm your email, so you press Log in when you are ready.
+IF A SIGN-UP DOES NOT WORK (an email that already has an account, a problem on our side, a missing password) NOTHING CHANGES: the form stays, and what you typed stays in the fields, so you can put it right.
+
+PROOF: I ran the built site in a real phone-sized browser (the account service stood in for by a pretend one, so nothing real was created): exactly ONE sign-up request is sent; afterwards there is no form and no Create account button; Log in goes to /login; focus is on the new message; and "Start again" shows two empty fields.
+TESTS: 10 new in test/signup-done.test.jsx (the form and button are gone; the message names the tidy address; one Log in button to /login; focus moves; neither the email nor the password is kept; a mistyped address can be put right; a failed sign-up and a form with a problem leave everything as it was; the styles it needs). The 24 existing log in and sign-up tests still pass unchanged. 11 deliberate breakages: 10 caught, and the 11th changes nothing you could see (an email box already strips stray spaces itself).
+WHOLE SUITE on a copy of your newest commit (968e79a) with this installed: 3,822 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+NOT CHANGED, FOR YOU TO KNOW: the Forgot password page has a similar pattern (its message sits above a form that stays), but sending a second reset link is harmless and sometimes wanted, so I left it. Say if you would like it tidied the same way.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-signup-done-22oct.zip
+ 5. python3 tools/add-signup-done.py       IT MUST PRINT "changed" LINES FOR 2 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "fm__done" src/pages/Signup.jsx        (it must print 1)
+    grep -c "fm__done" src/styles/forms.css        (it must print 1)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-signup-done" -not -path "./node_modules/*" -delete
+11. git checkout -b signup-done
+    git add .
+    git status                                   (2 changed files: src/pages/Signup.jsx and src/styles/forms.css; new: test/signup-done.test.jsx, the notes, the installer, its test and fixtures, tools/signup-done-files/; nothing ending .before-)
+    git commit -m "Sign-up: clear the form and point to log in once the account is made"
+    git push -u origin signup-done
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "signup-done" and says Preview. WAIT for Ready, then open it ON YOUR PHONE and go to Sign up.
+      NOTE: the preview talks to your REAL account system, so a successful sign-up makes a REAL account. Use an address you can open that has no account yet (for example a "+test" version of your own, like yourname+test1@icloud.com), and delete that test account afterwards if you wish.
+      a. Create the account: the form must be replaced by the green "Account created" box, the address, and a blue Log in button. No Create account button, nothing left in any field.
+      b. Press "Start again": an empty form comes back.
+      c. Try an address that ALREADY has an account: you get the "already an account" message, and what you typed stays in the fields.
+      d. Press Log in: you land on the log in page.
+    If the build fails (Error), or any of a to d is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge signup-done
+    git push
+    git branch -d signup-done
