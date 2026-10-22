@@ -15,7 +15,7 @@ describe('blog tags', () => {
     expect(friendlyTag('')).toBe('')
   })
   it('leaves out our own working and test tags', () => {
-    for (const t of ['test-import', 'testing', 'repeat', 'multiple', 'factory-floor', 'archive-entries', 'TESTING']) expect(hiddenFromBlog(t), t).toBe(true)
+    for (const t of ['test-import', 'testing', 'repeat', 'multiple', 'factory-floor', 'archive-entries', 'TESTING', 'Archive Entry']) expect(hiddenFromBlog(t), t).toBe(true)
     for (const t of ['art', 'travel', 'lessons-from-the-road', 'poems']) expect(hiddenFromBlog(t), t).toBe(false)
     expect(HIDDEN_BLOG_TAGS).toContain('test-import')
   })
