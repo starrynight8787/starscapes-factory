@@ -1,0 +1,5 @@
+/* The promise to a child on the Clubhouse's pages (SFW-264). Stands on its own. */
+.cn { box-sizing: border-box; max-width: 720px; margin: 24px auto; padding: 16px 20px; border: 2px solid var(--sf-navy-700, #14306a); border-radius: 14px; background: #fff; color: var(--sf-ink, #0e1530); }
+.cn__title { margin: 0 0 8px; font-size: 1.25rem; color: var(--sf-navy-700, #14306a); }
+.cn__list { margin: 0 0 12px; padding-left: 1.2em; font-size: 1.0625rem; line-height: 1.6; }
+.cn__grownups { margin: 0; font-size: 0.9375rem; line-height: 1.5; color: var(--sf-muted, #5b6585); }

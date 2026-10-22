@@ -118,7 +118,7 @@ describe('the unsubscribe page', () => {
 
 describe('how it is wired in, and how it looks', () => {
   it('is in the footer, has routes for both link pages, and page titles kept out of search', () => {
-    expect(read('src/components/Footer.jsx')).toMatch(/<NewsletterSignup \/>\s*<hr \/>/)
+    expect(read('src/components/Footer.jsx')).toMatch(/<NewsletterSignup \/>\}?\s*<hr \/>/) // still just above the rule, whether or not the Clubhouse condition wraps it (SFW-264)
     const app = read('src/App.jsx'); expect(app).toContain('<Route path="/newsletter/confirm" element={<NewsletterConfirmPage />} />'); expect(app).toContain('<Route path="/newsletter/unsubscribe" element={<NewsletterUnsubscribePage />} />')
     expect(PAGES['/newsletter/confirm']).toMatchObject({ index: false, client: true }); expect(PAGES['/newsletter/unsubscribe']).toMatchObject({ index: false, client: true })
   })

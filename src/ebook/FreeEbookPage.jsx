@@ -11,6 +11,7 @@ import '../rooms/roompages.css'
 import '../styles/pages.css'
 import './ebook.css'
 import './ebookv2.css'
+import { GROWN_UPS_NOTE } from '../data/children'
 
 // The Free Ebook pages behind the Lounge's door (Figma: "Download page: Free Ebook, sign up with email" and "thank you and download").
 // Getting the ebook needs only an email address: NO tick. The newsletter is a separate, OPTIONAL box, never ticked for anyone, with the same words everywhere on the site. The request is
@@ -99,6 +100,7 @@ export default function FreeEbookPage() {
             </div>
             <CheckField id="eb-newsletter" label={OPTIONAL_NEWSLETTER_TEXT} checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
             <button type="submit" className="pg-btn sg-btn--primary eb__submit" disabled={saving}>{saving ? 'Sending…' : 'Get the free ebook'}</button>
+            <p className="eb__small">{GROWN_UPS_NOTE}</p>
             <p className="eb__small">{EBOOK.smallPrint} See our <Link to="/page/privacy">Privacy policy</Link>.</p>
           </form>
           )}

@@ -38,8 +38,10 @@ describe('nothing behind it needs an account, a pass or a payment', () => {
     const file = read('lib/newsletter.js'); const pub = file.slice(file.indexOf('async function'), file.indexOf('// The daily tidy-up')) // the public code: not the daily tidy-up, which needs its own secret
     expect(pub.length).toBeGreaterThan(1000); expect(pub).toMatch(/async function unsubscribe/); expect(pub).not.toMatch(/requireOwner|ownerGuard|memberships|stripe|Bearer|auth\.getUser/i)
   })
-  it('the box sits in the footer on its own, with no condition about being signed in or holding a pass', () => {
-    const footer = read('src/components/Footer.jsx'); expect(footer).toMatch(/\n\s*<NewsletterSignup \/>\n/); expect(footer).not.toMatch(/(&&|\?)\s*<NewsletterSignup/)
+  it('the box sits in the footer with no condition about being signed in or holding a pass: its ONE condition is that the page is not the children\'s Clubhouse (SFW-264)', () => {
+    const footer = read('src/components/Footer.jsx')
+    expect(footer).toMatch(/\{!onClubhouse\(pathname\) && <NewsletterSignup \/>\}/)
+    expect(footer).not.toMatch(/\b(session|signedIn|isMember|hasPass|holdsPass|useIsOwner|useSession|supabase)\b/)
   })
   it('the words people agree to say nothing about a price or a pass, and promise only the newsletter and the way out', () => {
     expect(CONSENT_TEXT).toMatch(/newsletter by email/); expect(CONSENT_TEXT).toMatch(/unsubscribe at any time/); expect(CONSENT_TEXT).not.toMatch(/pass|pay|£|price|member/i)

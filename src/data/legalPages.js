@@ -275,7 +275,9 @@ export const LEGAL_PAGES = fillContact([
       {
         "title": "Children",
         "paragraphs": [
-          "This shop is for adults. We don't knowingly collect information about children. If you think we have, please tell us and we will delete it."
+          "The shop, accounts and passes are for adults. You must be 18 or over to create an account, buy passes, or sign up to our emails.",
+          "Sarah Junior's Clubhouse is for children, and we look after it with extra care. A child doesn't need an account, and the Clubhouse doesn't ask them for their name, their email address or anything else. It uses no advertising, no analytics and no tracking, and the newsletter sign-up box is not shown there. A video only loads from YouTube when it is pressed, and then through YouTube's privacy-enhanced player. The only thing we can see from a visit is the ordinary technical record that every website keeps to stay secure, such as an IP address, kept only as long as needed.",
+          "We don't knowingly collect information about children. If you think we have collected your child's information, please tell us at [{{CONTACT_EMAIL}}](mailto:{{CONTACT_EMAIL}}) and we will delete it. We looked at the Information Commissioner's Children's Code for the Clubhouse and wrote down our reasons."
         ]
       },
       {

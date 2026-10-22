@@ -6,6 +6,7 @@ import { fetchOpen, subscribe } from '../newsletter/newsletterApi'
 import { OPTIONAL_NEWSLETTER_TEXT } from '../newsletter/newsletterRules'
 import '../ebook/ebook.css'
 import '../ebook/ebookv2.css'
+import { GROWN_UPS_NOTE } from '../data/children'
 
 // An email box for ONE thing (the Road journal, or to hear when a door opens). The site-wide sign-up rule (see the "Email sign-up rule" document): getting the thing needs only an email address,
 // the newsletter is a separate OPTIONAL box that is never ticked for anyone, and we email a link to confirm first. It works only while sign-ups are open, like the footer's newsletter box.
@@ -66,6 +67,7 @@ export default function RequestForm({ id, source, door, button, smallPrint, done
       </div>
       <CheckField id={`${id}-newsletter`} label={OPTIONAL_NEWSLETTER_TEXT} checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
       <button type="submit" className="pg-btn sg-btn--primary eb__submit" disabled={saving}>{saving ? 'Sending…' : button}</button>
+      <p className="eb__small">{GROWN_UPS_NOTE}</p>
       <p className="eb__small">{smallPrint} See our <Link to="/page/privacy">Privacy policy</Link>.</p>
     </form>
   )

@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useLocation } from 'react-router-dom'
 import Logo from './Logo'
 import { channels } from '../data/channels'
 import { roomPath } from '../data/roomImages'
@@ -6,6 +6,7 @@ import { social as socialLinks } from '../data/social'
 import { pageExists, pageIsReady } from '../data/staticPages'
 import { companyLine, printerLine } from '../data/company'
 import NewsletterSignup from '../newsletter/NewsletterSignup'
+import { onClubhouse } from '../data/children'
 import '../styles/site.css'
 import './footer.css'
 
@@ -16,6 +17,7 @@ const LEGAL = [['Terms and conditions', '/page/terms'], ['Privacy policy', '/pag
 
 // `social` can be passed in (the tests do), and otherwise comes from src/data/social.js
 export default function Footer({ social = socialLinks, owner = false }) {
+  const { pathname } = useLocation()
   const follow = social.filter((s) => s.url && s.url.trim())
   const shown = (links) => links.map(([label, to]) => {
     if (!to.startsWith('/page/')) return { label, to, draft: false }
@@ -62,7 +64,7 @@ export default function Footer({ social = socialLinks, owner = false }) {
             )}
           </div>
         </div>
-        <NewsletterSignup />
+        {!onClubhouse(pathname) && <NewsletterSignup />}
         <hr />
         <div className="ft__company">
           <p>{companyLine()}</p>

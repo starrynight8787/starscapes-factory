@@ -1,0 +1,63 @@
+CHILDREN'S CODE: SARAH JUNIOR'S CLUBHOUSE   starscapes-childrens-code-22oct.zip   (SFW-264)
+(Code, wording and tests. No Supabase step. Released through a preview first.)
+
+WHY: Gill confirmed on 22 October 2026 that Sarah Junior's Clubhouse (the Den) is FOR CHILDREN, so the ICO's Children's Code applies to it. The written assessment is attached to SFW-264. The rule that follows:
+a child is never asked for anything on its pages.
+
+WHAT CHANGES (what you will SEE)
+ 1. THE CLUBHOUSE'S PAGES NO LONGER SHOW THE NEWSLETTER BOX. It sits in the footer, which appears on every page, so a child could type an email address on a children's page. It is now hidden on every page under
+    /sarah-jrs-den (the front page, the YouTube Series page, and any door). On every other page it is exactly as before.
+ 2. "OUR PROMISE TO YOU", a small card in plain words, appears on the Clubhouse's front page (under the picture) and at the bottom of the YouTube Series page:
+      We don't ask you for your name or your email. / We don't follow you around the internet. / A video only starts when you press play.
+    plus a line for the grown-up with a link to the Privacy policy. Every line is true of what the site does, and tests check it.
+ 3. EVERY EMAIL FORM NOW SAYS IT IS FOR GROWN-UPS: "For grown-ups: you must be 18 or over to sign up. If you are younger, please ask a grown-up to do it for you." (the newsletter box, the free ebook form, and the
+    "tell me when it opens" form on the Explorer's Bay taped doors).
+ 4. THE SIGN UP PAGE says: "Accounts are for people aged 18 or over. If you are younger, please ask a grown-up."
+ 5. PRIVACY POLICY, SECTION 12 (CHILDREN) IS REWRITTEN (the page is still a draft, only you see it): the shop, accounts and passes are for adults (18 or over); the Clubhouse is for children and what it does and does
+    not do; and how a grown-up can ask for a child's information to be deleted. It no longer says only "This shop is for adults".
+WHAT DOES NOT CHANGE: nothing is collected from a child; there is still no age check (it would mean collecting MORE from children); the three other Clubhouse doors still show "opening soon".
+
+TESTS: 25 new in test/children-code.test.jsx (which pages count as the Clubhouse, including that a look-alike address does not; no newsletter box on any Clubhouse path and still there everywhere else; no page
+component of the Clubhouse can draw or import an email form; the grown-ups sentence on each email form and the sign-up page; the promise card and where it appears; the promise is TRUE: nothing loads from YouTube
+until play, the privacy-enhanced player with no related videos, and no page fetches anything straight from YouTube or Google; Privacy section 12). Two existing footer tests were updated to allow exactly one condition on
+the newsletter box (the Clubhouse), and to keep forbidding any condition about being signed in or holding a pass. 15 deliberate breakages, ALL caught (the email box coming back on the Clubhouse; a look-alike address
+matching; only the front page counting; each grown-ups sentence dropped; the promise dropped or shown in every room; Privacy section 12 reverting; a promise line removed; a YouTube picture loaded directly; an email
+form pulled into a Clubhouse page; "related videos" coming back).
+WHOLE SUITE on a copy of your newest commit (cec5588) with this installed: 4,032 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+STILL YOURS TO DO (not code): in YouTube Studio, mark Sarah Jr.'s videos "made for kids" (a channel setting only you can change). Then add the date you approve the assessment on SFW-264.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-childrens-code-22oct.zip
+ 5. python3 tools/add-childrens-code.py       IT MUST PRINT "changed" LINES FOR 10 FILES AND FOUR LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "onClubhouse" src/components/Footer.jsx             (it must print 2)
+    grep -c "ClubhouseNote" src/rooms/RoomHome.jsx              (it must print 2)
+    grep -c "GROWN_UPS_NOTE" src/ebook/FreeEbookPage.jsx        (it must print 2)
+    grep -c "Sarah Junior's Clubhouse is for children" src/data/legalPages.js     (it must print 1)
+    ls src/data/children.js src/components/ClubhouseNote.jsx    (both must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-childrens-code" -not -path "./node_modules/*" -delete
+11. git checkout -b childrens-code
+    git add .
+    git status                                   (10 changed files: Footer.jsx, legalPages.js, YouTubeSeriesPage.jsx, FreeEbookPage.jsx, RequestForm.jsx, NewsletterSignup.jsx, Signup.jsx, RoomHome.jsx, test/newsletter-free.test.jsx, test/newsletter-pages.test.jsx; new: children.js, ClubhouseNote.jsx and its css, the new test, the notes, the installer, its test and fixtures, tools/childrens-code-files/; nothing ending .before-)
+    git commit -m "Children's Code: no email box on the Clubhouse, a promise to children, grown-ups wording on every email form and the sign-up page, Privacy section 12"
+    git push -u origin childrens-code
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "childrens-code" and says Preview. WAIT for Ready, THEN OPEN IT AND LOOK before merging. Check on your phone:
+      a. Open the Clubhouse (starscapesfactory.com/sarah-jrs-den on the preview): under the picture there is a card, "Our promise to you", with three lines. Scroll to the bottom: NO newsletter box in the footer.
+      b. Open the Clubhouse's YouTube Series page (the door, if it is open): the same card at the bottom, and NO newsletter box in the footer. A video still only starts when you press play.
+      c. Open the home page or any other room: the newsletter box IS in the footer, with the grown-ups sentence under the word "Newsletter".
+      d. Open Sign up: "Accounts are for people aged 18 or over. If you are younger, please ask a grown-up." under the first line.
+      e. Open the Free ebook page (Leadership Lounge) and a taped door in Explorer's Bay: the grown-ups sentence sits just above the small print.
+      f. (Owner only) open the draft Privacy policy and find section 12, Children: three short paragraphs.
+    If the build fails (Error), or any of a to f is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git merge childrens-code
+    git push
+    git branch -d childrens-code

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { Link } from 'react-router-dom'
 import useTitle from '../rooms/useTitle'
 import PageBanner from '../components/PageBanner'
+import ClubhouseNote from '../components/ClubhouseNote'
 import { SOCIAL_LINKS } from '../data/contact'
 import { fetchIntroId, fetchSeries } from './youtubeApi'
 import { ID, pickGrid, pickIntro } from './youtubeRules'
@@ -80,6 +81,7 @@ export default function YouTubeSeriesPage() {
           </div>
         </section>
       )}
+      <ClubhouseNote />
     </main>
   )
 }

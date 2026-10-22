@@ -7,6 +7,7 @@ import '../styles/forms.css'
 import PageBanner from '../components/PageBanner'
 import { emailProblem, signupMessage, captchaIssue } from './formRules'
 import CaptchaCheck, { captchaOn } from '../components/CaptchaCheck'
+import { ACCOUNT_AGE_NOTE } from '../data/children'
 
 export default function Signup() {
   const [email, setEmail] = useState('')
@@ -65,6 +66,7 @@ export default function Signup() {
      <PageBanner art="plain" room="factory-floor" chip="Your account" title="Sign up" />
      <div className="fm__card">
       <p className="fm__sub">So you can follow along, and keep your orders in one place.</p>
+      <p className="fm__small">{ACCOUNT_AGE_NOTE}</p>
       <ErrorSummary errors={summary} />
       {failure && <FailureMessage title="We couldn't create your account">{failure}</FailureMessage>}
       {created ? (

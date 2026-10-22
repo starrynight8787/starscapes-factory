@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { CONSENT_TEXT, cleanSubscribe } from './newsletterRules'
+import { GROWN_UPS_NOTE } from '../data/children'
 import { fetchOpen, subscribe } from './newsletterApi'
 import './newsletter.css'
 
@@ -46,6 +47,7 @@ export default function NewsletterSignup() {
     <section className="nl-signup" aria-labelledby="nl-signup-title">
       <h2 id="nl-signup-title" className="nl-signup__title">Newsletter</h2>
       <p className="nl-signup__text">Free, with no account or pass needed. New posts and news from Starscapes Factory, by email.</p>
+      <p className="nl-signup__text">{GROWN_UPS_NOTE}</p>
       <form className="nl-signup__form" onSubmit={submit} noValidate>
         {problem && <p className="nl-signup__summary" role="alert">{problem.message}</p>}
         <div className="nl-signup__field">

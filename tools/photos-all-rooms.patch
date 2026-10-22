@@ -1,0 +1,149 @@
+diff --git a/src/components/PostCard.jsx b/src/components/PostCard.jsx
+index 25b6067..400bb29 100644
+--- a/src/components/PostCard.jsx
++++ b/src/components/PostCard.jsx
+@@ -1,10 +1,11 @@
+ import { Link } from 'react-router-dom'
+ import '../styles/articles.css'
+ import PassChip from '../membership/PassChip'
++import { withoutPhotos } from '../explorers/travelRules'
+ 
+ export default function PostCard({ post, variant = 'feed' }) {
+-  const excerpt =
+-    post.content.length > 140 ? post.content.slice(0, 140) + '...' : post.content
++  const words = withoutPhotos(post.content)
++  const excerpt = words.length > 140 ? words.slice(0, 140) + '...' : words
+ 
+   if (variant === 'gallery') {
+     return (
+diff --git a/src/explorers/PhotoTool.jsx b/src/explorers/PhotoTool.jsx
+index 42cab30..e5bd89c 100644
+--- a/src/explorers/PhotoTool.jsx
++++ b/src/explorers/PhotoTool.jsx
+@@ -2,7 +2,7 @@ import { useState } from 'react'
+ import { supabase } from '../supabaseClient'
+ import { photoLine, scaledSize } from './travelRules'
+ 
+-// Adds a photo to the text of an Explorer's Bay post. The photo is re-drawn in the browser first, which leaves out the location and camera details saved inside the original file,
++// Adds a photo to the text of any post. The photo is re-drawn in the browser first, which leaves out the location and camera details saved inside the original file,
+ // then kept with the post pictures. It needs a description (read aloud for anyone who cannot see it). Please leave out children's faces and names.
+ async function cleanCopy(file) {
+   const bitmap = await createImageBitmap(file)
+diff --git a/src/explorers/travelRules.js b/src/explorers/travelRules.js
+index 2528238..b27e901 100644
+--- a/src/explorers/travelRules.js
++++ b/src/explorers/travelRules.js
+@@ -91,6 +91,11 @@ const PHOTO_START = /^\[photo:/i
+ export const photoSource = (u) => (typeof u === 'string' && (/^https:\/\/[^\s/]+\//i.test(u.trim()) || (u.trim().startsWith('/') && !u.trim().startsWith('//'))) ? u.trim() : '')
+ 
+ // The words of a post as blocks: { type: 'text', text } and { type: 'photo', url, alt }. A photo with no description or an unusable address is left out, never shown without its alt text.
++// The words of a post with its photo lines taken out, for short previews on cards (so no web address shows).
++export function withoutPhotos(text) {
++  return String(text == null ? '' : text).split('\n').filter((l) => !PHOTO_START.test(l.trim())).join('\n').replace(/\n{3,}/g, '\n\n').trim()
++}
++
+ export function bodyBlocks(text) {
+   const blocks = []
+   let run = []
+diff --git a/src/pages/EditPost.jsx b/src/pages/EditPost.jsx
+index ab7402c..e649e3d 100644
+--- a/src/pages/EditPost.jsx
++++ b/src/pages/EditPost.jsx
+@@ -130,7 +130,7 @@ export default function EditPost({ session }) {
+     setError(null)
+     const found = postProblems({ title, content, file })
+     Object.assign(found, travelProblems({ channel, tags: tags.split(',').map((t) => t.trim()).filter(Boolean), ...travel }))
+-    if (channel === TRAVEL_ROOM && photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
++    if (photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
+     if (Object.keys(found).length > 0) {
+       setErrors(found)
+       return
+@@ -227,7 +227,7 @@ export default function EditPost({ session }) {
+         <Field id="ep-content" label="Post text" error={errors.content}>
+           {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
+         </Field>
+-        {channel === TRAVEL_ROOM && <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />}
++        <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />
+         <div className="fm__row">
+           <Field id="ep-tags" label="Tags" help="Separate them with commas, for example art, travel.">
+             {(p) => <input {...p} type="text" placeholder="Tags (comma separated, e.g. art, travel)" value={tags} onChange={(e) => setTags(e.target.value)} />}
+diff --git a/src/pages/NewPost.jsx b/src/pages/NewPost.jsx
+index beac7b6..37e0172 100644
+--- a/src/pages/NewPost.jsx
++++ b/src/pages/NewPost.jsx
+@@ -52,7 +52,7 @@ export default function NewPost({ session }) {
+     const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
+     const travelFound = travelProblems({ channel, tags: tagList, ...travel })
+     Object.assign(found, travelFound)
+-    if (channel === TRAVEL_ROOM && photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
++    if (photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
+     if (Object.keys(found).length > 0) {
+       setErrors(found)
+       return
+@@ -137,7 +137,7 @@ export default function NewPost({ session }) {
+         <Field id="np-content" label="Post text" error={errors.content}>
+           {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
+         </Field>
+-        {channel === TRAVEL_ROOM && <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />}
++        <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />
+         <div className="fm__actions">
+           <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
+             {saving && savingAs === 'publish' ? 'Publishing...' : 'Publish'}
+diff --git a/src/pages/PostPage.jsx b/src/pages/PostPage.jsx
+index c7b21a2..45d2e05 100644
+--- a/src/pages/PostPage.jsx
++++ b/src/pages/PostPage.jsx
+@@ -136,7 +136,7 @@ export default function PostPage({ session }) {
+           />
+         )}
+       {post.channel === 'explorers-bay' && !gated && <TravelCard post={post} />}
+-      {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : post.channel === 'explorers-bay' ? <ArticleBody text={body !== null ? body : post.content} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
++      {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : <ArticleBody text={body !== null ? body : post.content} />}
+       </article>
+       </div>
+ 
+diff --git a/test/photos-all-rooms.test.jsx b/test/photos-all-rooms.test.jsx
+new file mode 100644
+index 0000000..67147d0
+--- /dev/null
++++ b/test/photos-all-rooms.test.jsx
+@@ -0,0 +1,39 @@
++// Photos placed in the text work in every room's posts, not only Explorer's Bay, and never show as a web address on a card.
++import { describe, it, expect } from 'vitest'
++import { render } from '@testing-library/react'
++import { MemoryRouter } from 'react-router-dom'
++import { readFileSync } from 'node:fs'
++import { join } from 'node:path'
++import ArticleBody from '../src/explorers/ArticleBody'
++import PostCard from '../src/components/PostCard'
++import { withoutPhotos } from '../src/explorers/travelRules'
++
++const read = (p) => readFileSync(join(process.cwd(), p), 'utf8')
++const TEXT = 'First part.\n\n[photo: https://example.com/a.jpg | A red door]\n\nSecond part.'
++
++describe('photos in the text, in any room', () => {
++  it('the post page uses the photo-aware body for every post, not just Explorer’s Bay', () => {
++    const src = read('src/pages/PostPage.jsx')
++    expect(src).toMatch(/<ArticleBody text=/)
++    expect(src).not.toMatch(/post\.channel === 'explorers-bay' \? <ArticleBody/)
++  })
++  it('both post forms offer the photo tool whatever the room', () => {
++    for (const f of ['src/pages/NewPost.jsx', 'src/pages/EditPost.jsx']) {
++      expect(read(f), f).toMatch(/<PhotoTool /)
++      expect(read(f), f).not.toMatch(/TRAVEL_ROOM && <PhotoTool/)
++      expect(read(f), f).toMatch(/if \(photoProblems\(content\)\.length > 0/)
++    }
++  })
++  it('puts the photo where it was written, with its description', () => {
++    const { container } = render(<ArticleBody text={TEXT} />)
++    const kids = [...container.querySelector('.xb-body').children]
++    expect(kids.map((k) => k.tagName)).toEqual(['P', 'FIGURE', 'P'])
++    expect(kids[1].querySelector('img')).toHaveAttribute('alt', 'A red door')
++  })
++  it('a card preview leaves the photo line out, so no address shows', () => {
++    expect(withoutPhotos(TEXT)).toBe('First part.\n\nSecond part.')
++    const { container } = render(<MemoryRouter><PostCard post={{ id: 'x', title: 'T', content: TEXT, created_at: '2026-10-20T10:00:00Z', tags: [] }} /></MemoryRouter>)
++    expect(container.textContent).toContain('First part.')
++    expect(container.textContent).not.toMatch(/\[photo:|example\.com/)
++  })
++})
