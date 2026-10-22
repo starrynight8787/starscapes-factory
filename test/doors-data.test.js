@@ -9,10 +9,10 @@ import { withoutLogo } from './allowedLogo'
 const read = (rel) => fs.readFileSync(path.resolve(rel), 'utf8')
 
 describe('the list of doors', () => {
-  it('has the twelve doors that start closed, in the five illustrated rooms', () => {
-    expect(DOORS).toHaveLength(12)
+  it('has the fourteen doors that start closed, in the five illustrated rooms', () => {
+    expect(DOORS).toHaveLength(14)
     expect([...new Set(DOORS.map((d) => d.room))]).toEqual(['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook', 'sarah-jrs-den'])
-    expect(new Set(DOORS.map((d) => doorKey(d.room, d.id))).size).toBe(12)
+    expect(new Set(DOORS.map((d) => doorKey(d.room, d.id))).size).toBe(14)
   })
   it('names only doors that really are taped off in the rooms\u2019 own data, with the same names', () => {
     for (const d of DOORS) {
@@ -30,9 +30,9 @@ describe('the list of doors', () => {
   })
   it('says which doors have a page now (a plain list or gallery of tagged posts) and which are waiting for their own design', () => {
     const withPage = DOORS.filter((d) => d.page).map((d) => doorKey(d.room, d.id))
-    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'leadership-lounge/free-ebook', 'knowledge-nook/book-club', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'knowledge-nook/story-ledger', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books', 'sarah-jrs-den/youtube-series'])
+    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'leadership-lounge/free-ebook', 'explorers-bay/lessons-from-the-road', 'explorers-bay/travel-map', 'explorers-bay/road-journal', 'knowledge-nook/book-club', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'knowledge-nook/story-ledger', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books', 'sarah-jrs-den/youtube-series'])
     const without = DOORS.filter((d) => !d.page).map((d) => doorKey(d.room, d.id))
-    expect(without).toEqual(['explorers-bay/coming-soon']) // only the paid bottle is still waiting for its page
+    expect(without).toEqual([]) // every door now has a page (the Travel map is drawn in code, src/explorers/TravelMapPage.jsx)
     for (const d of DOORS.filter((x) => x.page)) expect(['list', 'gallery', 'custom']).toContain(d.page.layout) // custom = its own designed page, not a list of posts
   })
   it('uses the layouts the designs ask for: the Den\u2019s Books as a gallery, its Blog as a list', () => {
@@ -51,7 +51,8 @@ describe('the list of doors', () => {
   it('puts a door\u2019s page at /room/door, and gives a door with no page no address', () => {
     expect(doorPath(findDoor('sarah-jrs-den', 'blog'))).toBe('/sarah-jrs-den/blog')
     expect(doorPath(findDoor('knowledge-nook', 'book-club'))).toBe('/knowledge-nook/book-club')
-    expect(doorPath(findDoor('explorers-bay', 'coming-soon'))).toBeNull()
+    expect(doorPath(findDoor('explorers-bay', 'travel-map'))).toBe('/explorers-bay/travel-map')
+    expect(doorPath({ room: 'x', id: 'y', page: null })).toBeNull()
     expect(doorPath(null)).toBeNull()
     expect(findDoor('sarah-jrs-den', 'nonsense')).toBeNull()
     expect(findDoor('nonsense', 'blog')).toBeNull()
@@ -73,7 +74,7 @@ describe('the list of doors', () => {
 
 // The bottle's open picture is a new drawing (a solid bottle with its own padlock), not the dotted one with the tape taken off, so it is not
 // held to "shorter than the taped one". Its own test is in research-and-bottle.test.js.
-const REDRAWN = ['explorers-bay/coming-soon']
+const REDRAWN = []
 describe('the untaped pictures', () => {
   it.each(DOORS.map((d) => [doorKey(d.room, d.id), d]))('%s has an untaped picture, the same size as the taped one but with no tape', (_, d) => {
     const taped = read(`public/scenes/${d.room}/item-${d.id}.svg`)

@@ -14,7 +14,7 @@ const T2 = 'b2'.repeat(24)
 const row = (over = {}) => ({ id: 'id-1', email: 'ann@example.com', status: 'pending', token: T1, consent_text: CONSENT_TEXT, source: 'site', confirmation_sent_at: new Date(Date.now() - 3600000).toISOString(), unsubscribed_at: null, confirmed_at: null, ...over })
 
 function world({ rows = [], resendFails = false, dbFails = false } = {}) {
-  const db = rows.map((r) => ({ ...r })); const sent = []; const calls = []
+  const db = rows.map((r) => ({ ...r })); const sent = []; const calls = []; const requests = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url); const method = init.method || 'GET'; calls.push({ u, method, body: init.body })
     if (u.startsWith('https://api.resend.com/emails')) { if (resendFails) return json({ message: 'no re_secret_key_zzzz' }, 500); const b = JSON.parse(init.body); sent.push(b); return json({ id: `em_${sent.length}` }) }
@@ -25,10 +25,11 @@ function world({ rows = [], resendFails = false, dbFails = false } = {}) {
       if (method === 'POST') { const r = JSON.parse(init.body); if (db.some((x) => x.email === r.email)) return json({ code: '23505' }, 409); db.push({ id: `id-${db.length + 1}`, unsubscribed_at: null, confirmed_at: null, ...r }); return json(null, 201) }
       if (method === 'PATCH') { const id = q.get('id').replace(/^eq\./, ''); const r = db.find((x) => x.id === id); Object.assign(r, JSON.parse(init.body)); return json(null, 204) }
     }
+    if (u.startsWith('https://db.test/rest/v1/email_requests')) { if (method === 'GET') return json([]); if (method === 'POST') { requests.push(JSON.parse(init.body)); return json(null, 201) } } // one-purpose requests (the free ebook): see test/ebook-request.test.js
     throw new Error(`unexpected request: ${method} ${u}`)
   })
   vi.stubGlobal('fetch', fn)
-  return { db, sent, calls, fn }
+  return { db, sent, calls, fn, requests }
 }
 const call = async (req) => {
   const out = { headers: {}, status: null, body: null }
@@ -86,9 +87,9 @@ describe('signing up', () => {
     const w = world({ rows: [row({ status: 'unsubscribed', unsubscribed_at: '2026-09-01T00:00:00Z' })] }); await sub(yes)
     expect(w.db[0]).toMatchObject({ status: 'pending', unsubscribed_at: null, token: T1 }); expect(w.sent).toHaveLength(1)
   })
-  it('remembers a sign-up that came from the ebook page, and calls anything else the site', async () => {
-    let w = world(); await sub({ ...yes, source: 'ebook' }); expect(w.db[0].source).toBe('ebook')
-    w = world(); await sub({ ...yes, source: 'carrier-pigeon' }); expect(w.db[0].source).toBe('site')
+  it('keeps a request from the ebook page apart from the newsletter list (see test/ebook-request.test.js), and calls anything else the site', async () => {
+    let w = world(); await sub({ ...yes, source: 'ebook' }); expect(w.db).toHaveLength(0); expect(w.requests).toHaveLength(1)
+    w = world(); await sub({ ...yes, source: 'carrier-pigeon' }); expect(w.db[0].source).toBe('site'); expect(w.requests).toHaveLength(0)
   })
   it('turns away a bad address or an unticked box, saying which, and stores and sends nothing', async () => {
     const w = world()

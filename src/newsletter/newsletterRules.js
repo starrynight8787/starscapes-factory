@@ -4,6 +4,7 @@
 import { emailFrame } from '../email/emailLayout.js'
 import { COMPANY, companyLine } from '../data/company'
 import { EBOOK } from '../ebook/ebookConfig.js'
+import { JOURNAL, OPENING_DOORS, OPENS_REQUEST } from '../explorers/explorersConfig.js'
 
 export const SUBJECT_MAX = 150
 export const BODY_MAX = 20000
@@ -12,12 +13,33 @@ export const BATCH_SIZE = 50 // emails sent per request to Resend (its limit is 
 export const TOKEN_PATTERN = /^[a-f0-9]{48}$/
 export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
 export const CONSENT_TEXT = 'Send me the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.'
+// The OPTIONAL newsletter box, worded the same everywhere it appears (the free ebook, the Road journal, and so on). It is never ticked for anyone and never needed to get the thing they asked for.
+export const OPTIONAL_NEWSLETTER_TEXT = 'Optional: also send me the Starscapes Factory newsletter by email, with new posts and news. I can unsubscribe at any time, with the link in every email.'
 export const SITE = 'https://starscapesfactory.com'
 
-// Where a sign-up came from: the footer box ('site') or the free ebook page ('ebook'). Both join the SAME list. The words recorded as their agreement are the ones on the box they ticked,
-// chosen here on the server and never taken from the browser.
+// Where a sign-up came from: the footer box ('site': the newsletter, with a required tick) or the free ebook page ('ebook': a one-purpose request that needs NO tick, plus an optional newsletter box).
+// The words recorded as their agreement to the NEWSLETTER are the ones on the box they ticked, chosen here on the server and never taken from the browser.
 export const sourceOf = (input) => (input && input.source === 'ebook' ? 'ebook' : 'site')
-export const consentFor = (source) => (source === 'ebook' ? EBOOK.consent : CONSENT_TEXT)
+// A one-purpose request (the free ebook, the Road journal, or "tell me when this door opens"): it needs no tick, is kept apart from the newsletter list, and is confirmed by email first.
+// Returns null for anything else (the footer's newsletter). Everything the server records or says comes from here, never from the browser. "purpose" is the saved name of the request;
+// "join" is the source recorded if they also ticked the optional newsletter box.
+export function requestOf(input) {
+  const source = input && typeof input.source === 'string' ? input.source : ''
+  if (source === 'ebook') return { source, purpose: 'ebook', join: 'ebook', words: EBOOK.request, what: 'the free ebook', title: 'your free ebook', subject: 'Please confirm your email to get your free ebook', button: 'Yes, send me the free ebook', gets: ' and get the ebook', file: EBOOK.file, fileNote: EBOOK.fileNote, linkTitle: EBOOK.title.replace(/:.*$/, ''), banner: 'leadership-lounge' }
+  if (source === 'road-journal') return { source, purpose: 'road-journal', join: 'road-journal', words: JOURNAL.request, what: 'the free Road journal', title: 'your free Road journal', subject: 'Please confirm your email to get your free Road journal', button: 'Yes, send me the Road journal', gets: ' and get the Road journal', file: JOURNAL.file, fileNote: JOURNAL.fileNote, linkTitle: JOURNAL.title, banner: 'explorers-bay' }
+  const door = input && typeof input.door === 'string' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, input.door) ? input.door : ''
+  if (source === 'opens' && door) { const name = OPENING_DOORS[door].name; return { source, purpose: `opens:${door}`, join: 'door', words: `${OPENS_REQUEST} (${name})`, what: `a message when ${name} opens`, title: `a message when ${name} opens`, subject: `Please confirm your email to hear when ${name} opens`, button: 'Yes, tell me when it opens', gets: '', file: '', fileNote: '', linkTitle: name, banner: 'explorers-bay' } }
+  return null
+}
+// The request that a saved purpose belongs to (to answer a confirm link), or null.
+export function requestForPurpose(purpose) {
+  const p = String(purpose || '')
+  if (p === 'ebook') return requestOf({ source: 'ebook' })
+  if (p === 'road-journal') return requestOf({ source: 'road-journal' })
+  const m = p.match(/^opens:([a-z-]+)$/)
+  return m ? requestOf({ source: 'opens', door: m[1] }) : null
+}
+export const consentFor = (source) => (source === 'ebook' ? OPTIONAL_NEWSLETTER_TEXT : CONSENT_TEXT)
 
 export const isToken = (t) => TOKEN_PATTERN.test(String(t === null || t === undefined ? '' : t))
 export const isUuid = (t) => UUID_PATTERN.test(String(t === null || t === undefined ? '' : t))
@@ -26,13 +48,15 @@ const bad = (field, message) => ({ ok: false, field, message })
 
 const EMAIL = /^[^\s@<>",;:\\]+@[^\s@<>",;:\\]+\.[^\s@<>",;:\\]+$/
 
-// A sign-up: an email address and a ticked box. Returns { ok: true, email } (in lower case) or { ok: false, field, message }.
+// A sign-up: an email address and, for the footer box, a ticked box. The free ebook needs only the email: its newsletter box is optional (newsletter: true only if they ticked it).
+// Returns { ok: true, email } (in lower case; the ebook also gets newsletter) or { ok: false, field, message }.
 export function cleanSubscribe(input) {
   const f = input && typeof input === 'object' ? input : {}
   const email = text(f.email).trim().toLowerCase()
   if (!email) return bad('email', 'Please enter your email address.')
   if (email.length > 254 || !EMAIL.test(email)) return bad('email', 'That does not look like an email address. Please check it.')
-  if (f.consent !== true) return bad('consent', sourceOf(f) === 'ebook' ? 'Please tick the box to say you would like the free ebook and the newsletter.' : 'Please tick the box to say you would like the newsletter.')
+  if (requestOf(f)) return { ok: true, email, newsletter: f.newsletter === true }
+  if (f.consent !== true) return bad('consent', 'Please tick the box to say you would like the newsletter.')
   return { ok: true, email }
 }
 
@@ -104,30 +128,47 @@ export function renderNewsletter({ subject, body, unsubscribeUrl, company = COMP
   return { subject, html: FRAME(subject, b.html, footerHtml, { banner: 'general', title: subject, subtitle: 'The Starscapes Factory newsletter' }), text: `Starscapes Factory\n\n${b.text}\n\n--\n${footerText}\n` }
 }
 
-// The email that asks someone to confirm: they are only added once they press the link (double opt-in)
-export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site' }) {
+// The email that asks someone to confirm: nothing happens until they press the link (double opt-in). For the newsletter box in the footer it confirms the newsletter. For the free ebook it confirms
+// the ebook request ONLY, and mentions the newsletter only when they ticked the optional box.
+export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site', newsletter = false, door = '' }) {
   const line = companyLine(company)
-  const ebook = source === 'ebook' // asked for the free ebook, which joins the same list
-  const what = ebook ? 'the free ebook and the Starscapes Factory newsletter' : 'the Starscapes Factory newsletter'
-  const subject = ebook ? 'Please confirm to get your free ebook and the Starscapes Factory newsletter' : 'Please confirm you would like the Starscapes Factory newsletter'
-  const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${ebook ? ' and get the ebook' : ''}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${ebook ? ' and get the ebook' : ''}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${ebook ? 'Yes, send me the free ebook and the newsletter' : 'Yes, send me the newsletter'}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
+  const req = requestOf({ source, door })
+  const ebook = Boolean(req) // a one-purpose request (the ebook, the Road journal, or a door's list)
+  const also = ebook && newsletter === true
+  const what = ebook ? (also ? `${req.what}, and the Starscapes Factory newsletter,` : req.what) : 'the Starscapes Factory newsletter'
+  const subject = ebook ? (also ? `Please confirm to get ${req.title} and the Starscapes Factory newsletter` : req.subject) : 'Please confirm you would like the Starscapes Factory newsletter'
+  const button = ebook ? (also ? (req.source === 'opens' ? 'Yes, tell me when it opens, and send me the newsletter' : `${req.button} and the newsletter`) : req.button) : 'Yes, send me the newsletter'
+  const gets = ebook ? req.gets : ''
+  const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${gets}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${gets}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${button}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
-  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? 'To get your free ebook and the newsletter' : 'To get the Starscapes Factory newsletter' }), text }
+  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? (also ? `To get ${req.title} and the newsletter` : `To get ${req.title}`) : 'To get the Starscapes Factory newsletter' }), text }
 }
 
-// For someone who is ALREADY on the list and asks for the ebook (nothing to confirm, so it just gives the link). The page never says whether an address was already signed up: they find out in their inbox.
-export function ebookLinkEmail({ file, company = COMPANY, site = SITE }) {
+// For someone who has ALREADY confirmed the ebook and asks again (nothing to confirm, so it just gives the link). It says nothing about the newsletter. The page never says whether an address was already known: they find out in their inbox.
+export function ebookLinkEmail({ file, company = COMPANY, site = SITE, request = requestOf({ source: 'ebook' }) }) {
   const line = companyLine(company)
   const link = `${site}${file}`
-  const subject = `Your free ebook: ${EBOOK.title.replace(/:.*$/, '')}`
-  const text = `Hello,\n\nHere is the free ebook you asked for:\n${link}\n\n${EBOOK.fileNote}\n\nYou are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.\n\n--\n${line}\n`
-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ebook you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ebook (PDF)</a></p>\n<p style="${P}">${esc(EBOOK.fileNote)}</p>\n<p style="${P}">You are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.</p>`
+  const subject = `Your ${request.source === 'ebook' ? 'free ebook' : 'free Road journal'}: ${request.linkTitle}`
+  const noun = request.source === 'ebook' ? 'ebook' : 'Road journal'
+  const text = `Hello,\n\nHere is the free ${noun} you asked for:\n${link}\n\n${request.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ${noun} you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ${noun} (PDF)</a></p>\n<p style="${P}">${esc(request.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
-  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'leadership-lounge', title: 'Your free ebook', subtitle: EBOOK.title.replace(/:.*$/, '') }), text }
+  return { subject, html: FRAME(subject, inner, footerHtml, { banner: request.banner === 'explorers-bay' ? 'general' : 'leadership-lounge', title: `Your free ${noun}`, subtitle: request.linkTitle }), text }
 }
 
-export const confirmUrl = (token, site = SITE) => `${site}/newsletter/confirm?t=${token}`
+// Told when a door has opened: only that it has opened, and a link. Nothing about the newsletter, ever.
+export function doorOpenedEmail({ door, url, company = COMPANY }) {
+  const line = companyLine(company)
+  const name = OPENING_DOORS[door] ? OPENING_DOORS[door].name : 'A door'
+  const subject = `${name} has opened`
+  const text = `Hello,\n\nYou asked us to tell you when ${name} opens in Explorer's Bay. It has opened:\n${url}\n\nThis is the only message you asked for about this, so you will not hear from us about it again.\n\n--\n${line}\n`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">You asked us to tell you when ${esc(name)} opens in Explorer's Bay. It has opened:</p>\n<p style="margin:0 0 16px"><a href="${esc(url)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Take me there</a></p>\n<p style="${P}">This is the only message you asked for about this, so you will not hear from us about it again.</p>`
+  const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: subject, subtitle: "Explorer's Bay" }), text }
+}
+
+export const confirmUrl = (token, site = SITE, purpose = '') => `${site}/newsletter/confirm?t=${token}${['ebook', 'road-journal', 'opens'].includes(purpose) ? `&for=${purpose}` : ''}` // "for" only changes the words on the confirm page; the server decides by the private code
 export const unsubscribePageUrl = (token, site = SITE) => `${site}/newsletter/unsubscribe?t=${token}`
 // The address a mail program posts to for one-click unsubscribe (RFC 8058): the server handles it, the person never has to open a page
 export const oneClickUrl = (token, site = SITE) => `${site}/api/ebook-signup?newsletter=unsubscribe&t=${token}`

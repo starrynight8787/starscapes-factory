@@ -10,8 +10,11 @@ import '../styles/forms.css'
 import '../admin/adminv2.css'
 import AdminBanner from '../admin/AdminBanner'
 import { resetPassIndex } from '../membership/passIndex'
+import TravelFields from '../explorers/TravelFields'
+import PhotoTool from '../explorers/PhotoTool'
+import { ROOM as TRAVEL_ROOM, travelPayload, travelProblems, photoProblems } from '../explorers/travelRules'
 
-const IDS = { title: 'np-title', content: 'np-content', file: 'np-file' }
+const IDS = { title: 'np-title', content: 'np-content', file: 'np-file', country: 'np-country', year: 'np-year', advice: 'np-advice' }
 
 export default function NewPost({ session }) {
   const [title, setTitle] = useState('')
@@ -19,6 +22,7 @@ export default function NewPost({ session }) {
   const [tags, setTags] = useState('')
   const [channel, setChannel] = useState('')
   const [file, setFile] = useState(null)
+  const [travel, setTravel] = useState({ country: '', year: '', advice: '' }) // Explorer's Bay only
   const [error, setError] = useState(null)
   const [errors, setErrors] = useState({}) // a plain-words problem under each field that needs fixing
   const [saving, setSaving] = useState(false)
@@ -45,6 +49,10 @@ export default function NewPost({ session }) {
     setError(null)
     setSavingAs(publish ? 'publish' : 'draft')
     const found = postProblems({ title, content, file })
+    const tagList = tags.split(',').map((t) => t.trim()).filter(Boolean)
+    const travelFound = travelProblems({ channel, tags: tagList, ...travel })
+    Object.assign(found, travelFound)
+    if (channel === TRAVEL_ROOM && photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
     if (Object.keys(found).length > 0) {
       setErrors(found)
       return
@@ -82,7 +90,7 @@ export default function NewPost({ session }) {
         // a post for a pass: the post is made WITHOUT its words, and the words are kept in the protected table. If keeping them fails, the empty post is taken away again.
         const { data: made, error: insertError } = await supabase
           .from('posts')
-          .insert({ title, content: '', image_url: imageUrl, author_id: session.user.id, published: publish, tags: tagsArray, channel: channel || null, pass: lockedPass })
+          .insert({ title, content: '', image_url: imageUrl, author_id: session.user.id, published: publish, tags: tagsArray, channel: channel || null, pass: lockedPass, ...travelPayload(channel, travel) })
           .select('id')
           .single()
         if (insertError) throw insertError
@@ -101,6 +109,7 @@ export default function NewPost({ session }) {
           published: publish,
           tags: tagsArray,
           channel: channel || null,
+          ...travelPayload(channel, travel),
         })
 
         if (insertError) throw insertError
@@ -128,6 +137,7 @@ export default function NewPost({ session }) {
         <Field id="np-content" label="Post text" error={errors.content}>
           {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
         </Field>
+        {channel === TRAVEL_ROOM && <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />}
         <div className="fm__actions">
           <button type="submit" className="pg-btn fm-btn--primary" disabled={saving}>
             {saving && savingAs === 'publish' ? 'Publishing...' : 'Publish'}
@@ -158,6 +168,7 @@ export default function NewPost({ session }) {
             )}
           </Field>
         </div>
+        {channel === TRAVEL_ROOM && <TravelFields idPrefix="np" values={travel} onChange={setTravel} errors={errors} />}
         {canPass && (
           <Field id="np-pass" label="Pass" help="Leave this as Free for everyone for an ordinary post. Choose a pass to keep the words of this post for people who hold it (the first three posts in each pass stay free to read).">
             {(p) => (

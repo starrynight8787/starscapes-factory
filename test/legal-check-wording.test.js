@@ -41,7 +41,7 @@ describe('the Privacy policy says what the ICO checklist asks, and it matches th
   it('gives the rule for website logs instead of a vague "short time", and the site really keeps no log of its own (no table for visits, requests or analytics)', () => {
     const k = section('privacy', 'How long we keep it'); expect(k).toMatch(/\*\*Website logs:\*\* only as long as needed to keep the site secure and fix faults\. Our hosting provider sets this, and we do not keep our own copy\./); expect(k).not.toMatch(/short time only/)
     const tables = readdirSync(join(process.cwd(), 'sql')).flatMap((f) => [...read(`sql/${f}`).matchAll(/create table if not exists public\.([a-z_]+)/g)].map((m) => m[1])); expect(tables.length).toBeGreaterThan(15)
-    expect(tables.filter((t) => /log|visit|request|analytic|tracking/.test(t))).toEqual([])
+    expect(tables.filter((t) => /log|visit|request|analytic|tracking/.test(t) && t !== 'email_requests')).toEqual([]) // email_requests is the free ebook's one-purpose requests (people who asked for something by email), not a log of visits
   })
   it('promises to acknowledge a complaint within 30 days and to say what was found, while keeping the way to the ICO', () => {
     const c = section('privacy', 'Complaints'); expect(c).toMatch(/We will acknowledge your complaint within 30 days, look into it, and tell you what we found/); expect(c).toMatch(/Information Commissioner/); expect(c).toMatch(/0303 123 1113/)

@@ -15,6 +15,11 @@ import BookPage from '../bookclub/BookPage'
 import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
 import LeadingFromTheMiddlePage from '../leadership/LeadingFromTheMiddlePage'
 import WritingInTransitPage from '../entries/WritingInTransitPage'
+import TapedDoorPage from '../explorers/TapedDoorPage'
+import RoadJournalPage from '../explorers/RoadJournalPage'
+import LessonsPage from '../explorers/LessonsPage'
+import TravelMapPage from '../explorers/TravelMapPage'
+import { OPENING_DOORS } from '../explorers/explorersConfig'
 import LetsWriteStoryPage from '../stories/LetsWriteStoryPage'
 import './roompages.css'
 
@@ -46,6 +51,9 @@ const CUSTOM_PAGES = {
   'leadership-lounge/free-ebook': FreeEbookPage,
   'knowledge-nook/book-club': BookClubPage,
   'knowledge-nook/come-read-with-me': ComeReadWithMePage,
+  'explorers-bay/road-journal': RoadJournalPage,
+  'explorers-bay/lessons-from-the-road': LessonsPage,
+  'explorers-bay/travel-map': TravelMapPage,
 }
 
 // Pages with their own design that are always open (not behind a door), by "room/page".
@@ -62,9 +70,11 @@ function AreaRoute({ room }) {
   const areas = { ...ROOMS[room].areas, ...doorAreas(room) }
   const page = <RoomAreaPage room={room} areas={areas} extra={room === 'explorers-bay' && area === 'photography' ? <InstagramGallery /> : null} nebula={(room === 'sarah-jrs-den' && area === 'blog') || (room === 'leadership-lounge' && area === 'leading-from-the-middle')} />
   const door = findDoor(room, area)
+  const taped = room === 'explorers-bay' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, area) ? <TapedDoorPage door={area} /> : null // the taped page with a "tell me when it opens" sign-up
+  if (taped && !(door && door.page)) return taped // a door whose page is not built yet is always taped
   const Own = !door ? CUSTOM_AREAS[`${room}/${area}`] : null
   if (Own) return <Own />
   const Custom = door && door.page && door.page.layout === 'custom' ? CUSTOM_PAGES[`${room}/${door.id}`] : null
-  if (Custom) return <DoorGate room={room} door={door.id}><Custom /></DoorGate>
-  return door && door.page ? <DoorGate room={room} door={door.id}>{page}</DoorGate> : page
+  if (Custom) return <DoorGate room={room} door={door.id} closed={taped}><Custom /></DoorGate>
+  return door && door.page ? <DoorGate room={room} door={door.id} closed={taped}>{page}</DoorGate> : page
 }

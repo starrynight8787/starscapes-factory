@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
 import { cleanSignup, isEmail } from '../src/ebook/ebookRules'
 import { EBOOK } from '../src/ebook/ebookConfig'
+import { OPTIONAL_NEWSLETTER_TEXT } from '../src/newsletter/newsletterRules'
 import { findDoor } from '../src/doors/doorsData'
 
 const h = vi.hoisted(() => ({ open: true, subscribed: [], fail: null }))
@@ -22,19 +23,21 @@ beforeEach(() => { Object.assign(h, { open: true, subscribed: [], fail: null }) 
 afterEach(() => { EBOOK.file = originalFile; vi.restoreAllMocks() })
 
 describe('the rules', () => {
-  it('want a proper email and a ticked box, in plain words', () => {
-    expect(cleanSignup({ email: ' Name@Example.COM ', consent: true })).toEqual({ ok: true, email: 'name@example.com' })
-    expect(cleanSignup({ email: '', consent: true }).errors.email).toMatch(/Enter your email/)
-    expect(cleanSignup({ email: 'not an email', consent: true }).errors.email).toMatch(/name@example\.com/)
-    expect(cleanSignup({ email: 'a@b.co', consent: false }).errors.consent).toMatch(/Tick the box/)
-    expect(cleanSignup({ email: 'a@b.co' }).ok).toBe(false)
+  it('want a proper email and nothing else: no tick is needed, and the optional newsletter box is only ever a literal yes', () => {
+    expect(cleanSignup({ email: ' Name@Example.COM ' })).toEqual({ ok: true, email: 'name@example.com', newsletter: false })
+    expect(cleanSignup({ email: 'a@b.co', newsletter: true })).toEqual({ ok: true, email: 'a@b.co', newsletter: true })
+    expect(cleanSignup({ email: 'a@b.co', newsletter: 'true' }).newsletter).toBe(false)
+    expect(cleanSignup({ email: '' }).errors.email).toMatch(/Enter your email/)
+    expect(cleanSignup({ email: 'not an email' }).errors.email).toMatch(/name@example\.com/)
+    expect(cleanSignup({ email: 'a@b.co' }).errors).toBeUndefined()
     expect(cleanSignup(null).ok).toBe(false)
   })
   it('refuse an address that could break an email header, or is far too long', () => {
     for (const bad of ['a@b.co\nBcc: x@y.co', 'a b@c.co', '<a@b.co>', `${'x'.repeat(250)}@b.co`]) expect(isEmail(bad), bad).toBe(false)
   })
-  it('use the words in the design, and the tick box says yes to BOTH the ebook and the newsletter, with the way out', () => {
-    expect(EBOOK.consent).toBe('Yes, send me the free ebook and the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.')
+  it('use the words in the design, and the newsletter box is a separate optional one, with the way out', () => {
+    expect(OPTIONAL_NEWSLETTER_TEXT).toBe('Optional: also send me the Starscapes Factory newsletter by email, with new posts and news. I can unsubscribe at any time, with the link in every email.')
+    expect(EBOOK.smallPrint).toBe('We will email you a link to confirm your address. Once you confirm, the ebook is yours. We use your email for that only, unless you tick the box.')
     expect(EBOOK.title).toBe('Leading from the Middle: the free ebook')
     expect(EBOOK.inside).toHaveLength(3)
   })
@@ -65,7 +68,7 @@ describe('the retired database file (the free ebook now joins the newsletter lis
 
 describe('the page', () => {
   const show = () => render(<MemoryRouter><FreeEbookPage /></MemoryRouter>)
-  const fill = (email = 'Name@Example.com', tick = true) => {
+  const fill = (email = 'Name@Example.com', tick = false) => {
     fireEvent.change(screen.getByLabelText('Your email address'), { target: { value: email } })
     if (tick) fireEvent.click(screen.getByRole('checkbox'))
     fireEvent.click(screen.getByRole('button', { name: 'Get the free ebook' }))
@@ -78,25 +81,30 @@ describe('the page', () => {
     for (const line of EBOOK.inside) expect(screen.getByText(line)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to Leadership Lounge/ })).toHaveAttribute('href', '/leadership-lounge')
     expect(screen.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', '/page/privacy')
-    const small = screen.getByText(/You will get an email asking you to confirm/); expect(small).toHaveTextContent('you will also get the newsletter'); expect(small).toHaveTextContent('never shared'); expect(small).toHaveTextContent('unsubscribe at any time')
-    expect(screen.getByLabelText(EBOOK.consent)).not.toBeChecked()
+    const small = screen.getByText(/We will email you a link to confirm your address/); expect(small).toHaveTextContent('Once you confirm, the ebook is yours'); expect(small).toHaveTextContent('for that only, unless you tick the box')
+    expect(screen.getAllByRole('checkbox')).toHaveLength(1); expect(screen.getByLabelText(OPTIONAL_NEWSLETTER_TEXT)).not.toBeChecked()
   })
   it('does not promise a download straight away: that comes after confirming', () => {
     show(); expect(document.body.textContent).not.toMatch(/straight away/i)
   })
-  it('does not send anything without a proper email and the tick, and says why in words with links to the fields', async () => {
+  it('does not send anything without a proper email, and says why in words with a link to the field; it never asks for a tick to get the ebook', async () => {
     show()
     fireEvent.click(screen.getByRole('button', { name: 'Get the free ebook' }))
     const alert = await screen.findByRole('alert')
     expect(alert).toHaveTextContent('Enter your email address.')
-    expect(alert).toHaveTextContent('Tick the box')
+    expect(alert).not.toHaveTextContent('Tick the box')
     expect(screen.getByLabelText('Your email address')).toHaveAttribute('aria-invalid', 'true')
     expect(h.subscribed).toHaveLength(0)
   })
-  it('signs them up to the newsletter list as an ebook sign-up: the lower-cased email, the tick, the hidden box (empty), and where it came from', async () => {
+  it('asks for the ebook with no tick: the lower-cased email, the newsletter box left unticked (false), the hidden box (empty), and where it came from', async () => {
     show(); fill()
     await screen.findByRole('heading', { level: 1, name: 'Check your email' })
-    expect(h.subscribed).toEqual([{ email: 'name@example.com', consent: true, website: '', source: 'ebook' }])
+    expect(h.subscribed).toEqual([{ email: 'name@example.com', newsletter: false, website: '', source: 'ebook' }])
+  })
+  it('sends the newsletter as a yes only when they tick the optional box themselves', async () => {
+    show(); fill('Name@Example.com', true)
+    await screen.findByRole('heading', { level: 1, name: 'Check your email' })
+    expect(h.subscribed).toEqual([{ email: 'name@example.com', newsletter: true, website: '', source: 'ebook' }])
   })
   it('has a hidden box for robots that real visitors cannot reach by keyboard or screen reader', () => {
     const { container } = show()
@@ -107,7 +115,7 @@ describe('the page', () => {
   it('after signing up, says to check the email and press the button, that nothing comes until they do, and shows no download and no "you are in"', async () => {
     show(); fill()
     expect(await screen.findByRole('heading', { level: 1, name: 'Check your email' })).toBeInTheDocument()
-    const status = screen.getByRole('status'); expect(status).toHaveTextContent('Thank you. I have sent you an email.'); expect(status).toHaveTextContent('Press the button in it to confirm'); expect(status).toHaveTextContent('You will not get the ebook, or the newsletter, until you do'); expect(status).toHaveTextContent('spam')
+    const status = screen.getByRole('status'); expect(status).toHaveTextContent('Thank you. I have sent you an email.'); expect(status).toHaveTextContent('Press the button in it to confirm'); expect(status).toHaveTextContent('You will not get the ebook until you do'); expect(status).toHaveTextContent('spam')
     expect(screen.queryByRole('link', { name: /Download the/ })).toBeNull(); expect(document.body.textContent).not.toMatch(/You are in/)
   })
   it('while there is no PDF, says the ebook is not quite ready and the link will be emailed; once there is one, says the download waits on the page the button opens', async () => {

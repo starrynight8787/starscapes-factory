@@ -48,3 +48,4 @@ export const sendTest = ({ subject, body }) => ask('POST', { action: 'test', sub
 export const sendStep = (id) => ask('POST', { action: 'send', id })
 export const retryFailed = (id) => ask('POST', { action: 'retry', id })
 export const removeSubscriber = (id) => ask('POST', { action: 'remove', id })
+export const tellDoorWaiting = (door) => ask('POST', { action: 'door-opened', door }) // { sent, failed, more }

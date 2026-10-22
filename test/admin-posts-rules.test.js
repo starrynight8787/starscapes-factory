@@ -25,8 +25,8 @@ describe('which pages of a room list posts, and how a post gets on them', () => 
   it('the Leadership Lounge: Leading from the Middle by tag, and the Blog, which shows every post in the room', () => {
     expect(pagesOfRoom('leadership-lounge').map((p) => [p.name, p.tags])).toEqual([['Leading from the Middle', ['leading-from-the-middle']], ['Leadership Blog', null]])
   })
-  it('Explorer\u2019s Bay: Writing in Transit and Photography, by tag', () => {
-    expect(pagesOfRoom('explorers-bay').map((p) => [p.name, p.tags])).toEqual([['Writing in Transit', ['writing-in-transit']], ['Photography', ['photography']]])
+  it('Explorer\u2019s Bay: Writing in Transit and Lessons from the road, by tag (the old Photography address is kept for links but no longer lists posts)', () => {
+    expect(pagesOfRoom('explorers-bay').map((p) => [p.name, p.tags])).toEqual([['Writing in Transit', ['writing-in-transit']], ['Lessons from the road', ['lessons-from-the-road']]])
   })
   it('the Drafting Desk: Archive Entries, the Author\u2019s Notebook, Writing Prompts and Poems, each by its accepted tags', () => {
     expect(pagesOfRoom('drafting-desk')).toEqual([
@@ -56,7 +56,7 @@ describe('where a post appears', () => {
     expect(pagesFor(p).map((x) => x.name)).toEqual(['Stop Motion']); expect(whereIs(p)).toBe('Appears on: Stop Motion, and the blog page (which lists every post from every room).')
   })
   it('does not mind capitals, spaces or apostrophes in a tag, and a post can be on two pages', () => {
-    expect(pagesFor(post('a', 'explorers-bay', ['WRITING IN TRANSIT', 'Photography'])).map((x) => x.name)).toEqual(['Writing in Transit', 'Photography']); expect(pagesFor(post('b', 'drafting-desk', ['Archive Entries'])).map((x) => x.name)).toEqual(['Archive Entries']); expect(pagesFor(post('c', 'drafting-desk', ['notebook'])).map((x) => x.name)).toEqual(['Author\u2019s Notebook'])
+    expect(pagesFor(post('a', 'explorers-bay', ['WRITING IN TRANSIT', 'Lessons from the road'])).map((x) => x.name)).toEqual(['Writing in Transit', 'Lessons from the road']); expect(pagesFor(post('b', 'drafting-desk', ['Archive Entries'])).map((x) => x.name)).toEqual(['Archive Entries']); expect(pagesFor(post('c', 'drafting-desk', ['notebook'])).map((x) => x.name)).toEqual(['Author\u2019s Notebook'])
   })
   it('the Story Ledger\u2019s audits (tagged story-ledger) and the Book Club\u2019s reviews (tagged book-club) appear on their pages, not as missing', () => {
     expect(whereIs(post('a', 'knowledge-nook', ['story-ledger']))).toBe('Appears on: Story Ledger (audits), and the blog page (which lists every post from every room).'); expect(whereIs(post('b', 'knowledge-nook', ['Book Club', 'fiction']))).toContain('Appears on: Book Club (reviews and conversations)')

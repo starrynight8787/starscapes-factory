@@ -49,3 +49,22 @@ describe('after pressing confirm, for someone who joined from the footer box', (
     const status = await screen.findByRole('status'); expect(status.textContent).not.toMatch(/ebook/i); expect(screen.queryByRole('link', { name: /Download/ })).toBeNull()
   })
 })
+
+describe('the ebook request link (…&for=ebook, 22 October 2026): the ebook alone, and the newsletter only if they ticked its separate box', () => {
+  const openFor = () => render(<MemoryRouter initialEntries={[`/newsletter/confirm?t=${TOKEN}&for=ebook`]}><NewsletterConfirmPage /></MemoryRouter>)
+  const pressEbook = async () => userEvent.click(screen.getByRole('button', { name: 'Yes, send me the free ebook' }))
+  it('opening it changes nothing, and the words before the button are about the ebook only', () => {
+    openFor(); expect(h.confirmed).toHaveLength(0); expect(document.body.textContent).toMatch(/Press the button to confirm your email address. You will then get the free ebook./); expect(document.body.textContent).not.toMatch(/newsletter/i)
+  })
+  it('confirmed without the newsletter: thanks, no word of a subscription or the newsletter, and the download (or the "still being finished" note)', async () => {
+    h.result = { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: false }; EBOOK.file = '/downloads/x.pdf'; openFor(); await pressEbook()
+    const status = await screen.findByRole('status'); expect(status).toHaveTextContent('Thank you, you are confirmed.'); expect(status).not.toHaveTextContent(/newsletter|subscribed/i); expect(screen.getByRole('link', { name: 'Download the free ebook (PDF)' })).toHaveAttribute('href', '/downloads/x.pdf')
+  })
+  it('confirmed with the newsletter box ticked: says they are also on that list, and how to leave', async () => {
+    h.result = { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: true }; openFor(); await pressEbook()
+    const status = await screen.findByRole('status'); expect(status).toHaveTextContent('You also asked for the newsletter, so you are on that list too.'); expect(status).toHaveTextContent('unsubscribe at any time'); expect(status).toHaveTextContent('still being finished')
+  })
+  it('pressing it twice is fine', async () => {
+    h.result = { ok: true, state: 'already', source: 'ebook', kind: 'request', newsletter: false }; openFor(); await pressEbook(); expect(await screen.findByRole('status')).toHaveTextContent('You have already confirmed. Thank you.')
+  })
+})

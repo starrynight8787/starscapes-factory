@@ -56,7 +56,7 @@ export const PAGES = {
   '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion and a story we write together: pick a beaker to see what I am working on.'),
   '/idea-hatchery/lets-write-a-story': { title: 'Stories: let\u2019s write a story', description: 'A story we write together: I write each chapter, and members vote on where it goes next. The first three chapters are free to read.', image: 'idea-hatchery' },
   '/leadership-lounge': room('leadership-lounge', 'Leading from the middle. A blog, an audio course and an online course for people who lead without authority.'),
-  '/explorers-bay': room('explorers-bay', 'Stories and pictures from the road: writing in transit and travel photography, from the pier.'),
+  '/explorers-bay': room('explorers-bay', 'Writing, lessons and a map from the road: Writing in Transit, Lessons from the road, the Travel map and the free Road journal, from the pier.'),
   '/knowledge-nook': room('knowledge-nook', 'Reading, learning and personal growth. A bookcase of what I am reading and learning.'),
   '/sarah-jrs-den': room('sarah-jrs-den', "Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl."),
   '/knowledge-nook/story-ledger': { title: 'Story Ledger', description: 'A ledger of the stories I watch and read, with a focus on 90s TV shows.', image: 'story-ledger' },

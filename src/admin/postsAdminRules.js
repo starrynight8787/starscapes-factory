@@ -32,6 +32,7 @@ export function pagesOfRoom(slug) {
   }
   // doors with an ordinary list or gallery page show the room's posts tagged with the door's name
   for (const d of DOORS) if (d.room === slug && d.page && d.page.layout !== 'custom') pages.push({ name: d.name, to: `/${slug}/${d.id}`, tags: [d.id] })
+  if (slug === 'explorers-bay') pages.push({ name: 'Lessons from the road', to: '/explorers-bay/lessons-from-the-road', tags: ['lessons-from-the-road'] }) // its own page, with a country filter
   // two pages with their own design that still list the Nook's posts by tag: the Book Club's reviews and conversations, and the Story Ledger's audits
   if (slug === 'knowledge-nook') {
     pages.push({ name: 'Book Club (reviews and conversations)', to: '/knowledge-nook/book-club', tags: ['book-club'] })

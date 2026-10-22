@@ -17,8 +17,9 @@ export const GEOMETRY = {
   },
   'explorers-bay': {
     'writing-in-transit': { cx: 280, cy: 547.5, w: 248, h: 159 },
-    'photography': { cx: 710, cy: 416.5, w: 300, h: 177 },
-    'coming-soon': { cx: 1065, cy: 734.5, w: 80, h: 117 },
+    'lessons-from-the-road': { cx: 466, cy: 528.5, w: 148, h: 151 },
+    'travel-map': { cx: 710, cy: 416.5, w: 300, h: 177 },
+    'road-journal': { cx: 1065, cy: 734.5, w: 80, h: 117 },
   },
   'knowledge-nook': {
     'book-club': { cx: 290, cy: 214, w: 132, h: 190 },

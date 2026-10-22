@@ -53,17 +53,20 @@ export const ROOMS = {
   'explorers-bay': {
     slug: 'explorers-bay',
     name: "Explorer's Bay",
-    tagline: 'Stories and pictures from the road.',
+    tagline: 'Writing, lessons and a map from the road.',
     blurb: 'Pick something up from the pier.',
     channel: 'explorers-bay',
     items: [
       { ...piece('explorers-bay', 'writing-in-transit'), id: 'writing-in-transit', name: 'Writing in Transit', blurb: 'Words written on the move.', kind: 'page', to: '/explorers-bay/writing-in-transit', labelAt: [280, 700] },
-      { ...piece('explorers-bay', 'photography'), id: 'photography', name: 'Photography', blurb: 'Pictures from the road.', kind: 'page', to: '/explorers-bay/photography', labelAt: [710, 520] },
-      { ...piece('explorers-bay', 'coming-soon'), id: 'coming-soon', name: 'Something New', blurb: 'A message is drifting in.', kind: 'locked', lock: 'opening soon', labelAt: [915, 722] },
+      // The three taped doors: each links to a taped page with a "tell me when it opens" sign-up (notify: true), and the owner opens each door in Admin. The pictures are in public/scenes/explorers-bay.
+      { ...piece('explorers-bay', 'lessons-from-the-road'), id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/lessons-from-the-road', notify: true, labelAt: [466, 750] },
+      { ...piece('explorers-bay', 'travel-map'), id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/travel-map', notify: true, labelAt: [710, 520] },
+      { ...piece('explorers-bay', 'road-journal'), id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/road-journal', notify: true, labelAt: [915, 722] },
     ],
     areas: {
       'writing-in-transit': { name: 'Writing in Transit', blurb: 'Words written on the move.', layout: 'list', tags: ['writing-in-transit'] },
-      photography: { name: 'Photography', blurb: 'Pictures from the road.', layout: 'gallery', tags: ['photography'] },
+      // The old Photography door was taken away (its pictures now live inside the Writing in Transit articles). The address is kept so anything shared or bookmarked still works, and the Instagram connection stays in place.
+      photography: { name: 'Photography', blurb: 'Pictures from the road.', layout: 'gallery', tags: ['photography'], oldLink: true },
     },
   },
   'knowledge-nook': {

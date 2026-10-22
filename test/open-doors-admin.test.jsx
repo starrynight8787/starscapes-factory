@@ -44,12 +44,11 @@ describe('the Open a door tool', () => {
     expect(screen.getByRole('button', { name: 'Open this door: Blog' })).toBeEnabled()
     expect(screen.getByRole('button', { name: 'Open this door: Books' })).toBeEnabled()
   })
-  it('keeps a door with no page switched off, and says why', async () => {
+  it('lets the owner open the Travel map, now that its page is built', async () => {
     await show()
-    const row = screen.getByText('Something New').closest('li') // the paid bottle is the one door still without a page
-    expect(within(row).getByRole('button', { name: 'Open this door: Something New' })).toBeDisabled()
-    expect(within(row).getByText('Its page has not been built yet, so it cannot be opened.')).toBeTruthy()
-    expect(within(row).queryByRole('link')).toBeNull()
+    const row = screen.getByText('Travel map').closest('li')
+    expect(within(row).getByRole('button', { name: 'Open this door: Travel map' })).toBeEnabled()
+    expect(within(row).queryByText('Its page has not been built yet, so it cannot be opened.')).toBeNull()
   })
   it('warns that a dotted-outline picture will look unfinished once open', async () => {
     await show()

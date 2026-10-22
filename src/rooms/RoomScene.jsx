@@ -101,6 +101,9 @@ function SceneItem({ item, scene }) {
       </a>
     )
   }
+  if (item.notify && item.to) {
+    return <Link className="rs-item is-locked" style={style} to={item.to} aria-label={`${itemLabel(item)}. Ask to hear when it opens`}>{inside}</Link>
+  }
   return (
     <div className="rs-item is-locked" style={style} tabIndex={0} role="group" aria-label={itemLabel(item)}>
       {inside}
@@ -120,5 +123,6 @@ function ListItem({ item }) {
   )
   if (item.kind === 'page') return <Link to={item.to}>{text}</Link>
   if (item.kind === 'external') return <a href={item.href} target="_blank" rel="noopener noreferrer">{text}</a>
+  if (item.notify && item.to) return <Link className="is-locked" to={item.to} aria-label={`${item.name}, ${why.toLowerCase()}. Ask to hear when it opens`}>{text}</Link>
   return <span className="is-locked" aria-label={`${item.name}, locked, ${why.toLowerCase()}`}>{text}</span>
 }

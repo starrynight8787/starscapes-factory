@@ -57,10 +57,12 @@ describe('the rooms', () => {
     const doors = items.filter((i) => i.kind === 'page').map((i) => i.to.replace(`/${slug}/`, ''))
     expect(Object.keys(areas).filter((k) => !areas[k].oldLink).sort()).toEqual(doors.sort())
   })
-  it('keeps the old Short Stories gallery reachable for old links, and says so, and nothing else is kept that way', () => {
+  it('keeps the old Short Stories gallery and the old Photography page reachable for old links, and says so, and nothing else is kept that way', () => {
     const kept = Object.entries(ROOMS['idea-hatchery'].areas).filter(([, a]) => a.oldLink).map(([k]) => k)
     expect(kept).toEqual(['short-stories'])
-    for (const slug of ROOM_SLUGS.filter((s) => s !== 'idea-hatchery')) expect(Object.values(ROOMS[slug].areas).filter((a) => a.oldLink)).toHaveLength(0)
+    expect(Object.entries(ROOMS['explorers-bay'].areas).filter(([, a]) => a.oldLink).map(([k]) => k)).toEqual(['photography']) // its door was taken away; the address, and the Instagram connection, stay
+    expect(ROOMS['explorers-bay'].items.some((i) => i.to === '/explorers-bay/photography')).toBe(false)
+    for (const slug of ROOM_SLUGS.filter((s) => s !== 'idea-hatchery' && s !== 'explorers-bay')) expect(Object.values(ROOMS[slug].areas).filter((a) => a.oldLink)).toHaveLength(0)
     expect(ROOMS['idea-hatchery'].items.some((i) => i.to === '/idea-hatchery/short-stories')).toBe(false)
   })
   it.each(ALL)('%s: every area has a name, a line, a layout, and says which posts belong to it', (slug) => {
@@ -236,6 +238,10 @@ describe('each room as a visitor meets it', () => {
         const link = stage.getByRole('link', { name: new RegExp(`^${i.name}\\b`) })
         expect(link, i.id).toHaveAttribute('href', i.kind === 'page' ? i.to : i.href)
         expect(link, i.id).toHaveAccessibleName(`${i.name}. ${i.blurb}${i.lock ? ` ${lockText(i.lock)}` : ''}${i.kind === 'external' ? ' (opens in a new tab)' : ''}`)
+      } else if (i.notify) { // a taped door that links to its taped page, where a visitor can ask to hear when it opens
+        const taped = stage.getByRole('link', { name: new RegExp(`^${i.name}\\. .*\\(locked\\)\\. Ask to hear when it opens$`) })
+        expect(taped, i.id).toHaveAttribute('href', i.to)
+        expect(taped, i.id).toHaveClass('is-locked')
       } else {
         const closed = stage.getByRole('group', { name: new RegExp(`^${i.name}\\. .*\\(locked\\)$`) })
         expect(closed, i.id).toHaveAttribute('tabindex', '0')
@@ -279,6 +285,7 @@ describe('each room as a visitor meets it', () => {
     const list = within(container.querySelector('.rs-list'))
     ROOMS[slug].items.forEach((i) => {
       if (i.kind !== 'locked') expect(list.getByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toHaveAttribute('href', i.kind === 'page' ? i.to : i.href)
+      else if (i.notify) expect(list.getByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toHaveAttribute('href', i.to)
       else expect(list.queryByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toBeNull()
     })
   })

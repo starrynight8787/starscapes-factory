@@ -27,6 +27,7 @@ const BARE_INPUT_ONLY = {
   'src/admin/AdminSuggestions.jsx': 'the on/off switch',
   'src/components/FormMessages.jsx': 'the tick box, drawn by .sf-check',
   'src/ebook/FreeEbookPage.jsx': 'the hidden box for robots',
+  'src/explorers/RequestForm.jsx': 'the hidden box for robots',
   'src/pages/EditPost.jsx': 'the pin switch, drawn by pinswitch.css',
   'src/suggest/SuggestPanel.jsx': 'the choice of kind, inside its chip',
 }

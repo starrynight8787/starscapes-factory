@@ -7,8 +7,8 @@ import useCurrentOwner from './useCurrentOwner'
 import './doors.css'
 
 // Wraps the page behind a door. Open: everyone sees the page. Closed: visitors are told the door is not open yet,
-// and only the owner sees the page, under a banner that says so.
-export default function DoorGate({ room, door, children }) {
+// and only the owner sees the page, under a banner that says so. A door can bring its own closed page (closed), such as the taped page with a "tell me when it opens" sign-up.
+export default function DoorGate({ room, door, closed = null, children }) {
   const { ready, isOpen } = useDoors()
   const { checking, owner } = useCurrentOwner()
 
@@ -25,7 +25,7 @@ export default function DoorGate({ room, door, children }) {
       </>
     )
   }
-  return <NotOpenYet room={room} />
+  return closed || <NotOpenYet room={room} />
 }
 
 function NotOpenYet({ room }) {

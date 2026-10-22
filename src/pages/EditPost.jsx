@@ -12,8 +12,11 @@ import '../styles/pages.css'
 import '../styles/forms.css'
 import { resetPassIndex } from '../membership/passIndex'
 import { WORDS as PUBLISH_WORDS } from './postPublish'
+import TravelFields from '../explorers/TravelFields'
+import PhotoTool from '../explorers/PhotoTool'
+import { ROOM as TRAVEL_ROOM, travelChanges, travelProblems, photoProblems } from '../explorers/travelRules'
 
-const IDS = { title: 'ep-title', content: 'ep-content', file: 'ep-file' }
+const IDS = { title: 'ep-title', content: 'ep-content', file: 'ep-file', country: 'ep-country', year: 'ep-year', advice: 'ep-advice' }
 
 export default function EditPost({ session }) {
   const { id } = useParams()
@@ -24,6 +27,8 @@ export default function EditPost({ session }) {
   const [channel, setChannel] = useState('')
   const [imageUrl, setImageUrl] = useState(null)
   const [file, setFile] = useState(null)
+  const [travel, setTravel] = useState({ country: '', year: '', advice: '' }) // Explorer's Bay only
+  const [hasTravel, setHasTravel] = useState(false) // has the database been given the travel columns yet
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState(null)
@@ -45,11 +50,13 @@ export default function EditPost({ session }) {
       const columns = 'id, title, content, image_url, author_id, tags, channel, published'
       // the database may not have been given the pinned_in or the pass column yet: ask with both, then with just pinned_in, then with neither, and carry on with whatever it has
       let data, error, used
-      for (const asked of [columns + ', pinned_in, pass', columns + ', pinned_in', columns]) {
+      const travelColumns = ', country, year_visited, advice_url'
+      for (const asked of [columns + ', pinned_in, pass' + travelColumns, columns + ', pinned_in, pass', columns + ', pinned_in', columns]) {
         used = asked
         ;({ data, error } = await supabase.from('posts').select(asked).eq('id', id).single())
-        if (!error || !/pinned_in|\bpass\b/i.test(String(error.message || ''))) break
+        if (!error || !(/pinned_in|\bpass\b/i.test(String(error.message || '')) || /country|year_visited|advice_url/i.test(String(error.message || '')))) break
       }
+      setHasTravel(/year_visited/.test(used))
       const hasPinColumn = /pinned_in/.test(used)
 
       if (error) {
@@ -86,6 +93,7 @@ export default function EditPost({ session }) {
       setImageUrl(data.image_url)
       setTags((data.tags || []).join(', '))
       setChannel(data.channel || '')
+      setTravel({ country: data.country || '', year: data.year_visited ? String(data.year_visited) : '', advice: data.advice_url || '' })
       setCanPin(hasPinColumn)
       setPinned(hasPinColumn && Boolean(data.pinned_in) && data.pinned_in === kindOf(data))
       setLoading(false)
@@ -121,6 +129,8 @@ export default function EditPost({ session }) {
     e.preventDefault()
     setError(null)
     const found = postProblems({ title, content, file })
+    Object.assign(found, travelProblems({ channel, tags: tags.split(',').map((t) => t.trim()).filter(Boolean), ...travel }))
+    if (channel === TRAVEL_ROOM && photoProblems(content).length > 0 && !found.content) found.content = photoProblems(content)[0]
     if (Object.keys(found).length > 0) {
       setErrors(found)
       return
@@ -161,6 +171,7 @@ export default function EditPost({ session }) {
         channel: channel || null,
       }
       if (published !== wasPublished) changes.published = published
+      if (hasTravel) Object.assign(changes, travelChanges(channel, travel)) // only when the database has the travel columns
 
       // A post for a pass: its words go into the protected table FIRST (so they are safe), and the post itself is left with none. A post made free again gets its words back.
       const wantPass = canPass ? cleanPass(pass) : ''
@@ -216,6 +227,7 @@ export default function EditPost({ session }) {
         <Field id="ep-content" label="Post text" error={errors.content}>
           {(p) => <textarea {...p} placeholder="Write your post..." rows={10} value={content} onChange={(e) => setContent(e.target.value)} />}
         </Field>
+        {channel === TRAVEL_ROOM && <PhotoTool userId={session.user.id} onInsert={(line) => setContent((c) => (c ? c.replace(/\s+$/, '') + '\n\n' : '') + line)} />}
         <div className="fm__row">
           <Field id="ep-tags" label="Tags" help="Separate them with commas, for example art, travel.">
             {(p) => <input {...p} type="text" placeholder="Tags (comma separated, e.g. art, travel)" value={tags} onChange={(e) => setTags(e.target.value)} />}
@@ -233,6 +245,8 @@ export default function EditPost({ session }) {
             )}
           </Field>
         </div>
+        {channel === TRAVEL_ROOM && hasTravel && <TravelFields idPrefix="ep" values={travel} onChange={setTravel} errors={errors} />}
+        {channel === TRAVEL_ROOM && !hasTravel && <p className="fm__small">The country, year and travel advice boxes appear once the travel columns have been added in Supabase.</p>}
         {canPass && (
           <Field id="ep-pass" label="Pass" help="Free for everyone is an ordinary post. Choose a pass to keep the words of this post for people who hold it (the first three posts in each pass stay free to read). Changing it moves the words in or out of the protected store for you.">
             {(p) => (

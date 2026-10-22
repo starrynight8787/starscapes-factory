@@ -45,52 +45,26 @@ describe('Research', () => {
   })
 })
 
-describe('the message in a bottle', () => {
-  const door = findDoor('explorers-bay', 'coming-soon')
-  const open = read('public/scenes/explorers-bay/item-coming-soon-open.svg')
-  const taped = read('public/scenes/explorers-bay/item-coming-soon.svg')
+describe('the message in a bottle (the Road journal door)', () => {
+  const door = findDoor('explorers-bay', 'road-journal')
+  const open = read('public/scenes/explorers-bay/item-road-journal-open.svg')
+  const taped = read('public/scenes/explorers-bay/item-road-journal.svg')
   const box = (svg) => svg.match(/viewBox="([^"]+)"/)[1].split(' ').map(Number)
-  it('is marked as for paying visitors, and is no longer a dotted outline', () => {
-    expect(door.paid).toBe(true)
+  it('is the Road journal door: free (no padlock, no pass), a solid bottle, and it has its own page', () => {
+    expect(door.paid).toBeUndefined()
     expect(door.ghost).toBeUndefined()
-    expect(door.name).toBe('Something New') // the name is still to be decided
+    expect(door.name).toBe('Road journal')
+    expect(door.page).toEqual({ layout: 'custom' })
+    expect(bay.items.find((i) => i.id === 'road-journal').kind).toBe('locked')
   })
-  it('cannot be opened yet: its page waits for the passes to exist', () => {
-    expect(door.page).toBeNull()
-    expect(bay.items.find((i) => i.id === 'coming-soon').kind).toBe('locked')
+  it('is a simple glass bottle with a cork, in both pictures, and the closed one has tape across the glass', () => {
+    for (const svg of [open, taped]) { expect(svg).toContain('fill="#DCE6FF"'); expect(svg).toContain('fill="#C9A070"'); expect(svg).not.toContain('stroke-dasharray'); expect(svg).not.toContain('data-lock') }
+    expect(taped).toContain('data-tape-group'); expect(open).not.toMatch(/data-tape|#FFD60A/)
   })
-  it('keeps its closed picture as it was: the dotted bottle with the tape', () => {
-    expect(taped).toContain('data-tape-group')
-    expect(taped).toContain('stroke-dasharray')
-  })
-  it('is drawn as a solid corked bottle with a message in it, not dots', () => {
-    expect(open).toContain('fill="#DCE6FF"') // the glass
-    expect(open).toContain('fill="#C9A070"') // the cork, in the room\u2019s own tan
-    expect(open).not.toContain('stroke-dasharray')
-    expect(open).not.toMatch(/data-tape|#FFD60A/)
-  })
-  it('has its own padlock, hung from the bottle\u2019s neck on rope and stamped with an anchor, so it is Explorer\u2019s Bay\u2019s and no other room\u2019s', () => {
-    const lock = open.match(/<g data-lock="explorers-bay">([\s\S]*?)<\/g><\/g><\/svg>/)
-    expect(lock, 'the lock group').toBeTruthy()
-    expect(lock[1]).toContain('stroke="#C9A070"') // the rope
-    expect(lock[1]).toMatch(/<rect[^>]*rx="6"[^>]*fill="#FFE27A"/) // the gold padlock body
-    expect(lock[1]).toMatch(/<circle[^>]*r="2\.6"/) // the ring at the top of the anchor
-    // and it is not the Notebook\u2019s padlock or the blueprint\u2019s
-    for (const other of ['public/scenes/drafting-desk/sheet-authors-notebook.svg', 'public/scenes/factory-floor/blueprint-roll.svg']) expect(read(other)).not.toContain('data-lock="explorers-bay"')
-  })
-  it('keeps everything inside its picture, which is the same size and place as the closed one', () => {
-    expect(box(open)).toEqual(box(taped))
-    const [vx, vy, vw, vh] = box(open)
-    const rect = open.match(/<g data-lock[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/)
-    const [x, y, w, h] = rect.slice(1).map(Number)
-    expect(x - 3).toBeGreaterThanOrEqual(vx)
-    expect(x + w + 3).toBeLessThanOrEqual(vx + vw)
-    expect(y - 3).toBeGreaterThanOrEqual(vy)
-    expect(y + h + 3).toBeLessThanOrEqual(vy + vh)
-    expect(open.match(/translate\(1080,770\) rotate\(-24\)/)).toBeTruthy() // the bottle sits where the old one did
+  it('keeps the closed and open pictures the same size and place, where the old bottle was', () => {
+    expect(box(open)).toEqual(box(taped)); expect(box(open)).toEqual([1001, 652, 128, 165])
   })
   it('is only a drawing, with nothing that runs, loads or links', () => {
-    expect(open).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)
-    expect(open).toContain('aria-hidden="true"')
+    for (const svg of [open, taped]) { expect(svg).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i); expect(svg).toContain('aria-hidden="true"') }
   })
 })

@@ -28,16 +28,21 @@ describe('opening a door in a scene', () => {
     const out = applyDoors(buildRoomScene('sarah-jrs-den'), 'sarah-jrs-den', only('sarah-jrs-den/blog', 'sarah-jrs-den/books'))
     expect(out.items.map((i) => [i.id, i.kind])).toEqual([['blog', 'page'], ['daryls-adventures', 'locked'], ['books', 'page'], ['youtube-series', 'locked']])
   })
-  it('never opens a door whose page has not been built, even if the database says it is open', () => {
-    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/coming-soon'))
-    expect(item(out, 'coming-soon').kind).toBe('locked')
-    expect(item(out, 'coming-soon').lock).toBeTruthy()
-    expect(item(out, 'coming-soon').art).toBe('/scenes/explorers-bay/item-coming-soon.svg')
+  it('opens the Travel map door to its page once the owner opens it, and keeps it taped until then', () => {
+    const closed = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', () => false)
+    expect(item(closed, 'travel-map').kind).toBe('locked')
+    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/travel-map'))
+    expect(item(out, 'travel-map')).toMatchObject({ kind: 'page', to: '/explorers-bay/travel-map', art: '/scenes/explorers-bay/item-travel-map-open.svg' })
+  })
+  it('opens the Lessons from the road door to its page, with its untaped picture, once the owner opens it', () => {
+    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/lessons-from-the-road'))
+    expect(item(out, 'lessons-from-the-road')).toMatchObject({ kind: 'page', to: '/explorers-bay/lessons-from-the-road', art: '/scenes/explorers-bay/item-lessons-from-the-road-open.svg' })
+    expect(item(out, 'road-journal').kind).toBe('locked')
   })
   it('does not touch a door that is already a page, or an outside link', () => {
-    const scene = buildRoomScene('explorers-bay') // its two pages are already open, and its bottle has no page yet, so nothing changes
+    const scene = buildRoomScene('explorers-bay') // Writing in Transit is already a page
     const out = applyDoors(scene, 'explorers-bay', () => true)
-    expect(out.items).toEqual(scene.items)
+    expect(item(out, 'writing-in-transit')).toEqual(item(scene, 'writing-in-transit'))
   })
   it('ignores a door from another room that happens to share a name', () => {
     const out = applyDoors(buildRoomScene('sarah-jrs-den'), 'sarah-jrs-den', only('leadership-lounge/blog'))

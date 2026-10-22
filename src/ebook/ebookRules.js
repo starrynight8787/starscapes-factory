@@ -4,12 +4,12 @@ export const isEmail = (value) => {
   return s.length <= 254 && /^[^\s@<>",;:\\]+@[^\s@<>",;:\\]+\.[^\s@<>",;:\\]+$/.test(s)
 }
 
-// Returns { ok: true, email } or { ok: false, errors } with plain words. The tick box must be ticked: it is the person's agreement to the emails.
+// Returns { ok: true, email, newsletter } or { ok: false, errors } with plain words. Getting the ebook needs only an email address: there is NO required tick.
+// "newsletter" is the separate, optional box: true only when they ticked it themselves.
 export function cleanSignup(input) {
   const email = String((input && input.email) || '').trim().toLowerCase()
   const errors = {}
   if (!email) errors.email = 'Enter your email address.'
   else if (!isEmail(email)) errors.email = 'Enter your email address in the form name@example.com.'
-  if (!(input && input.consent === true)) errors.consent = 'Tick the box to say yes to the emails, so I can send you the ebook.'
-  return Object.keys(errors).length ? { ok: false, errors } : { ok: true, email }
+  return Object.keys(errors).length ? { ok: false, errors } : { ok: true, email, newsletter: Boolean(input && input.newsletter === true) }
 }

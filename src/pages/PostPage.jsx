@@ -8,8 +8,11 @@ import BackToPosts from '../components/BackToPosts'
 import { channels } from '../data/channels'
 import { safeImage } from '../rooms/postRules'
 import useTitle from './useTitle'
+import TravelCard from '../explorers/TravelCard'
+import ArticleBody from '../explorers/ArticleBody'
 import PostGate from '../membership/PostGate'
 import { cleanPass, hasPassColumn, loadLockedBody } from '../membership/lockedPosts'
+import '../explorers/explorers.css'
 import '../styles/articles.css'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
@@ -35,7 +38,9 @@ export default function PostPage({ session }) {
     async function fetchPost() {
       const columns = 'id, title, content, image_url, created_at, author_id, tags, channel, published'
       // the database may not have been given the pass column yet: carry on without it, and every post is free
-      let { data, error } = await supabase.from('posts').select(columns + ', pass').eq('id', id).single()
+      let { data, error } = await supabase.from('posts').select(columns + ', pass, country, year_visited, advice_url').eq('id', id).single()
+      // the database may not have been given the pass column or the travel columns yet: carry on without them
+      if (error && /\bpass\b|country|year_visited|advice_url/i.test(String(error.message || ''))) ({ data, error } = await supabase.from('posts').select(columns + ', pass').eq('id', id).single())
       if (error && /\bpass\b/i.test(String(error.message || ''))) ({ data, error } = await supabase.from('posts').select(columns).eq('id', id).single())
 
       if (error) {
@@ -130,7 +135,8 @@ export default function PostPage({ session }) {
             }}
           />
         )}
-      {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
+      {post.channel === 'explorers-bay' && !gated && <TravelCard post={post} />}
+      {gated ? <PostGate pass={cleanPass(post.pass)} signedIn={Boolean(session)} /> : post.channel === 'explorers-bay' ? <ArticleBody text={body !== null ? body : post.content} /> : <div className="pg-post__body">{body !== null ? body : post.content}</div>}
       </article>
       </div>
 

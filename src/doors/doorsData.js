@@ -10,7 +10,9 @@
 export const DOORS = [
   { room: 'idea-hatchery', id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me.', page: { layout: 'list' }, ghost: true },
   { room: 'leadership-lounge', id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free.', page: { layout: 'custom' } },
-  { room: 'explorers-bay', id: 'coming-soon', name: 'Something New', blurb: 'A message has arrived.', paid: true, page: null },
+  { room: 'explorers-bay', id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', page: { layout: 'custom' } },
+  { room: 'explorers-bay', id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', page: { layout: 'custom' } }, // the map, drawn in the site's own code (src/explorers/TravelMapPage.jsx)
+  { room: 'explorers-bay', id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', page: { layout: 'custom' } },
   { room: 'knowledge-nook', id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', page: { layout: 'custom' } },
   { room: 'knowledge-nook', id: 'come-read-with-me', name: 'Come Read With Me', blurb: 'Read alongside me.', page: { layout: 'custom' } },
   { room: 'knowledge-nook', id: 'research', name: 'Research', blurb: 'A space to test things out.', page: { layout: 'list' } },

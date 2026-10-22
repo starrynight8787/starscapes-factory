@@ -27,7 +27,8 @@ export function resolveItem(item) {
   const kind = item && item.kind
   if (kind === 'page' && typeof item.to === 'string' && item.to.startsWith('/') && !item.to.startsWith('//')) return { ...item, kind: 'page' }
   if (kind === 'external' && typeof item.href === 'string' && /^https:\/\/[^\s/]+/i.test(item.href.trim())) return { ...item, href: item.href.trim(), kind: 'external' }
-  return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon' }
+  const taped = item && item.notify === true && typeof item.to === 'string' && item.to.startsWith('/') && !item.to.startsWith('//') // a taped door that links to its page, where a visitor can ask to hear when it opens
+  return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon', ...(taped ? {} : { to: undefined }) }
 }
 
 // What a screen reader says for an item. It follows the order of the writing on the item (name, description, then the note about access), because a spoken label that does not

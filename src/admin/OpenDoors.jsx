@@ -7,6 +7,8 @@ import { ROOMS } from '../rooms/roomsData'
 import { DOORS, doorKey, doorPath } from '../doors/doorsData'
 import useDoors, { loadDoors } from '../doors/useDoors'
 import { saveDoor } from '../doors/doorsApi'
+import { tellDoorWaiting } from './newsletterAdminApi'
+import { OPENING_DOORS } from '../explorers/explorersConfig'
 import { useOwnerCheck } from './useIsOwner'
 import './admin.css'
 import './opendoors.css'
@@ -31,7 +33,17 @@ export default function OpenDoors({ session }) {
     try {
       await saveDoor(door.room, door.id, open)
       await loadDoors({ force: true })
-      setMessage({ ok: true, text: open ? `${door.name} is now open to visitors.` : `${door.name} is closed again.` })
+      let told = ''
+      if (open && door.room === 'explorers-bay' && OPENING_DOORS[door.id]) { // tell the people who asked to hear when this door opens (one email each, only that it has opened)
+        try {
+          let total = 0
+          for (let go = 0; go < 50; go += 1) { const r = await tellDoorWaiting(door.id); total += r.sent; if (!r.more) break }
+          told = total ? ` ${total} ${total === 1 ? 'person was' : 'people were'} emailed to say it has opened.` : ' Nobody was waiting to be told.'
+        } catch (e) {
+          told = ` The people waiting were not told yet: ${e.message || 'please try again from this page.'}`
+        }
+      }
+      setMessage({ ok: true, text: open ? `${door.name} is now open to visitors.${told}` : `${door.name} is closed again.` })
     } catch (e) {
       setMessage({ ok: false, text: `${door.name} was not changed. ${e.message || 'Please try again in a moment.'}` })
     }

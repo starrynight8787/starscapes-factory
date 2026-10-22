@@ -162,6 +162,7 @@ describe('the table and quote styles', () => {
 })
 
 import { EBOOK } from '../src/ebook/ebookConfig'
+import { OPTIONAL_NEWSLETTER_TEXT } from '../src/newsletter/newsletterRules'
 
 describe('the Privacy policy says what the site really does (SFW-233)', () => {
   const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
@@ -174,12 +175,12 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
   })
   it('covers passes, suggestions and votes, story votes, the free ebook, YouTube and the choice kept on the passes page', () => {
     const t = privacy()
-    for (const needle of ['Your passes:', 'What you suggest', 'Your vote in a story vote', 'the newsletter or the free ebook', 'privacy-enhanced player', 'the choice you make on the passes page']) expect(t, needle).toContain(needle)
+    for (const needle of ['Your passes:', 'What you suggest', 'Your vote in a story vote', 'ask for the free ebook', 'privacy-enhanced player', 'the choice you make on the passes page']) expect(t, needle).toContain(needle)
   })
-  it('no longer says there is no marketing, and says what the ebook tick box says: yes to the ebook AND the newsletter (one list), with an unsubscribe link', () => {
+  it('no longer says there is no marketing, and says the free ebook needs no newsletter tick (a separate optional box), with an unsubscribe link', () => {
     expect(privacy()).not.toMatch(/We don.t send marketing emails/)
-    expect(EBOOK.consent).toMatch(/free ebook and the Starscapes Factory newsletter by email/)
-    const m = section('Marketing'); expect(m).toMatch(/or ask for the free ebook, you are saying yes to the newsletter/); expect(m).toMatch(/one list, so asking for the ebook also signs you up to the newsletter/); expect(m).toMatch(/unsubscribe link/); expect(m).toMatch(/never sell your email address/)
+    expect(OPTIONAL_NEWSLETTER_TEXT).toMatch(/^Optional: also send me the Starscapes Factory newsletter by email/); expect(EBOOK.request).not.toMatch(/newsletter/i)
+    const m = section('Marketing'); expect(m).toMatch(/Asking for the free ebook is separate: you do not have to sign up for the newsletter to get it/); expect(m).toMatch(/we do not add you to the newsletter because you asked for it/); expect(m).toMatch(/optional box, never ticked for you/); expect(m).toMatch(/unsubscribe link/); expect(m).toMatch(/never sell your email address/)
     expect(m).toMatch(/receipts and password resets, are not marketing/)
   })
   it('promises that who voted for what is not shown or looked at, as Gill decided on 20 October 2026', () => {
@@ -205,7 +206,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
     expect(read('src/bookclub/BookClubPage.jsx')).toMatch(/youtube-nocookie\.com\/embed/)
   })
   it('lists the people it shares with, including the mailing tool and YouTube, and Stripe for passes', () => {
-    const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
+    const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
     expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube\)/)
   })
   it('says that links to other websites, such as the Substack, leave this site and have their own privacy policies, and the site really does link to the Substack', () => {
@@ -216,7 +217,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
     expect(section('How long we keep it')).toMatch(/Emails and messages to us:\*\* 2 years, then deleted\./); expect(privacy()).not.toMatch(/\[2 years\]/)
   })
   it('lets people take back their consent, and says how long newsletter and ebook sign-ups and passes records are kept', () => {
-    expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Newsletter and free ebook sign-ups \(they are one list\):\*\* until you unsubscribe/); expect(k).not.toMatch(/Free ebook sign-ups:\*\*/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
+    expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\* a newsletter sign-up until you unsubscribe/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
   })
 })
 
