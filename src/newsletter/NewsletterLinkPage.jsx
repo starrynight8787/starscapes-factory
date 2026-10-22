@@ -36,12 +36,16 @@ function LinkPage({ title, button, working, run, done, explain, noToken }) {
 }
 
 // After confirming: someone who asked for the free ebook also gets it here (or is told it is still being finished). It is the same list for everyone.
-function Confirmed({ already, ebook }) {
-  const thanks = already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.'
+function Confirmed({ already, ebook, request, newsletter }) {
+  // A free ebook request is its own thing: it says nothing about the newsletter unless they ticked that separate box.
+  const thanks = request
+    ? (already ? 'You have already confirmed. Thank you.' : 'Thank you, you are confirmed.')
+    : (already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.')
   if (!ebook) return thanks
   return (
     <>
       <p>{thanks}</p>
+      {request && newsletter && <p>You also asked for the newsletter, so you are on that list too. You can unsubscribe at any time, with the link in every email.</p>}
       {EBOOK.file ? (
         <p><a className="pg-btn nlp__button" href={EBOOK.file} download>Download the free ebook (PDF)</a> <small>{EBOOK.fileNote}</small></p>
       ) : (
@@ -52,7 +56,11 @@ function Confirmed({ already, ebook }) {
 }
 
 export function NewsletterConfirmPage() {
-  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={(r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} />} noToken="That link does not look right. Please open the link in the email we sent you." />
+  const [params] = useSearchParams()
+  const forEbook = params.get('for') === 'ebook' // only changes the words before the button: the server decides what is confirmed by the private code in the link
+  const done = (r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} request={r.kind === 'request'} newsletter={r.newsletter === true} />
+  if (forEbook) return <LinkPage title="Confirm your email" button="Yes, send me the free ebook" working="Confirming…" run={confirmSubscription} explain="Press the button to confirm your email address. You will then get the free ebook." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
+  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
 }
 
 export function NewsletterUnsubscribePage() {

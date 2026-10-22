@@ -17,9 +17,9 @@ describe('what the policy says it keeps', () => {
     const r = rows().find((x) => /sign up for the newsletter/.test(x[1]))
     expect(r).toHaveLength(4)
     expect(r[0]).toMatch(/email address/); expect(r[0]).toMatch(/date and wording you agreed to/); expect(r[0]).toMatch(/whether and when you confirmed it/); expect(r[0]).toMatch(/if you leave, that you left/)
-    expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/if you asked for it, the free ebook/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
-    expect(r[3]).toMatch(/Your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
-    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook are ONE list (one row), and the member profile is the eleventh
+    expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/the free ebook if you asked for it/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
+    expect(r[3]).toMatch(/your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
+    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook have one row between them, and the member profile is the eleventh
   })
   it('keeps exactly what the table in the database keeps: the address, the words agreed to, when, whether confirmed, and whether they left (and no name, no phone, nothing else)', () => {
     const sql = read('sql/newsletter.sql'); const table = between(sql, 'create table if not exists public.newsletter_subscribers', 'create table if not exists public.newsletter_issues')
@@ -32,7 +32,7 @@ describe('what the policy says it keeps', () => {
 describe('who the policy says sends it', () => {
   it('names Resend as the one that sends the confirmation email and the newsletter, and that is the only company the code sends it through', () => {
     const t = section('Who we share your information with')
-    expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter/); expect(t).not.toMatch(/our free blog posts/)
+    expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it/); expect(t).not.toMatch(/our free blog posts/)
     const sends = ['lib/newsletter.js', 'lib/newsletterAdmin.js', 'lib/sendEmail.js'].map(read).join('\n')
     expect([...sends.matchAll(/https?:\/\/[a-z0-9.-]+/gi)].map((m) => m[0]).filter((u) => !/starscapesfactory\.com|db\.test/.test(u))).toEqual(expect.arrayContaining(['https://api.resend.com'])); expect(new Set([...sends.matchAll(/https:\/\/(?:api|www)\.[a-z0-9.-]+/gi)].map((m) => m[0]))).toEqual(new Set(['https://api.resend.com']))
   })
@@ -40,8 +40,8 @@ describe('who the policy says sends it', () => {
 
 describe('what the policy says about leaving, confirming and how long it keeps things', () => {
   it('says nobody is added until they press the link, and the code adds them as pending and only ever sends to confirmed people', () => {
-    const m = section('Marketing'); expect(m).toMatch(/If you sign up for the newsletter, or ask for the free ebook, you are saying yes to the newsletter/); expect(m).toMatch(/We first email you a link, and you are only added once you press it/)
-    const pub = read('lib/newsletter.js'); expect(pub).toMatch(/status: 'pending', consent_text: consentFor\(source\)/); expect(pub).not.toMatch(/status: 'confirmed', consent_text/)
+    const m = section('Marketing'); expect(m).toMatch(/If you sign up for the newsletter, you are saying yes to new posts and news/); expect(m).toMatch(/We first email you a link, and you are only added once you press it/)
+    const pub = read('lib/newsletter.js'); expect(pub).toMatch(/status: 'pending', consent_text: consentFor\(source\)/); expect((pub.match(/status: 'confirmed', consent_text/g) || [])).toHaveLength(2) /* both inside joinNewsletter */; const join = pub.slice(pub.indexOf('async function joinNewsletter'), pub.indexOf('const BAD_LINK')); expect(join).toMatch(/status: 'confirmed', consent_text/); expect(pub.match(/joinNewsletter\(/g)).toHaveLength(2) /* its definition, and the one call: after the confirm link is pressed */; expect(pub.slice(pub.indexOf('async function confirm'))).toMatch(/if \(wants\) await joinNewsletter/); expect(pub.slice(0, pub.indexOf('async function joinNewsletter'))).not.toMatch(/joinNewsletter\(/)
     expect(read('lib/newsletterAdmin.js')).toMatch(/newsletter_subscribers\?status=eq\.confirmed/); expect(read('lib/newsletterAdmin.js')).toMatch(/r\.newsletter_subscribers\.status === 'confirmed'/)
   })
   it('says what they agreed to in the same words as the sign-up box', () => {
@@ -62,13 +62,13 @@ describe('what the policy says about leaving, confirming and how long it keeps t
     expect(read('lib/newsletterAdmin.js')).toMatch(/newsletter_subscribers\?id=eq\.\$\{input\.id\}`, 'DELETE'/); expect(read('sql/newsletter.sql')).toMatch(/subscriber_id uuid not null references public\.newsletter_subscribers \(id\) on delete cascade/)
   })
   it('says a sign-up that is never confirmed is deleted after the number of days the daily job really uses', () => {
-    const said = section('How long we keep it').match(/Newsletter and free ebook sign-ups \(they are one list\):\*\*[^\n]*?we delete your address after (\d+) days/)
+    const said = section('How long we keep it').match(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\*[^\n]*?we delete your address after (\d+) days/)
     expect(said, 'the policy names the number of days').toBeTruthy(); expect(Number(said[1])).toBe(UNCONFIRMED_DAYS); expect(UNCONFIRMED_DAYS).toBe(30)
     expect(read('lib/newsletter.js')).toMatch(/UNCONFIRMED_DAYS \* 86400000/)
     const cron = JSON.parse(read('vercel.json')).crons.find((c) => c.path === '/api/ebook-signup?newsletter=tidy'); expect(cron, 'the daily job is scheduled').toBeTruthy(); expect(cron.schedule).toMatch(/^\d+ \d+ \* \* \*$/) // once a day
   })
   it('says newsletter sign-ups are kept until the person unsubscribes or asks, beside the ebook ones', () => {
-    expect(section('How long we keep it')).toMatch(/Newsletter and free ebook sign-ups \(they are one list\):\*\* until you unsubscribe or ask us to delete your email address/)
+    expect(section('How long we keep it')).toMatch(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\* a newsletter sign-up until you unsubscribe or ask us to delete your email address/)
   })
 })
 

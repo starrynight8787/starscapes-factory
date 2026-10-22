@@ -12,25 +12,26 @@ const DAY = 86400000
 const ago = (days) => new Date(Date.now() - days * DAY).toISOString()
 const person = (id, status, sentDaysAgo, over = {}) => ({ id, email: `${id}@example.com`, status, token: id.padEnd(48, 'a'), created_at: ago(sentDaysAgo), confirmation_sent_at: sentDaysAgo === null ? null : ago(sentDaysAgo), ...over })
 
-function world(rows, { dbFails = false } = {}) {
-  const db = rows.map((r) => ({ ...r })); const calls = []
+function world(rows, { dbFails = false, requests = [] } = {}) {
+  const db = rows.map((r) => ({ ...r })); const reqs = requests.map((r) => ({ ...r })); const calls = []
   const fn = vi.fn(async (url, init = {}) => {
     const u = String(url); const method = init.method || 'GET'; calls.push({ u, method })
-    if (u.startsWith('https://db.test/rest/v1/newsletter_subscribers') && method === 'DELETE') {
+    const table = u.startsWith('https://db.test/rest/v1/email_requests') ? reqs : u.startsWith('https://db.test/rest/v1/newsletter_subscribers') ? db : null
+    if (table && method === 'DELETE') {
       if (dbFails) return json({ message: 'boom srv-key-secret-value-0000' }, 500)
       const q = new URL(u).searchParams; const gone = []
-      for (const r of [...db]) {
+      for (const r of [...table]) {
         if (r.status !== (q.get('status') || '').replace('eq.', '')) continue
         const sent = q.get('confirmation_sent_at'); const made = q.get('created_at')
         const ok = sent && sent.startsWith('lt.') ? (r.confirmation_sent_at && r.confirmation_sent_at < sent.slice(3)) : sent === 'is.null' ? (r.confirmation_sent_at === null && made && r.created_at < made.slice(3)) : false
-        if (ok) { db.splice(db.indexOf(r), 1); gone.push({ ...r }) }
+        if (ok) { table.splice(table.indexOf(r), 1); gone.push({ ...r }) }
       }
       return json(gone)
     }
     throw new Error(`unexpected request: ${method} ${u}`)
   })
   vi.stubGlobal('fetch', fn)
-  return { db, calls }
+  return { db, reqs, calls }
 }
 const call = async (req) => {
   const out = { headers: {}, status: null, body: null }
@@ -56,6 +57,14 @@ describe('who may run it', () => {
     for (const method of ['PUT', 'DELETE', 'PATCH']) { const out = await call({ method, headers: {} }); expect(out.status, method).toBe(405); expect(out.headers.Allow).toBe('GET, POST') }
   })
   it('never lets an answer be kept', async () => { world([]); expect((await call()).headers['Cache-Control']).toBe('no-store') })
+})
+
+describe('one-purpose requests (the free ebook)', () => {
+  it('tidies a request nobody confirmed, after the same 30 days, and never one that was confirmed', async () => {
+    const w = world([], { requests: [person('oldreq', 'pending', 90), person('newreq', 'pending', 2), person('doneq', 'confirmed', 90)] })
+    const out = await call(); expect(out.body).toEqual({ ok: true, removed: 1 })
+    expect(w.reqs.map((r) => r.id).sort()).toEqual(['doneq', 'newreq'])
+  })
 })
 
 describe('who it deletes', () => {
