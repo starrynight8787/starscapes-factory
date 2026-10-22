@@ -1,0 +1,53 @@
+THE DELIVERY LINE ON THE PRINT PAGES   starscapes-delivery-line-22oct.zip   (SFW-9 decided, SFW-10 built)
+(A small code change and a test. No Supabase step. Released through a preview first.)
+
+WHAT CHANGES: the line under the Add to cart button on every print page used to say "Delivery cost is shown at checkout, which opens soon." That was out of date: delivery is free to six countries.
+It now says (Gill chose this wording on 22 October 2026, option B):
+    Free tracked delivery to the UK, Ireland, Germany, France, the United States and Canada. We can't deliver anywhere else yet.
+THE CART'S SENTENCE CHANGES A LITTLE TOO, ON PURPOSE: it used to say "Delivery is free to United Kingdom, Ireland, Germany, France, United States and Canada." It now says
+"Delivery is free to the UK, Ireland, Germany, France, the United States and Canada." Both pages now use ONE shared helper to write the list of countries, so they can never say different things.
+THE LINE CHANGES ITSELF when a country is added to the list in src/cart/launchCountries.js (SFW-187): nobody has to remember to edit a second sentence.
+IT SAYS NOTHING ABOUT HOW LONG DELIVERY TAKES, ON PURPOSE. Creative Hub confirmed in writing (20 October) that every order has tracking, and gave one figure for everywhere (6 to 10 working days, making and
+delivering together), but has not answered for Europe, the US and Canada separately (SFW-17). A test fails if a timing is added to the line before that answer is in.
+THE CANADA IMPORT-TAX NOTE IS UNCHANGED and still sits directly after it.
+CAN GO LIVE NOW: the new line does not mention checkout "opening soon", so it does not have to wait for opening day.
+
+TESTS: 11 new in test/delivery-line.test.js (the exact sentence; it is one of the print facts, before the Canada note; the old line is gone; no delivery-time promise; "tracked" and "free"; it names the six
+countries and nothing else; the cart and the print pages share one helper and the cart no longer has its own; the data file holds no second copy of the sentence; the helper reads well for one, two or many
+countries and puts "the" before the Netherlands, the United Arab Emirates and the Philippines). The existing 10 import-tax tests pass unchanged. 12 deliberate breakages, ALL caught: the old line coming back;
+Canada dropped; "tracked" dropped; a timing promise added; the limit sentence dropped; the cart getting its own helper again; the UK and the United States losing their "the"; the helper losing its "and"; the
+line left out; a hard-coded second copy; the Netherlands losing its "the"; and the line placed after the Canada note.
+NOT RUN IN A REAL BROWSER this time (it is a change of wording built from a helper the cart already used); the preview check below is the real-eyes check.
+WHOLE SUITE on a copy of your newest commit (debcf2a) with this installed: 3,998 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-delivery-line-22oct.zip
+ 5. python3 tools/add-delivery-line.py       IT MUST PRINT "changed" LINES FOR 3 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "DELIVERY_LINE" src/artloft/artLoftData.js          (it must print 2)
+    grep -c "export function countryList" src/cart/launchCountries.js   (it must print 1)
+    grep -c "function countryList" src/cart/CartPage.jsx          (it must print 0)
+    ls test/delivery-line.test.js                                 (it must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-delivery-line" -not -path "./node_modules/*" -delete
+11. git checkout -b delivery-line
+    git add .
+    git status                                   (3 changed files: src/artloft/artLoftData.js, src/cart/CartPage.jsx, src/cart/launchCountries.js; new: the test, the notes, the installer, its test and fixtures, tools/delivery-line-files/; nothing ending .before-)
+    git commit -m "Print pages: say delivery is free and tracked to the six countries (one shared country list for the cart and the prints)"
+    git push -u origin delivery-line
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "delivery-line" and says Preview. WAIT for Ready, then open it and check:
+      a. Open any print. Under Add to cart, the delivery line reads exactly: "Free tracked delivery to the UK, Ireland, Germany, France, the United States and Canada. We can't deliver anywhere else yet."
+      b. Directly under it, the Canada import-tax note is still there. Nothing anywhere says delivery cost "is shown at checkout" or that checkout "opens soon" in that place.
+      c. Put a print in the cart and open the cart: it says "Delivery is free to the UK, Ireland, Germany, France, the United States and Canada. You'll choose your address on the next page."
+      d. Open a framed print and an unframed one: the same line under both.
+    If the build fails (Error), or any of a to d is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge delivery-line
+    git push
+    git branch -d delivery-line

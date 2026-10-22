@@ -4,17 +4,10 @@ import './cart.css'
 import useCart from './useCart'
 import { startCheckout, checkoutStatus } from './checkout'
 import { redirectTo } from './redirect'
-import { LAUNCH_COUNTRIES, IMPORT_TAX_NOTE } from './launchCountries'
+import { LAUNCH_COUNTRIES, IMPORT_TAX_NOTE, countryList } from './launchCountries'
 import { KINDS, setQty, removeItem, clearCart } from './cartStore'
 import { formatMoney } from './money'
 import PageBanner from '../components/PageBanner'
-
-// "United Kingdom, Ireland and Canada"
-function countryList(codes) {
-  const names = new Intl.DisplayNames(['en'], { type: 'region' })
-  const list = codes.map((c) => names.of(c))
-  return list.length > 1 ? `${list.slice(0, -1).join(', ')} and ${list[list.length - 1]}` : list.join('')
-}
 
 export default function CartPage() {
   const { items, count, subtotal } = useCart()
