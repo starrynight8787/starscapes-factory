@@ -1,0 +1,1420 @@
+From 93e0e2703ae4f1f67532be7c3a5f8e0d3af5301b Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Thu, 22 Oct 2026 14:48:13 +0100
+Subject: [PATCH] Explorer's Bay stage 1: room page, four doors, taped pages,
+ sign-ups
+
+Co-Authored-By: Claude Sonnet 5.5 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_019d71gpi38hPgKQvLVhHC7E
+---
+ lib/newsletter.js                             |  52 +++----
+ lib/newsletterAdmin.js                        |  32 +++-
+ public/scenes/explorers-bay/geometry.json     |  12 +-
+ .../item-lessons-from-the-road-open.svg       |   1 +
+ .../item-lessons-from-the-road.svg            |   1 +
+ .../explorers-bay/item-road-journal-open.svg  |   1 +
+ .../explorers-bay/item-road-journal.svg       |   1 +
+ .../explorers-bay/item-travel-map-open.svg    |   1 +
+ .../scenes/explorers-bay/item-travel-map.svg  |   1 +
+ sql/email-requests.sql                        |   9 ++
+ src/admin/OpenDoors.jsx                       |  14 +-
+ src/admin/newsletterAdminApi.js               |   1 +
+ src/data/pageMeta.js                          |   2 +-
+ src/doors/DoorGate.jsx                        |   6 +-
+ src/doors/doorsData.js                        |   4 +-
+ src/explorers/RequestForm.jsx                 |  72 +++++++++
+ src/explorers/RoadJournalPage.jsx             |  40 +++++
+ src/explorers/TapedDoorPage.jsx               |  39 +++++
+ src/explorers/explorers.css                   |  19 +++
+ src/explorers/explorersConfig.js              |  22 +++
+ src/newsletter/NewsletterLinkPage.jsx         |  35 +++--
+ src/newsletter/newsletterApi.js               |   2 +-
+ src/newsletter/newsletterRules.js             |  64 ++++++--
+ src/rooms/RoomRoutes.jsx                      |  10 +-
+ src/rooms/RoomScene.jsx                       |   4 +
+ src/rooms/roomsData.js                        |  11 +-
+ src/rooms/roomsGeometry.js                    |   5 +-
+ src/rooms/sceneRules.js                       |   3 +-
+ test/admin-posts-rules.test.js                |   6 +-
+ test/apply-doors.test.js                      |  18 ++-
+ test/doors-data.test.js                       |  14 +-
+ test/explorers-bay-requests.test.js           | 140 ++++++++++++++++++
+ test/legacy-styles.test.js                    |   1 +
+ test/open-doors-admin.test.jsx                |   4 +-
+ test/research-and-bottle.test.js              |  56 ++-----
+ test/rooms-data.test.jsx                      |  11 +-
+ tools/art-manifest.json                       |  10 +-
+ tools/health-check.mjs                        |   2 +-
+ 38 files changed, 587 insertions(+), 139 deletions(-)
+ create mode 100644 public/scenes/explorers-bay/item-lessons-from-the-road-open.svg
+ create mode 100644 public/scenes/explorers-bay/item-lessons-from-the-road.svg
+ create mode 100644 public/scenes/explorers-bay/item-road-journal-open.svg
+ create mode 100644 public/scenes/explorers-bay/item-road-journal.svg
+ create mode 100644 public/scenes/explorers-bay/item-travel-map-open.svg
+ create mode 100644 public/scenes/explorers-bay/item-travel-map.svg
+ create mode 100644 src/explorers/RequestForm.jsx
+ create mode 100644 src/explorers/RoadJournalPage.jsx
+ create mode 100644 src/explorers/TapedDoorPage.jsx
+ create mode 100644 src/explorers/explorers.css
+ create mode 100644 src/explorers/explorersConfig.js
+ create mode 100644 test/explorers-bay-requests.test.js
+
+diff --git a/lib/newsletter.js b/lib/newsletter.js
+index 49e185f..b60d9f2 100644
+--- a/lib/newsletter.js
++++ b/lib/newsletter.js
+@@ -14,8 +14,7 @@ import { randomBytes } from 'node:crypto'
+ import { sendEmail } from './sendEmail.js'
+ import { serviceFetch, databaseUrl, serviceKeys } from './serviceKey.js'
+ import { authorised } from './membershipReminders.js'
+-import { UNCONFIRMED_DAYS, cleanSubscribe, confirmationEmail, consentFor, ebookLinkEmail, confirmUrl, isToken, sourceOf } from '../src/newsletter/newsletterRules.js'
+-import { EBOOK } from '../src/ebook/ebookConfig.js'
++import { UNCONFIRMED_DAYS, cleanSubscribe, confirmationEmail, consentFor, ebookLinkEmail, confirmUrl, isToken, requestForPurpose, requestOf } from '../src/newsletter/newsletterRules.js'
+ 
+ const clean = (v) => String(v === null || v === undefined ? '' : v).trim()
+ const MAX_BODY = 4000
+@@ -67,14 +66,14 @@ async function subscribe(req, res) {
+   if (typeof body.website === 'string' && body.website.trim() !== '') return say(res, 200, { ok: true }) // a robot: thank it, keep nothing
+   const check = cleanSubscribe(body)
+   if (!check.ok) return say(res, 400, { ok: false, field: check.field, message: check.message })
+-  const source = sourceOf(body) // 'site' (the footer box: the newsletter) or 'ebook' (the free ebook page: a separate request, with an optional newsletter box)
+-  if (source === 'ebook') return subscribeEbook(res, check.email, check.newsletter === true)
++  const kind = requestOf(body) // a one-purpose request (the free ebook, the Road journal, a door's list): a separate request with an optional newsletter box. Anything else is the footer's newsletter.
++  if (kind) return subscribeRequest(res, check.email, check.newsletter === true, kind)
++  const source = 'site'
+ 
+   const now = Date.now()
+   const stamp = new Date(now).toISOString()
+   let token = ''
+   let sendConfirmation = false
+-  let sendEbook = false // someone already on the list asks for the ebook: they get the link, nothing to confirm
+   try {
+     const existing = await findByEmail(check.email)
+     if (!existing) {
+@@ -85,15 +84,12 @@ async function subscribe(req, res) {
+       sendConfirmation = true
+     } else if (existing.status === 'confirmed') {
+       sendConfirmation = false // already on the list: the answer is the same, and nothing to confirm
+-      sendEbook = source === 'ebook' && Boolean(EBOOK.file) // asking for the ebook again: the link, by email (the page says the same to everyone, so it never reveals who is on the list)
+     } else {
+       token = existing.token // the same private code for good, so links in older emails keep working
+       const recent = existing.status === 'pending' && existing.confirmation_sent_at && now - Date.parse(existing.confirmation_sent_at) < COOLDOWN_MS
+       if (!recent) {
+         await patch(existing.id, { status: 'pending', consent_text: consentFor(source), source, confirmation_sent_at: stamp, unsubscribed_at: null }) // a fresh yes from someone who had left starts again from the beginning
+         sendConfirmation = true
+-      } else if (source === 'ebook' && existing.source !== 'ebook') {
+-        await patch(existing.id, { source, consent_text: consentFor(source) }) // they asked for the ebook a moment after joining from the footer: no second email, but the confirm page will offer the ebook, and the words recorded are the ones they ticked last
+       }
+     }
+   } catch (e) {
+@@ -104,27 +100,23 @@ async function subscribe(req, res) {
+     const sent = await sendEmail({ to: check.email, ...mail, idempotencyKey: `newsletter-confirm-${check.email}-${Math.floor(now / COOLDOWN_MS)}` })
+     if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the confirmation email just now. Please try again in a moment.' })
+   }
+-  if (sendEbook) {
+-    const mail = ebookLinkEmail({ file: EBOOK.file })
+-    const sent = await sendEmail({ to: check.email, ...mail, idempotencyKey: `newsletter-ebook-${check.email}-${Math.floor(now / COOLDOWN_MS)}` })
+-    if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the email just now. Please try again in a moment.' })
+-  }
+   return say(res, 200, { ok: true })
+ }
+ 
+-// The free ebook: a request for ONE thing, kept apart from the newsletter list. No tick is needed to get it. If they ticked the optional newsletter box, the same confirm link also confirms the newsletter.
+-async function subscribeEbook(res, email, wantsNewsletter) {
++// A request for ONE thing (the free ebook, the Road journal, or to hear when a door opens), kept apart from the newsletter list. No tick is needed to get it. If they ticked the optional newsletter box, the same confirm link also confirms the newsletter.
++async function subscribeRequest(res, email, wantsNewsletter, kind) {
+   const now = Date.now()
+   const stamp = new Date(now).toISOString()
+   const newsletterText = wantsNewsletter ? consentFor('ebook') : null
++  const purpose = kind.purpose
+   let token = ''
+   let sendConfirmation = false
+   let sendEbook = false // someone who already confirmed asks again: the link, by email (the page says the same to everyone, so it never reveals who asked before)
+   try {
+-    const existing = await findRequest(email, 'ebook')
++    const existing = await findRequest(email, purpose)
+     if (!existing) {
+       token = newToken()
+-      const made = await rest('email_requests', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, purpose: 'ebook', token, status: 'pending', consent_text: EBOOK.request, wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, confirmation_sent_at: stamp }) })
++      const made = await rest('email_requests', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, purpose, token, status: 'pending', consent_text: kind.words, wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, confirmation_sent_at: stamp }) })
+       if (made && made.status === 409) return say(res, 200, { ok: true }) // someone asked for this address a moment ago: nothing more to do
+       if (!made || !made.ok) throw new Error('database')
+       sendConfirmation = true
+@@ -137,13 +129,13 @@ async function subscribeEbook(res, email, wantsNewsletter) {
+         sendConfirmation = true
+       } else {
+         token = existing.token
+-        sendEbook = Boolean(EBOOK.file)
++        sendEbook = Boolean(kind.file) // a door's list has no file: nothing to send again
+       }
+     } else {
+       token = existing.token // the same private code for good, so links in older emails keep working
+       const recent = existing.confirmation_sent_at && now - Date.parse(existing.confirmation_sent_at) < COOLDOWN_MS
+       if (!recent) {
+-        await patchRequest(existing.id, { status: 'pending', wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, consent_text: EBOOK.request, confirmation_sent_at: stamp })
++        await patchRequest(existing.id, { status: 'pending', wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, consent_text: kind.words, confirmation_sent_at: stamp })
+         sendConfirmation = true
+       } else if (wantsNewsletter !== Boolean(existing.wants_newsletter)) {
+         await patchRequest(existing.id, { wants_newsletter: wantsNewsletter, newsletter_text: newsletterText }) // they changed the box a moment later: no second email, the link they already have confirms what the box says now
+@@ -153,27 +145,27 @@ async function subscribeEbook(res, email, wantsNewsletter) {
+     return say(res, 502, { ok: false, message: 'We could not sign you up just now. Please try again in a moment.' })
+   }
+   if (sendConfirmation) {
+-    const mail = confirmationEmail({ confirmUrl: confirmUrl(token, undefined, 'ebook'), source: 'ebook', newsletter: wantsNewsletter })
+-    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `ebook-confirm-${email}-${Math.floor(now / COOLDOWN_MS)}` })
++    const mail = confirmationEmail({ confirmUrl: confirmUrl(token, undefined, kind.source), source: kind.source, newsletter: wantsNewsletter, door: kind.source === 'opens' ? purpose.slice(6) : '' })
++    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `request-confirm-${purpose}-${email}-${Math.floor(now / COOLDOWN_MS)}` })
+     if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the confirmation email just now. Please try again in a moment.' })
+   }
+   if (sendEbook) {
+-    const mail = ebookLinkEmail({ file: EBOOK.file })
+-    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `ebook-link-${email}-${Math.floor(now / COOLDOWN_MS)}` })
++    const mail = ebookLinkEmail({ file: kind.file, request: kind })
++    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `request-link-${purpose}-${email}-${Math.floor(now / COOLDOWN_MS)}` })
+     if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the email just now. Please try again in a moment.' })
+   }
+   return say(res, 200, { ok: true })
+ }
+ 
+ // Someone confirmed the ebook AND ticked the optional newsletter box: only now are they added to the newsletter list, with the exact words next to that box.
+-async function joinNewsletter(email, words, stamp) {
++async function joinNewsletter(email, words, stamp, source) {
+   const existing = await findByEmail(email)
+   if (!existing) {
+-    const made = await rest('newsletter_subscribers', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, token: newToken(), status: 'confirmed', consent_text: words, source: 'ebook', confirmation_sent_at: stamp, confirmed_at: stamp }) })
++    const made = await rest('newsletter_subscribers', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, token: newToken(), status: 'confirmed', consent_text: words, source, confirmation_sent_at: stamp, confirmed_at: stamp }) })
+     if (made && made.status === 409) return
+     if (!made || !made.ok) throw new Error('database')
+   } else if (existing.status !== 'confirmed') {
+-    await patch(existing.id, { status: 'confirmed', consent_text: words, source: 'ebook', confirmed_at: stamp, unsubscribed_at: null })
++    await patch(existing.id, { status: 'confirmed', consent_text: words, source, confirmed_at: stamp, unsubscribed_at: null })
+   }
+ }
+ 
+@@ -191,11 +183,13 @@ async function confirm(req, res) {
+       const request = await findRequestByToken(token) // a one-purpose request (the free ebook), not the newsletter list
+       if (!request) return say(res, 404, { ok: false, message: GONE_LINK })
+       const wants = request.wants_newsletter === true
+-      if (request.status === 'confirmed') return say(res, 200, { ok: true, state: 'already', source: 'ebook', kind: 'request', newsletter: wants })
++      const kind = requestForPurpose(request.purpose) || { source: 'ebook', join: 'ebook' }
++      const door = kind.source === 'opens' ? request.purpose.slice(6) : undefined
++      if (request.status === 'confirmed') return say(res, 200, { ok: true, state: 'already', source: kind.source, kind: 'request', newsletter: wants, door })
+       const stamp = new Date().toISOString()
+       await patchRequest(request.id, { status: 'confirmed', confirmed_at: stamp })
+-      if (wants) await joinNewsletter(request.email, request.newsletter_text || consentFor('ebook'), stamp)
+-      return say(res, 200, { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: wants })
++      if (wants) await joinNewsletter(request.email, request.newsletter_text || consentFor('ebook'), stamp, kind.join)
++      return say(res, 200, { ok: true, state: 'confirmed', source: kind.source, kind: 'request', newsletter: wants, door })
+     }
+     if (person.status === 'confirmed') return say(res, 200, { ok: true, state: 'already', source: person.source })
+     if (person.status === 'unsubscribed') return say(res, 410, { ok: false, message: 'You have unsubscribed from the newsletter. To join again, please sign up again.' })
+diff --git a/lib/newsletterAdmin.js b/lib/newsletterAdmin.js
+index aba62ac..65b78e4 100644
+--- a/lib/newsletterAdmin.js
++++ b/lib/newsletterAdmin.js
+@@ -13,7 +13,8 @@ import { serviceFetch, databaseUrl, serviceKeys } from './serviceKey.js'
+ import { sendEmail, FROM } from './sendEmail.js'
+ import { CONTACT_EMAIL } from '../src/data/contact.js'
+ import { isOpen, readBody } from './newsletter.js'
+-import { BATCH_SIZE, SITE, cleanDraft, isUuid, oneClickUrl, renderNewsletter, unsubscribePageUrl } from '../src/newsletter/newsletterRules.js'
++import { BATCH_SIZE, SITE, cleanDraft, doorOpenedEmail, isUuid, oneClickUrl, renderNewsletter, unsubscribePageUrl } from '../src/newsletter/newsletterRules.js'
++import { JOURNAL, OPENING_DOORS } from '../src/explorers/explorersConfig.js'
+ 
+ const clean = (v) => String(v === null || v === undefined ? '' : v).trim()
+ const say = (res, status, message, extra = {}) => res.status(status).json({ ok: false, message, ...extra })
+@@ -206,6 +207,34 @@ async function retryFailed(res, input) {
+   }
+ }
+ 
++// "Tell me when it opens": after the owner opens one of Explorer's Bay's taped doors, this sends ONE email to each person who asked for that door and confirmed (and has not been told yet), saying only
++// that the door has opened. It carries no newsletter content, and it sends nothing unless the door really is open (checked in the database again here). Each call sends up to DOOR_BATCH and says how many
++// are left, so the page asks again until none are. Someone is marked as told only after their email was accepted, so a failure leaves them in the queue.
++const DOOR_BATCH = 20
++async function doorOpened(res, input) {
++  const door = typeof input.door === 'string' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, input.door) ? input.door : ''
++  if (!door) return say(res, 400, 'That door does not have a list of people to tell.')
++  if (door === 'road-journal' && !JOURNAL.file) return say(res, 409, 'The Road journal file is not in the project yet, so nobody is told. Add the file first (src/explorers/explorersConfig.js).')
++  try {
++    const open = await rows(`doors?room=eq.explorers-bay&door=eq.${door}&open=eq.true&select=door&limit=1`)
++    if (open.length === 0) return say(res, 409, 'That door is not open, so nobody has been told.')
++    const purpose = `opens:${door}`
++    const waiting = await rows(`email_requests?purpose=eq.${encodeURIComponent(purpose)}&status=eq.confirmed&notified_at=is.null&select=id,email&order=created_at.asc&limit=${DOOR_BATCH + 1}`)
++    const now = waiting.slice(0, DOOR_BATCH)
++    let sent = 0
++    let failed = 0
++    for (const person of now) {
++      const mail = doorOpenedEmail({ door, url: `${SITE}/explorers-bay/${door}` })
++      const result = await sendEmail({ to: person.email, ...mail, idempotencyKey: `door-opened-${door}-${person.id}` })
++      if (result.ok) { await write(`email_requests?id=eq.${person.id}`, 'PATCH', { notified_at: new Date().toISOString() }); sent += 1 } else failed += 1
++    }
++    return res.status(200).json({ ok: true, sent, failed, more: waiting.length > DOOR_BATCH && failed === 0 })
++  } catch (e) {
++    note('door opened', e)
++    return say(res, 502, 'The people waiting could not be told just now. The door is open. You can try again from the Open a door page.')
++  }
++}
++
+ export async function handleNewsletterAdmin(req, res, who) {
+   if (!databaseUrl() || serviceKeys().length === 0) return say(res, 503, 'No server database key is set on this deployment, so the newsletter cannot be read. In Vercel, SUPABASE_SERVICE_ROLE_KEY or SUPABASE_SECRET_KEY is needed.')
+   if (req.method === 'GET') return list(res)
+@@ -219,6 +248,7 @@ export async function handleNewsletterAdmin(req, res, who) {
+     case 'send': return sendIssue(res, input)
+     case 'retry': return retryFailed(res, input)
+     case 'remove': return removeSubscriber(res, input)
++    case 'door-opened': return doorOpened(res, input)
+     default: return say(res, 400, 'That did not look right. Please reload the page and try again.')
+   }
+ }
+diff --git a/public/scenes/explorers-bay/geometry.json b/public/scenes/explorers-bay/geometry.json
+index eae4547..cc306bc 100644
+--- a/public/scenes/explorers-bay/geometry.json
++++ b/public/scenes/explorers-bay/geometry.json
+@@ -5,14 +5,20 @@
+   "w": 248,
+   "h": 159
+  },
+- "photography": {
++ "lessons-from-the-road": {
++  "cx": 466,
++  "cy": 528.5,
++  "w": 148,
++  "h": 151
++ },
++ "travel-map": {
+   "cx": 710.0,
+   "cy": 416.5,
+   "w": 300,
+   "h": 177
+  },
+- "coming-soon": {
+-  "cx": 1065.0,
++ "road-journal": {
++  "cx": 1065,
+   "cy": 734.5,
+   "w": 80,
+   "h": 117
+diff --git a/public/scenes/explorers-bay/item-lessons-from-the-road-open.svg b/public/scenes/explorers-bay/item-lessons-from-the-road-open.svg
+new file mode 100644
+index 0000000..99ac8f1
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-lessons-from-the-road-open.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="368 429 196 199" width="196" height="199" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g id="object-lessons-from-the-road"><rect x="452" y="470" width="12" height="134" rx="4" fill="#DDBB92" /><circle cx="458" cy="462" r="8" fill="#fff" stroke-width="5" /><path d="M464 478 H512 L528 494 L512 510 H464 Z" fill="#fff" stroke-width="5" /><path d="M472 494 H498" stroke-width="3.5" /><path d="M452 520 H416 L404 536 L416 552 H452 Z" fill="#fff" stroke-width="5" /><path d="M418 536 H438" stroke-width="3.5" /></g></g></svg>
+\ No newline at end of file
+diff --git a/public/scenes/explorers-bay/item-lessons-from-the-road.svg b/public/scenes/explorers-bay/item-lessons-from-the-road.svg
+new file mode 100644
+index 0000000..64a8adb
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-lessons-from-the-road.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="368 429 196 199" width="196" height="199" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g stroke-opacity="0.75"><g id="object-lessons-from-the-road"><rect x="452" y="470" width="12" height="134" rx="4" fill="#DDBB92" /><circle cx="458" cy="462" r="8" fill="#fff" stroke-width="5" /><path d="M464 478 H512 L528 494 L512 510 H464 Z" fill="#fff" stroke-width="5" /><path d="M472 494 H498" stroke-width="3.5" /><path d="M452 520 H416 L404 536 L416 552 H452 Z" fill="#fff" stroke-width="5" /><path d="M418 536 H438" stroke-width="3.5" /></g></g><g data-tape-group="1" transform="translate(458 520) rotate(-8)"><defs><clipPath id="tape-lessons"><rect x="-50.0" y="-13" width="100" height="26" /></clipPath></defs><rect data-tape="1" x="-50.0" y="-13" width="100" height="26" fill="#FFD60A" stroke="none" /><g clip-path="url(#tape-lessons)"><path d="M-76.0 13 L-63.0 13 L-37.0 -13 L-50.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-50.0 13 L-37.0 13 L-11.0 -13 L-24.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-24.0 13 L-11.0 13 L15.0 -13 L2.0 -13 Z" fill="#14306A" stroke="none" /><path d="M2.0 13 L15.0 13 L41.0 -13 L28.0 -13 Z" fill="#14306A" stroke="none" /><path d="M28.0 13 L41.0 13 L67.0 -13 L54.0 -13 Z" fill="#14306A" stroke="none" /><path d="M54.0 13 L67.0 13 L93.0 -13 L80.0 -13 Z" fill="#14306A" stroke="none" /><path d="M80.0 13 L93.0 13 L119.0 -13 L106.0 -13 Z" fill="#14306A" stroke="none" /></g><rect x="-50.0" y="-13" width="100" height="26" fill="none" stroke-width="4" /></g></g></svg>
+\ No newline at end of file
+diff --git a/public/scenes/explorers-bay/item-road-journal-open.svg b/public/scenes/explorers-bay/item-road-journal-open.svg
+new file mode 100644
+index 0000000..d02d89d
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-road-journal-open.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="1001 652 128 165" width="128" height="165" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g id="object-road-journal" transform="translate(1068,772) rotate(-24)"><path d="M-24 0 V-44 Q-24 -60 -11 -64 V-84 H11 V-64 Q24 -60 24 -44 V0 Q24 20 0 20 Q-24 20 -24 0 Z" fill="#DCE6FF" /><g transform="translate(0,0)"><rect x="-9" y="-44" width="18" height="40" rx="4" fill="#fff" stroke-width="4" /><path d="M-4 -34 H4 M-4 -25 H4 M-4 -16 H1" stroke-width="3" /></g><path d="M-14 -40 V-6" stroke="#fff" stroke-width="4" opacity="0.9" /><rect x="-10" y="-102" width="20" height="18" rx="4" fill="#C9A070" stroke-width="5" /></g></g></svg>
+\ No newline at end of file
+diff --git a/public/scenes/explorers-bay/item-road-journal.svg b/public/scenes/explorers-bay/item-road-journal.svg
+new file mode 100644
+index 0000000..7e5cf99
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-road-journal.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="1001 652 128 165" width="128" height="165" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g stroke-opacity="0.75"><g id="object-road-journal" transform="translate(1068,772) rotate(-24)"><path d="M-24 0 V-44 Q-24 -60 -11 -64 V-84 H11 V-64 Q24 -60 24 -44 V0 Q24 20 0 20 Q-24 20 -24 0 Z" fill="#DCE6FF" /><path d="M-14 -40 V-6" stroke="#fff" stroke-width="4" opacity="0.9" /><rect x="-10" y="-102" width="20" height="18" rx="4" fill="#C9A070" stroke-width="5" /></g></g><g data-tape-group="1" transform="translate(1068 760) rotate(-34)"><defs><clipPath id="tape-journal"><rect x="-50.0" y="-13" width="100" height="26" /></clipPath></defs><rect data-tape="1" x="-50.0" y="-13" width="100" height="26" fill="#FFD60A" stroke="none" /><g clip-path="url(#tape-journal)"><path d="M-76.0 13 L-63.0 13 L-37.0 -13 L-50.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-50.0 13 L-37.0 13 L-11.0 -13 L-24.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-24.0 13 L-11.0 13 L15.0 -13 L2.0 -13 Z" fill="#14306A" stroke="none" /><path d="M2.0 13 L15.0 13 L41.0 -13 L28.0 -13 Z" fill="#14306A" stroke="none" /><path d="M28.0 13 L41.0 13 L67.0 -13 L54.0 -13 Z" fill="#14306A" stroke="none" /><path d="M54.0 13 L67.0 13 L93.0 -13 L80.0 -13 Z" fill="#14306A" stroke="none" /><path d="M80.0 13 L93.0 13 L119.0 -13 L106.0 -13 Z" fill="#14306A" stroke="none" /></g><rect x="-50.0" y="-13" width="100" height="26" fill="none" stroke-width="4" /></g></g></svg>
+\ No newline at end of file
+diff --git a/public/scenes/explorers-bay/item-travel-map-open.svg b/public/scenes/explorers-bay/item-travel-map-open.svg
+new file mode 100644
+index 0000000..ec36924
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-travel-map-open.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="536 304 348 225" width="348" height="225" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g id="object-travel-map"><path d="M562 364 Q700 470 858 330" stroke-width="4" /><g transform="translate(609,393) rotate(-7)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="1" x="-26" y="15" width="52" height="50" rx="2" fill="#FFC78F" stroke-width="3.5" /><path d="M0.0 26.0 L3.6 35.0 L13.3 35.7 L5.9 41.9 L8.2 51.3 L0.0 46.2 L-8.2 51.3 L-5.9 41.9 L-13.3 35.7 L-3.6 35.0 Z" fill="#14306A" stroke-width="2.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(670,409) rotate(5)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="2" x="-26" y="15" width="52" height="50" rx="2" fill="#7FC4F0" stroke-width="3.5" /><circle cx="0" cy="42" r="9" stroke-width="3.5" /><path d="M0 24 v-0 M-18 42 h-4 M18 42 h4 M0 60 v0" stroke-width="3.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(735,403) rotate(-4)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="3" x="-26" y="15" width="52" height="50" rx="2" fill="#8FD694" stroke-width="3.5" /><path d="M-24 62 L-8 36 L4 52 L12 42 L24 62" stroke-width="3.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(802,372) rotate(8)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="4" x="-26" y="15" width="52" height="50" rx="2" fill="#B79CF2" stroke-width="3.5" /><path d="M6 28 A14 14 0 1 0 6 56 A11 11 0 1 1 6 28 Z" fill="#14306A" stroke-width="2" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g></g></g></svg>
+\ No newline at end of file
+diff --git a/public/scenes/explorers-bay/item-travel-map.svg b/public/scenes/explorers-bay/item-travel-map.svg
+new file mode 100644
+index 0000000..d1c68d7
+--- /dev/null
++++ b/public/scenes/explorers-bay/item-travel-map.svg
+@@ -0,0 +1 @@
++<svg xmlns="http://www.w3.org/2000/svg" viewBox="536 304 348 225" width="348" height="225" aria-hidden="true"><g fill="none" stroke="#14306A" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"><g stroke-opacity="0.75"><g id="object-travel-map"><path d="M562 364 Q700 470 858 330" stroke-width="4" /><g transform="translate(609,393) rotate(-7)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="1" x="-26" y="15" width="52" height="50" rx="2" fill="#FFC78F" stroke-width="3.5" /><path d="M0.0 26.0 L3.6 35.0 L13.3 35.7 L5.9 41.9 L8.2 51.3 L0.0 46.2 L-8.2 51.3 L-5.9 41.9 L-13.3 35.7 L-3.6 35.0 Z" fill="#14306A" stroke-width="2.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(670,409) rotate(5)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="2" x="-26" y="15" width="52" height="50" rx="2" fill="#7FC4F0" stroke-width="3.5" /><circle cx="0" cy="42" r="9" stroke-width="3.5" /><path d="M0 24 v-0 M-18 42 h-4 M18 42 h4 M0 60 v0" stroke-width="3.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(735,403) rotate(-4)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="3" x="-26" y="15" width="52" height="50" rx="2" fill="#8FD694" stroke-width="3.5" /><path d="M-24 62 L-8 36 L4 52 L12 42 L24 62" stroke-width="3.5" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g><g transform="translate(802,372) rotate(8)"><rect x="-33" y="8" width="66" height="82" rx="4" fill="#fff" /><rect data-photo="4" x="-26" y="15" width="52" height="50" rx="2" fill="#B79CF2" stroke-width="3.5" /><path d="M6 28 A14 14 0 1 0 6 56 A11 11 0 1 1 6 28 Z" fill="#14306A" stroke-width="2" /><path d="M-12 78 H12" stroke-width="3" stroke-opacity="0.5" /><rect x="-5" y="0" width="10" height="16" rx="3" fill="#fff" stroke-width="4" /></g></g></g><g data-tape-group="1" transform="translate(670 398) rotate(-6)"><defs><clipPath id="tape-map"><rect x="-65.0" y="-13" width="130" height="26" /></clipPath></defs><rect data-tape="1" x="-65.0" y="-13" width="130" height="26" fill="#FFD60A" stroke="none" /><g clip-path="url(#tape-map)"><path d="M-91.0 13 L-78.0 13 L-52.0 -13 L-65.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-65.0 13 L-52.0 13 L-26.0 -13 L-39.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-39.0 13 L-26.0 13 L0.0 -13 L-13.0 -13 Z" fill="#14306A" stroke="none" /><path d="M-13.0 13 L0.0 13 L26.0 -13 L13.0 -13 Z" fill="#14306A" stroke="none" /><path d="M13.0 13 L26.0 13 L52.0 -13 L39.0 -13 Z" fill="#14306A" stroke="none" /><path d="M39.0 13 L52.0 13 L78.0 -13 L65.0 -13 Z" fill="#14306A" stroke="none" /><path d="M65.0 13 L78.0 13 L104.0 -13 L91.0 -13 Z" fill="#14306A" stroke="none" /></g><rect x="-65.0" y="-13" width="130" height="26" fill="none" stroke-width="4" /></g></g></svg>
+\ No newline at end of file
+diff --git a/sql/email-requests.sql b/sql/email-requests.sql
+index 72c8342..53f719b 100644
+--- a/sql/email-requests.sql
++++ b/sql/email-requests.sql
+@@ -23,14 +23,23 @@ create table if not exists public.email_requests (
+   created_at timestamptz not null default now(),
+   confirmation_sent_at timestamptz,
+   confirmed_at timestamptz,
++  notified_at timestamptz, -- for a "tell me when it opens" request: when the one "it has opened" email was sent
+   unique (email, purpose)
+ );
+ 
++-- If you ran this file before "tell me when it opens" existed, this adds the missing column (safe to run again):
++alter table public.email_requests add column if not exists notified_at timestamptz;
++
++-- More kinds of sign-up can now join the newsletter list (only if they ticked the optional box and confirmed): the Road journal, and a taped door's list.
++alter table public.newsletter_subscribers drop constraint if exists newsletter_subscribers_source_check;
++alter table public.newsletter_subscribers add constraint newsletter_subscribers_source_check check (source in ('site', 'ebook', 'road-journal', 'door'));
++
+ alter table public.email_requests enable row level security;
+ revoke all on public.email_requests from anon, authenticated;
+ 
+ -- Only the SERVER's key (service_role) reads and writes this, and a table made in the SQL editor gives that key no permission until it is granted.
+ grant select, insert, update, delete on public.email_requests to service_role;
++grant select on public.doors to service_role;
+ 
+ -- To confirm it worked, run these. The first should show email_requests with row level security on (true), and the second should show 0 (no policies is right: no visitor can touch it):
+ --   select tablename, rowsecurity from pg_tables where tablename = 'email_requests';
+diff --git a/src/admin/OpenDoors.jsx b/src/admin/OpenDoors.jsx
+index ee00be7..0edfdfc 100644
+--- a/src/admin/OpenDoors.jsx
++++ b/src/admin/OpenDoors.jsx
+@@ -7,6 +7,8 @@ import { ROOMS } from '../rooms/roomsData'
+ import { DOORS, doorKey, doorPath } from '../doors/doorsData'
+ import useDoors, { loadDoors } from '../doors/useDoors'
+ import { saveDoor } from '../doors/doorsApi'
++import { tellDoorWaiting } from './newsletterAdminApi'
++import { OPENING_DOORS } from '../explorers/explorersConfig'
+ import { useOwnerCheck } from './useIsOwner'
+ import './admin.css'
+ import './opendoors.css'
+@@ -31,7 +33,17 @@ export default function OpenDoors({ session }) {
+     try {
+       await saveDoor(door.room, door.id, open)
+       await loadDoors({ force: true })
+-      setMessage({ ok: true, text: open ? `${door.name} is now open to visitors.` : `${door.name} is closed again.` })
++      let told = ''
++      if (open && door.room === 'explorers-bay' && OPENING_DOORS[door.id]) { // tell the people who asked to hear when this door opens (one email each, only that it has opened)
++        try {
++          let total = 0
++          for (let go = 0; go < 50; go += 1) { const r = await tellDoorWaiting(door.id); total += r.sent; if (!r.more) break }
++          told = total ? ` ${total} ${total === 1 ? 'person was' : 'people were'} emailed to say it has opened.` : ' Nobody was waiting to be told.'
++        } catch (e) {
++          told = ` The people waiting were not told yet: ${e.message || 'please try again from this page.'}`
++        }
++      }
++      setMessage({ ok: true, text: open ? `${door.name} is now open to visitors.${told}` : `${door.name} is closed again.` })
+     } catch (e) {
+       setMessage({ ok: false, text: `${door.name} was not changed. ${e.message || 'Please try again in a moment.'}` })
+     }
+diff --git a/src/admin/newsletterAdminApi.js b/src/admin/newsletterAdminApi.js
+index 7ff3be6..f438442 100644
+--- a/src/admin/newsletterAdminApi.js
++++ b/src/admin/newsletterAdminApi.js
+@@ -48,3 +48,4 @@ export const sendTest = ({ subject, body }) => ask('POST', { action: 'test', sub
+ export const sendStep = (id) => ask('POST', { action: 'send', id })
+ export const retryFailed = (id) => ask('POST', { action: 'retry', id })
+ export const removeSubscriber = (id) => ask('POST', { action: 'remove', id })
++export const tellDoorWaiting = (door) => ask('POST', { action: 'door-opened', door }) // { sent, failed, more }
+diff --git a/src/data/pageMeta.js b/src/data/pageMeta.js
+index 628418b..e5dcec0 100644
+--- a/src/data/pageMeta.js
++++ b/src/data/pageMeta.js
+@@ -56,7 +56,7 @@ export const PAGES = {
+   '/idea-hatchery': room('idea-hatchery', 'Where ideas get tested. Stop motion and a story we write together: pick a beaker to see what I am working on.'),
+   '/idea-hatchery/lets-write-a-story': { title: 'Stories: let\u2019s write a story', description: 'A story we write together: I write each chapter, and members vote on where it goes next. The first three chapters are free to read.', image: 'idea-hatchery' },
+   '/leadership-lounge': room('leadership-lounge', 'Leading from the middle. A blog, an audio course and an online course for people who lead without authority.'),
+-  '/explorers-bay': room('explorers-bay', 'Stories and pictures from the road: writing in transit and travel photography, from the pier.'),
++  '/explorers-bay': room('explorers-bay', 'Writing, lessons and a map from the road: Writing in Transit, Lessons from the road, the Travel map and the free Road journal, from the pier.'),
+   '/knowledge-nook': room('knowledge-nook', 'Reading, learning and personal growth. A bookcase of what I am reading and learning.'),
+   '/sarah-jrs-den': room('sarah-jrs-den', "Kids' travel adventures, told through a curious little bear and her pet dinosaur, Daryl."),
+   '/knowledge-nook/story-ledger': { title: 'Story Ledger', description: 'A ledger of the stories I watch and read, with a focus on 90s TV shows.', image: 'story-ledger' },
+diff --git a/src/doors/DoorGate.jsx b/src/doors/DoorGate.jsx
+index df4a7be..7a9ca22 100644
+--- a/src/doors/DoorGate.jsx
++++ b/src/doors/DoorGate.jsx
+@@ -7,8 +7,8 @@ import useCurrentOwner from './useCurrentOwner'
+ import './doors.css'
+ 
+ // Wraps the page behind a door. Open: everyone sees the page. Closed: visitors are told the door is not open yet,
+-// and only the owner sees the page, under a banner that says so.
+-export default function DoorGate({ room, door, children }) {
++// and only the owner sees the page, under a banner that says so. A door can bring its own closed page (closed), such as the taped page with a "tell me when it opens" sign-up.
++export default function DoorGate({ room, door, closed = null, children }) {
+   const { ready, isOpen } = useDoors()
+   const { checking, owner } = useCurrentOwner()
+ 
+@@ -25,7 +25,7 @@ export default function DoorGate({ room, door, children }) {
+       </>
+     )
+   }
+-  return <NotOpenYet room={room} />
++  return closed || <NotOpenYet room={room} />
+ }
+ 
+ function NotOpenYet({ room }) {
+diff --git a/src/doors/doorsData.js b/src/doors/doorsData.js
+index ab87935..73eae18 100644
+--- a/src/doors/doorsData.js
++++ b/src/doors/doorsData.js
+@@ -10,7 +10,9 @@
+ export const DOORS = [
+   { room: 'idea-hatchery', id: 'come-study-with-me', name: 'Come Study With Me', blurb: 'Study alongside me.', page: { layout: 'list' }, ghost: true },
+   { room: 'leadership-lounge', id: 'free-ebook', name: 'Free Ebook', blurb: 'Download it free.', page: { layout: 'custom' } },
+-  { room: 'explorers-bay', id: 'coming-soon', name: 'Something New', blurb: 'A message has arrived.', paid: true, page: null },
++  { room: 'explorers-bay', id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', page: { layout: 'list' } },
++  { room: 'explorers-bay', id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', page: null }, // its page (the map drawn in code) is the next stage; until then it cannot be opened
++  { room: 'explorers-bay', id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', page: { layout: 'custom' } },
+   { room: 'knowledge-nook', id: 'book-club', name: 'Book Club', blurb: 'Reading notes and reviews.', page: { layout: 'custom' } },
+   { room: 'knowledge-nook', id: 'come-read-with-me', name: 'Come Read With Me', blurb: 'Read alongside me.', page: { layout: 'custom' } },
+   { room: 'knowledge-nook', id: 'research', name: 'Research', blurb: 'A space to test things out.', page: { layout: 'list' } },
+diff --git a/src/explorers/RequestForm.jsx b/src/explorers/RequestForm.jsx
+new file mode 100644
+index 0000000..592bce7
+--- /dev/null
++++ b/src/explorers/RequestForm.jsx
+@@ -0,0 +1,72 @@
++import { useEffect, useState } from 'react'
++import { Link } from 'react-router-dom'
++import { Field, CheckField, ErrorSummary, FailureMessage } from '../components/FormMessages'
++import { cleanSignup } from '../ebook/ebookRules'
++import { fetchOpen, subscribe } from '../newsletter/newsletterApi'
++import { OPTIONAL_NEWSLETTER_TEXT } from '../newsletter/newsletterRules'
++import '../ebook/ebook.css'
++import '../ebook/ebookv2.css'
++
++// An email box for ONE thing (the Road journal, or to hear when a door opens). The site-wide sign-up rule (see the "Email sign-up rule" document): getting the thing needs only an email address,
++// the newsletter is a separate OPTIONAL box that is never ticked for anyone, and we email a link to confirm first. It works only while sign-ups are open, like the footer's newsletter box.
++// source: 'road-journal' or 'opens' (with door). The small print is shown under the button. doneNote is the line after "check your email".
++export default function RequestForm({ id, source, door, button, smallPrint, doneNote }) {
++  const [email, setEmail] = useState('')
++  const [newsletter, setNewsletter] = useState(false)
++  const [robot, setRobot] = useState('') // a box people cannot see: only a robot fills it in
++  const [errors, setErrors] = useState({})
++  const [saving, setSaving] = useState(false)
++  const [problem, setProblem] = useState('')
++  const [done, setDone] = useState(false)
++  const [open, setOpen] = useState(null)
++
++  useEffect(() => {
++    let alive = true
++    fetchOpen().then((o) => { if (alive) setOpen(o) })
++    return () => { alive = false }
++  }, [])
++
++  async function submit(event) {
++    event.preventDefault()
++    setProblem('')
++    const check = cleanSignup({ email, newsletter })
++    if (!check.ok) { setErrors(check.errors); return }
++    setErrors({})
++    setSaving(true)
++    try {
++      await subscribe({ email: check.email, newsletter: check.newsletter, website: robot, source, door })
++      setDone(true)
++    } catch (e) {
++      if (e && e.field === 'email') setErrors({ email: e.message })
++      else setProblem((e && e.message) || 'That did not go through just now. Please try again in a moment.')
++    } finally {
++      setSaving(false)
++    }
++  }
++
++  if (done) {
++    return (
++      <div className="eb__ok" role="status">
++        <p className="eb__ok-title">Thank you. I have sent you an email.</p>
++        <p>Press the button in it to confirm. {doneNote} If it does not arrive in a few minutes, check your spam folder.</p>
++      </div>
++    )
++  }
++  if (open === false) return <p className="eb__text" role="status">Sign-ups are not open just yet. Please come back soon.</p>
++  const summary = Object.entries(errors).map(([key, message]) => ({ id: `${id}-${key}`, message }))
++  return (
++    <form className="eb__form" onSubmit={submit} noValidate>
++      <ErrorSummary errors={summary} />
++      {problem && <FailureMessage title="That did not go through">{problem}</FailureMessage>}
++      <Field id={`${id}-email`} label="Your email address" error={errors.email}>
++        {(p) => <input {...p} type="email" name="email" autoComplete="email" inputMode="email" value={email} placeholder="name@example.com" onChange={(e) => setEmail(e.target.value)} />}
++      </Field>
++      <div className="eb__trap" aria-hidden="true">
++        <label>Leave this empty<input type="text" name="website" tabIndex={-1} autoComplete="off" value={robot} onChange={(e) => setRobot(e.target.value)} /></label>
++      </div>
++      <CheckField id={`${id}-newsletter`} label={OPTIONAL_NEWSLETTER_TEXT} checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
++      <button type="submit" className="pg-btn sg-btn--primary eb__submit" disabled={saving}>{saving ? 'Sending…' : button}</button>
++      <p className="eb__small">{smallPrint} See our <Link to="/page/privacy">Privacy policy</Link>.</p>
++    </form>
++  )
++}
+diff --git a/src/explorers/RoadJournalPage.jsx b/src/explorers/RoadJournalPage.jsx
+new file mode 100644
+index 0000000..dbd8c8e
+--- /dev/null
++++ b/src/explorers/RoadJournalPage.jsx
+@@ -0,0 +1,40 @@
++import { Link } from 'react-router-dom'
++import useTitle from '../rooms/useTitle'
++import PageBanner from '../components/PageBanner'
++import RequestForm from './RequestForm'
++import TapedDoorPage from './TapedDoorPage'
++import { JOURNAL } from './explorersConfig'
++import '../rooms/roompages.css'
++import '../styles/pages.css'
++import '../ebook/ebook.css'
++import '../ebook/ebookv2.css'
++import './explorers.css'
++
++// The Road journal (Figma E9): what it is, a preview, and an email box that gives the free download. Getting it needs only an email address (no tick); the newsletter is a separate optional box;
++// the download link comes by email once they have pressed the confirm link, and the thank-you page opens from that link, never straight after typing an address.
++// Until the file exists (src/explorers/explorersConfig.js) this shows the taped page instead, even if the door has been opened in Admin.
++export default function RoadJournalPage() {
++  if (!JOURNAL.file) return <TapedDoorPage door="road-journal" />
++  return <OpenJournal />
++}
++
++function OpenJournal() {
++  useTitle(JOURNAL.title)
++  return (
++    <main className="rp eb eb--v2">
++      <p className="rp-back"><Link to="/explorers-bay">← Back to Explorer&apos;s Bay</Link></p>
++      <PageBanner chip="Free" title={JOURNAL.title} subtitle={JOURNAL.summary} art="transit" room="explorers-bay" />
++      <div className="eb__layout">
++        <div className="eb__side">
++          <div className="eb__cover" aria-hidden="true"><span>The Road Journal</span></div>
++          <h2 className="eb__h2">What is inside</h2>
++          <ul className="eb__inside">{JOURNAL.inside.map((line) => <li key={line}>{line}</li>)}</ul>
++        </div>
++        <div className="eb__card">
++          <h2 className="eb__h2">Where shall I send it?</h2>
++          <RequestForm id="xb-journal" source="road-journal" button="Get the free Road journal" smallPrint={JOURNAL.smallPrint} doneNote="You will not get the journal until you do." />
++        </div>
++      </div>
++    </main>
++  )
++}
+diff --git a/src/explorers/TapedDoorPage.jsx b/src/explorers/TapedDoorPage.jsx
+new file mode 100644
+index 0000000..42dccb2
+--- /dev/null
++++ b/src/explorers/TapedDoorPage.jsx
+@@ -0,0 +1,39 @@
++import { Link } from 'react-router-dom'
++import useTitle from '../rooms/useTitle'
++import PageBanner from '../components/PageBanner'
++import RequestForm from './RequestForm'
++import { OPENING_DOORS, OPENS_SMALL_PRINT } from './explorersConfig'
++import '../rooms/roompages.css'
++import '../styles/pages.css'
++import '../ebook/ebook.css'
++import '../ebook/ebookv2.css'
++import './explorers.css'
++
++// The page behind a door that is still taped (Figma: "Taped door" and its sign-up). It says the door is not open yet and offers one message when it opens, and nothing else
++// unless the optional newsletter box is ticked. Shown to visitors while the door is closed; the owner sees the real page under a banner (src/doors/DoorGate.jsx).
++const WORDS = {
++  'lessons-from-the-road': { chip: 'Opening soon', line: 'Short pieces about the places I have been: a lesson from each, what to look out for, and where to find the official travel advice.' },
++  'travel-map': { chip: 'Opening soon', line: 'A map of the countries I have visited, each one linking to what I have written about it. It opens with the first lesson.' },
++  'road-journal': { chip: 'Opening soon', line: 'A free printable journal to take on the road. It is still being made.' },
++}
++
++export default function TapedDoorPage({ door }) {
++  const info = OPENING_DOORS[door]
++  const words = WORDS[door]
++  const name = info ? info.name.replace(/^The /, '') : 'This door'
++  useTitle(`${name}: opening soon`)
++  return (
++    <main className="rp eb eb--v2 xb-taped">
++      <p className="rp-back"><Link to="/explorers-bay">← Back to Explorer&apos;s Bay</Link></p>
++      <PageBanner chip={words.chip} title={name} subtitle={words.line} art="transit" room="explorers-bay" />
++      <div className="eb__layout">
++        <div className="eb__side"><div className="xb-tape" aria-hidden="true"><span>Opening soon</span></div></div>
++        <div className="eb__card">
++          <h2 className="eb__h2">Tell me when it opens</h2>
++          <p className="eb__text">This door is not open yet. Leave your email address and I will send you one message when it opens.</p>
++          <RequestForm id={`xb-${door}`} source="opens" door={door} button="Tell me when it opens" smallPrint={OPENS_SMALL_PRINT} doneNote="Once you have, I will email you when this door opens." />
++        </div>
++      </div>
++    </main>
++  )
++}
+diff --git a/src/explorers/explorers.css b/src/explorers/explorers.css
+new file mode 100644
+index 0000000..01f5ceb
+--- /dev/null
++++ b/src/explorers/explorers.css
+@@ -0,0 +1,19 @@
++/* Explorer's Bay pages: the hazard tape on a closed door's page. */
++.xb-tape {
++  display: grid;
++  place-items: center;
++  min-height: 160px;
++  border: 2px solid var(--sf-navy-700, #14306a);
++  border-radius: 14px;
++  background: repeating-linear-gradient(-45deg, #ffd60a 0 18px, #14306a 18px 36px);
++}
++.xb-tape span {
++  padding: 8px 18px;
++  border: 2px solid var(--sf-navy-700, #14306a);
++  border-radius: 999px;
++  background: #ffd60a;
++  color: #14306a;
++  font-weight: 800;
++  letter-spacing: 0.04em;
++  text-transform: uppercase;
++}
+diff --git a/src/explorers/explorersConfig.js b/src/explorers/explorersConfig.js
+new file mode 100644
+index 0000000..12eada9
+--- /dev/null
++++ b/src/explorers/explorersConfig.js
+@@ -0,0 +1,22 @@
++// Explorer's Bay: the words and the file for the Road journal, and the doors that have a "tell me when it opens" list. Used by the pages (src/explorers) and by the server (lib/newsletter.js),
++// so they always agree. Like the free ebook, none of these needs a tick to get what was asked for; the newsletter is a separate optional box (src/newsletter/newsletterRules.js).
++// WHEN THE ROAD JOURNAL FILE IS READY: save it in the project at public/downloads/ (for example public/downloads/road-journal.pdf), then set "file" below to '/downloads/road-journal.pdf'
++// and push. Until "file" is filled in, the Road journal page stays taped even if the door is opened in Admin, and no email with a link is sent.
++export const JOURNAL = {
++  title: 'The Road Journal',
++  summary: 'A free printable journal for the road: pages for the places you go and the things you notice.',
++  inside: ['Pages for where you went and what you saw', 'Prompts for the moments that are easy to miss', 'A page for what you would tell your future self'],
++  file: '',
++  fileNote: 'PDF, to print at home.',
++  request: 'Send me the free Road journal by email.',
++  smallPrint: 'We will email you a link to confirm your address. Your download link comes once you have confirmed. We use your email for that only, unless you tick the box.',
++}
++
++// The doors with a taped page and a "tell me when it opens" sign-up. The name is for the email and the page.
++export const OPENING_DOORS = {
++  'lessons-from-the-road': { name: 'Lessons from the road' },
++  'travel-map': { name: 'The Travel map' },
++  'road-journal': { name: 'The Road journal' },
++}
++export const OPENS_REQUEST = 'Tell me once, by email, when this door opens.'
++export const OPENS_SMALL_PRINT = 'One message when this door opens, and nothing else unless you tick the box.'
+diff --git a/src/newsletter/NewsletterLinkPage.jsx b/src/newsletter/NewsletterLinkPage.jsx
+index df6bd4b..2061e65 100644
+--- a/src/newsletter/NewsletterLinkPage.jsx
++++ b/src/newsletter/NewsletterLinkPage.jsx
+@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
+ import useTitle from '../pages/useTitle'
+ import { isToken } from './newsletterRules'
+ import { EBOOK } from '../ebook/ebookConfig'
++import { JOURNAL, OPENING_DOORS } from '../explorers/explorersConfig'
+ import { confirmSubscription, unsubscribe } from './newsletterApi'
+ import '../styles/pages.css'
+ import './newsletter.css'
+@@ -35,31 +36,43 @@ function LinkPage({ title, button, working, run, done, explain, noToken }) {
+   )
+ }
+ 
+-// After confirming: someone who asked for the free ebook also gets it here (or is told it is still being finished). It is the same list for everyone.
+-function Confirmed({ already, ebook, request, newsletter }) {
+-  // A free ebook request is its own thing: it says nothing about the newsletter unless they ticked that separate box.
++// After confirming. A free ebook or Road journal request also gets its download here (or is told it is still being finished); a door's list is told it will hear when the door opens. A request
++// says nothing about the newsletter unless they ticked that separate box. The newsletter's own sign-up thanks them as before.
++function Confirmed({ already, ebook, request, newsletter, source, door }) {
+   const thanks = request
+     ? (already ? 'You have already confirmed. Thank you.' : 'Thank you, you are confirmed.')
+     : (already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.')
+-  if (!ebook) return thanks
++  const extra = request && newsletter ? <p>You also asked for the newsletter, so you are on that list too. You can unsubscribe at any time, with the link in every email.</p> : null
++  if (request && source === 'opens') {
++    const name = door && OPENING_DOORS[door] ? OPENING_DOORS[door].name : 'This door'
++    return <><p>{thanks}</p><p>{name} is not open yet. I will send you one email when it opens.</p>{extra}</>
++  }
++  const thing = source === 'road-journal' ? { file: JOURNAL.file, note: JOURNAL.fileNote, name: 'Road journal' } : { file: EBOOK.file, note: EBOOK.fileNote, name: 'ebook' }
++  if (!ebook && !(request && source === 'road-journal')) return thanks
+   return (
+     <>
+       <p>{thanks}</p>
+-      {request && newsletter && <p>You also asked for the newsletter, so you are on that list too. You can unsubscribe at any time, with the link in every email.</p>}
+-      {EBOOK.file ? (
+-        <p><a className="pg-btn nlp__button" href={EBOOK.file} download>Download the free ebook (PDF)</a> <small>{EBOOK.fileNote}</small></p>
++      {extra}
++      {thing.file ? (
++        <p><a className="pg-btn nlp__button" href={thing.file} download>Download the free {thing.name} (PDF)</a> <small>{thing.note}</small></p>
+       ) : (
+-        <p>Your free ebook is still being finished. I will email you the link as soon as it is ready.</p>
++        <p>Your free {thing.name} is still being finished. I will email you the link as soon as it is ready.</p>
+       )}
+     </>
+   )
+ }
+ 
++const FOR = { // the words before the button, chosen by "for" in the link (only the words: the server decides what is confirmed by the private code)
++  ebook: { title: 'Confirm your email', button: 'Yes, send me the free ebook', explain: 'Press the button to confirm your email address. You will then get the free ebook.' },
++  'road-journal': { title: 'Confirm your email', button: 'Yes, send me the Road journal', explain: 'Press the button to confirm your email address. You will then get the free Road journal.' },
++  opens: { title: 'Confirm your email', button: 'Yes, tell me when it opens', explain: 'Press the button to confirm your email address. I will then send you one message when the door opens.' },
++}
++
+ export function NewsletterConfirmPage() {
+   const [params] = useSearchParams()
+-  const forEbook = params.get('for') === 'ebook' // only changes the words before the button: the server decides what is confirmed by the private code in the link
+-  const done = (r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} request={r.kind === 'request'} newsletter={r.newsletter === true} />
+-  if (forEbook) return <LinkPage title="Confirm your email" button="Yes, send me the free ebook" working="Confirming…" run={confirmSubscription} explain="Press the button to confirm your email address. You will then get the free ebook." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
++  const forWhat = Object.prototype.hasOwnProperty.call(FOR, params.get('for')) ? FOR[params.get('for')] : null
++  const done = (r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} request={r.kind === 'request'} newsletter={r.newsletter === true} source={r.source} door={r.door} />
++  if (forWhat) return <LinkPage title={forWhat.title} button={forWhat.button} working="Confirming…" run={confirmSubscription} explain={forWhat.explain} done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
+   return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
+ }
+ 
+diff --git a/src/newsletter/newsletterApi.js b/src/newsletter/newsletterApi.js
+index f54464e..6480afc 100644
+--- a/src/newsletter/newsletterApi.js
++++ b/src/newsletter/newsletterApi.js
+@@ -26,6 +26,6 @@ export function fetchOpen() {
+   return openAnswer
+ }
+ 
+-export const subscribe = ({ email, consent, newsletter, website, source }) => ask('subscribe', { body: { email, consent, newsletter: newsletter === true, website, source: source === 'ebook' ? 'ebook' : 'site' } })
++export const subscribe = ({ email, consent, newsletter, website, source, door }) => ask('subscribe', { body: { email, consent, newsletter: newsletter === true, website, source: ['ebook', 'road-journal', 'opens'].includes(source) ? source : 'site', ...(source === 'opens' && typeof door === 'string' ? { door } : {}) } })
+ export const confirmSubscription = (token) => ask('confirm', { body: { token } })
+ export const unsubscribe = (token) => ask('unsubscribe', { body: { token } })
+diff --git a/src/newsletter/newsletterRules.js b/src/newsletter/newsletterRules.js
+index 618c695..a678eed 100644
+--- a/src/newsletter/newsletterRules.js
++++ b/src/newsletter/newsletterRules.js
+@@ -4,6 +4,7 @@
+ import { emailFrame } from '../email/emailLayout.js'
+ import { COMPANY, companyLine } from '../data/company'
+ import { EBOOK } from '../ebook/ebookConfig.js'
++import { JOURNAL, OPENING_DOORS, OPENS_REQUEST } from '../explorers/explorersConfig.js'
+ 
+ export const SUBJECT_MAX = 150
+ export const BODY_MAX = 20000
+@@ -19,6 +20,25 @@ export const SITE = 'https://starscapesfactory.com'
+ // Where a sign-up came from: the footer box ('site': the newsletter, with a required tick) or the free ebook page ('ebook': a one-purpose request that needs NO tick, plus an optional newsletter box).
+ // The words recorded as their agreement to the NEWSLETTER are the ones on the box they ticked, chosen here on the server and never taken from the browser.
+ export const sourceOf = (input) => (input && input.source === 'ebook' ? 'ebook' : 'site')
++// A one-purpose request (the free ebook, the Road journal, or "tell me when this door opens"): it needs no tick, is kept apart from the newsletter list, and is confirmed by email first.
++// Returns null for anything else (the footer's newsletter). Everything the server records or says comes from here, never from the browser. "purpose" is the saved name of the request;
++// "join" is the source recorded if they also ticked the optional newsletter box.
++export function requestOf(input) {
++  const source = input && typeof input.source === 'string' ? input.source : ''
++  if (source === 'ebook') return { source, purpose: 'ebook', join: 'ebook', words: EBOOK.request, what: 'the free ebook', title: 'your free ebook', subject: 'Please confirm your email to get your free ebook', button: 'Yes, send me the free ebook', gets: ' and get the ebook', file: EBOOK.file, fileNote: EBOOK.fileNote, linkTitle: EBOOK.title.replace(/:.*$/, ''), banner: 'leadership-lounge' }
++  if (source === 'road-journal') return { source, purpose: 'road-journal', join: 'road-journal', words: JOURNAL.request, what: 'the free Road journal', title: 'your free Road journal', subject: 'Please confirm your email to get your free Road journal', button: 'Yes, send me the Road journal', gets: ' and get the Road journal', file: JOURNAL.file, fileNote: JOURNAL.fileNote, linkTitle: JOURNAL.title, banner: 'explorers-bay' }
++  const door = input && typeof input.door === 'string' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, input.door) ? input.door : ''
++  if (source === 'opens' && door) { const name = OPENING_DOORS[door].name; return { source, purpose: `opens:${door}`, join: 'door', words: `${OPENS_REQUEST} (${name})`, what: `a message when ${name} opens`, title: `a message when ${name} opens`, subject: `Please confirm your email to hear when ${name} opens`, button: 'Yes, tell me when it opens', gets: '', file: '', fileNote: '', linkTitle: name, banner: 'explorers-bay' } }
++  return null
++}
++// The request that a saved purpose belongs to (to answer a confirm link), or null.
++export function requestForPurpose(purpose) {
++  const p = String(purpose || '')
++  if (p === 'ebook') return requestOf({ source: 'ebook' })
++  if (p === 'road-journal') return requestOf({ source: 'road-journal' })
++  const m = p.match(/^opens:([a-z-]+)$/)
++  return m ? requestOf({ source: 'opens', door: m[1] }) : null
++}
+ export const consentFor = (source) => (source === 'ebook' ? OPTIONAL_NEWSLETTER_TEXT : CONSENT_TEXT)
+ 
+ export const isToken = (t) => TOKEN_PATTERN.test(String(t === null || t === undefined ? '' : t))
+@@ -35,7 +55,7 @@ export function cleanSubscribe(input) {
+   const email = text(f.email).trim().toLowerCase()
+   if (!email) return bad('email', 'Please enter your email address.')
+   if (email.length > 254 || !EMAIL.test(email)) return bad('email', 'That does not look like an email address. Please check it.')
+-  if (sourceOf(f) === 'ebook') return { ok: true, email, newsletter: f.newsletter === true }
++  if (requestOf(f)) return { ok: true, email, newsletter: f.newsletter === true }
+   if (f.consent !== true) return bad('consent', 'Please tick the box to say you would like the newsletter.')
+   return { ok: true, email }
+ }
+@@ -110,31 +130,45 @@ export function renderNewsletter({ subject, body, unsubscribeUrl, company = COMP
+ 
+ // The email that asks someone to confirm: nothing happens until they press the link (double opt-in). For the newsletter box in the footer it confirms the newsletter. For the free ebook it confirms
+ // the ebook request ONLY, and mentions the newsletter only when they ticked the optional box.
+-export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site', newsletter = false }) {
++export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site', newsletter = false, door = '' }) {
+   const line = companyLine(company)
+-  const ebook = source === 'ebook'
++  const req = requestOf({ source, door })
++  const ebook = Boolean(req) // a one-purpose request (the ebook, the Road journal, or a door's list)
+   const also = ebook && newsletter === true
+-  const what = ebook ? (also ? 'the free ebook, and the Starscapes Factory newsletter,' : 'the free ebook') : 'the Starscapes Factory newsletter'
+-  const subject = ebook ? (also ? 'Please confirm to get your free ebook and the Starscapes Factory newsletter' : 'Please confirm your email to get your free ebook') : 'Please confirm you would like the Starscapes Factory newsletter'
+-  const button = ebook ? (also ? 'Yes, send me the free ebook and the newsletter' : 'Yes, send me the free ebook') : 'Yes, send me the newsletter'
+-  const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${ebook ? ' and get the ebook' : ''}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
+-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${ebook ? ' and get the ebook' : ''}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${button}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
++  const what = ebook ? (also ? `${req.what}, and the Starscapes Factory newsletter,` : req.what) : 'the Starscapes Factory newsletter'
++  const subject = ebook ? (also ? `Please confirm to get ${req.title} and the Starscapes Factory newsletter` : req.subject) : 'Please confirm you would like the Starscapes Factory newsletter'
++  const button = ebook ? (also ? (req.source === 'opens' ? 'Yes, tell me when it opens, and send me the newsletter' : `${req.button} and the newsletter`) : req.button) : 'Yes, send me the newsletter'
++  const gets = ebook ? req.gets : ''
++  const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${gets}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
++  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${gets}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${button}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
+   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+-  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? (also ? 'To get your free ebook and the newsletter' : 'To get your free ebook') : 'To get the Starscapes Factory newsletter' }), text }
++  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? (also ? `To get ${req.title} and the newsletter` : `To get ${req.title}`) : 'To get the Starscapes Factory newsletter' }), text }
+ }
+ 
+ // For someone who has ALREADY confirmed the ebook and asks again (nothing to confirm, so it just gives the link). It says nothing about the newsletter. The page never says whether an address was already known: they find out in their inbox.
+-export function ebookLinkEmail({ file, company = COMPANY, site = SITE }) {
++export function ebookLinkEmail({ file, company = COMPANY, site = SITE, request = requestOf({ source: 'ebook' }) }) {
+   const line = companyLine(company)
+   const link = `${site}${file}`
+-  const subject = `Your free ebook: ${EBOOK.title.replace(/:.*$/, '')}`
+-  const text = `Hello,\n\nHere is the free ebook you asked for:\n${link}\n\n${EBOOK.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
+-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ebook you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ebook (PDF)</a></p>\n<p style="${P}">${esc(EBOOK.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
++  const subject = `Your ${request.source === 'ebook' ? 'free ebook' : 'free Road journal'}: ${request.linkTitle}`
++  const noun = request.source === 'ebook' ? 'ebook' : 'Road journal'
++  const text = `Hello,\n\nHere is the free ${noun} you asked for:\n${link}\n\n${request.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
++  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ${noun} you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ${noun} (PDF)</a></p>\n<p style="${P}">${esc(request.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
++  const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
++  return { subject, html: FRAME(subject, inner, footerHtml, { banner: request.banner === 'explorers-bay' ? 'general' : 'leadership-lounge', title: `Your free ${noun}`, subtitle: request.linkTitle }), text }
++}
++
++// Told when a door has opened: only that it has opened, and a link. Nothing about the newsletter, ever.
++export function doorOpenedEmail({ door, url, company = COMPANY }) {
++  const line = companyLine(company)
++  const name = OPENING_DOORS[door] ? OPENING_DOORS[door].name : 'A door'
++  const subject = `${name} has opened`
++  const text = `Hello,\n\nYou asked us to tell you when ${name} opens in Explorer's Bay. It has opened:\n${url}\n\nThis is the only message you asked for about this, so you will not hear from us about it again.\n\n--\n${line}\n`
++  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">You asked us to tell you when ${esc(name)} opens in Explorer's Bay. It has opened:</p>\n<p style="margin:0 0 16px"><a href="${esc(url)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Take me there</a></p>\n<p style="${P}">This is the only message you asked for about this, so you will not hear from us about it again.</p>`
+   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+-  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'leadership-lounge', title: 'Your free ebook', subtitle: EBOOK.title.replace(/:.*$/, '') }), text }
++  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: subject, subtitle: "Explorer's Bay" }), text }
+ }
+ 
+-export const confirmUrl = (token, site = SITE, purpose = '') => `${site}/newsletter/confirm?t=${token}${purpose === 'ebook' ? '&for=ebook' : ''}` // "for" only changes the words on the confirm page; the server decides by the private code
++export const confirmUrl = (token, site = SITE, purpose = '') => `${site}/newsletter/confirm?t=${token}${['ebook', 'road-journal', 'opens'].includes(purpose) ? `&for=${purpose}` : ''}` // "for" only changes the words on the confirm page; the server decides by the private code
+ export const unsubscribePageUrl = (token, site = SITE) => `${site}/newsletter/unsubscribe?t=${token}`
+ // The address a mail program posts to for one-click unsubscribe (RFC 8058): the server handles it, the person never has to open a page
+ export const oneClickUrl = (token, site = SITE) => `${site}/api/ebook-signup?newsletter=unsubscribe&t=${token}`
+diff --git a/src/rooms/RoomRoutes.jsx b/src/rooms/RoomRoutes.jsx
+index 536e752..5c29053 100644
+--- a/src/rooms/RoomRoutes.jsx
++++ b/src/rooms/RoomRoutes.jsx
+@@ -15,6 +15,9 @@ import BookPage from '../bookclub/BookPage'
+ import LeadershipBlogPage from '../leadership/LeadershipBlogPage'
+ import LeadingFromTheMiddlePage from '../leadership/LeadingFromTheMiddlePage'
+ import WritingInTransitPage from '../entries/WritingInTransitPage'
++import TapedDoorPage from '../explorers/TapedDoorPage'
++import RoadJournalPage from '../explorers/RoadJournalPage'
++import { OPENING_DOORS } from '../explorers/explorersConfig'
+ import LetsWriteStoryPage from '../stories/LetsWriteStoryPage'
+ import './roompages.css'
+ 
+@@ -46,6 +49,7 @@ const CUSTOM_PAGES = {
+   'leadership-lounge/free-ebook': FreeEbookPage,
+   'knowledge-nook/book-club': BookClubPage,
+   'knowledge-nook/come-read-with-me': ComeReadWithMePage,
++  'explorers-bay/road-journal': RoadJournalPage,
+ }
+ 
+ // Pages with their own design that are always open (not behind a door), by "room/page".
+@@ -62,9 +66,11 @@ function AreaRoute({ room }) {
+   const areas = { ...ROOMS[room].areas, ...doorAreas(room) }
+   const page = <RoomAreaPage room={room} areas={areas} extra={room === 'explorers-bay' && area === 'photography' ? <InstagramGallery /> : null} nebula={(room === 'sarah-jrs-den' && area === 'blog') || (room === 'leadership-lounge' && area === 'leading-from-the-middle')} />
+   const door = findDoor(room, area)
++  const taped = room === 'explorers-bay' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, area) ? <TapedDoorPage door={area} /> : null // the taped page with a "tell me when it opens" sign-up
++  if (taped && !(door && door.page)) return taped // a door whose page is not built yet is always taped
+   const Own = !door ? CUSTOM_AREAS[`${room}/${area}`] : null
+   if (Own) return <Own />
+   const Custom = door && door.page && door.page.layout === 'custom' ? CUSTOM_PAGES[`${room}/${door.id}`] : null
+-  if (Custom) return <DoorGate room={room} door={door.id}><Custom /></DoorGate>
+-  return door && door.page ? <DoorGate room={room} door={door.id}>{page}</DoorGate> : page
++  if (Custom) return <DoorGate room={room} door={door.id} closed={taped}><Custom /></DoorGate>
++  return door && door.page ? <DoorGate room={room} door={door.id} closed={taped}>{page}</DoorGate> : page
+ }
+diff --git a/src/rooms/RoomScene.jsx b/src/rooms/RoomScene.jsx
+index 4ae3971..17cfe6f 100644
+--- a/src/rooms/RoomScene.jsx
++++ b/src/rooms/RoomScene.jsx
+@@ -101,6 +101,9 @@ function SceneItem({ item, scene }) {
+       </a>
+     )
+   }
++  if (item.notify && item.to) {
++    return <Link className="rs-item is-locked" style={style} to={item.to} aria-label={`${itemLabel(item)}. Ask to hear when it opens`}>{inside}</Link>
++  }
+   return (
+     <div className="rs-item is-locked" style={style} tabIndex={0} role="group" aria-label={itemLabel(item)}>
+       {inside}
+@@ -120,5 +123,6 @@ function ListItem({ item }) {
+   )
+   if (item.kind === 'page') return <Link to={item.to}>{text}</Link>
+   if (item.kind === 'external') return <a href={item.href} target="_blank" rel="noopener noreferrer">{text}</a>
++  if (item.notify && item.to) return <Link className="is-locked" to={item.to} aria-label={`${item.name}, ${why.toLowerCase()}. Ask to hear when it opens`}>{text}</Link>
+   return <span className="is-locked" aria-label={`${item.name}, locked, ${why.toLowerCase()}`}>{text}</span>
+ }
+diff --git a/src/rooms/roomsData.js b/src/rooms/roomsData.js
+index 86a4ad2..2547788 100644
+--- a/src/rooms/roomsData.js
++++ b/src/rooms/roomsData.js
+@@ -53,17 +53,20 @@ export const ROOMS = {
+   'explorers-bay': {
+     slug: 'explorers-bay',
+     name: "Explorer's Bay",
+-    tagline: 'Stories and pictures from the road.',
++    tagline: 'Writing, lessons and a map from the road.',
+     blurb: 'Pick something up from the pier.',
+     channel: 'explorers-bay',
+     items: [
+       { ...piece('explorers-bay', 'writing-in-transit'), id: 'writing-in-transit', name: 'Writing in Transit', blurb: 'Words written on the move.', kind: 'page', to: '/explorers-bay/writing-in-transit', labelAt: [280, 700] },
+-      { ...piece('explorers-bay', 'photography'), id: 'photography', name: 'Photography', blurb: 'Pictures from the road.', kind: 'page', to: '/explorers-bay/photography', labelAt: [710, 520] },
+-      { ...piece('explorers-bay', 'coming-soon'), id: 'coming-soon', name: 'Something New', blurb: 'A message is drifting in.', kind: 'locked', lock: 'opening soon', labelAt: [915, 722] },
++      // The three taped doors: each links to a taped page with a "tell me when it opens" sign-up (notify: true), and the owner opens each door in Admin. The pictures are in public/scenes/explorers-bay.
++      { ...piece('explorers-bay', 'lessons-from-the-road'), id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/lessons-from-the-road', notify: true, labelAt: [466, 750] },
++      { ...piece('explorers-bay', 'travel-map'), id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/travel-map', notify: true, labelAt: [710, 520] },
++      { ...piece('explorers-bay', 'road-journal'), id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/road-journal', notify: true, labelAt: [915, 722] },
+     ],
+     areas: {
+       'writing-in-transit': { name: 'Writing in Transit', blurb: 'Words written on the move.', layout: 'list', tags: ['writing-in-transit'] },
+-      photography: { name: 'Photography', blurb: 'Pictures from the road.', layout: 'gallery', tags: ['photography'] },
++      // The old Photography door was taken away (its pictures now live inside the Writing in Transit articles). The address is kept so anything shared or bookmarked still works, and the Instagram connection stays in place.
++      photography: { name: 'Photography', blurb: 'Pictures from the road.', layout: 'gallery', tags: ['photography'], oldLink: true },
+     },
+   },
+   'knowledge-nook': {
+diff --git a/src/rooms/roomsGeometry.js b/src/rooms/roomsGeometry.js
+index 9c2c149..dc65a4a 100644
+--- a/src/rooms/roomsGeometry.js
++++ b/src/rooms/roomsGeometry.js
+@@ -17,8 +17,9 @@ export const GEOMETRY = {
+   },
+   'explorers-bay': {
+     'writing-in-transit': { cx: 280, cy: 547.5, w: 248, h: 159 },
+-    'photography': { cx: 710, cy: 416.5, w: 300, h: 177 },
+-    'coming-soon': { cx: 1065, cy: 734.5, w: 80, h: 117 },
++    'lessons-from-the-road': { cx: 466, cy: 528.5, w: 148, h: 151 },
++    'travel-map': { cx: 710, cy: 416.5, w: 300, h: 177 },
++    'road-journal': { cx: 1065, cy: 734.5, w: 80, h: 117 },
+   },
+   'knowledge-nook': {
+     'book-club': { cx: 290, cy: 214, w: 132, h: 190 },
+diff --git a/src/rooms/sceneRules.js b/src/rooms/sceneRules.js
+index 7bacd84..5a35c0c 100644
+--- a/src/rooms/sceneRules.js
++++ b/src/rooms/sceneRules.js
+@@ -27,7 +27,8 @@ export function resolveItem(item) {
+   const kind = item && item.kind
+   if (kind === 'page' && typeof item.to === 'string' && item.to.startsWith('/') && !item.to.startsWith('//')) return { ...item, kind: 'page' }
+   if (kind === 'external' && typeof item.href === 'string' && /^https:\/\/[^\s/]+/i.test(item.href.trim())) return { ...item, href: item.href.trim(), kind: 'external' }
+-  return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon' }
++  const taped = item && item.notify === true && typeof item.to === 'string' && item.to.startsWith('/') && !item.to.startsWith('//') // a taped door that links to its page, where a visitor can ask to hear when it opens
++  return { ...item, kind: 'locked', lock: item && item.lock ? item.lock : 'opening soon', ...(taped ? {} : { to: undefined }) }
+ }
+ 
+ // What a screen reader says for an item. It follows the order of the writing on the item (name, description, then the note about access), because a spoken label that does not
+diff --git a/test/admin-posts-rules.test.js b/test/admin-posts-rules.test.js
+index 570fd93..3670f2d 100644
+--- a/test/admin-posts-rules.test.js
++++ b/test/admin-posts-rules.test.js
+@@ -25,8 +25,8 @@ describe('which pages of a room list posts, and how a post gets on them', () =>
+   it('the Leadership Lounge: Leading from the Middle by tag, and the Blog, which shows every post in the room', () => {
+     expect(pagesOfRoom('leadership-lounge').map((p) => [p.name, p.tags])).toEqual([['Leading from the Middle', ['leading-from-the-middle']], ['Leadership Blog', null]])
+   })
+-  it('Explorer\u2019s Bay: Writing in Transit and Photography, by tag', () => {
+-    expect(pagesOfRoom('explorers-bay').map((p) => [p.name, p.tags])).toEqual([['Writing in Transit', ['writing-in-transit']], ['Photography', ['photography']]])
++  it('Explorer\u2019s Bay: Writing in Transit and Lessons from the road, by tag (the old Photography address is kept for links but no longer lists posts)', () => {
++    expect(pagesOfRoom('explorers-bay').map((p) => [p.name, p.tags])).toEqual([['Writing in Transit', ['writing-in-transit']], ['Lessons from the road', ['lessons-from-the-road']]])
+   })
+   it('the Drafting Desk: Archive Entries, the Author\u2019s Notebook, Writing Prompts and Poems, each by its accepted tags', () => {
+     expect(pagesOfRoom('drafting-desk')).toEqual([
+@@ -56,7 +56,7 @@ describe('where a post appears', () => {
+     expect(pagesFor(p).map((x) => x.name)).toEqual(['Stop Motion']); expect(whereIs(p)).toBe('Appears on: Stop Motion, and the blog page (which lists every post from every room).')
+   })
+   it('does not mind capitals, spaces or apostrophes in a tag, and a post can be on two pages', () => {
+-    expect(pagesFor(post('a', 'explorers-bay', ['WRITING IN TRANSIT', 'Photography'])).map((x) => x.name)).toEqual(['Writing in Transit', 'Photography']); expect(pagesFor(post('b', 'drafting-desk', ['Archive Entries'])).map((x) => x.name)).toEqual(['Archive Entries']); expect(pagesFor(post('c', 'drafting-desk', ['notebook'])).map((x) => x.name)).toEqual(['Author\u2019s Notebook'])
++    expect(pagesFor(post('a', 'explorers-bay', ['WRITING IN TRANSIT', 'Lessons from the road'])).map((x) => x.name)).toEqual(['Writing in Transit', 'Lessons from the road']); expect(pagesFor(post('b', 'drafting-desk', ['Archive Entries'])).map((x) => x.name)).toEqual(['Archive Entries']); expect(pagesFor(post('c', 'drafting-desk', ['notebook'])).map((x) => x.name)).toEqual(['Author\u2019s Notebook'])
+   })
+   it('the Story Ledger\u2019s audits (tagged story-ledger) and the Book Club\u2019s reviews (tagged book-club) appear on their pages, not as missing', () => {
+     expect(whereIs(post('a', 'knowledge-nook', ['story-ledger']))).toBe('Appears on: Story Ledger (audits), and the blog page (which lists every post from every room).'); expect(whereIs(post('b', 'knowledge-nook', ['Book Club', 'fiction']))).toContain('Appears on: Book Club (reviews and conversations)')
+diff --git a/test/apply-doors.test.js b/test/apply-doors.test.js
+index d21ca5d..ec09b44 100644
+--- a/test/apply-doors.test.js
++++ b/test/apply-doors.test.js
+@@ -29,15 +29,21 @@ describe('opening a door in a scene', () => {
+     expect(out.items.map((i) => [i.id, i.kind])).toEqual([['blog', 'page'], ['daryls-adventures', 'locked'], ['books', 'page'], ['youtube-series', 'locked']])
+   })
+   it('never opens a door whose page has not been built, even if the database says it is open', () => {
+-    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/coming-soon'))
+-    expect(item(out, 'coming-soon').kind).toBe('locked')
+-    expect(item(out, 'coming-soon').lock).toBeTruthy()
+-    expect(item(out, 'coming-soon').art).toBe('/scenes/explorers-bay/item-coming-soon.svg')
++    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/travel-map'))
++    expect(item(out, 'travel-map').kind).toBe('locked')
++    expect(item(out, 'travel-map').lock).toBeTruthy()
++    expect(item(out, 'travel-map').art).toBe('/scenes/explorers-bay/item-travel-map.svg')
++  })
++  it('opens the Lessons from the road door to its page, with its untaped picture, once the owner opens it', () => {
++    const out = applyDoors(buildRoomScene('explorers-bay'), 'explorers-bay', only('explorers-bay/lessons-from-the-road'))
++    expect(item(out, 'lessons-from-the-road')).toMatchObject({ kind: 'page', to: '/explorers-bay/lessons-from-the-road', art: '/scenes/explorers-bay/item-lessons-from-the-road-open.svg' })
++    expect(item(out, 'road-journal').kind).toBe('locked')
+   })
+   it('does not touch a door that is already a page, or an outside link', () => {
+-    const scene = buildRoomScene('explorers-bay') // its two pages are already open, and its bottle has no page yet, so nothing changes
++    const scene = buildRoomScene('explorers-bay') // Writing in Transit is already a page, and the Travel map has no page yet
+     const out = applyDoors(scene, 'explorers-bay', () => true)
+-    expect(out.items).toEqual(scene.items)
++    expect(item(out, 'writing-in-transit')).toEqual(item(scene, 'writing-in-transit'))
++    expect(item(out, 'travel-map')).toEqual(item(scene, 'travel-map'))
+   })
+   it('ignores a door from another room that happens to share a name', () => {
+     const out = applyDoors(buildRoomScene('sarah-jrs-den'), 'sarah-jrs-den', only('leadership-lounge/blog'))
+diff --git a/test/doors-data.test.js b/test/doors-data.test.js
+index 66a213c..ea0ef31 100644
+--- a/test/doors-data.test.js
++++ b/test/doors-data.test.js
+@@ -9,10 +9,10 @@ import { withoutLogo } from './allowedLogo'
+ const read = (rel) => fs.readFileSync(path.resolve(rel), 'utf8')
+ 
+ describe('the list of doors', () => {
+-  it('has the twelve doors that start closed, in the five illustrated rooms', () => {
+-    expect(DOORS).toHaveLength(12)
++  it('has the fourteen doors that start closed, in the five illustrated rooms', () => {
++    expect(DOORS).toHaveLength(14)
+     expect([...new Set(DOORS.map((d) => d.room))]).toEqual(['idea-hatchery', 'leadership-lounge', 'explorers-bay', 'knowledge-nook', 'sarah-jrs-den'])
+-    expect(new Set(DOORS.map((d) => doorKey(d.room, d.id))).size).toBe(12)
++    expect(new Set(DOORS.map((d) => doorKey(d.room, d.id))).size).toBe(14)
+   })
+   it('names only doors that really are taped off in the rooms\u2019 own data, with the same names', () => {
+     for (const d of DOORS) {
+@@ -30,9 +30,9 @@ describe('the list of doors', () => {
+   })
+   it('says which doors have a page now (a plain list or gallery of tagged posts) and which are waiting for their own design', () => {
+     const withPage = DOORS.filter((d) => d.page).map((d) => doorKey(d.room, d.id))
+-    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'leadership-lounge/free-ebook', 'knowledge-nook/book-club', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'knowledge-nook/story-ledger', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books', 'sarah-jrs-den/youtube-series'])
++    expect(withPage).toEqual(['idea-hatchery/come-study-with-me', 'leadership-lounge/free-ebook', 'explorers-bay/lessons-from-the-road', 'explorers-bay/road-journal', 'knowledge-nook/book-club', 'knowledge-nook/come-read-with-me', 'knowledge-nook/research', 'knowledge-nook/book-to-screen', 'knowledge-nook/story-ledger', 'sarah-jrs-den/blog', 'sarah-jrs-den/daryls-adventures', 'sarah-jrs-den/books', 'sarah-jrs-den/youtube-series'])
+     const without = DOORS.filter((d) => !d.page).map((d) => doorKey(d.room, d.id))
+-    expect(without).toEqual(['explorers-bay/coming-soon']) // only the paid bottle is still waiting for its page
++    expect(without).toEqual(['explorers-bay/travel-map']) // only the Travel map is still waiting for its page (the map drawn in code is the next stage)
+     for (const d of DOORS.filter((x) => x.page)) expect(['list', 'gallery', 'custom']).toContain(d.page.layout) // custom = its own designed page, not a list of posts
+   })
+   it('uses the layouts the designs ask for: the Den\u2019s Books as a gallery, its Blog as a list', () => {
+@@ -51,7 +51,7 @@ describe('the list of doors', () => {
+   it('puts a door\u2019s page at /room/door, and gives a door with no page no address', () => {
+     expect(doorPath(findDoor('sarah-jrs-den', 'blog'))).toBe('/sarah-jrs-den/blog')
+     expect(doorPath(findDoor('knowledge-nook', 'book-club'))).toBe('/knowledge-nook/book-club')
+-    expect(doorPath(findDoor('explorers-bay', 'coming-soon'))).toBeNull()
++    expect(doorPath(findDoor('explorers-bay', 'travel-map'))).toBeNull()
+     expect(doorPath(null)).toBeNull()
+     expect(findDoor('sarah-jrs-den', 'nonsense')).toBeNull()
+     expect(findDoor('nonsense', 'blog')).toBeNull()
+@@ -73,7 +73,7 @@ describe('the list of doors', () => {
+ 
+ // The bottle's open picture is a new drawing (a solid bottle with its own padlock), not the dotted one with the tape taken off, so it is not
+ // held to "shorter than the taped one". Its own test is in research-and-bottle.test.js.
+-const REDRAWN = ['explorers-bay/coming-soon']
++const REDRAWN = []
+ describe('the untaped pictures', () => {
+   it.each(DOORS.map((d) => [doorKey(d.room, d.id), d]))('%s has an untaped picture, the same size as the taped one but with no tape', (_, d) => {
+     const taped = read(`public/scenes/${d.room}/item-${d.id}.svg`)
+diff --git a/test/explorers-bay-requests.test.js b/test/explorers-bay-requests.test.js
+new file mode 100644
+index 0000000..10d01c3
+--- /dev/null
++++ b/test/explorers-bay-requests.test.js
+@@ -0,0 +1,140 @@
++// @vitest-environment node
++// Explorer's Bay sign-ups (22 October 2026): the Road journal and "tell me when it opens" follow the same rule as the free ebook (no tick, an optional newsletter box, confirm first, kept apart from the
++// newsletter list), and the "it has opened" email goes once to each confirmed person when the owner opens the door, and carries no newsletter content. Against a pretend database and Resend.
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
++import { readFileSync } from 'node:fs'
++import { join } from 'node:path'
++import publicHandler from '../api/ebook-signup.js'
++import adminHandler from '../api/membership-checkout.js'
++import { OPTIONAL_NEWSLETTER_TEXT, SITE, confirmationEmail, doorOpenedEmail, ebookLinkEmail, requestForPurpose, requestOf } from '../src/newsletter/newsletterRules.js'
++import { JOURNAL, OPENING_DOORS } from '../src/explorers/explorersConfig.js'
++
++const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
++const originalFile = JOURNAL.file
++const T = (n) => String(n).repeat(2).padStart(2, '0').repeat(24).slice(0, 48)
++
++function world({ requests = [], subs = [], doors = [{ room: 'explorers-bay', door: 'lessons-from-the-road', open: true }], resendFails = false } = {}) {
++  const reqs = requests.map((r) => ({ ...r })); const people = subs.map((r) => ({ ...r })); const sent = []
++  vi.stubGlobal('fetch', vi.fn(async (url, init = {}) => {
++    const u = String(url); const method = init.method || 'GET'
++    if (u.startsWith('https://db.test/auth/v1/user')) return String((init.headers || {}).Authorization) === 'Bearer owner-token' ? json({ id: 'o', email: 'gill@example.com', email_confirmed_at: '2026-01-01T00:00:00Z' }) : json({}, 401)
++    if (u.startsWith('https://api.resend.com/emails')) { if (resendFails) return json({ message: 'no re_secret_key_zzzz' }, 500); const b = JSON.parse(init.body); sent.push(b); return json({ id: `em_${sent.length}` }) }
++    const q = u.includes('?') ? new URL(u).searchParams : new URLSearchParams()
++    const g = (k) => (q.get(k) || '').replace(/^eq\./, '')
++    if (u.startsWith('https://db.test/rest/v1/doors')) return json(doors.filter((d) => d.room === g('room') && d.door === g('door') && String(d.open) === g('open')))
++    const rows = u.startsWith('https://db.test/rest/v1/email_requests') ? reqs : u.startsWith('https://db.test/rest/v1/newsletter_subscribers') ? people : null
++    if (rows) {
++      if (method === 'GET') {
++        let found = rows.filter((r) => (!g('email') || r.email === g('email')) && (!g('purpose') || r.purpose === g('purpose')) && (!g('token') || r.token === g('token')) && (!g('status') || r.status === g('status')) && (q.get('notified_at') !== 'is.null' || !r.notified_at))
++        const lim = Number(q.get('limit')); if (lim) found = found.slice(0, lim)
++        return json(found.map((r) => ({ ...r })))
++      }
++      if (method === 'POST') { const r = JSON.parse(init.body); if (rows.some((x) => x.email === r.email && x.purpose === r.purpose)) return json({ code: '23505' }, 409); rows.push({ id: `id-${rows.length + 1}`, confirmed_at: null, unsubscribed_at: null, notified_at: null, ...r }); return json(null, 201) }
++      if (method === 'PATCH') { const id = g('id'); Object.assign(rows.find((x) => x.id === id), JSON.parse(init.body)); return json(null, 204) }
++    }
++    throw new Error(`unexpected request: ${method} ${u}`)
++  }))
++  return { reqs, people, sent }
++}
++const run = async (handler, r) => {
++  const out = { headers: {}, status: null, body: null }
++  const res = { setHeader: (k, v) => { out.headers[k] = v }, status(n) { out.status = n; return res }, json(b) { out.body = b; return res } }
++  await handler({ method: 'POST', query: {}, headers: {}, ...r }, res)
++  return out
++}
++const sub = (body) => run(publicHandler, { query: { newsletter: 'subscribe' }, body })
++const confirm = (token) => run(publicHandler, { query: { newsletter: 'confirm' }, body: { token } })
++const tell = (door) => run(adminHandler, { query: { admin: 'newsletter' }, headers: { authorization: 'Bearer owner-token' }, body: { action: 'door-opened', door } })
++const waiting = (n, over = {}) => ({ id: `w-${n}`, email: `p${n}@example.com`, purpose: 'opens:lessons-from-the-road', status: 'confirmed', token: T(n + 10), consent_text: 'x', wants_newsletter: false, newsletter_text: null, confirmation_sent_at: '2026-10-01T00:00:00Z', created_at: `2026-10-0${n}T00:00:00Z`, notified_at: null, ...over })
++
++beforeEach(() => { Object.assign(process.env, { SUPABASE_URL: 'https://db.test', SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'srv-key-secret-value-0000', RESEND_API_KEY: 're_secret_key_zzzz', OWNER_EMAIL: 'gill@example.com', NEWSLETTER_OPEN: 'yes' }); delete process.env.VITE_SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY; JOURNAL.file = '' })
++afterEach(() => { JOURNAL.file = originalFile; vi.unstubAllGlobals(); vi.restoreAllMocks() })
++
++describe('what a request is', () => {
++  it('knows three kinds, from a short list: the ebook, the Road journal, and a taped door’s list; anything else is the footer’s newsletter', () => {
++    expect(requestOf({ source: 'road-journal' })).toMatchObject({ purpose: 'road-journal', join: 'road-journal', words: JOURNAL.request })
++    expect(requestOf({ source: 'opens', door: 'travel-map' })).toMatchObject({ purpose: 'opens:travel-map', join: 'door' })
++    for (const bad of [{ source: 'opens' }, { source: 'opens', door: 'nonsense' }, { source: 'opens', door: 'constructor' }, { source: 'opens', door: ['travel-map'] }, { source: 'Road-Journal' }, { source: 'site' }, {}, null]) expect(requestOf(bad), JSON.stringify(bad)).toBeNull()
++    expect(requestForPurpose('opens:lessons-from-the-road').source).toBe('opens'); expect(requestForPurpose('opens:nonsense')).toBeNull(); expect(requestForPurpose('ebook').source).toBe('ebook'); expect(requestForPurpose('x')).toBeNull()
++  })
++  it('puts no mention of the newsletter in the words recorded for what they asked for', () => {
++    for (const k of [requestOf({ source: 'road-journal' }), ...Object.keys(OPENING_DOORS).map((door) => requestOf({ source: 'opens', door }))]) expect(k.words, k.purpose).not.toMatch(/newsletter/i)
++  })
++})
++
++describe('the Road journal sign-up', () => {
++  it('needs only an email: a waiting request with the server’s words, nothing in the newsletter list, and an email about the journal only', async () => {
++    const w = world(); const out = await sub({ email: 'Ann@Example.com', source: 'road-journal' })
++    expect(out.body).toEqual({ ok: true }); expect(w.people).toHaveLength(0); expect(w.reqs[0]).toMatchObject({ email: 'ann@example.com', purpose: 'road-journal', status: 'pending', consent_text: JOURNAL.request, wants_newsletter: false })
++    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toBe('Please confirm your email to get your free Road journal'); expect(w.sent[0].text.replace(/https?:\/\/\S+/g, '')).not.toMatch(/newsletter/i); expect(w.sent[0].text).toContain('&for=road-journal')
++  })
++  it('joins the newsletter list only after the link is pressed, and only if the optional box was ticked, with the Road journal as the source', async () => {
++    const w = world(); await sub({ email: 'ann@example.com', source: 'road-journal', newsletter: true }); expect(w.people).toHaveLength(0); expect(w.reqs[0].newsletter_text).toBe(OPTIONAL_NEWSLETTER_TEXT)
++    const out = await confirm(w.reqs[0].token); expect(out.body).toMatchObject({ ok: true, state: 'confirmed', source: 'road-journal', kind: 'request', newsletter: true })
++    expect(w.people).toHaveLength(1); expect(w.people[0]).toMatchObject({ status: 'confirmed', source: 'road-journal', consent_text: OPTIONAL_NEWSLETTER_TEXT })
++  })
++  it('sends the link again to someone who confirmed, once the file exists, and says nothing about a list', async () => {
++    JOURNAL.file = '/downloads/road-journal.pdf'; const w = world({ requests: [{ ...waiting(1), purpose: 'road-journal' }] }); await sub({ email: 'p1@example.com', source: 'road-journal' })
++    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toBe('Your free Road journal: The Road Journal'); expect(w.sent[0].text).toContain(`${SITE}/downloads/road-journal.pdf`); expect(w.sent[0].text).not.toMatch(/already on/i)
++  })
++})
++
++describe('"tell me when it opens"', () => {
++  it('keeps one waiting request for that door, asks to confirm, and sends nothing else', async () => {
++    const w = world(); await sub({ email: 'ann@example.com', source: 'opens', door: 'lessons-from-the-road' })
++    expect(w.reqs[0]).toMatchObject({ purpose: 'opens:lessons-from-the-road', status: 'pending', wants_newsletter: false }); expect(w.people).toHaveLength(0)
++    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toBe('Please confirm your email to hear when Lessons from the road opens'); expect(w.sent[0].html).toContain('Yes, tell me when it opens'); expect(w.sent[0].text).toContain('&for=opens')
++  })
++  it('an unknown door is not accepted as a request: it falls back to the newsletter box, which needs its tick', async () => {
++    const w = world(); const out = await sub({ email: 'ann@example.com', source: 'opens', door: 'nonsense' }); expect(out.status).toBe(400); expect(out.body.field).toBe('consent'); expect(w.reqs).toHaveLength(0); expect(w.sent).toHaveLength(0)
++  })
++  it('the same address can wait for two doors, one request each', async () => {
++    const w = world(); await sub({ email: 'ann@example.com', source: 'opens', door: 'lessons-from-the-road' }); await sub({ email: 'ann@example.com', source: 'opens', door: 'travel-map' })
++    expect(w.reqs.map((r) => r.purpose).sort()).toEqual(['opens:lessons-from-the-road', 'opens:travel-map'])
++  })
++  it('confirming says which door, and never offers a file; asking again after confirming sends nothing', async () => {
++    const w = world(); await sub({ email: 'ann@example.com', source: 'opens', door: 'travel-map' })
++    expect((await confirm(w.reqs[0].token)).body).toEqual({ ok: true, state: 'confirmed', source: 'opens', kind: 'request', newsletter: false, door: 'travel-map' })
++    w.sent.length = 0; await sub({ email: 'ann@example.com', source: 'opens', door: 'travel-map' }); expect(w.sent).toHaveLength(0)
++  })
++  it('the email that says a door has opened has a link and nothing about the newsletter', () => {
++    const m = doorOpenedEmail({ door: 'lessons-from-the-road', url: `${SITE}/explorers-bay/lessons-from-the-road` })
++    expect(m.subject).toBe('Lessons from the road has opened'); expect(m.text).toContain(`${SITE}/explorers-bay/lessons-from-the-road`); expect(m.html).toContain(`${SITE}/explorers-bay/lessons-from-the-road`)
++    expect(m.text.replace(/https?:\/\/\S+/g, '')).not.toMatch(/newsletter|subscribe|unsubscribe/i); expect(m.html.replace(/<[^>]+>/g, ' ').replace(/https?:\/\/\S+/g, '')).not.toMatch(/newsletter|subscribe/i)
++  })
++  it('the confirmation email for a door and for the Road journal each differ only where they should', () => {
++    const a = confirmationEmail({ confirmUrl: 'https://x.test/c', source: 'opens', door: 'travel-map', newsletter: true }); expect(a.subject).toMatch(/^Please confirm to get a message when The Travel map opens and the Starscapes Factory newsletter$/); expect(a.html).toContain('Yes, tell me when it opens, and send me the newsletter')
++    expect(ebookLinkEmail({ file: '/d.pdf', request: requestOf({ source: 'road-journal' }) }).subject).toMatch(/Road journal/)
++  })
++})
++
++describe('telling the people waiting, when the owner opens a door', () => {
++  it('emails each confirmed, not-yet-told person once, marks them told, and sends nothing to anyone else', async () => {
++    const w = world({ requests: [waiting(1), waiting(2), waiting(3, { status: 'pending' }), waiting(4, { purpose: 'opens:travel-map' }), waiting(5, { notified_at: '2026-10-10T00:00:00Z' })] })
++    const out = await tell('lessons-from-the-road'); expect(out.status).toBe(200); expect(out.body).toEqual({ ok: true, sent: 2, failed: 0, more: false })
++    expect(w.sent.map((m) => m.to[0]).sort()).toEqual(['p1@example.com', 'p2@example.com']); expect(w.reqs.filter((r) => r.notified_at).map((r) => r.id).sort()).toEqual(['w-1', 'w-2', 'w-5'])
++    w.sent.length = 0; expect((await tell('lessons-from-the-road')).body.sent).toBe(0); expect(w.sent).toHaveLength(0) // twice is safe
++  })
++  it('sends nothing, and says so, unless the door really is open', async () => {
++    const w = world({ requests: [waiting(1)], doors: [{ room: 'explorers-bay', door: 'lessons-from-the-road', open: false }] }); const out = await tell('lessons-from-the-road')
++    expect(out.status).toBe(409); expect(w.sent).toHaveLength(0); expect(w.reqs[0].notified_at).toBeNull()
++  })
++  it('does not tell the Road journal’s list until the file exists', async () => {
++    const w = world({ requests: [waiting(1, { purpose: 'opens:road-journal' })], doors: [{ room: 'explorers-bay', door: 'road-journal', open: true }] }); const out = await tell('road-journal'); expect(out.status).toBe(409); expect(w.sent).toHaveLength(0)
++    JOURNAL.file = '/downloads/road-journal.pdf'; expect((await tell('road-journal')).body.sent).toBe(1)
++  })
++  it('keeps someone in the queue when their email fails, and never passes on the mailing tool’s words', async () => {
++    const w = world({ requests: [waiting(1)], resendFails: true }); const out = await tell('lessons-from-the-road'); expect(out.body).toMatchObject({ sent: 0, failed: 1 }); expect(w.reqs[0].notified_at).toBeNull(); expect(JSON.stringify(out.body)).not.toMatch(/re_secret/)
++  })
++  it('refuses a door with no list, and everyone but the owner', async () => {
++    world({ requests: [waiting(1)] }); expect((await tell('nonsense')).status).toBe(400)
++    const stranger = await run(adminHandler, { query: { admin: 'newsletter' }, headers: { authorization: 'Bearer nope' }, body: { action: 'door-opened', door: 'lessons-from-the-road' } }); expect(stranger.status).toBeGreaterThanOrEqual(401); expect(stranger.status).toBeLessThan(404)
++  })
++})
++
++describe('the database file', () => {
++  const sql = readFileSync(join(process.cwd(), 'sql/email-requests.sql'), 'utf8')
++  it('has the column that remembers who was told, lets the other sign-up kinds join the newsletter list only through the same check, and keeps visitors out', () => {
++    expect(sql).toMatch(/notified_at timestamptz/); expect(sql).toMatch(/source in \('site', 'ebook', 'road-journal', 'door'\)/); expect(sql).not.toMatch(/create policy/i)
++  })
++})
+diff --git a/test/legacy-styles.test.js b/test/legacy-styles.test.js
+index 7f04429..b3d32ef 100644
+--- a/test/legacy-styles.test.js
++++ b/test/legacy-styles.test.js
+@@ -27,6 +27,7 @@ const BARE_INPUT_ONLY = {
+   'src/admin/AdminSuggestions.jsx': 'the on/off switch',
+   'src/components/FormMessages.jsx': 'the tick box, drawn by .sf-check',
+   'src/ebook/FreeEbookPage.jsx': 'the hidden box for robots',
++  'src/explorers/RequestForm.jsx': 'the hidden box for robots',
+   'src/pages/EditPost.jsx': 'the pin switch, drawn by pinswitch.css',
+   'src/suggest/SuggestPanel.jsx': 'the choice of kind, inside its chip',
+ }
+diff --git a/test/open-doors-admin.test.jsx b/test/open-doors-admin.test.jsx
+index e879ce4..c59f0ce 100644
+--- a/test/open-doors-admin.test.jsx
++++ b/test/open-doors-admin.test.jsx
+@@ -46,8 +46,8 @@ describe('the Open a door tool', () => {
+   })
+   it('keeps a door with no page switched off, and says why', async () => {
+     await show()
+-    const row = screen.getByText('Something New').closest('li') // the paid bottle is the one door still without a page
+-    expect(within(row).getByRole('button', { name: 'Open this door: Something New' })).toBeDisabled()
++    const row = screen.getByText('Travel map').closest('li') // the Travel map is the one door still without a page
++    expect(within(row).getByRole('button', { name: 'Open this door: Travel map' })).toBeDisabled()
+     expect(within(row).getByText('Its page has not been built yet, so it cannot be opened.')).toBeTruthy()
+     expect(within(row).queryByRole('link')).toBeNull()
+   })
+diff --git a/test/research-and-bottle.test.js b/test/research-and-bottle.test.js
+index f84d231..0d1445a 100644
+--- a/test/research-and-bottle.test.js
++++ b/test/research-and-bottle.test.js
+@@ -45,52 +45,26 @@ describe('Research', () => {
+   })
+ })
+ 
+-describe('the message in a bottle', () => {
+-  const door = findDoor('explorers-bay', 'coming-soon')
+-  const open = read('public/scenes/explorers-bay/item-coming-soon-open.svg')
+-  const taped = read('public/scenes/explorers-bay/item-coming-soon.svg')
++describe('the message in a bottle (the Road journal door)', () => {
++  const door = findDoor('explorers-bay', 'road-journal')
++  const open = read('public/scenes/explorers-bay/item-road-journal-open.svg')
++  const taped = read('public/scenes/explorers-bay/item-road-journal.svg')
+   const box = (svg) => svg.match(/viewBox="([^"]+)"/)[1].split(' ').map(Number)
+-  it('is marked as for paying visitors, and is no longer a dotted outline', () => {
+-    expect(door.paid).toBe(true)
++  it('is the Road journal door: free (no padlock, no pass), a solid bottle, and it has its own page', () => {
++    expect(door.paid).toBeUndefined()
+     expect(door.ghost).toBeUndefined()
+-    expect(door.name).toBe('Something New') // the name is still to be decided
++    expect(door.name).toBe('Road journal')
++    expect(door.page).toEqual({ layout: 'custom' })
++    expect(bay.items.find((i) => i.id === 'road-journal').kind).toBe('locked')
+   })
+-  it('cannot be opened yet: its page waits for the passes to exist', () => {
+-    expect(door.page).toBeNull()
+-    expect(bay.items.find((i) => i.id === 'coming-soon').kind).toBe('locked')
++  it('is a simple glass bottle with a cork, in both pictures, and the closed one has tape across the glass', () => {
++    for (const svg of [open, taped]) { expect(svg).toContain('fill="#DCE6FF"'); expect(svg).toContain('fill="#C9A070"'); expect(svg).not.toContain('stroke-dasharray'); expect(svg).not.toContain('data-lock') }
++    expect(taped).toContain('data-tape-group'); expect(open).not.toMatch(/data-tape|#FFD60A/)
+   })
+-  it('keeps its closed picture as it was: the dotted bottle with the tape', () => {
+-    expect(taped).toContain('data-tape-group')
+-    expect(taped).toContain('stroke-dasharray')
+-  })
+-  it('is drawn as a solid corked bottle with a message in it, not dots', () => {
+-    expect(open).toContain('fill="#DCE6FF"') // the glass
+-    expect(open).toContain('fill="#C9A070"') // the cork, in the room\u2019s own tan
+-    expect(open).not.toContain('stroke-dasharray')
+-    expect(open).not.toMatch(/data-tape|#FFD60A/)
+-  })
+-  it('has its own padlock, hung from the bottle\u2019s neck on rope and stamped with an anchor, so it is Explorer\u2019s Bay\u2019s and no other room\u2019s', () => {
+-    const lock = open.match(/<g data-lock="explorers-bay">([\s\S]*?)<\/g><\/g><\/svg>/)
+-    expect(lock, 'the lock group').toBeTruthy()
+-    expect(lock[1]).toContain('stroke="#C9A070"') // the rope
+-    expect(lock[1]).toMatch(/<rect[^>]*rx="6"[^>]*fill="#FFE27A"/) // the gold padlock body
+-    expect(lock[1]).toMatch(/<circle[^>]*r="2\.6"/) // the ring at the top of the anchor
+-    // and it is not the Notebook\u2019s padlock or the blueprint\u2019s
+-    for (const other of ['public/scenes/drafting-desk/sheet-authors-notebook.svg', 'public/scenes/factory-floor/blueprint-roll.svg']) expect(read(other)).not.toContain('data-lock="explorers-bay"')
+-  })
+-  it('keeps everything inside its picture, which is the same size and place as the closed one', () => {
+-    expect(box(open)).toEqual(box(taped))
+-    const [vx, vy, vw, vh] = box(open)
+-    const rect = open.match(/<g data-lock[\s\S]*?<rect x="([\d.]+)" y="([\d.]+)" width="([\d.]+)" height="([\d.]+)"/)
+-    const [x, y, w, h] = rect.slice(1).map(Number)
+-    expect(x - 3).toBeGreaterThanOrEqual(vx)
+-    expect(x + w + 3).toBeLessThanOrEqual(vx + vw)
+-    expect(y - 3).toBeGreaterThanOrEqual(vy)
+-    expect(y + h + 3).toBeLessThanOrEqual(vy + vh)
+-    expect(open.match(/translate\(1080,770\) rotate\(-24\)/)).toBeTruthy() // the bottle sits where the old one did
++  it('keeps the closed and open pictures the same size and place, where the old bottle was', () => {
++    expect(box(open)).toEqual(box(taped)); expect(box(open)).toEqual([1001, 652, 128, 165])
+   })
+   it('is only a drawing, with nothing that runs, loads or links', () => {
+-    expect(open).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)
+-    expect(open).toContain('aria-hidden="true"')
++    for (const svg of [open, taped]) { expect(svg).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i); expect(svg).toContain('aria-hidden="true"') }
+   })
+ })
+diff --git a/test/rooms-data.test.jsx b/test/rooms-data.test.jsx
+index af024cf..99705da 100644
+--- a/test/rooms-data.test.jsx
++++ b/test/rooms-data.test.jsx
+@@ -57,10 +57,12 @@ describe('the rooms', () => {
+     const doors = items.filter((i) => i.kind === 'page').map((i) => i.to.replace(`/${slug}/`, ''))
+     expect(Object.keys(areas).filter((k) => !areas[k].oldLink).sort()).toEqual(doors.sort())
+   })
+-  it('keeps the old Short Stories gallery reachable for old links, and says so, and nothing else is kept that way', () => {
++  it('keeps the old Short Stories gallery and the old Photography page reachable for old links, and says so, and nothing else is kept that way', () => {
+     const kept = Object.entries(ROOMS['idea-hatchery'].areas).filter(([, a]) => a.oldLink).map(([k]) => k)
+     expect(kept).toEqual(['short-stories'])
+-    for (const slug of ROOM_SLUGS.filter((s) => s !== 'idea-hatchery')) expect(Object.values(ROOMS[slug].areas).filter((a) => a.oldLink)).toHaveLength(0)
++    expect(Object.entries(ROOMS['explorers-bay'].areas).filter(([, a]) => a.oldLink).map(([k]) => k)).toEqual(['photography']) // its door was taken away; the address, and the Instagram connection, stay
++    expect(ROOMS['explorers-bay'].items.some((i) => i.to === '/explorers-bay/photography')).toBe(false)
++    for (const slug of ROOM_SLUGS.filter((s) => s !== 'idea-hatchery' && s !== 'explorers-bay')) expect(Object.values(ROOMS[slug].areas).filter((a) => a.oldLink)).toHaveLength(0)
+     expect(ROOMS['idea-hatchery'].items.some((i) => i.to === '/idea-hatchery/short-stories')).toBe(false)
+   })
+   it.each(ALL)('%s: every area has a name, a line, a layout, and says which posts belong to it', (slug) => {
+@@ -236,6 +238,10 @@ describe('each room as a visitor meets it', () => {
+         const link = stage.getByRole('link', { name: new RegExp(`^${i.name}\\b`) })
+         expect(link, i.id).toHaveAttribute('href', i.kind === 'page' ? i.to : i.href)
+         expect(link, i.id).toHaveAccessibleName(`${i.name}. ${i.blurb}${i.lock ? ` ${lockText(i.lock)}` : ''}${i.kind === 'external' ? ' (opens in a new tab)' : ''}`)
++      } else if (i.notify) { // a taped door that links to its taped page, where a visitor can ask to hear when it opens
++        const taped = stage.getByRole('link', { name: new RegExp(`^${i.name}\\. .*\\(locked\\)\\. Ask to hear when it opens$`) })
++        expect(taped, i.id).toHaveAttribute('href', i.to)
++        expect(taped, i.id).toHaveClass('is-locked')
+       } else {
+         const closed = stage.getByRole('group', { name: new RegExp(`^${i.name}\\. .*\\(locked\\)$`) })
+         expect(closed, i.id).toHaveAttribute('tabindex', '0')
+@@ -279,6 +285,7 @@ describe('each room as a visitor meets it', () => {
+     const list = within(container.querySelector('.rs-list'))
+     ROOMS[slug].items.forEach((i) => {
+       if (i.kind !== 'locked') expect(list.getByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toHaveAttribute('href', i.kind === 'page' ? i.to : i.href)
++      else if (i.notify) expect(list.getByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toHaveAttribute('href', i.to)
+       else expect(list.queryByRole('link', { name: new RegExp(`^${i.name}\\b`) }), i.id).toBeNull()
+     })
+   })
+diff --git a/tools/art-manifest.json b/tools/art-manifest.json
+index f91a6ed..fd8724d 100644
+--- a/tools/art-manifest.json
++++ b/tools/art-manifest.json
+@@ -14,10 +14,16 @@
+  "public/scenes/drafting-desk/sheet-come-write-with-me.svg": "52bedeae8ecaea71",
+  "public/scenes/drafting-desk/sheet-overthink-archive.svg": "a0eecf79cf92439c",
+  "public/scenes/explorers-bay/base.svg": "404d5cd616b48d62",
+- "public/scenes/explorers-bay/geometry.json": "820f31f3aa8cc175",
++ "public/scenes/explorers-bay/geometry.json": "bcfdcbdfc47bb0f8",
+  "public/scenes/explorers-bay/item-coming-soon-open.svg": "ff122b94bd091907",
+  "public/scenes/explorers-bay/item-coming-soon.svg": "e0ea0990485e9e98",
++ "public/scenes/explorers-bay/item-lessons-from-the-road-open.svg": "ea5f4010cbaff97c",
++ "public/scenes/explorers-bay/item-lessons-from-the-road.svg": "1f9b8452df4860cb",
+  "public/scenes/explorers-bay/item-photography.svg": "1999e32f526f6100",
++ "public/scenes/explorers-bay/item-road-journal-open.svg": "5762e659cc9909b5",
++ "public/scenes/explorers-bay/item-road-journal.svg": "26a03dcde049fe07",
++ "public/scenes/explorers-bay/item-travel-map-open.svg": "0f170264f14f8eaa",
++ "public/scenes/explorers-bay/item-travel-map.svg": "6699bcff114bfab0",
+  "public/scenes/explorers-bay/item-writing-in-transit.svg": "8ff9442e663b9c95",
+  "public/scenes/factory-floor/blueprint-roll.svg": "205994f6cf08fb2e",
+  "public/scenes/factory-floor/protractor.svg": "c89b40e04d020f0a",
+@@ -58,4 +64,4 @@
+  "public/scenes/sarah-jrs-den/item-daryls-adventures.svg": "0a3918e0829db1c8",
+  "public/scenes/sarah-jrs-den/item-youtube-series-open.svg": "0e28e20cabbbbfd7",
+  "public/scenes/sarah-jrs-den/item-youtube-series.svg": "66e728a782dcdf82"
+-}
+\ No newline at end of file
++}
+diff --git a/tools/health-check.mjs b/tools/health-check.mjs
+index 0a0dbe6..4d5b3c8 100644
+--- a/tools/health-check.mjs
++++ b/tools/health-check.mjs
+@@ -111,7 +111,7 @@ const CHECKS = [
+   ['YouTube Series: the feed reader', 'lib/youtubeFeed.js', /export function parseFeed/, 'the ebook and YouTube update'],
+   ['YouTube Series: the page', 'src/den/YouTubeSeriesPage.jsx', /youtube-nocookie/, 'the ebook and YouTube update'],
+   ['YouTube Series: its door', 'src/doors/doorsData.js', /id: 'youtube-series'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
+-  ['Free Ebook: the sign-up joins the newsletter list', 'lib/newsletter.js', /source = sourceOf\(body\)/, 'the one list update (the ebook and the newsletter are one list)'],
++  ['Free Ebook: the sign-up is a separate request, with an optional newsletter box', 'lib/newsletter.js', /const kind = requestOf\(body\)/, 'the ebook sign-up update (the free ebook is a separate request, and the newsletter an optional box)'],
+   ['Free Ebook: the database file', 'sql/ebook-signups.sql', /enable row level security/, 'the ebook and YouTube update'],
+   ['Free Ebook: the page', 'src/ebook/FreeEbookPage.jsx', /Get the free ebook/, 'the ebook and YouTube update'],
+   ['Free Ebook: its door', 'src/doors/doorsData.js', /id: 'free-ebook'[^\n]*layout: 'custom'/, 'the ebook and YouTube update (the add-ebook-youtube script)'],
+-- 
+2.43.0
+

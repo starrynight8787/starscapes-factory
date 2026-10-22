@@ -1,0 +1,40 @@
+WHITE ICONS IN THE MOBILE MENU: FIX FOR "YOU CAN'T SEE THEM"   starscapes-menu-icons-22oct.zip
+(One rule in one stylesheet, and a test. No Supabase step. Released through a preview first.)
+
+THE PROBLEM (reported with a phone screenshot, 22 October 2026): in the mobile menu the little room pictures beside each room's name cannot be seen, and the Leadership Lounge and Idea Hatchery ones barely exist at all.
+THE CAUSE: the pictures are navy line art on a see-through background, and the mobile menu is a dark navy gradient, so navy sits on navy. The stylesheet already had a rule for exactly this ("the navy line art needs a light backing on the dark mobile menu": a white tile behind each picture), but it was aimed at a class called sf-tile, which only an older component uses. The pictures are now drawn by a component that gives them a different class (sf-room-icon), so the rule matched nothing.
+
+THE FIX (src/styles/site.css): one rule, .sf-menu .sf-room-icon { filter: brightness(0) invert(1) }. It draws each picture in white, the menu's own #fff (the same white as the room names beside them). The shape and the see-through background are kept, and only the colour changes, so the stars and details inside each picture stay crisp.
+IT IS ONLY INSIDE THE DARK MOBILE MENU. The rooms dropdown on a computer is a white panel, and the membership pages, the room directory and the 404 page are light: they keep the navy pictures. The old white-tile rule is left where it is (harmless: it still serves the older component).
+
+PROOF: I rendered the real menu in a browser with your built stylesheet and your real icon files, with and without the rule. Without it the pictures are barely visible (like the screenshot); with it all eight are clear white line art.
+TESTS: 8 new in test/mobile-menu-icons.test.jsx (the white rule exists; it is the menu's own white; it aims at the class the picture really has, which is the bug that caused this; the mobile menu draws every room's picture; every room has its picture file; no rule whitens a picture outside the dark menu; the desktop dropdown is white and left alone; the picture's own style does not whiten it for everyone). 10 deliberate breakages, ALL caught (the filter removed, the pictures turned black, only almost white, the rule applied to the whole site, aimed at the wrong class, the desktop dropdown whitened too, the menu text colour changed, the menu no longer drawing pictures, the picture given a different class, the dropdown made dark).
+WHOLE SUITE on a copy of your newest commit (4ecd5eb) with this installed: 3,781 tests, 0 failing (that includes this installer's own 8 safety tests); build fine; 12 functions; health check 216 of 216.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-menu-icons-22oct.zip
+ 5. python3 tools/add-menu-icons.py        IT MUST PRINT "changed       src/styles/site.css" AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "sf-room-icon" src/styles/site.css        (it must print 1)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-menu-icons" -not -path "./node_modules/*" -delete
+11. git checkout -b menu-icons
+    git add .
+    git status                                   (1 changed file: src/styles/site.css; new: test/mobile-menu-icons.test.jsx, the notes, the installer, its test and fixtures, tools/menu-icons-files/; nothing ending .before-)
+    git commit -m "Mobile menu: draw the room pictures in white so they can be seen on the dark menu"
+    git push -u origin menu-icons
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "menu-icons" and says Preview. WAIT for Ready, then open it ON YOUR PHONE (the menu only looks like this on a phone, or a narrow browser window) and look:
+      a. Tap Menu: all eight room pictures must be clear white line art, including the Leadership Lounge and the Idea Hatchery.
+      b. On a computer (or a wide window), open the Rooms dropdown: its pictures must still be NAVY on the white panel.
+      c. Open a membership page and the home page: pictures there must be unchanged (navy).
+    If the build fails (Error), or any of a to c is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge menu-icons
+    git push
+    git branch -d menu-icons

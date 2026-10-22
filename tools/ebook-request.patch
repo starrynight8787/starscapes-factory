@@ -1,0 +1,1180 @@
+diff --git a/lib/newsletter.js b/lib/newsletter.js
+index f3e954f..49e185f 100644
+--- a/lib/newsletter.js
++++ b/lib/newsletter.js
+@@ -2,6 +2,8 @@
+ // with ?newsletter=... to handleNewsletter), because the free Vercel plan allows 12 functions and all 12 are used.
+ //
+ // How it keeps people safe:
++//   - The FREE EBOOK is a one-purpose request, kept apart from the newsletter list (table email_requests): it needs no tick, and the newsletter is a separate OPTIONAL box. The newsletter list only
++//     gets that person if they ticked the box AND pressed the confirm link.
+ //   - DOUBLE OPT-IN: signing up only stores the address as "pending" and emails a link. Nobody is on the list until they press it.
+ //   - The list is the shop's own (Supabase, server key only). Resend only delivers the emails. Someone who unsubscribes STAYS in the table, marked unsubscribed, so they are never emailed again.
+ //   - It never says whether an address is already signed up (the answer is the same), and a robot's hidden box gets a quiet "thank you" and nothing is kept.
+@@ -46,6 +48,12 @@ async function one(path) {
+ }
+ const findByEmail = (email) => one(`newsletter_subscribers?email=eq.${encodeURIComponent(email)}&select=id,status,token,source,confirmation_sent_at&limit=1`)
+ const findByToken = (token) => one(`newsletter_subscribers?token=eq.${token}&select=id,status,email,source&limit=1`)
++const findRequest = (email, purpose) => one(`email_requests?email=eq.${encodeURIComponent(email)}&purpose=eq.${purpose}&select=id,status,token,wants_newsletter,confirmation_sent_at&limit=1`)
++const findRequestByToken = (token) => one(`email_requests?token=eq.${token}&select=id,status,email,purpose,wants_newsletter,newsletter_text&limit=1`)
++async function patchRequest(id, fields) {
++  const response = await rest(`email_requests?id=eq.${id}`, { method: 'PATCH', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify(fields) })
++  if (!response || !response.ok) throw new Error('database')
++}
+ async function patch(id, fields) {
+   const response = await rest(`newsletter_subscribers?id=eq.${id}`, { method: 'PATCH', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify(fields) })
+   if (!response || !response.ok) throw new Error('database')
+@@ -59,7 +67,8 @@ async function subscribe(req, res) {
+   if (typeof body.website === 'string' && body.website.trim() !== '') return say(res, 200, { ok: true }) // a robot: thank it, keep nothing
+   const check = cleanSubscribe(body)
+   if (!check.ok) return say(res, 400, { ok: false, field: check.field, message: check.message })
+-  const source = sourceOf(body) // 'site' (the footer box) or 'ebook' (the free ebook page): the SAME list, a different tick box and different words
++  const source = sourceOf(body) // 'site' (the footer box: the newsletter) or 'ebook' (the free ebook page: a separate request, with an optional newsletter box)
++  if (source === 'ebook') return subscribeEbook(res, check.email, check.newsletter === true)
+ 
+   const now = Date.now()
+   const stamp = new Date(now).toISOString()
+@@ -103,6 +112,71 @@ async function subscribe(req, res) {
+   return say(res, 200, { ok: true })
+ }
+ 
++// The free ebook: a request for ONE thing, kept apart from the newsletter list. No tick is needed to get it. If they ticked the optional newsletter box, the same confirm link also confirms the newsletter.
++async function subscribeEbook(res, email, wantsNewsletter) {
++  const now = Date.now()
++  const stamp = new Date(now).toISOString()
++  const newsletterText = wantsNewsletter ? consentFor('ebook') : null
++  let token = ''
++  let sendConfirmation = false
++  let sendEbook = false // someone who already confirmed asks again: the link, by email (the page says the same to everyone, so it never reveals who asked before)
++  try {
++    const existing = await findRequest(email, 'ebook')
++    if (!existing) {
++      token = newToken()
++      const made = await rest('email_requests', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, purpose: 'ebook', token, status: 'pending', consent_text: EBOOK.request, wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, confirmation_sent_at: stamp }) })
++      if (made && made.status === 409) return say(res, 200, { ok: true }) // someone asked for this address a moment ago: nothing more to do
++      if (!made || !made.ok) throw new Error('database')
++      sendConfirmation = true
++    } else if (existing.status === 'confirmed') {
++      let alreadyOnList = false
++      if (wantsNewsletter && !existing.wants_newsletter) { const sub = await findByEmail(email); alreadyOnList = Boolean(sub && sub.status === 'confirmed') }
++      if (wantsNewsletter && !existing.wants_newsletter && !alreadyOnList) { // they now also want the newsletter: that needs its own confirm link
++        token = existing.token
++        await patchRequest(existing.id, { status: 'pending', wants_newsletter: true, newsletter_text: newsletterText, confirmation_sent_at: stamp })
++        sendConfirmation = true
++      } else {
++        token = existing.token
++        sendEbook = Boolean(EBOOK.file)
++      }
++    } else {
++      token = existing.token // the same private code for good, so links in older emails keep working
++      const recent = existing.confirmation_sent_at && now - Date.parse(existing.confirmation_sent_at) < COOLDOWN_MS
++      if (!recent) {
++        await patchRequest(existing.id, { status: 'pending', wants_newsletter: wantsNewsletter, newsletter_text: newsletterText, consent_text: EBOOK.request, confirmation_sent_at: stamp })
++        sendConfirmation = true
++      } else if (wantsNewsletter !== Boolean(existing.wants_newsletter)) {
++        await patchRequest(existing.id, { wants_newsletter: wantsNewsletter, newsletter_text: newsletterText }) // they changed the box a moment later: no second email, the link they already have confirms what the box says now
++      }
++    }
++  } catch (e) {
++    return say(res, 502, { ok: false, message: 'We could not sign you up just now. Please try again in a moment.' })
++  }
++  if (sendConfirmation) {
++    const mail = confirmationEmail({ confirmUrl: confirmUrl(token, undefined, 'ebook'), source: 'ebook', newsletter: wantsNewsletter })
++    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `ebook-confirm-${email}-${Math.floor(now / COOLDOWN_MS)}` })
++    if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the confirmation email just now. Please try again in a moment.' })
++  }
++  if (sendEbook) {
++    const mail = ebookLinkEmail({ file: EBOOK.file })
++    const sent = await sendEmail({ to: email, ...mail, idempotencyKey: `ebook-link-${email}-${Math.floor(now / COOLDOWN_MS)}` })
++    if (!sent.ok) return say(res, 502, { ok: false, message: 'We could not send the email just now. Please try again in a moment.' })
++  }
++  return say(res, 200, { ok: true })
++}
++
++// Someone confirmed the ebook AND ticked the optional newsletter box: only now are they added to the newsletter list, with the exact words next to that box.
++async function joinNewsletter(email, words, stamp) {
++  const existing = await findByEmail(email)
++  if (!existing) {
++    const made = await rest('newsletter_subscribers', { method: 'POST', headers: { ...JSON_HEADERS, Prefer: 'return=minimal' }, body: JSON.stringify({ email, token: newToken(), status: 'confirmed', consent_text: words, source: 'ebook', confirmation_sent_at: stamp, confirmed_at: stamp }) })
++    if (made && made.status === 409) return
++    if (!made || !made.ok) throw new Error('database')
++  } else if (existing.status !== 'confirmed') {
++    await patch(existing.id, { status: 'confirmed', consent_text: words, source: 'ebook', confirmed_at: stamp, unsubscribed_at: null })
++  }
++}
++
+ const BAD_LINK = 'That link does not look right. Please use the link in the email.'
+ const GONE_LINK = 'That link is not valid. It may be old or already used.'
+ 
+@@ -113,7 +187,16 @@ async function confirm(req, res) {
+   if (!isToken(token)) return say(res, 400, { ok: false, message: BAD_LINK })
+   try {
+     const person = await findByToken(token)
+-    if (!person) return say(res, 404, { ok: false, message: GONE_LINK })
++    if (!person) {
++      const request = await findRequestByToken(token) // a one-purpose request (the free ebook), not the newsletter list
++      if (!request) return say(res, 404, { ok: false, message: GONE_LINK })
++      const wants = request.wants_newsletter === true
++      if (request.status === 'confirmed') return say(res, 200, { ok: true, state: 'already', source: 'ebook', kind: 'request', newsletter: wants })
++      const stamp = new Date().toISOString()
++      await patchRequest(request.id, { status: 'confirmed', confirmed_at: stamp })
++      if (wants) await joinNewsletter(request.email, request.newsletter_text || consentFor('ebook'), stamp)
++      return say(res, 200, { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: wants })
++    }
+     if (person.status === 'confirmed') return say(res, 200, { ok: true, state: 'already', source: person.source })
+     if (person.status === 'unsubscribed') return say(res, 410, { ok: false, message: 'You have unsubscribed from the newsletter. To join again, please sign up again.' })
+     await patch(person.id, { status: 'confirmed', confirmed_at: new Date().toISOString() })
+@@ -149,8 +232,10 @@ async function tidy(req, res) {
+   const cutoff = encodeURIComponent(new Date(Date.now() - UNCONFIRMED_DAYS * 86400000).toISOString())
+   try {
+     let removed = 0
+-    for (const filter of [`confirmation_sent_at=lt.${cutoff}`, `confirmation_sent_at=is.null&created_at=lt.${cutoff}`]) { // the second is only a safety net: every sign-up records when its email was sent
+-      const gone = await rest(`newsletter_subscribers?status=eq.pending&${filter}`, { method: 'DELETE', headers: { Prefer: 'return=representation' } })
++    // Newsletter sign-ups, and one-purpose requests (the free ebook), that were never confirmed. The second filter of each is only a safety net: every sign-up records when its email was sent.
++    const targets = ['newsletter_subscribers', 'email_requests'].flatMap((table) => [`${table}?status=eq.pending&confirmation_sent_at=lt.${cutoff}`, `${table}?status=eq.pending&confirmation_sent_at=is.null&created_at=lt.${cutoff}`])
++    for (const target of targets) {
++      const gone = await rest(target, { method: 'DELETE', headers: { Prefer: 'return=representation' } })
+       if (!gone || !gone.ok) throw new Error('database')
+       const rows = await gone.json().catch(() => [])
+       removed += Array.isArray(rows) ? rows.length : 0
+diff --git a/sql/email-requests.sql b/sql/email-requests.sql
+new file mode 100644
+index 0000000..72c8342
+--- /dev/null
++++ b/sql/email-requests.sql
+@@ -0,0 +1,40 @@
++-- EMAIL REQUESTS: run this once in the Supabase SQL editor (paste the SQL itself, not the file name). It is safe to run more than once.
++--
++-- WHAT IT DOES: makes one small table, email_requests, for people who ask for ONE thing by email, such as the free ebook, WITHOUT joining the newsletter.
++--   One row for each email address and each purpose (for example 'ebook'). It holds the email, the purpose, whether they have confirmed, a private link code for the confirm email,
++--   the exact words they were shown, whether they also ticked the OPTIONAL newsletter box (and the words next to that box), and the dates.
++--   Ticking the newsletter box does not put anyone on the newsletter list until they press the confirm link. Only then does the server add them to newsletter_subscribers.
++--   A request that is never confirmed is deleted after 30 days by the daily tidy-up.
++--
++-- WHO CAN SEE IT: nobody on the website. Row level security is on and there are NO policies, so a visitor cannot read or change it, even with the public key.
++-- Only the website's server (through its private key) can, and you can read it in the Supabase Table Editor.
++--
++-- TO UNDO IT at any time, run the DROP line at the very bottom. Nothing else depends on this table.
++
++create table if not exists public.email_requests (
++  id uuid primary key default gen_random_uuid(),
++  email text not null check (char_length(email) between 3 and 254 and email = lower(email)),
++  purpose text not null check (purpose ~ '^[a-z0-9:-]{2,60}$'),
++  status text not null default 'pending' check (status in ('pending', 'confirmed')),
++  token text not null unique check (token ~ '^[a-f0-9]{48}$'),
++  consent_text text not null,
++  wants_newsletter boolean not null default false,
++  newsletter_text text,
++  created_at timestamptz not null default now(),
++  confirmation_sent_at timestamptz,
++  confirmed_at timestamptz,
++  unique (email, purpose)
++);
++
++alter table public.email_requests enable row level security;
++revoke all on public.email_requests from anon, authenticated;
++
++-- Only the SERVER's key (service_role) reads and writes this, and a table made in the SQL editor gives that key no permission until it is granted.
++grant select, insert, update, delete on public.email_requests to service_role;
++
++-- To confirm it worked, run these. The first should show email_requests with row level security on (true), and the second should show 0 (no policies is right: no visitor can touch it):
++--   select tablename, rowsecurity from pg_tables where tablename = 'email_requests';
++--   select count(*) from pg_policies where tablename = 'email_requests';
++
++-- TO UNDO (run this line if you ever need to):
++--   drop table if exists public.email_requests;
+diff --git a/src/data/legalPages.js b/src/data/legalPages.js
+index d5d2ec5..4fd1182 100644
+--- a/src/data/legalPages.js
++++ b/src/data/legalPages.js
+@@ -13,9 +13,9 @@
+ //    and the order emails now say so, and Returns section 4 ("every order is sent with tracked delivery") is confirmed. STILL NOT ANSWERED: separate figures for Europe, the US and Canada; who receives the tracking email from
+ //    Creative Hub (so we do not know if customers would get two emails); whether a test order can be cancelled before it is charged; what the tracking field is called in their API.
+ 
+-//  * THE PRIVACY POLICY was brought up to date on 20 October 2026 (SFW-233): passes, the suggest and vote boxes, story votes, the free ebook (it now joins the newsletter list: one list, one tick box that says yes to both),
+-//    the YouTube player and the browser storage. Decided 20 October: Resend is the mailing tool, and emails and messages to us are kept 2 years. THE ONLY GAP LEFT is the [date]. STILL TO DO BEFORE IT GOES LIVE: the ebook and the newsletter are
+-//    now ONE list, kept in Supabase (21 October 2026); check which region the Resend account sends from
++//  * THE PRIVACY POLICY was brought up to date on 20 October 2026 (SFW-233): passes, the suggest and vote boxes, story votes, the free ebook (rewritten 22 October 2026: getting it needs NO tick and does not join the newsletter; the newsletter is a separate optional box, and a request is kept apart from the newsletter list in its own table, email_requests),
++//    the YouTube player and the browser storage. Decided 20 October: Resend is the mailing tool, and emails and messages to us are kept 2 years. THE ONLY GAP LEFT is the [date]. STILL TO DO BEFORE IT GOES LIVE: the newsletter list is kept in
++//    Supabase (21 October 2026), and one-purpose requests such as the free ebook are in email_requests (22 October 2026); check which region the Resend account sends from
+ //    and its plan limits (SFW-188); the newsletter's lines were added on 21 October 2026, with a daily job that deletes sign-ups nobody confirms after 30 days; and the solicitor should check the YouTube wording, the proof that someone agreed to open their passes
+ //    straight away (deleted with the account, though Stripe keeps a copy), and the sentence that we do not look at who voted for what (Gill's promise): see SFW-234. Re-check against the ICO's right-to-be-informed checklist near launch:
+ //    the ICO says its guidance is under review after the Data (Use and Access) Act.
+@@ -197,7 +197,7 @@ export const LEGAL_PAGES = fillContact([
+       {
+         "title": "What we collect and why",
+         "paragraphs": [
+-          "| What | When | Why | Our legal reason |\n| -- | -- | -- | -- |\n| Your name, email, phone number, delivery address and what you ordered | When you place an order | To take your order, make it, deliver it and contact you about it | It is needed to carry out our contract with you |\n| Confirmation of your payment, the amount, and your name and email | When you pay | To know your order is paid for | Contract |\n| Your email address and a password, stored in scrambled form | When you create an account | To run your account | Contract |\n| Your profile: your name, your username, the icon you choose and your email choice (free updates, news about your passes only, or no emails) | When you fill in or change your profile on the My passes page | To show your username and icon beside what you write on the site, and to send only the emails you asked for | Contract (your profile is part of your account), and your consent for emails, which you can take back at any time on the same page |\n| Your emails and messages to us | When you contact us | To reply and keep a record | Our legitimate interest in answering customers |\n| Order and invoice records | After every order | To keep accounts and pay tax | A legal obligation |\n| Technical details such as your IP address, browser and the pages you request | When you visit | To keep the site secure and working | Our legitimate interest in running a safe website |\n| Your passes: which you hold, whether they are active, how often you pay, when the next payment is due, whether you have cancelled, and the date and wording you agreed to when you opened them straight away | When you buy passes | To give you your passes, show you what you hold, and keep proof that you agreed to open them straight away | Contract, and our legitimate interest in keeping that proof |\n| What you suggest (a book, show or stat, and your reason if you give one) and the votes you cast on suggestions | When you suggest or vote | To run the suggest and vote boxes fairly, with one vote each | Our legitimate interest in running them fairly |\n| Your vote in a story vote | When you vote | To count one vote for each member and let you change it until the vote closes | Contract (it is part of your pass) |\n| Your email address, the date and wording you agreed to, whether and when you confirmed it, and, if you leave, that you left | When you sign up for the newsletter or the free ebook, confirm it, or unsubscribe | To send you the newsletter and, if you asked for it, the free ebook, to keep proof that you asked and confirmed, and to make sure nobody who has unsubscribed is emailed again | Your consent, which you can take back at any time, and our legitimate interest in making sure we never email someone who has asked us to stop |\n| Your Star Atlas: the stamps you earn (which room, what earned each one, and when), the stardust you spend, and the dates of your free taste week | When you earn a stamp, spend stardust or start your taste week | To show your atlas, to count your stardust, and to give each person one taste week | Contract (the atlas is part of your account) |\n| Your monthly reading check-in: a number from 0 to 3, and, only if you choose, a genre | When you do the monthly check-in (pass holders) | To give you your stardust, and to see how many books members read, as totals only | Contract for the number, because it earns your stardust. Your consent for the genre, which is optional and is never needed for your stardust. Our legitimate interest in seeing the totals |\n| The country you choose | When you pick it | To give you your First country stamp | Contract |\n| Your answers to the optional year-one survey about reading habits | If you choose to answer it | To learn about members' reading habits, as totals only | Your consent, which you can take back at any time by asking us to delete your answers |",
++          "| What | When | Why | Our legal reason |\n| -- | -- | -- | -- |\n| Your name, email, phone number, delivery address and what you ordered | When you place an order | To take your order, make it, deliver it and contact you about it | It is needed to carry out our contract with you |\n| Confirmation of your payment, the amount, and your name and email | When you pay | To know your order is paid for | Contract |\n| Your email address and a password, stored in scrambled form | When you create an account | To run your account | Contract |\n| Your profile: your name, your username, the icon you choose and your email choice (free updates, news about your passes only, or no emails) | When you fill in or change your profile on the My passes page | To show your username and icon beside what you write on the site, and to send only the emails you asked for | Contract (your profile is part of your account), and your consent for emails, which you can take back at any time on the same page |\n| Your emails and messages to us | When you contact us | To reply and keep a record | Our legitimate interest in answering customers |\n| Order and invoice records | After every order | To keep accounts and pay tax | A legal obligation |\n| Technical details such as your IP address, browser and the pages you request | When you visit | To keep the site secure and working | Our legitimate interest in running a safe website |\n| Your passes: which you hold, whether they are active, how often you pay, when the next payment is due, whether you have cancelled, and the date and wording you agreed to when you opened them straight away | When you buy passes | To give you your passes, show you what you hold, and keep proof that you agreed to open them straight away | Contract, and our legitimate interest in keeping that proof |\n| What you suggest (a book, show or stat, and your reason if you give one) and the votes you cast on suggestions | When you suggest or vote | To run the suggest and vote boxes fairly, with one vote each | Our legitimate interest in running them fairly |\n| Your vote in a story vote | When you vote | To count one vote for each member and let you change it until the vote closes | Contract (it is part of your pass) |\n| Your email address, the date and wording you agreed to or asked for, whether and when you confirmed it, and, if you leave, that you left | When you sign up for the newsletter, ask for the free ebook, confirm it, or unsubscribe | To send you the newsletter if you signed up for it, to send you the free ebook if you asked for it, to keep proof that you asked and confirmed, and to make sure nobody who has unsubscribed is emailed again | For the newsletter, your consent, which you can take back at any time. For the free ebook, you asked us for it, and it is in our legitimate interest to send it and to keep a record that you asked. In both cases, our legitimate interest in making sure we never email someone who has asked us to stop |\n| Your Star Atlas: the stamps you earn (which room, what earned each one, and when), the stardust you spend, and the dates of your free taste week | When you earn a stamp, spend stardust or start your taste week | To show your atlas, to count your stardust, and to give each person one taste week | Contract (the atlas is part of your account) |\n| Your monthly reading check-in: a number from 0 to 3, and, only if you choose, a genre | When you do the monthly check-in (pass holders) | To give you your stardust, and to see how many books members read, as totals only | Contract for the number, because it earns your stardust. Your consent for the genre, which is optional and is never needed for your stardust. Our legitimate interest in seeing the totals |\n| The country you choose | When you pick it | To give you your First country stamp | Contract |\n| Your answers to the optional year-one survey about reading habits | If you choose to answer it | To learn about members' reading habits, as totals only | Your consent, which you can take back at any time by asking us to delete your answers |",
+           "We never see your card number. You type it into Stripe's payment page, and Stripe passes us only the confirmation.",
+           "If you order, we need your name, email, delivery address and phone number to make and deliver your order: without them we cannot. Everything else, such as the newsletter, suggestions and votes, is your choice."
+         ]
+@@ -236,7 +236,7 @@ export const LEGAL_PAGES = fillContact([
+         "title": "Who we share your information with",
+         "paragraphs": [
+           "We share only what each of these needs to do its job:",
+-          "* **Creative Hub, run by Printspace Studios Limited** (company number 06043884, 74 Kingsland Road, London E2 8DL; its privacy policy is at [https://www.theprintspace.co.uk/privacy-policy/](https://www.theprintspace.co.uk/privacy-policy/)) makes and posts your order. It receives your name, delivery address, phone number and what you ordered.\n* **Stripe** takes your payments for prints and passes. It receives your name, email and payment details, and keeps the payment records for your passes.\n* **Supabase** stores our database and sign-ins, so it holds your account, your profile and your order details.\n* **Vercel** hosts the website, so it sees technical details of visits.\n* **Resend** sends our emails. That means emails about your orders, account and passes, such as confirmations, receipts and password resets, and, if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter. It receives your email address.\n* **YouTube (Google)**, only if you press play on a video. It can then see your visit and set its own cookies.\n* **Our accountants and accounting software** receive sales and invoice records.\n* **Authorities**, but only where the law requires it.",
++          "* **Creative Hub, run by Printspace Studios Limited** (company number 06043884, 74 Kingsland Road, London E2 8DL; its privacy policy is at [https://www.theprintspace.co.uk/privacy-policy/](https://www.theprintspace.co.uk/privacy-policy/)) makes and posts your order. It receives your name, delivery address, phone number and what you ordered.\n* **Stripe** takes your payments for prints and passes. It receives your name, email and payment details, and keeps the payment records for your passes.\n* **Supabase** stores our database and sign-ins, so it holds your account, your profile and your order details.\n* **Vercel** hosts the website, so it sees technical details of visits.\n* **Resend** sends our emails. That means emails about your orders, account and passes, such as confirmations, receipts and password resets, and, if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it. It receives your email address.\n* **YouTube (Google)**, only if you press play on a video. It can then see your visit and set its own cookies.\n* **Our accountants and accounting software** receive sales and invoice records.\n* **Authorities**, but only where the law requires it.",
+           "We don't sell your information, and we don't share it for other people's marketing.",
+           "Our site links to other websites, such as our Substack. Once you follow a link you have left this site, and that website's own privacy policy applies."
+         ]
+@@ -250,7 +250,7 @@ export const LEGAL_PAGES = fillContact([
+       {
+         "title": "How long we keep it",
+         "paragraphs": [
+-          "* **Order and invoice records:** six years, because tax law requires it.\n* **Your account:** until you ask us to delete it.\n* **Your passes record:** until you ask us to delete your account. Payment records for passes are kept for six years, like order records.\n* **Suggestions and votes:** until you ask us to delete your account.\n* **Your profile (name, username, icon and email choice):** until you ask us to delete your account.\n* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete them, or to delete your account.\n* **Newsletter and free ebook sign-ups (they are one list):** until you unsubscribe or ask us to delete your email address. If you sign up but never press the link to confirm, we delete your address after 30 days.\n* **If you unsubscribe from the newsletter:** we keep your email address, marked as unsubscribed, so that we never email you again by mistake. If you would rather we deleted it completely, ask us and we will.\n* **Emails and messages to us:** 2 years, then deleted.\n* **Website logs:** only as long as needed to keep the site secure and fix faults. Our hosting provider sets this, and we do not keep our own copy.",
++          "* **Order and invoice records:** six years, because tax law requires it.\n* **Your account:** until you ask us to delete it.\n* **Your passes record:** until you ask us to delete your account. Payment records for passes are kept for six years, like order records.\n* **Suggestions and votes:** until you ask us to delete your account.\n* **Your profile (name, username, icon and email choice):** until you ask us to delete your account.\n* **Your Star Atlas, your reading check-ins and your survey answers:** until you ask us to delete them, or to delete your account.\n* **Newsletter sign-ups and free ebook requests (kept apart):** a newsletter sign-up until you unsubscribe or ask us to delete your email address, and an ebook request until you ask us to delete your email address (we keep it so that we can send you the link again if you ask). If you sign up for either but never press the link to confirm, we delete your address after 30 days.\n* **If you unsubscribe from the newsletter:** we keep your email address, marked as unsubscribed, so that we never email you again by mistake. If you would rather we deleted it completely, ask us and we will.\n* **Emails and messages to us:** 2 years, then deleted.\n* **Website logs:** only as long as needed to keep the site secure and fix faults. Our hosting provider sets this, and we do not keep our own copy.",
+           "Stripe, Creative Hub and our other providers keep information under their own policies."
+         ]
+       },
+@@ -267,7 +267,7 @@ export const LEGAL_PAGES = fillContact([
+         "title": "Marketing",
+         "paragraphs": [
+           "We only send emails you have asked for. Every newsletter has an unsubscribe link, and you can also email us to stop them. We never sell your email address or share it for other people's marketing.",
+-          "If you sign up for the newsletter, or ask for the free ebook, you are saying yes to the newsletter: new posts and news from Starscapes Factory, by email. The free ebook and the newsletter are one list, so asking for the ebook also signs you up to the newsletter, and the tick box says so. We first email you a link, and you are only added once you press it. Every newsletter has a link to unsubscribe, and the unsubscribe button that many email programs show works too. If you unsubscribe, we keep your address, marked as unsubscribed, so that we never email you again by mistake.",
++          "If you sign up for the newsletter, you are saying yes to new posts and news from Starscapes Factory, by email. We first email you a link, and you are only added once you press it. Asking for the free ebook is separate: you do not have to sign up for the newsletter to get it, and we do not add you to the newsletter because you asked for it. We email you a link to confirm your address, and we use your email for the ebook only. The free ebook page has an optional box, never ticked for you, if you would like the newsletter as well. If you tick it, you are only added to the newsletter once you press the same link. Every newsletter has a link to unsubscribe, and the unsubscribe button that many email programs show works too. If you unsubscribe, we keep your address, marked as unsubscribed, so that we never email you again by mistake.",
+           "You can also choose or change your emails on your My passes page, whether or not you hold passes: free updates, news about your passes only, or no emails. Choosing free updates there signs you up to the newsletter. Because you are already signed in with your email address, we do not send a second link to confirm it.",
+           "Emails about your orders, account and passes, such as receipts and password resets, are not marketing. They are sent whether or not you have signed up for the newsletter."
+         ]
+diff --git a/src/ebook/FreeEbookPage.jsx b/src/ebook/FreeEbookPage.jsx
+index 9ef8d5f..0e6b171 100644
+--- a/src/ebook/FreeEbookPage.jsx
++++ b/src/ebook/FreeEbookPage.jsx
+@@ -6,19 +6,20 @@ import PageBanner from '../components/PageBanner'
+ import { EBOOK } from './ebookConfig'
+ import { cleanSignup } from './ebookRules'
+ import { fetchOpen, subscribe } from '../newsletter/newsletterApi'
++import { OPTIONAL_NEWSLETTER_TEXT } from '../newsletter/newsletterRules'
+ import '../rooms/roompages.css'
+ import '../styles/pages.css'
+ import './ebook.css'
+ import './ebookv2.css'
+ 
+ // The Free Ebook pages behind the Lounge's door (Figma: "Download page: Free Ebook, sign up with email" and "thank you and download").
+-// The free ebook and the newsletter are ONE list: asking for the ebook signs someone up to the newsletter (the tick box says so), with the same email that asks them to confirm. Once they
+-// press the button in it, the page it opens gives them the download (src/newsletter/NewsletterLinkPage.jsx). Until there is a PDF (src/ebook/ebookConfig.js) it says the ebook is being finished.
+-// It works only while the newsletter is open, like the sign-up box in the footer.
++// Getting the ebook needs only an email address: NO tick. The newsletter is a separate, OPTIONAL box, never ticked for anyone, with the same words everywhere on the site. The request is
++// kept apart from the newsletter list, and we email a link to confirm first. Once they press the button in it, the page it opens gives them the download (src/newsletter/NewsletterLinkPage.jsx).
++// Until there is a PDF (src/ebook/ebookConfig.js) it says the ebook is being finished. It works only while sign-ups are open, like the sign-up box in the footer.
+ export default function FreeEbookPage() {
+   useTitle('Free ebook')
+   const [email, setEmail] = useState('')
+-  const [consent, setConsent] = useState(false)
++  const [newsletter, setNewsletter] = useState(false) // the optional box: unticked
+   const [robot, setRobot] = useState('') // a box people cannot see: only a robot fills it in
+   const [errors, setErrors] = useState({})
+   const [saving, setSaving] = useState(false)
+@@ -35,15 +36,15 @@ export default function FreeEbookPage() {
+   async function submit(event) {
+     event.preventDefault()
+     setProblem('')
+-    const check = cleanSignup({ email, consent })
++    const check = cleanSignup({ email, newsletter })
+     if (!check.ok) { setErrors(check.errors); return }
+     setErrors({})
+     setSaving(true)
+     try {
+-      await subscribe({ email: check.email, consent: true, website: robot, source: 'ebook' })
++      await subscribe({ email: check.email, newsletter: check.newsletter, website: robot, source: 'ebook' })
+       setDone(true)
+     } catch (e) {
+-      if (e && (e.field === 'email' || e.field === 'consent')) setErrors({ [e.field]: e.message })
++      if (e && e.field === 'email') setErrors({ [e.field]: e.message })
+       else setProblem((e && e.message) || 'That did not go through just now. Please try again in a moment.')
+     } finally {
+       setSaving(false)
+@@ -63,7 +64,7 @@ export default function FreeEbookPage() {
+           <div className="eb__card">
+             <div className="eb__ok" role="status">
+               <p className="eb__ok-title">Thank you. I have sent you an email.</p>
+-              <p>Press the button in it to confirm. You will not get the ebook, or the newsletter, until you do. If it does not arrive in a few minutes, check your spam folder.</p>
++              <p>Press the button in it to confirm. You will not get the ebook until you do. If it does not arrive in a few minutes, check your spam folder.</p>
+             </div>
+             <p className="eb__text">{EBOOK.file ? 'The download will be waiting for you on the page the button opens.' : 'The ebook is not quite ready to download. As soon as it is, I will email you the link.'}</p>
+             <p><Link to="/leadership-lounge">← Back to Leadership Lounge</Link></p>
+@@ -73,7 +74,7 @@ export default function FreeEbookPage() {
+     )
+   }
+ 
+-  const summary = Object.entries(errors).map(([id, message]) => ({ id: id === 'consent' ? 'eb-consent' : 'eb-email', message }))
++  const summary = Object.entries(errors).map(([id, message]) => ({ id: 'eb-email', message }))
+   return (
+     <main className="rp eb eb--v2">
+       {back}
+@@ -96,9 +97,9 @@ export default function FreeEbookPage() {
+             <div className="eb__trap" aria-hidden="true">
+               <label>Leave this empty<input type="text" name="website" tabIndex={-1} autoComplete="off" value={robot} onChange={(e) => setRobot(e.target.value)} /></label>
+             </div>
+-            <CheckField id="eb-consent" label={EBOOK.consent} error={errors.consent} checked={consent} onChange={(e) => setConsent(e.target.checked)} />
++            <CheckField id="eb-newsletter" label={OPTIONAL_NEWSLETTER_TEXT} checked={newsletter} onChange={(e) => setNewsletter(e.target.checked)} />
+             <button type="submit" className="pg-btn sg-btn--primary eb__submit" disabled={saving}>{saving ? 'Sending…' : 'Get the free ebook'}</button>
+-            <p className="eb__small">You will get an email asking you to confirm. Once you do, the ebook is yours, and you will also get the newsletter: new posts and news, by email. Your email is never shared, and you can unsubscribe at any time. See the <Link to="/page/privacy">Privacy policy</Link>.</p>
++            <p className="eb__small">{EBOOK.smallPrint} See our <Link to="/page/privacy">Privacy policy</Link>.</p>
+           </form>
+           )}
+         </div>
+diff --git a/src/ebook/ebookConfig.js b/src/ebook/ebookConfig.js
+index 14a8f77..8711d4c 100644
+--- a/src/ebook/ebookConfig.js
++++ b/src/ebook/ebookConfig.js
+@@ -1,4 +1,4 @@
+-// The free ebook: its words and its file. Used by the page (src/ebook/FreeEbookPage.jsx) and by the newsletter's server code (lib/newsletter.js): the free ebook joins the NEWSLETTER list (one list), so asking for the ebook is signing up to the newsletter.
++// The free ebook: its words and its file. Used by the page (src/ebook/FreeEbookPage.jsx) and by the newsletter's server code (lib/newsletter.js): getting the free ebook needs NO tick and does not sign anyone up to the newsletter. The newsletter is a separate, optional, unticked box on the page (the same words as everywhere: see OPTIONAL_NEWSLETTER_TEXT in src/newsletter/newsletterRules.js). The request itself is kept apart from the newsletter list.
+ // WHEN THE PDF IS READY: save it in the project at public/downloads/ (for example public/downloads/leading-from-the-middle.pdf), then set "file" below to
+ // '/downloads/leading-from-the-middle.pdf', push, and the page starts offering the download. While "file" is empty the page says the ebook is being finished,
+ // and no email with a link is sent.
+@@ -10,5 +10,8 @@ export const EBOOK = {
+   inside: ['Why the middle is where most leading happens', 'Small habits for being heard without shouting', 'Questions to ask in your next one-to-one'],
+   file: '',
+   fileNote: 'PDF, about 40 pages.',
+-  consent: 'Yes, send me the free ebook and the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.',
++  // The words recorded as what they asked for (chosen on the server, never taken from the browser). Nothing about the newsletter is in it: that has its own box and its own words.
++  request: 'Send me the free ebook, Leading from the Middle, by email.',
++  // The small print under the button.
++  smallPrint: 'We will email you a link to confirm your address. Once you confirm, the ebook is yours. We use your email for that only, unless you tick the box.',
+ }
+diff --git a/src/ebook/ebookRules.js b/src/ebook/ebookRules.js
+index 9542886..504959c 100644
+--- a/src/ebook/ebookRules.js
++++ b/src/ebook/ebookRules.js
+@@ -4,12 +4,12 @@ export const isEmail = (value) => {
+   return s.length <= 254 && /^[^\s@<>",;:\\]+@[^\s@<>",;:\\]+\.[^\s@<>",;:\\]+$/.test(s)
+ }
+ 
+-// Returns { ok: true, email } or { ok: false, errors } with plain words. The tick box must be ticked: it is the person's agreement to the emails.
++// Returns { ok: true, email, newsletter } or { ok: false, errors } with plain words. Getting the ebook needs only an email address: there is NO required tick.
++// "newsletter" is the separate, optional box: true only when they ticked it themselves.
+ export function cleanSignup(input) {
+   const email = String((input && input.email) || '').trim().toLowerCase()
+   const errors = {}
+   if (!email) errors.email = 'Enter your email address.'
+   else if (!isEmail(email)) errors.email = 'Enter your email address in the form name@example.com.'
+-  if (!(input && input.consent === true)) errors.consent = 'Tick the box to say yes to the emails, so I can send you the ebook.'
+-  return Object.keys(errors).length ? { ok: false, errors } : { ok: true, email }
++  return Object.keys(errors).length ? { ok: false, errors } : { ok: true, email, newsletter: Boolean(input && input.newsletter === true) }
+ }
+diff --git a/src/newsletter/NewsletterLinkPage.jsx b/src/newsletter/NewsletterLinkPage.jsx
+index 2aa7bc4..df6bd4b 100644
+--- a/src/newsletter/NewsletterLinkPage.jsx
++++ b/src/newsletter/NewsletterLinkPage.jsx
+@@ -36,12 +36,16 @@ function LinkPage({ title, button, working, run, done, explain, noToken }) {
+ }
+ 
+ // After confirming: someone who asked for the free ebook also gets it here (or is told it is still being finished). It is the same list for everyone.
+-function Confirmed({ already, ebook }) {
+-  const thanks = already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.'
++function Confirmed({ already, ebook, request, newsletter }) {
++  // A free ebook request is its own thing: it says nothing about the newsletter unless they ticked that separate box.
++  const thanks = request
++    ? (already ? 'You have already confirmed. Thank you.' : 'Thank you, you are confirmed.')
++    : (already ? 'You are already subscribed. Thank you.' : 'You are subscribed. Thank you: the next newsletter will come to you.')
+   if (!ebook) return thanks
+   return (
+     <>
+       <p>{thanks}</p>
++      {request && newsletter && <p>You also asked for the newsletter, so you are on that list too. You can unsubscribe at any time, with the link in every email.</p>}
+       {EBOOK.file ? (
+         <p><a className="pg-btn nlp__button" href={EBOOK.file} download>Download the free ebook (PDF)</a> <small>{EBOOK.fileNote}</small></p>
+       ) : (
+@@ -52,7 +56,11 @@ function Confirmed({ already, ebook }) {
+ }
+ 
+ export function NewsletterConfirmPage() {
+-  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={(r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} />} noToken="That link does not look right. Please open the link in the email we sent you." />
++  const [params] = useSearchParams()
++  const forEbook = params.get('for') === 'ebook' // only changes the words before the button: the server decides what is confirmed by the private code in the link
++  const done = (r) => <Confirmed already={r.state === 'already'} ebook={r.source === 'ebook'} request={r.kind === 'request'} newsletter={r.newsletter === true} />
++  if (forEbook) return <LinkPage title="Confirm your email" button="Yes, send me the free ebook" working="Confirming…" run={confirmSubscription} explain="Press the button to confirm your email address. You will then get the free ebook." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
++  return <LinkPage title="Confirm your subscription" button="Yes, send me the newsletter" working="Confirming…" run={confirmSubscription} explain="Press the button to say yes: you will then get the Starscapes Factory newsletter by email, and you can unsubscribe at any time." done={done} noToken="That link does not look right. Please open the link in the email we sent you." />
+ }
+ 
+ export function NewsletterUnsubscribePage() {
+diff --git a/src/newsletter/newsletterApi.js b/src/newsletter/newsletterApi.js
+index d6a68d8..f54464e 100644
+--- a/src/newsletter/newsletterApi.js
++++ b/src/newsletter/newsletterApi.js
+@@ -26,6 +26,6 @@ export function fetchOpen() {
+   return openAnswer
+ }
+ 
+-export const subscribe = ({ email, consent, website, source }) => ask('subscribe', { body: { email, consent, website, source: source === 'ebook' ? 'ebook' : 'site' } })
++export const subscribe = ({ email, consent, newsletter, website, source }) => ask('subscribe', { body: { email, consent, newsletter: newsletter === true, website, source: source === 'ebook' ? 'ebook' : 'site' } })
+ export const confirmSubscription = (token) => ask('confirm', { body: { token } })
+ export const unsubscribe = (token) => ask('unsubscribe', { body: { token } })
+diff --git a/src/newsletter/newsletterRules.js b/src/newsletter/newsletterRules.js
+index 3cc1e12..618c695 100644
+--- a/src/newsletter/newsletterRules.js
++++ b/src/newsletter/newsletterRules.js
+@@ -12,12 +12,14 @@ export const BATCH_SIZE = 50 // emails sent per request to Resend (its limit is
+ export const TOKEN_PATTERN = /^[a-f0-9]{48}$/
+ export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/
+ export const CONSENT_TEXT = 'Send me the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.'
++// The OPTIONAL newsletter box, worded the same everywhere it appears (the free ebook, the Road journal, and so on). It is never ticked for anyone and never needed to get the thing they asked for.
++export const OPTIONAL_NEWSLETTER_TEXT = 'Optional: also send me the Starscapes Factory newsletter by email, with new posts and news. I can unsubscribe at any time, with the link in every email.'
+ export const SITE = 'https://starscapesfactory.com'
+ 
+-// Where a sign-up came from: the footer box ('site') or the free ebook page ('ebook'). Both join the SAME list. The words recorded as their agreement are the ones on the box they ticked,
+-// chosen here on the server and never taken from the browser.
++// Where a sign-up came from: the footer box ('site': the newsletter, with a required tick) or the free ebook page ('ebook': a one-purpose request that needs NO tick, plus an optional newsletter box).
++// The words recorded as their agreement to the NEWSLETTER are the ones on the box they ticked, chosen here on the server and never taken from the browser.
+ export const sourceOf = (input) => (input && input.source === 'ebook' ? 'ebook' : 'site')
+-export const consentFor = (source) => (source === 'ebook' ? EBOOK.consent : CONSENT_TEXT)
++export const consentFor = (source) => (source === 'ebook' ? OPTIONAL_NEWSLETTER_TEXT : CONSENT_TEXT)
+ 
+ export const isToken = (t) => TOKEN_PATTERN.test(String(t === null || t === undefined ? '' : t))
+ export const isUuid = (t) => UUID_PATTERN.test(String(t === null || t === undefined ? '' : t))
+@@ -26,13 +28,15 @@ const bad = (field, message) => ({ ok: false, field, message })
+ 
+ const EMAIL = /^[^\s@<>",;:\\]+@[^\s@<>",;:\\]+\.[^\s@<>",;:\\]+$/
+ 
+-// A sign-up: an email address and a ticked box. Returns { ok: true, email } (in lower case) or { ok: false, field, message }.
++// A sign-up: an email address and, for the footer box, a ticked box. The free ebook needs only the email: its newsletter box is optional (newsletter: true only if they ticked it).
++// Returns { ok: true, email } (in lower case; the ebook also gets newsletter) or { ok: false, field, message }.
+ export function cleanSubscribe(input) {
+   const f = input && typeof input === 'object' ? input : {}
+   const email = text(f.email).trim().toLowerCase()
+   if (!email) return bad('email', 'Please enter your email address.')
+   if (email.length > 254 || !EMAIL.test(email)) return bad('email', 'That does not look like an email address. Please check it.')
+-  if (f.consent !== true) return bad('consent', sourceOf(f) === 'ebook' ? 'Please tick the box to say you would like the free ebook and the newsletter.' : 'Please tick the box to say you would like the newsletter.')
++  if (sourceOf(f) === 'ebook') return { ok: true, email, newsletter: f.newsletter === true }
++  if (f.consent !== true) return bad('consent', 'Please tick the box to say you would like the newsletter.')
+   return { ok: true, email }
+ }
+ 
+@@ -104,30 +108,33 @@ export function renderNewsletter({ subject, body, unsubscribeUrl, company = COMP
+   return { subject, html: FRAME(subject, b.html, footerHtml, { banner: 'general', title: subject, subtitle: 'The Starscapes Factory newsletter' }), text: `Starscapes Factory\n\n${b.text}\n\n--\n${footerText}\n` }
+ }
+ 
+-// The email that asks someone to confirm: they are only added once they press the link (double opt-in)
+-export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site' }) {
++// The email that asks someone to confirm: nothing happens until they press the link (double opt-in). For the newsletter box in the footer it confirms the newsletter. For the free ebook it confirms
++// the ebook request ONLY, and mentions the newsletter only when they ticked the optional box.
++export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'site', newsletter = false }) {
+   const line = companyLine(company)
+-  const ebook = source === 'ebook' // asked for the free ebook, which joins the same list
+-  const what = ebook ? 'the free ebook and the Starscapes Factory newsletter' : 'the Starscapes Factory newsletter'
+-  const subject = ebook ? 'Please confirm to get your free ebook and the Starscapes Factory newsletter' : 'Please confirm you would like the Starscapes Factory newsletter'
++  const ebook = source === 'ebook'
++  const also = ebook && newsletter === true
++  const what = ebook ? (also ? 'the free ebook, and the Starscapes Factory newsletter,' : 'the free ebook') : 'the Starscapes Factory newsletter'
++  const subject = ebook ? (also ? 'Please confirm to get your free ebook and the Starscapes Factory newsletter' : 'Please confirm your email to get your free ebook') : 'Please confirm you would like the Starscapes Factory newsletter'
++  const button = ebook ? (also ? 'Yes, send me the free ebook and the newsletter' : 'Yes, send me the free ebook') : 'Yes, send me the newsletter'
+   const text = `Hello,\n\nSomeone, hopefully you, asked for ${what} to be sent to this address.\n\nTo say yes${ebook ? ' and get the ebook' : ''}, open this link:\n${confirmUrl}\n\nIf it was not you, do nothing: you will not be signed up and you will not hear from us again.\n\n--\n${line}\n`
+-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${ebook ? ' and get the ebook' : ''}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${ebook ? 'Yes, send me the free ebook and the newsletter' : 'Yes, send me the newsletter'}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
++  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Someone, hopefully you, asked for ${what} to be sent to this address.</p>\n<p style="${P}">To say yes${ebook ? ' and get the ebook' : ''}, press the button:</p>\n<p style="margin:0 0 16px"><a href="${esc(confirmUrl)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">${button}</a></p>\n<p style="${P}">Or copy this link into your browser:<br><a href="${esc(confirmUrl)}" style="color:#14306a;word-break:break-all">${esc(confirmUrl)}</a></p>\n<p style="${P}">If it was not you, do nothing: you will not be signed up and you will not hear from us again.</p>`
+   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+-  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? 'To get your free ebook and the newsletter' : 'To get the Starscapes Factory newsletter' }), text }
++  return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'general', title: 'Please confirm', subtitle: ebook ? (also ? 'To get your free ebook and the newsletter' : 'To get your free ebook') : 'To get the Starscapes Factory newsletter' }), text }
+ }
+ 
+-// For someone who is ALREADY on the list and asks for the ebook (nothing to confirm, so it just gives the link). The page never says whether an address was already signed up: they find out in their inbox.
++// For someone who has ALREADY confirmed the ebook and asks again (nothing to confirm, so it just gives the link). It says nothing about the newsletter. The page never says whether an address was already known: they find out in their inbox.
+ export function ebookLinkEmail({ file, company = COMPANY, site = SITE }) {
+   const line = companyLine(company)
+   const link = `${site}${file}`
+   const subject = `Your free ebook: ${EBOOK.title.replace(/:.*$/, '')}`
+-  const text = `Hello,\n\nHere is the free ebook you asked for:\n${link}\n\n${EBOOK.fileNote}\n\nYou are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.\n\n--\n${line}\n`
+-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ebook you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ebook (PDF)</a></p>\n<p style="${P}">${esc(EBOOK.fileNote)}</p>\n<p style="${P}">You are already on the Starscapes Factory newsletter list, so there is nothing to confirm. Every newsletter has a link to unsubscribe.</p>`
++  const text = `Hello,\n\nHere is the free ebook you asked for:\n${link}\n\n${EBOOK.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
++  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ebook you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ebook (PDF)</a></p>\n<p style="${P}">${esc(EBOOK.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
+   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
+   return { subject, html: FRAME(subject, inner, footerHtml, { banner: 'leadership-lounge', title: 'Your free ebook', subtitle: EBOOK.title.replace(/:.*$/, '') }), text }
+ }
+ 
+-export const confirmUrl = (token, site = SITE) => `${site}/newsletter/confirm?t=${token}`
++export const confirmUrl = (token, site = SITE, purpose = '') => `${site}/newsletter/confirm?t=${token}${purpose === 'ebook' ? '&for=ebook' : ''}` // "for" only changes the words on the confirm page; the server decides by the private code
+ export const unsubscribePageUrl = (token, site = SITE) => `${site}/newsletter/unsubscribe?t=${token}`
+ // The address a mail program posts to for one-click unsubscribe (RFC 8058): the server handles it, the person never has to open a page
+ export const oneClickUrl = (token, site = SITE) => `${site}/api/ebook-signup?newsletter=unsubscribe&t=${token}`
+diff --git a/test/ebook-one-list-pages.test.jsx b/test/ebook-one-list-pages.test.jsx
+index bf6bf67..fd080d7 100644
+--- a/test/ebook-one-list-pages.test.jsx
++++ b/test/ebook-one-list-pages.test.jsx
+@@ -49,3 +49,22 @@ describe('after pressing confirm, for someone who joined from the footer box', (
+     const status = await screen.findByRole('status'); expect(status.textContent).not.toMatch(/ebook/i); expect(screen.queryByRole('link', { name: /Download/ })).toBeNull()
+   })
+ })
++
++describe('the ebook request link (…&for=ebook, 22 October 2026): the ebook alone, and the newsletter only if they ticked its separate box', () => {
++  const openFor = () => render(<MemoryRouter initialEntries={[`/newsletter/confirm?t=${TOKEN}&for=ebook`]}><NewsletterConfirmPage /></MemoryRouter>)
++  const pressEbook = async () => userEvent.click(screen.getByRole('button', { name: 'Yes, send me the free ebook' }))
++  it('opening it changes nothing, and the words before the button are about the ebook only', () => {
++    openFor(); expect(h.confirmed).toHaveLength(0); expect(document.body.textContent).toMatch(/Press the button to confirm your email address. You will then get the free ebook./); expect(document.body.textContent).not.toMatch(/newsletter/i)
++  })
++  it('confirmed without the newsletter: thanks, no word of a subscription or the newsletter, and the download (or the "still being finished" note)', async () => {
++    h.result = { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: false }; EBOOK.file = '/downloads/x.pdf'; openFor(); await pressEbook()
++    const status = await screen.findByRole('status'); expect(status).toHaveTextContent('Thank you, you are confirmed.'); expect(status).not.toHaveTextContent(/newsletter|subscribed/i); expect(screen.getByRole('link', { name: 'Download the free ebook (PDF)' })).toHaveAttribute('href', '/downloads/x.pdf')
++  })
++  it('confirmed with the newsletter box ticked: says they are also on that list, and how to leave', async () => {
++    h.result = { ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: true }; openFor(); await pressEbook()
++    const status = await screen.findByRole('status'); expect(status).toHaveTextContent('You also asked for the newsletter, so you are on that list too.'); expect(status).toHaveTextContent('unsubscribe at any time'); expect(status).toHaveTextContent('still being finished')
++  })
++  it('pressing it twice is fine', async () => {
++    h.result = { ok: true, state: 'already', source: 'ebook', kind: 'request', newsletter: false }; openFor(); await pressEbook(); expect(await screen.findByRole('status')).toHaveTextContent('You have already confirmed. Thank you.')
++  })
++})
+diff --git a/test/ebook-one-list.test.js b/test/ebook-one-list.test.js
+deleted file mode 100644
+index bf886c7..0000000
+--- a/test/ebook-one-list.test.js
++++ /dev/null
+@@ -1,161 +0,0 @@
+-// @vitest-environment node
+-// The free ebook and the newsletter are ONE list (21 October 2026): asking for the ebook signs someone up to the newsletter list (source 'ebook'), through the same confirm-by-email step.
+-// Against a pretend database and a pretend Resend. The words recorded as their agreement are the ones on the box they ticked, chosen by the server; nobody is told whether an address was already
+-// signed up; nobody gets the ebook link before confirming; and the old separate ebook sign-up is gone.
+-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
+-import { existsSync, readFileSync, readdirSync } from 'node:fs'
+-import { join } from 'node:path'
+-import handler from '../api/ebook-signup.js'
+-import { COOLDOWN_MS } from '../lib/newsletter.js'
+-import { CONSENT_TEXT, SITE, confirmationEmail, consentFor, ebookLinkEmail, sourceOf } from '../src/newsletter/newsletterRules.js'
+-import { EBOOK } from '../src/ebook/ebookConfig.js'
+-
+-const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
+-const T1 = 'a1'.repeat(24)
+-const hoursAgo = (h) => new Date(Date.now() - h * 3600000).toISOString()
+-const row = (over = {}) => ({ id: 'id-1', email: 'ann@example.com', status: 'pending', token: T1, consent_text: CONSENT_TEXT, source: 'site', confirmation_sent_at: hoursAgo(1), unsubscribed_at: null, confirmed_at: null, ...over })
+-const originalFile = EBOOK.file
+-
+-function world({ rows = [], resendFails = false } = {}) {
+-  const db = rows.map((r) => ({ ...r })); const sent = []; const calls = []
+-  vi.stubGlobal('fetch', vi.fn(async (url, init = {}) => {
+-    const u = String(url); const method = init.method || 'GET'; calls.push({ u, method })
+-    if (u.startsWith('https://api.resend.com/emails')) { if (resendFails) return json({ message: 'no re_secret_key_zzzz' }, 500); const b = JSON.parse(init.body); sent.push(b); return json({ id: `em_${sent.length}` }) }
+-    if (u.startsWith('https://db.test/rest/v1/newsletter_subscribers')) {
+-      const q = new URL(u).searchParams
+-      if (method === 'GET') { const e = (q.get('email') || '').replace(/^eq\./, ''); const t = (q.get('token') || '').replace(/^eq\./, ''); const found = db.find((r) => (e && r.email === e) || (t && r.token === t)); return json(found ? [{ ...found }] : []) }
+-      if (method === 'POST') { const r = JSON.parse(init.body); if (db.some((x) => x.email === r.email)) return json({ code: '23505' }, 409); db.push({ id: `id-${db.length + 1}`, unsubscribed_at: null, confirmed_at: null, ...r }); return json(null, 201) }
+-      if (method === 'PATCH') { const id = q.get('id').replace(/^eq\./, ''); const r = db.find((x) => x.id === id); Object.assign(r, JSON.parse(init.body)); return json(null, 204) }
+-    }
+-    throw new Error(`unexpected request: ${method} ${u}`)
+-  }))
+-  return { db, sent, calls }
+-}
+-const call = async (req) => {
+-  const out = { headers: {}, status: null, body: null }
+-  const res = { setHeader: (k, v) => { out.headers[k] = v }, status(n) { out.status = n; return res }, json(b) { out.body = b; return res } }
+-  await handler({ method: 'POST', query: {}, headers: {}, ...req }, res)
+-  return out
+-}
+-const sub = (body) => call({ query: { newsletter: 'subscribe' }, body })
+-const confirm = (token) => call({ query: { newsletter: 'confirm' }, body: { token } })
+-const ebook = (over = {}) => ({ email: 'ann@example.com', consent: true, source: 'ebook', ...over })
+-
+-beforeEach(() => { Object.assign(process.env, { SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'srv-key-secret-value-0000', RESEND_API_KEY: 're_secret_key_zzzz', NEWSLETTER_OPEN: 'yes' }); delete process.env.VITE_SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY; EBOOK.file = '' })
+-afterEach(() => { EBOOK.file = originalFile; vi.unstubAllGlobals(); vi.restoreAllMocks() })
+-
+-describe('asking for the ebook signs someone up to the newsletter list', () => {
+-  it('keeps them as waiting to confirm (not on the list yet), marked as coming from the ebook, with the exact words on the ebook\u2019s tick box, and says only "ok"', async () => {
+-    const w = world(); const out = await sub(ebook({ email: 'Ann@Example.com ' }))
+-    expect(out.status).toBe(200); expect(out.body).toEqual({ ok: true })
+-    expect(w.db).toHaveLength(1); expect(w.db[0]).toMatchObject({ email: 'ann@example.com', status: 'pending', source: 'ebook', consent_text: EBOOK.consent }); expect(w.db[0].consent_text).toMatch(/free ebook and the Starscapes Factory newsletter/)
+-  })
+-  it('chooses the words itself: a browser cannot make the server record other words as their agreement', async () => {
+-    const w = world(); await sub(ebook({ consent_text: 'I agree to anything', consentText: 'x' })); expect(w.db[0].consent_text).toBe(EBOOK.consent)
+-  })
+-  it('sends exactly one email, to that address, asking them to confirm, and it mentions the free ebook and the newsletter (not just the newsletter)', async () => {
+-    const w = world(); await sub(ebook()); expect(w.sent).toHaveLength(1); const mail = w.sent[0]
+-    expect(mail.to).toEqual(['ann@example.com']); expect(mail.subject).toBe('Please confirm to get your free ebook and the Starscapes Factory newsletter'); expect(mail.text).toContain('asked for the free ebook and the Starscapes Factory newsletter'); expect(mail.html).toContain('Yes, send me the free ebook and the newsletter')
+-    expect(mail.text).toContain(`${SITE}/newsletter/confirm?t=`); expect(mail.text).not.toContain('/downloads/') // the ebook is not given before they confirm
+-  })
+-  it('sends the plain newsletter email from the footer box, unchanged: the footer words, and no mention of the ebook', async () => {
+-    for (const body of [{ email: 'ann@example.com', consent: true, source: 'site' }, { email: 'ann@example.com', consent: true }, { email: 'ann@example.com', consent: true, source: 'something-else' }, { email: 'ann@example.com', consent: true, source: ['ebook'] }]) {
+-      const w = world(); await sub(body); expect(w.db[0]).toMatchObject({ source: 'site', consent_text: CONSENT_TEXT }); expect(w.sent[0].subject).toBe('Please confirm you would like the Starscapes Factory newsletter'); expect(w.sent[0].text).not.toMatch(/ebook/i); expect(w.sent[0].html).not.toMatch(/ebook/i)
+-    }
+-  })
+-  it('asks for the right tick in the right words: without it, an ebook sign-up says "free ebook and the newsletter"; the footer says "the newsletter"', async () => {
+-    world(); const a = await sub(ebook({ consent: false })); expect(a.status).toBe(400); expect(a.body).toMatchObject({ ok: false, field: 'consent', message: 'Please tick the box to say you would like the free ebook and the newsletter.' })
+-    const b = await sub({ email: 'ann@example.com', consent: false }); expect(b.body.message).toBe('Please tick the box to say you would like the newsletter.')
+-  })
+-  it('keeps nothing and sends nothing for a robot (the hidden box filled in), and never while the newsletter is closed', async () => {
+-    const w = world(); const robot = await sub(ebook({ website: 'http://spam.example' })); expect(robot.status).toBe(200); expect(w.db).toHaveLength(0); expect(w.sent).toHaveLength(0)
+-    delete process.env.NEWSLETTER_OPEN; const closed = await sub(ebook()); expect(closed.status).toBe(403); expect(w.db).toHaveLength(0); expect(w.sent).toHaveLength(0)
+-  })
+-})
+-
+-describe('the page can never tell who is already signed up', () => {
+-  it('gives the very same answer whether the address is new, waiting, already confirmed or had left (and the ebook link never goes to anyone unconfirmed)', async () => {
+-    EBOOK.file = '/downloads/leading-from-the-middle.pdf'
+-    const answers = []
+-    for (const r of [null, row({ status: 'pending', confirmation_sent_at: hoursAgo(5) }), row({ status: 'confirmed', confirmed_at: hoursAgo(9) }), row({ status: 'unsubscribed', unsubscribed_at: hoursAgo(9) })]) {
+-      const w = world({ rows: r ? [r] : [] }); const out = await sub(ebook()); answers.push(out)
+-      const kinds = w.sent.map((m) => (m.subject.startsWith('Please confirm') ? 'confirm' : 'link')); if (!r || r.status !== 'confirmed') expect(kinds).toEqual(['confirm']) // anyone not confirmed gets only the confirm email
+-    }
+-    for (const a of answers) { expect(a.status).toBe(200); expect(a.body).toEqual({ ok: true }) }
+-  })
+-})
+-
+-describe('someone already on the list asks for the ebook', () => {
+-  it('while there is no PDF: nothing is sent and nothing changes (they hear when it is ready, like everyone on the list)', async () => {
+-    const w = world({ rows: [row({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); const out = await sub(ebook()); expect(out.body).toEqual({ ok: true }); expect(w.sent).toHaveLength(0); expect(w.db[0]).toMatchObject({ status: 'confirmed', source: 'site', consent_text: CONSENT_TEXT })
+-  })
+-  it('once there is a PDF: they get ONE email with the link (nothing to confirm), and their record is untouched', async () => {
+-    EBOOK.file = '/downloads/leading-from-the-middle.pdf'; const w = world({ rows: [row({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); await sub(ebook())
+-    expect(w.sent).toHaveLength(1); const mail = w.sent[0]; expect(mail.to).toEqual(['ann@example.com']); expect(mail.subject).toBe('Your free ebook: Leading from the Middle'); expect(mail.text).toContain(`${SITE}/downloads/leading-from-the-middle.pdf`); expect(mail.text).toContain('nothing to confirm')
+-    expect(w.db[0]).toMatchObject({ status: 'confirmed', source: 'site', consent_text: CONSENT_TEXT }); expect(w.calls.filter((c) => c.method === 'PATCH')).toHaveLength(0)
+-  })
+-  it('from the footer box they get nothing more (the answer is the same, and nothing is sent)', async () => {
+-    EBOOK.file = '/downloads/x.pdf'; const w = world({ rows: [row({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); await sub({ email: 'ann@example.com', consent: true }); expect(w.sent).toHaveLength(0)
+-  })
+-  it('says plainly, with none of the mailing tool\u2019s words or key, when that email cannot be sent', async () => {
+-    EBOOK.file = '/downloads/x.pdf'; world({ rows: [row({ status: 'confirmed', confirmed_at: hoursAgo(9) })], resendFails: true }); const out = await sub(ebook())
+-    expect(out.status).toBe(502); expect(out.body.ok).toBe(false); expect(JSON.stringify(out.body)).not.toMatch(/re_secret|no re_/)
+-  })
+-})
+-
+-describe('someone already waiting, or who had left, asks for the ebook', () => {
+-  it('a moment after joining from the footer: no second email, but the record now says they came for the ebook and holds the words they ticked last', async () => {
+-    const w = world({ rows: [row({ status: 'pending', confirmation_sent_at: new Date(Date.now() - COOLDOWN_MS / 4).toISOString() })] }); await sub(ebook())
+-    expect(w.sent).toHaveLength(0); expect(w.db[0]).toMatchObject({ status: 'pending', source: 'ebook', consent_text: EBOOK.consent })
+-  })
+-  it('later: a fresh confirmation email (the ebook one), and the record holds the ebook words', async () => {
+-    const w = world({ rows: [row({ status: 'pending', confirmation_sent_at: hoursAgo(30) })] }); await sub(ebook()); expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toMatch(/free ebook/); expect(w.db[0]).toMatchObject({ source: 'ebook', consent_text: EBOOK.consent, status: 'pending' })
+-  })
+-  it('someone who had unsubscribed starts again from the beginning: waiting to confirm, with the ebook words, and a confirmation email (not the link)', async () => {
+-    EBOOK.file = '/downloads/x.pdf'; const w = world({ rows: [row({ status: 'unsubscribed', unsubscribed_at: hoursAgo(50) })] }); await sub(ebook())
+-    expect(w.db[0]).toMatchObject({ status: 'pending', source: 'ebook', consent_text: EBOOK.consent, unsubscribed_at: null }); expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toMatch(/^Please confirm/)
+-  })
+-})
+-
+-describe('confirming', () => {
+-  it('tells the confirm page where they came from (so it can offer the ebook), only for a real private code, and changes nothing else', async () => {
+-    const w = world({ rows: [row({ source: 'ebook' })] }); const out = await confirm(T1); expect(out.status).toBe(200); expect(out.body).toEqual({ ok: true, state: 'confirmed', source: 'ebook' }); expect(w.db[0].status).toBe('confirmed')
+-    const again = await confirm(T1); expect(again.body).toEqual({ ok: true, state: 'already', source: 'ebook' })
+-    world({ rows: [row({ source: 'site' })] }); expect((await confirm(T1)).body).toEqual({ ok: true, state: 'confirmed', source: 'site' })
+-    const bad = await confirm('not-a-code'); expect(bad.status).toBe(400); expect(bad.body).not.toHaveProperty('source')
+-  })
+-})
+-
+-describe('the words and emails', () => {
+-  it('chooses the source and the words from a short list, and anything odd means the footer', () => {
+-    expect(sourceOf({ source: 'ebook' })).toBe('ebook'); for (const v of [undefined, null, '', 'site', 'EBOOK', ['ebook'], { x: 1 }, 5]) expect(sourceOf({ source: v }), String(v)).toBe('site'); expect(sourceOf(null)).toBe('site'); expect(sourceOf(undefined)).toBe('site')
+-    expect(consentFor('ebook')).toBe(EBOOK.consent); expect(consentFor('site')).toBe(CONSENT_TEXT); expect(consentFor('anything')).toBe(CONSENT_TEXT); expect(consentFor()).toBe(CONSENT_TEXT)
+-  })
+-  it('the ebook\u2019s words say yes to both, the way out, and no price or pass', () => {
+-    expect(EBOOK.consent).toMatch(/free ebook and the Starscapes Factory newsletter by email/); expect(EBOOK.consent).toMatch(/unsubscribe at any time/); expect(EBOOK.consent).not.toMatch(/pass|pay|£|price|member/i)
+-  })
+-  it('the two confirmation emails differ only where they should, and both carry the link and the unsubscribe-free promise "do nothing and you will not be signed up"', () => {
+-    const a = confirmationEmail({ confirmUrl: 'https://x.test/c?t=1' }); const b = confirmationEmail({ confirmUrl: 'https://x.test/c?t=1', source: 'ebook' })
+-    expect(a.subject).not.toBe(b.subject); for (const m of [a, b]) { expect(m.text).toContain('https://x.test/c?t=1'); expect(m.html).toContain('https://x.test/c?t=1'); expect(m.text).toContain('If it was not you, do nothing: you will not be signed up') }
+-    expect(a.text).not.toMatch(/ebook/i); expect(b.text).toMatch(/free ebook/)
+-  })
+-  it('the ebook link email puts the link in as an address and the file note, escapes anything odd, and says there is nothing to confirm', () => {
+-    const m = ebookLinkEmail({ file: '/downloads/a b.pdf?x=<script>' }); expect(m.html).not.toContain('<script>'); expect(m.text).toContain(`${SITE}/downloads/a b.pdf?x=<script>`); expect(m.html).toContain('&lt;script&gt;'); expect(m.html).toContain(EBOOK.fileNote); expect(m.text).toContain('nothing to confirm')
+-  })
+-})
+-
+-describe('the old separate ebook sign-up is gone', () => {
+-  it('has no server code of its own, no table in use, and the address answers "not found" to anything that is not the newsletter', async () => {
+-    expect(existsSync(join(process.cwd(), 'lib/ebookSignup.js'))).toBe(false)
+-    const files = [...readdirSync(join(process.cwd(), 'lib')).map((f) => `lib/${f}`), ...readdirSync(join(process.cwd(), 'api')).map((f) => `api/${f}`), 'src/ebook/FreeEbookPage.jsx', 'src/newsletter/newsletterApi.js']
+-    expect(files.filter((f) => /ebook_signups|handleSignup|ebookSignup/.test(readFileSync(join(process.cwd(), f), 'utf8')))).toEqual([])
+-    const w = world(); for (const method of ['POST', 'GET']) { const out = await call({ method, body: { email: 'ann@example.com', consent: true } }); expect(out.status).toBe(404) }
+-    expect(w.db).toHaveLength(0); expect(w.calls).toHaveLength(0)
+-  })
+-  it('the page asks the newsletter\u2019s server and nowhere else, and says where the sign-up came from', () => {
+-    const page = readFileSync(join(process.cwd(), 'src/ebook/FreeEbookPage.jsx'), 'utf8'); expect(page).toMatch(/source: 'ebook'/); expect(page).not.toMatch(/fetch\(/); expect(readFileSync(join(process.cwd(), 'src/newsletter/newsletterApi.js'), 'utf8')).toMatch(/source: source === 'ebook' \? 'ebook' : 'site'/)
+-  })
+-  it('the daily tidy-up treats ebook sign-ups like any other: it never looks at where they came from', () => {
+-    const tidy = readFileSync(join(process.cwd(), 'lib/newsletter.js'), 'utf8').split('async function tidy')[1].split('export async function handleNewsletter')[0]; expect(tidy).not.toMatch(/source/)
+-  })
+-})
+diff --git a/test/ebook-request.test.js b/test/ebook-request.test.js
+new file mode 100644
+index 0000000..c0d9ae1
+--- /dev/null
++++ b/test/ebook-request.test.js
+@@ -0,0 +1,190 @@
++// @vitest-environment node
++// The free ebook (22 October 2026): getting it needs NO tick and does not join the newsletter. It is a one-purpose request, kept in its own table (email_requests), confirmed by email first.
++// The newsletter is a separate OPTIONAL box: only if it was ticked AND the link is pressed does the person join the newsletter list, with the words next to that box.
++// Against a pretend database and a pretend Resend.
++import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest'
++import { existsSync, readFileSync } from 'node:fs'
++import { join } from 'node:path'
++import handler from '../api/ebook-signup.js'
++import { COOLDOWN_MS } from '../lib/newsletter.js'
++import { CONSENT_TEXT, OPTIONAL_NEWSLETTER_TEXT, SITE, cleanSubscribe, confirmationEmail, confirmUrl, consentFor, ebookLinkEmail, sourceOf } from '../src/newsletter/newsletterRules.js'
++import { EBOOK } from '../src/ebook/ebookConfig.js'
++
++const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
++const T1 = 'a1'.repeat(24)
++const T2 = 'b2'.repeat(24)
++const hoursAgo = (h) => new Date(Date.now() - h * 3600000).toISOString()
++const req = (over = {}) => ({ id: 'r-1', email: 'ann@example.com', purpose: 'ebook', status: 'pending', token: T1, consent_text: EBOOK.request, wants_newsletter: false, newsletter_text: null, confirmation_sent_at: hoursAgo(1), confirmed_at: null, ...over })
++const person = (over = {}) => ({ id: 's-1', email: 'ann@example.com', status: 'confirmed', token: T2, consent_text: CONSENT_TEXT, source: 'site', confirmation_sent_at: hoursAgo(90), unsubscribed_at: null, confirmed_at: hoursAgo(90), ...over })
++const originalFile = EBOOK.file
++
++function world({ requests = [], people = [], resendFails = false } = {}) {
++  const reqs = requests.map((r) => ({ ...r })); const subs = people.map((r) => ({ ...r })); const sent = []; const calls = []
++  const table = (u) => (u.startsWith('https://db.test/rest/v1/email_requests') ? reqs : u.startsWith('https://db.test/rest/v1/newsletter_subscribers') ? subs : null)
++  vi.stubGlobal('fetch', vi.fn(async (url, init = {}) => {
++    const u = String(url); const method = init.method || 'GET'; calls.push({ u, method })
++    if (u.startsWith('https://api.resend.com/emails')) { if (resendFails) return json({ message: 'no re_secret_key_zzzz' }, 500); const b = JSON.parse(init.body); sent.push(b); return json({ id: `em_${sent.length}` }) }
++    const rows = table(u)
++    if (rows) {
++      const q = new URL(u).searchParams
++      if (method === 'GET') { const g = (k) => (q.get(k) || '').replace(/^eq\./, ''); const found = rows.find((r) => (g('email') && r.email === g('email') && (!g('purpose') || r.purpose === g('purpose'))) || (g('token') && r.token === g('token'))); return json(found ? [{ ...found }] : []) }
++      if (method === 'POST') { const r = JSON.parse(init.body); if (rows.some((x) => x.email === r.email && x.purpose === r.purpose)) return json({ code: '23505' }, 409); rows.push({ id: `id-${rows.length + 1}`, unsubscribed_at: null, confirmed_at: null, ...r }); return json(null, 201) }
++      if (method === 'PATCH') { const id = q.get('id').replace(/^eq\./, ''); Object.assign(rows.find((x) => x.id === id), JSON.parse(init.body)); return json(null, 204) }
++    }
++    throw new Error(`unexpected request: ${method} ${u}`)
++  }))
++  return { reqs, subs, sent, calls }
++}
++const call = async (r) => {
++  const out = { headers: {}, status: null, body: null }
++  const res = { setHeader: (k, v) => { out.headers[k] = v }, status(n) { out.status = n; return res }, json(b) { out.body = b; return res } }
++  await handler({ method: 'POST', query: {}, headers: {}, ...r }, res)
++  return out
++}
++const sub = (body) => call({ query: { newsletter: 'subscribe' }, body })
++const confirm = (token) => call({ query: { newsletter: 'confirm' }, body: { token } })
++const ebook = (over = {}) => ({ email: 'ann@example.com', source: 'ebook', ...over })
++
++beforeEach(() => { Object.assign(process.env, { SUPABASE_URL: 'https://db.test', SUPABASE_SERVICE_ROLE_KEY: 'srv-key-secret-value-0000', RESEND_API_KEY: 're_secret_key_zzzz', NEWSLETTER_OPEN: 'yes' }); delete process.env.VITE_SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY; EBOOK.file = '' })
++afterEach(() => { EBOOK.file = originalFile; vi.unstubAllGlobals(); vi.restoreAllMocks() })
++
++describe('asking for the ebook needs no tick and does not touch the newsletter list', () => {
++  it('stores a waiting request (not confirmed) with the server’s own words, and nothing in the newsletter list', async () => {
++    const w = world(); const out = await sub(ebook({ email: 'Ann@Example.com ' }))
++    expect(out.status).toBe(200); expect(out.body).toEqual({ ok: true })
++    expect(w.reqs).toHaveLength(1); expect(w.reqs[0]).toMatchObject({ email: 'ann@example.com', purpose: 'ebook', status: 'pending', consent_text: EBOOK.request, wants_newsletter: false, newsletter_text: null })
++    expect(w.reqs[0].consent_text).not.toMatch(/newsletter/i); expect(w.subs).toHaveLength(0)
++  })
++  it('never lets a browser choose the words that are recorded', async () => {
++    const w = world(); await sub(ebook({ consent_text: 'I agree to anything', newsletter_text: 'x', consent: false })); expect(w.reqs[0].consent_text).toBe(EBOOK.request); expect(w.reqs[0].newsletter_text).toBe(null)
++  })
++  it('emails once, asking only to confirm the ebook: no newsletter in it', async () => {
++    const w = world(); await sub(ebook()); expect(w.sent).toHaveLength(1); const mail = w.sent[0]
++    expect(mail.to).toEqual(['ann@example.com']); expect(mail.subject).toBe('Please confirm your email to get your free ebook'); expect(mail.text).toContain('asked for the free ebook to be sent'); const words = (t) => t.replace(/https?:\/\/\S+/g, ''); expect(words(mail.text)).not.toMatch(/newsletter/i); expect(words(mail.html.replace(/<[^>]+>/g, ' '))).not.toMatch(/newsletter/i)
++    expect(mail.text).toContain(`${SITE}/newsletter/confirm?t=${w.reqs[0].token}&for=ebook`); expect(mail.text).not.toContain('/downloads/')
++  })
++  it('the optional newsletter box, when ticked, is kept as its own flag and words, and the email says so; ticking is only ever a literal true', async () => {
++    const w = world(); await sub(ebook({ newsletter: true })); expect(w.reqs[0]).toMatchObject({ wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT }); expect(w.subs).toHaveLength(0)
++    expect(w.sent[0].subject).toBe('Please confirm to get your free ebook and the Starscapes Factory newsletter'); expect(w.sent[0].html).toContain('Yes, send me the free ebook and the newsletter')
++    for (const v of ['true', 'on', 1, 'yes', [true], undefined, null, false]) { const x = world(); await sub(ebook({ newsletter: v })); expect(x.reqs[0].wants_newsletter, String(v)).toBe(false) }
++  })
++  it('a site (footer) sign-up is unchanged: it still needs its tick, joins the list as waiting, and says nothing about the ebook', async () => {
++    const none = await sub({ email: 'ann@example.com', consent: false }); expect(none.status).toBe(400); expect(none.body).toMatchObject({ field: 'consent', message: 'Please tick the box to say you would like the newsletter.' })
++    for (const body of [{ email: 'ann@example.com', consent: true, source: 'site' }, { email: 'ann@example.com', consent: true }, { email: 'ann@example.com', consent: true, source: 'EBOOK' }]) {
++      const w = world(); await sub(body); expect(w.subs[0]).toMatchObject({ source: 'site', status: 'pending', consent_text: CONSENT_TEXT }); expect(w.reqs).toHaveLength(0); expect(w.sent[0].subject).toBe('Please confirm you would like the Starscapes Factory newsletter'); expect(w.sent[0].text).not.toMatch(/ebook/i)
++    }
++  })
++  it('keeps nothing and sends nothing for a robot, and never while sign-ups are closed; a bad address is refused in plain words', async () => {
++    const w = world(); const robot = await sub(ebook({ website: 'http://spam.example' })); expect(robot.status).toBe(200); expect(w.reqs).toHaveLength(0); expect(w.sent).toHaveLength(0)
++    const bad = await sub(ebook({ email: 'nope' })); expect(bad.status).toBe(400); expect(bad.body.field).toBe('email')
++    delete process.env.NEWSLETTER_OPEN; const closed = await sub(ebook()); expect(closed.status).toBe(403); expect(w.reqs).toHaveLength(0)
++  })
++})
++
++describe('the page can never tell who asked before', () => {
++  it('gives the very same answer for a new address, a waiting one and a confirmed one, and a confirmed address is the only one sent the link', async () => {
++    EBOOK.file = '/downloads/leading-from-the-middle.pdf'; const answers = []
++    for (const r of [null, req({ confirmation_sent_at: hoursAgo(5) }), req({ status: 'confirmed', confirmed_at: hoursAgo(9) })]) {
++      const w = world({ requests: r ? [r] : [] }); answers.push(await sub(ebook()))
++      const kinds = w.sent.map((m) => (m.subject.startsWith('Please confirm') ? 'confirm' : 'link')); expect(kinds).toEqual(r && r.status === 'confirmed' ? ['link'] : ['confirm'])
++    }
++    for (const a of answers) { expect(a.status).toBe(200); expect(a.body).toEqual({ ok: true }) }
++  })
++  it('someone who confirmed already, while there is no PDF: nothing is sent and nothing changes', async () => {
++    const w = world({ requests: [req({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); const out = await sub(ebook()); expect(out.body).toEqual({ ok: true }); expect(w.sent).toHaveLength(0); expect(w.calls.filter((c) => c.method !== 'GET')).toHaveLength(0)
++  })
++  it('once there is a PDF: one email with the link, saying nothing about the newsletter, and the record is untouched', async () => {
++    EBOOK.file = '/downloads/leading-from-the-middle.pdf'; const w = world({ requests: [req({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); await sub(ebook())
++    expect(w.sent).toHaveLength(1); const mail = w.sent[0]; expect(mail.subject).toBe('Your free ebook: Leading from the Middle'); expect(mail.text).toContain(`${SITE}/downloads/leading-from-the-middle.pdf`); expect(mail.text).not.toMatch(/already on the/i)
++    expect(w.reqs[0]).toMatchObject({ status: 'confirmed' }); expect(w.calls.filter((c) => c.method === 'PATCH')).toHaveLength(0)
++  })
++  it('says plainly, without the mailing tool’s words or key, when the email cannot be sent', async () => {
++    world({ resendFails: true }); const out = await sub(ebook()); expect(out.status).toBe(502); expect(out.body.ok).toBe(false); expect(JSON.stringify(out.body)).not.toMatch(/re_secret|no re_/)
++  })
++})
++
++describe('asking again', () => {
++  it('a moment later: no second email, but the record follows the box as it is now', async () => {
++    const w = world({ requests: [req({ confirmation_sent_at: new Date(Date.now() - COOLDOWN_MS / 4).toISOString() })] }); await sub(ebook({ newsletter: true }))
++    expect(w.sent).toHaveLength(0); expect(w.reqs[0]).toMatchObject({ wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT })
++    await sub(ebook({ newsletter: false })); expect(w.reqs[0]).toMatchObject({ wants_newsletter: false, newsletter_text: null })
++  })
++  it('later, while still waiting: a fresh confirmation email and the box as it is now', async () => {
++    const w = world({ requests: [req({ confirmation_sent_at: hoursAgo(30), wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT })] }); await sub(ebook()); expect(w.sent).toHaveLength(1); expect(w.reqs[0]).toMatchObject({ status: 'pending', wants_newsletter: false, newsletter_text: null })
++  })
++  it('someone who confirmed the ebook and now also ticks the newsletter: a new confirm email for that, and they are not on the list until they press it', async () => {
++    const w = world({ requests: [req({ status: 'confirmed', confirmed_at: hoursAgo(9) })] }); await sub(ebook({ newsletter: true }))
++    expect(w.reqs[0]).toMatchObject({ status: 'pending', wants_newsletter: true }); expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toMatch(/newsletter/); expect(w.subs).toHaveLength(0)
++  })
++  it('but someone already on the newsletter list who confirmed the ebook just gets the link (nothing more to confirm)', async () => {
++    EBOOK.file = '/downloads/x.pdf'; const w = world({ requests: [req({ status: 'confirmed', confirmed_at: hoursAgo(9) })], people: [person()] }); await sub(ebook({ newsletter: true }))
++    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toMatch(/^Your free ebook/); expect(w.reqs[0].status).toBe('confirmed')
++  })
++  it('an ebook request never changes someone who is on the newsletter list: no change to their record, and no confirm email for it', async () => {
++    const w = world({ people: [person({ status: 'unsubscribed', unsubscribed_at: hoursAgo(50) })] }); await sub(ebook())
++    expect(w.subs[0].status).toBe('unsubscribed'); expect(w.reqs).toHaveLength(1)
++  })
++})
++
++describe('confirming', () => {
++  it('confirms the ebook request only: the newsletter list is untouched when the box was not ticked', async () => {
++    const w = world({ requests: [req()] }); const out = await confirm(T1)
++    expect(out.status).toBe(200); expect(out.body).toEqual({ ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: false }); expect(w.reqs[0].status).toBe('confirmed'); expect(w.subs).toHaveLength(0)
++    expect((await confirm(T1)).body).toEqual({ ok: true, state: 'already', source: 'ebook', kind: 'request', newsletter: false })
++  })
++  it('when the box was ticked, pressing the link also adds a CONFIRMED newsletter subscriber, with the words next to the box and the ebook as the source', async () => {
++    const w = world({ requests: [req({ wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT })] }); const out = await confirm(T1)
++    expect(out.body).toEqual({ ok: true, state: 'confirmed', source: 'ebook', kind: 'request', newsletter: true })
++    expect(w.subs).toHaveLength(1); expect(w.subs[0]).toMatchObject({ email: 'ann@example.com', status: 'confirmed', source: 'ebook', consent_text: OPTIONAL_NEWSLETTER_TEXT }); expect(w.subs[0].token).toMatch(/^[a-f0-9]{48}$/); expect(w.subs[0].confirmed_at).toBeTruthy()
++  })
++  it('brings back someone who had left, only because they ticked it themselves just now; and leaves someone already confirmed exactly as they are', async () => {
++    const left = world({ requests: [req({ wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT })], people: [person({ status: 'unsubscribed', unsubscribed_at: hoursAgo(50) })] }); await confirm(T1)
++    expect(left.subs[0]).toMatchObject({ status: 'confirmed', unsubscribed_at: null, source: 'ebook', consent_text: OPTIONAL_NEWSLETTER_TEXT })
++    const on = world({ requests: [req({ wants_newsletter: true, newsletter_text: OPTIONAL_NEWSLETTER_TEXT })], people: [person()] }); await confirm(T1); expect(on.subs[0]).toMatchObject({ source: 'site', consent_text: CONSENT_TEXT }); expect(on.calls.filter((c) => c.method !== 'GET' && c.u.includes('newsletter_subscribers'))).toHaveLength(0)
++  })
++  it('still works as before for the newsletter list, and a code nobody has is "not valid"', async () => {
++    const w = world({ people: [person({ status: 'pending', confirmed_at: null })] }); expect((await confirm(T2)).body).toEqual({ ok: true, state: 'confirmed', source: 'site' }); expect(w.subs[0].status).toBe('confirmed')
++    world(); expect((await confirm(T1)).status).toBe(404); const bad = await confirm('not-a-code'); expect(bad.status).toBe(400); expect(bad.body).not.toHaveProperty('source')
++  })
++})
++
++describe('the words and emails', () => {
++  it('chooses the source and the words from a short list, and anything odd means the footer', () => {
++    expect(sourceOf({ source: 'ebook' })).toBe('ebook'); for (const v of [undefined, null, '', 'site', 'EBOOK', ['ebook'], { x: 1 }, 5]) expect(sourceOf({ source: v }), String(v)).toBe('site'); expect(sourceOf(null)).toBe('site')
++    expect(consentFor('ebook')).toBe(OPTIONAL_NEWSLETTER_TEXT); expect(consentFor('site')).toBe(CONSENT_TEXT); expect(consentFor('anything')).toBe(CONSENT_TEXT); expect(consentFor()).toBe(CONSENT_TEXT)
++  })
++  it('the optional box has one set of words: it starts "Optional:", has the way out, and no price or pass; the ebook request words say nothing about the newsletter', () => {
++    expect(OPTIONAL_NEWSLETTER_TEXT).toBe('Optional: also send me the Starscapes Factory newsletter by email, with new posts and news. I can unsubscribe at any time, with the link in every email.'); expect(OPTIONAL_NEWSLETTER_TEXT).not.toMatch(/pass|pay|£|price|member/i)
++    expect(EBOOK.request).not.toMatch(/newsletter/i); expect(EBOOK.smallPrint).toMatch(/for that only, unless you tick the box/); expect(EBOOK).not.toHaveProperty('consent')
++  })
++  it('cleanSubscribe: the ebook needs only an email (newsletter true only for a literal true); the footer still needs its tick', () => {
++    expect(cleanSubscribe({ email: ' A@B.com ', source: 'ebook' })).toEqual({ ok: true, email: 'a@b.com', newsletter: false }); expect(cleanSubscribe({ email: 'a@b.com', source: 'ebook', newsletter: true })).toEqual({ ok: true, email: 'a@b.com', newsletter: true })
++    expect(cleanSubscribe({ email: 'a@b.com', source: 'ebook', newsletter: 'true' }).newsletter).toBe(false); expect(cleanSubscribe({ email: 'a@b.com' })).toMatchObject({ ok: false, field: 'consent' }); expect(cleanSubscribe({ email: '', source: 'ebook' }).field).toBe('email')
++  })
++  it('the confirm links: the "for=ebook" only changes the words on the page', () => {
++    expect(confirmUrl(T1)).toBe(`${SITE}/newsletter/confirm?t=${T1}`); expect(confirmUrl(T1, SITE, 'ebook')).toBe(`${SITE}/newsletter/confirm?t=${T1}&for=ebook`); expect(confirmUrl(T1, SITE, 'x')).toBe(`${SITE}/newsletter/confirm?t=${T1}`)
++  })
++  it('the confirmation emails carry the link and the "do nothing" promise; the ebook-only one never mentions the newsletter', () => {
++    const a = confirmationEmail({ confirmUrl: 'https://x.test/c?t=1' }); const b = confirmationEmail({ confirmUrl: 'https://x.test/c?t=1', source: 'ebook' }); const c = confirmationEmail({ confirmUrl: 'https://x.test/c?t=1', source: 'ebook', newsletter: true })
++    for (const m of [a, b, c]) { expect(m.text).toContain('https://x.test/c?t=1'); expect(m.html).toContain('https://x.test/c?t=1'); expect(m.text).toContain('If it was not you, do nothing: you will not be signed up') }
++    expect(a.text).not.toMatch(/ebook/i); expect(b.text.replace(/https?:\/\/\S+/g, '')).not.toMatch(/newsletter/i); expect(b.html.replace(/<[^>]+>/g, ' ').replace(/https?:\/\/\S+/g, '')).not.toMatch(/newsletter/i); expect(c.text).toMatch(/free ebook, and the Starscapes Factory newsletter/)
++  })
++  it('the ebook link email puts the link in as an address and the file note, escapes anything odd, and does not claim they are on any list', () => {
++    const m = ebookLinkEmail({ file: '/downloads/a b.pdf?x=<script>' }); expect(m.html).not.toContain('<script>'); expect(m.text).toContain(`${SITE}/downloads/a b.pdf?x=<script>`); expect(m.html).toContain('&lt;script&gt;'); expect(m.html).toContain(EBOOK.fileNote); expect(m.text).not.toMatch(/already on/i)
++  })
++})
++
++describe('the old separate ebook sign-up is still gone, and the new table is server-only', () => {
++  it('has no old ebook server code or table, and the address answers "not found" to anything that is not the newsletter', async () => {
++    expect(existsSync(join(process.cwd(), 'lib/ebookSignup.js'))).toBe(false)
++    const w = world(); for (const method of ['POST', 'GET']) { const out = await call({ method, body: { email: 'ann@example.com' } }); expect(out.status).toBe(404) }
++    expect(w.calls).toHaveLength(0)
++  })
++  it('the page asks the newsletter’s server and nowhere else', () => {
++    const page = readFileSync(join(process.cwd(), 'src/ebook/FreeEbookPage.jsx'), 'utf8'); expect(page).toMatch(/source: 'ebook'/); expect(page).not.toMatch(/fetch\(/); expect(page).not.toMatch(/consent/)
++  })
++  it('the SQL file makes email_requests with row level security, no policies, and the server’s key only', () => {
++    const sql = readFileSync(join(process.cwd(), 'sql/email-requests.sql'), 'utf8'); expect(sql).toMatch(/create table if not exists public\.email_requests/); expect(sql).toMatch(/unique \(email, purpose\)/); expect(sql).toMatch(/enable row level security/); expect(sql).toMatch(/revoke all on public\.email_requests from anon, authenticated;/)
++    const code = sql.split('\n').filter((l) => !l.trim().startsWith('--')).join('\n'); expect(code).toMatch(/^grant select, insert, update, delete on public\.email_requests to service_role;/m); expect(code).not.toMatch(/create policy/i); expect(code).not.toMatch(/grant[^;]*to[^;]*(anon|authenticated)/i)
++  })
++})
+diff --git a/test/free-ebook.test.jsx b/test/free-ebook.test.jsx
+index 37a9bf6..292b438 100644
+--- a/test/free-ebook.test.jsx
++++ b/test/free-ebook.test.jsx
+@@ -7,6 +7,7 @@ import { readFileSync } from 'node:fs'
+ import { join } from 'node:path'
+ import { cleanSignup, isEmail } from '../src/ebook/ebookRules'
+ import { EBOOK } from '../src/ebook/ebookConfig'
++import { OPTIONAL_NEWSLETTER_TEXT } from '../src/newsletter/newsletterRules'
+ import { findDoor } from '../src/doors/doorsData'
+ 
+ const h = vi.hoisted(() => ({ open: true, subscribed: [], fail: null }))
+@@ -22,19 +23,21 @@ beforeEach(() => { Object.assign(h, { open: true, subscribed: [], fail: null })
+ afterEach(() => { EBOOK.file = originalFile; vi.restoreAllMocks() })
+ 
+ describe('the rules', () => {
+-  it('want a proper email and a ticked box, in plain words', () => {
+-    expect(cleanSignup({ email: ' Name@Example.COM ', consent: true })).toEqual({ ok: true, email: 'name@example.com' })
+-    expect(cleanSignup({ email: '', consent: true }).errors.email).toMatch(/Enter your email/)
+-    expect(cleanSignup({ email: 'not an email', consent: true }).errors.email).toMatch(/name@example\.com/)
+-    expect(cleanSignup({ email: 'a@b.co', consent: false }).errors.consent).toMatch(/Tick the box/)
+-    expect(cleanSignup({ email: 'a@b.co' }).ok).toBe(false)
++  it('want a proper email and nothing else: no tick is needed, and the optional newsletter box is only ever a literal yes', () => {
++    expect(cleanSignup({ email: ' Name@Example.COM ' })).toEqual({ ok: true, email: 'name@example.com', newsletter: false })
++    expect(cleanSignup({ email: 'a@b.co', newsletter: true })).toEqual({ ok: true, email: 'a@b.co', newsletter: true })
++    expect(cleanSignup({ email: 'a@b.co', newsletter: 'true' }).newsletter).toBe(false)
++    expect(cleanSignup({ email: '' }).errors.email).toMatch(/Enter your email/)
++    expect(cleanSignup({ email: 'not an email' }).errors.email).toMatch(/name@example\.com/)
++    expect(cleanSignup({ email: 'a@b.co' }).errors).toBeUndefined()
+     expect(cleanSignup(null).ok).toBe(false)
+   })
+   it('refuse an address that could break an email header, or is far too long', () => {
+     for (const bad of ['a@b.co\nBcc: x@y.co', 'a b@c.co', '<a@b.co>', `${'x'.repeat(250)}@b.co`]) expect(isEmail(bad), bad).toBe(false)
+   })
+-  it('use the words in the design, and the tick box says yes to BOTH the ebook and the newsletter, with the way out', () => {
+-    expect(EBOOK.consent).toBe('Yes, send me the free ebook and the Starscapes Factory newsletter by email: new posts and news. I can unsubscribe at any time, with the link in every email.')
++  it('use the words in the design, and the newsletter box is a separate optional one, with the way out', () => {
++    expect(OPTIONAL_NEWSLETTER_TEXT).toBe('Optional: also send me the Starscapes Factory newsletter by email, with new posts and news. I can unsubscribe at any time, with the link in every email.')
++    expect(EBOOK.smallPrint).toBe('We will email you a link to confirm your address. Once you confirm, the ebook is yours. We use your email for that only, unless you tick the box.')
+     expect(EBOOK.title).toBe('Leading from the Middle: the free ebook')
+     expect(EBOOK.inside).toHaveLength(3)
+   })
+@@ -65,7 +68,7 @@ describe('the retired database file (the free ebook now joins the newsletter lis
+ 
+ describe('the page', () => {
+   const show = () => render(<MemoryRouter><FreeEbookPage /></MemoryRouter>)
+-  const fill = (email = 'Name@Example.com', tick = true) => {
++  const fill = (email = 'Name@Example.com', tick = false) => {
+     fireEvent.change(screen.getByLabelText('Your email address'), { target: { value: email } })
+     if (tick) fireEvent.click(screen.getByRole('checkbox'))
+     fireEvent.click(screen.getByRole('button', { name: 'Get the free ebook' }))
+@@ -78,25 +81,30 @@ describe('the page', () => {
+     for (const line of EBOOK.inside) expect(screen.getByText(line)).toBeInTheDocument()
+     expect(screen.getByRole('link', { name: /Back to Leadership Lounge/ })).toHaveAttribute('href', '/leadership-lounge')
+     expect(screen.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', '/page/privacy')
+-    const small = screen.getByText(/You will get an email asking you to confirm/); expect(small).toHaveTextContent('you will also get the newsletter'); expect(small).toHaveTextContent('never shared'); expect(small).toHaveTextContent('unsubscribe at any time')
+-    expect(screen.getByLabelText(EBOOK.consent)).not.toBeChecked()
++    const small = screen.getByText(/We will email you a link to confirm your address/); expect(small).toHaveTextContent('Once you confirm, the ebook is yours'); expect(small).toHaveTextContent('for that only, unless you tick the box')
++    expect(screen.getAllByRole('checkbox')).toHaveLength(1); expect(screen.getByLabelText(OPTIONAL_NEWSLETTER_TEXT)).not.toBeChecked()
+   })
+   it('does not promise a download straight away: that comes after confirming', () => {
+     show(); expect(document.body.textContent).not.toMatch(/straight away/i)
+   })
+-  it('does not send anything without a proper email and the tick, and says why in words with links to the fields', async () => {
++  it('does not send anything without a proper email, and says why in words with a link to the field; it never asks for a tick to get the ebook', async () => {
+     show()
+     fireEvent.click(screen.getByRole('button', { name: 'Get the free ebook' }))
+     const alert = await screen.findByRole('alert')
+     expect(alert).toHaveTextContent('Enter your email address.')
+-    expect(alert).toHaveTextContent('Tick the box')
++    expect(alert).not.toHaveTextContent('Tick the box')
+     expect(screen.getByLabelText('Your email address')).toHaveAttribute('aria-invalid', 'true')
+     expect(h.subscribed).toHaveLength(0)
+   })
+-  it('signs them up to the newsletter list as an ebook sign-up: the lower-cased email, the tick, the hidden box (empty), and where it came from', async () => {
++  it('asks for the ebook with no tick: the lower-cased email, the newsletter box left unticked (false), the hidden box (empty), and where it came from', async () => {
+     show(); fill()
+     await screen.findByRole('heading', { level: 1, name: 'Check your email' })
+-    expect(h.subscribed).toEqual([{ email: 'name@example.com', consent: true, website: '', source: 'ebook' }])
++    expect(h.subscribed).toEqual([{ email: 'name@example.com', newsletter: false, website: '', source: 'ebook' }])
++  })
++  it('sends the newsletter as a yes only when they tick the optional box themselves', async () => {
++    show(); fill('Name@Example.com', true)
++    await screen.findByRole('heading', { level: 1, name: 'Check your email' })
++    expect(h.subscribed).toEqual([{ email: 'name@example.com', newsletter: true, website: '', source: 'ebook' }])
+   })
+   it('has a hidden box for robots that real visitors cannot reach by keyboard or screen reader', () => {
+     const { container } = show()
+@@ -107,7 +115,7 @@ describe('the page', () => {
+   it('after signing up, says to check the email and press the button, that nothing comes until they do, and shows no download and no "you are in"', async () => {
+     show(); fill()
+     expect(await screen.findByRole('heading', { level: 1, name: 'Check your email' })).toBeInTheDocument()
+-    const status = screen.getByRole('status'); expect(status).toHaveTextContent('Thank you. I have sent you an email.'); expect(status).toHaveTextContent('Press the button in it to confirm'); expect(status).toHaveTextContent('You will not get the ebook, or the newsletter, until you do'); expect(status).toHaveTextContent('spam')
++    const status = screen.getByRole('status'); expect(status).toHaveTextContent('Thank you. I have sent you an email.'); expect(status).toHaveTextContent('Press the button in it to confirm'); expect(status).toHaveTextContent('You will not get the ebook until you do'); expect(status).toHaveTextContent('spam')
+     expect(screen.queryByRole('link', { name: /Download the/ })).toBeNull(); expect(document.body.textContent).not.toMatch(/You are in/)
+   })
+   it('while there is no PDF, says the ebook is not quite ready and the link will be emailed; once there is one, says the download waits on the page the button opens', async () => {
+diff --git a/test/legal-check-wording.test.js b/test/legal-check-wording.test.js
+index 04d8d0b..9b86246 100644
+--- a/test/legal-check-wording.test.js
++++ b/test/legal-check-wording.test.js
+@@ -41,7 +41,7 @@ describe('the Privacy policy says what the ICO checklist asks, and it matches th
+   it('gives the rule for website logs instead of a vague "short time", and the site really keeps no log of its own (no table for visits, requests or analytics)', () => {
+     const k = section('privacy', 'How long we keep it'); expect(k).toMatch(/\*\*Website logs:\*\* only as long as needed to keep the site secure and fix faults\. Our hosting provider sets this, and we do not keep our own copy\./); expect(k).not.toMatch(/short time only/)
+     const tables = readdirSync(join(process.cwd(), 'sql')).flatMap((f) => [...read(`sql/${f}`).matchAll(/create table if not exists public\.([a-z_]+)/g)].map((m) => m[1])); expect(tables.length).toBeGreaterThan(15)
+-    expect(tables.filter((t) => /log|visit|request|analytic|tracking/.test(t))).toEqual([])
++    expect(tables.filter((t) => /log|visit|request|analytic|tracking/.test(t) && t !== 'email_requests')).toEqual([]) // email_requests is the free ebook's one-purpose requests (people who asked for something by email), not a log of visits
+   })
+   it('promises to acknowledge a complaint within 30 days and to say what was found, while keeping the way to the ICO', () => {
+     const c = section('privacy', 'Complaints'); expect(c).toMatch(/We will acknowledge your complaint within 30 days, look into it, and tell you what we found/); expect(c).toMatch(/Information Commissioner/); expect(c).toMatch(/0303 123 1113/)
+diff --git a/test/legal-pages.test.jsx b/test/legal-pages.test.jsx
+index b1ba9da..6fb687a 100644
+--- a/test/legal-pages.test.jsx
++++ b/test/legal-pages.test.jsx
+@@ -162,6 +162,7 @@ describe('the table and quote styles', () => {
+ })
+ 
+ import { EBOOK } from '../src/ebook/ebookConfig'
++import { OPTIONAL_NEWSLETTER_TEXT } from '../src/newsletter/newsletterRules'
+ 
+ describe('the Privacy policy says what the site really does (SFW-233)', () => {
+   const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
+@@ -174,12 +175,12 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
+   })
+   it('covers passes, suggestions and votes, story votes, the free ebook, YouTube and the choice kept on the passes page', () => {
+     const t = privacy()
+-    for (const needle of ['Your passes:', 'What you suggest', 'Your vote in a story vote', 'the newsletter or the free ebook', 'privacy-enhanced player', 'the choice you make on the passes page']) expect(t, needle).toContain(needle)
++    for (const needle of ['Your passes:', 'What you suggest', 'Your vote in a story vote', 'ask for the free ebook', 'privacy-enhanced player', 'the choice you make on the passes page']) expect(t, needle).toContain(needle)
+   })
+-  it('no longer says there is no marketing, and says what the ebook tick box says: yes to the ebook AND the newsletter (one list), with an unsubscribe link', () => {
++  it('no longer says there is no marketing, and says the free ebook needs no newsletter tick (a separate optional box), with an unsubscribe link', () => {
+     expect(privacy()).not.toMatch(/We don.t send marketing emails/)
+-    expect(EBOOK.consent).toMatch(/free ebook and the Starscapes Factory newsletter by email/)
+-    const m = section('Marketing'); expect(m).toMatch(/or ask for the free ebook, you are saying yes to the newsletter/); expect(m).toMatch(/one list, so asking for the ebook also signs you up to the newsletter/); expect(m).toMatch(/unsubscribe link/); expect(m).toMatch(/never sell your email address/)
++    expect(OPTIONAL_NEWSLETTER_TEXT).toMatch(/^Optional: also send me the Starscapes Factory newsletter by email/); expect(EBOOK.request).not.toMatch(/newsletter/i)
++    const m = section('Marketing'); expect(m).toMatch(/Asking for the free ebook is separate: you do not have to sign up for the newsletter to get it/); expect(m).toMatch(/we do not add you to the newsletter because you asked for it/); expect(m).toMatch(/optional box, never ticked for you/); expect(m).toMatch(/unsubscribe link/); expect(m).toMatch(/never sell your email address/)
+     expect(m).toMatch(/receipts and password resets, are not marketing/)
+   })
+   it('promises that who voted for what is not shown or looked at, as Gill decided on 20 October 2026', () => {
+@@ -205,7 +206,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
+     expect(read('src/bookclub/BookClubPage.jsx')).toMatch(/youtube-nocookie\.com\/embed/)
+   })
+   it('lists the people it shares with, including the mailing tool and YouTube, and Stripe for passes', () => {
+-    const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
++    const t = section('Who we share your information with'); expect(t).not.toMatch(/MAILING TOOL/); expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it/); expect(read('lib/sendEmail.js')).toMatch(/api\.resend\.com/); expect(t).toMatch(/\*\*YouTube \(Google\)\*\*, only if you press play/); expect(t).toMatch(/payments for prints and passes/)
+     expect(section('Sending information abroad')).toMatch(/such as Google, which runs YouTube\)/)
+   })
+   it('says that links to other websites, such as the Substack, leave this site and have their own privacy policies, and the site really does link to the Substack', () => {
+@@ -216,7 +217,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
+     expect(section('How long we keep it')).toMatch(/Emails and messages to us:\*\* 2 years, then deleted\./); expect(privacy()).not.toMatch(/\[2 years\]/)
+   })
+   it('lets people take back their consent, and says how long newsletter and ebook sign-ups and passes records are kept', () => {
+-    expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Newsletter and free ebook sign-ups \(they are one list\):\*\* until you unsubscribe/); expect(k).not.toMatch(/Free ebook sign-ups:\*\*/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
++    expect(section('Your rights')).toMatch(/take back your consent whenever you like/); const k = section('How long we keep it'); expect(k).toMatch(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\* a newsletter sign-up until you unsubscribe/); expect(k).toMatch(/Your passes record:\*\*/); expect(k).toMatch(/Suggestions and votes:\*\*/)
+   })
+ })
+ 
+diff --git a/test/newsletter-privacy.test.js b/test/newsletter-privacy.test.js
+index 3585c4d..e265be0 100644
+--- a/test/newsletter-privacy.test.js
++++ b/test/newsletter-privacy.test.js
+@@ -17,9 +17,9 @@ describe('what the policy says it keeps', () => {
+     const r = rows().find((x) => /sign up for the newsletter/.test(x[1]))
+     expect(r).toHaveLength(4)
+     expect(r[0]).toMatch(/email address/); expect(r[0]).toMatch(/date and wording you agreed to/); expect(r[0]).toMatch(/whether and when you confirmed it/); expect(r[0]).toMatch(/if you leave, that you left/)
+-    expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/if you asked for it, the free ebook/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
+-    expect(r[3]).toMatch(/Your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
+-    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook are ONE list (one row), and the member profile is the eleventh
++    expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/the free ebook if you asked for it/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
++    expect(r[3]).toMatch(/your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
++    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook have one row between them, and the member profile is the eleventh
+   })
+   it('keeps exactly what the table in the database keeps: the address, the words agreed to, when, whether confirmed, and whether they left (and no name, no phone, nothing else)', () => {
+     const sql = read('sql/newsletter.sql'); const table = between(sql, 'create table if not exists public.newsletter_subscribers', 'create table if not exists public.newsletter_issues')
+@@ -32,7 +32,7 @@ describe('what the policy says it keeps', () => {
+ describe('who the policy says sends it', () => {
+   it('names Resend as the one that sends the confirmation email and the newsletter, and that is the only company the code sends it through', () => {
+     const t = section('Who we share your information with')
+-    expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter/); expect(t).not.toMatch(/our free blog posts/)
++    expect(t).toMatch(/\*\*Resend\*\* sends our emails/); expect(t).toMatch(/if you sign up for the newsletter or ask for the free ebook, the email asking you to confirm, the link to the ebook, and then the newsletter if you signed up for it/); expect(t).not.toMatch(/our free blog posts/)
+     const sends = ['lib/newsletter.js', 'lib/newsletterAdmin.js', 'lib/sendEmail.js'].map(read).join('\n')
+     expect([...sends.matchAll(/https?:\/\/[a-z0-9.-]+/gi)].map((m) => m[0]).filter((u) => !/starscapesfactory\.com|db\.test/.test(u))).toEqual(expect.arrayContaining(['https://api.resend.com'])); expect(new Set([...sends.matchAll(/https:\/\/(?:api|www)\.[a-z0-9.-]+/gi)].map((m) => m[0]))).toEqual(new Set(['https://api.resend.com']))
+   })
+@@ -40,8 +40,8 @@ describe('who the policy says sends it', () => {
+ 
+ describe('what the policy says about leaving, confirming and how long it keeps things', () => {
+   it('says nobody is added until they press the link, and the code adds them as pending and only ever sends to confirmed people', () => {
+-    const m = section('Marketing'); expect(m).toMatch(/If you sign up for the newsletter, or ask for the free ebook, you are saying yes to the newsletter/); expect(m).toMatch(/We first email you a link, and you are only added once you press it/)
+-    const pub = read('lib/newsletter.js'); expect(pub).toMatch(/status: 'pending', consent_text: consentFor\(source\)/); expect(pub).not.toMatch(/status: 'confirmed', consent_text/)
++    const m = section('Marketing'); expect(m).toMatch(/If you sign up for the newsletter, you are saying yes to new posts and news/); expect(m).toMatch(/We first email you a link, and you are only added once you press it/)
++    const pub = read('lib/newsletter.js'); expect(pub).toMatch(/status: 'pending', consent_text: consentFor\(source\)/); expect((pub.match(/status: 'confirmed', consent_text/g) || [])).toHaveLength(2) /* both inside joinNewsletter */; const join = pub.slice(pub.indexOf('async function joinNewsletter'), pub.indexOf('const BAD_LINK')); expect(join).toMatch(/status: 'confirmed', consent_text/); expect(pub.match(/joinNewsletter\(/g)).toHaveLength(2) /* its definition, and the one call: after the confirm link is pressed */; expect(pub.slice(pub.indexOf('async function confirm'))).toMatch(/if \(wants\) await joinNewsletter/); expect(pub.slice(0, pub.indexOf('async function joinNewsletter'))).not.toMatch(/joinNewsletter\(/)
+     expect(read('lib/newsletterAdmin.js')).toMatch(/newsletter_subscribers\?status=eq\.confirmed/); expect(read('lib/newsletterAdmin.js')).toMatch(/r\.newsletter_subscribers\.status === 'confirmed'/)
+   })
+   it('says what they agreed to in the same words as the sign-up box', () => {
+@@ -62,13 +62,13 @@ describe('what the policy says about leaving, confirming and how long it keeps t
+     expect(read('lib/newsletterAdmin.js')).toMatch(/newsletter_subscribers\?id=eq\.\$\{input\.id\}`, 'DELETE'/); expect(read('sql/newsletter.sql')).toMatch(/subscriber_id uuid not null references public\.newsletter_subscribers \(id\) on delete cascade/)
+   })
+   it('says a sign-up that is never confirmed is deleted after the number of days the daily job really uses', () => {
+-    const said = section('How long we keep it').match(/Newsletter and free ebook sign-ups \(they are one list\):\*\*[^\n]*?we delete your address after (\d+) days/)
++    const said = section('How long we keep it').match(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\*[^\n]*?we delete your address after (\d+) days/)
+     expect(said, 'the policy names the number of days').toBeTruthy(); expect(Number(said[1])).toBe(UNCONFIRMED_DAYS); expect(UNCONFIRMED_DAYS).toBe(30)
+     expect(read('lib/newsletter.js')).toMatch(/UNCONFIRMED_DAYS \* 86400000/)
+     const cron = JSON.parse(read('vercel.json')).crons.find((c) => c.path === '/api/ebook-signup?newsletter=tidy'); expect(cron, 'the daily job is scheduled').toBeTruthy(); expect(cron.schedule).toMatch(/^\d+ \d+ \* \* \*$/) // once a day
+   })
+   it('says newsletter sign-ups are kept until the person unsubscribes or asks, beside the ebook ones', () => {
+-    expect(section('How long we keep it')).toMatch(/Newsletter and free ebook sign-ups \(they are one list\):\*\* until you unsubscribe or ask us to delete your email address/)
++    expect(section('How long we keep it')).toMatch(/Newsletter sign-ups and free ebook requests \(kept apart\):\*\* a newsletter sign-up until you unsubscribe or ask us to delete your email address/)
+   })
+ })
+ 
+diff --git a/test/newsletter-public-server.test.js b/test/newsletter-public-server.test.js
+index 4b37c64..f979629 100644
+--- a/test/newsletter-public-server.test.js
++++ b/test/newsletter-public-server.test.js
+@@ -14,7 +14,7 @@ const T2 = 'b2'.repeat(24)
+ const row = (over = {}) => ({ id: 'id-1', email: 'ann@example.com', status: 'pending', token: T1, consent_text: CONSENT_TEXT, source: 'site', confirmation_sent_at: new Date(Date.now() - 3600000).toISOString(), unsubscribed_at: null, confirmed_at: null, ...over })
+ 
+ function world({ rows = [], resendFails = false, dbFails = false } = {}) {
+-  const db = rows.map((r) => ({ ...r })); const sent = []; const calls = []
++  const db = rows.map((r) => ({ ...r })); const sent = []; const calls = []; const requests = []
+   const fn = vi.fn(async (url, init = {}) => {
+     const u = String(url); const method = init.method || 'GET'; calls.push({ u, method, body: init.body })
+     if (u.startsWith('https://api.resend.com/emails')) { if (resendFails) return json({ message: 'no re_secret_key_zzzz' }, 500); const b = JSON.parse(init.body); sent.push(b); return json({ id: `em_${sent.length}` }) }
+@@ -25,10 +25,11 @@ function world({ rows = [], resendFails = false, dbFails = false } = {}) {
+       if (method === 'POST') { const r = JSON.parse(init.body); if (db.some((x) => x.email === r.email)) return json({ code: '23505' }, 409); db.push({ id: `id-${db.length + 1}`, unsubscribed_at: null, confirmed_at: null, ...r }); return json(null, 201) }
+       if (method === 'PATCH') { const id = q.get('id').replace(/^eq\./, ''); const r = db.find((x) => x.id === id); Object.assign(r, JSON.parse(init.body)); return json(null, 204) }
+     }
++    if (u.startsWith('https://db.test/rest/v1/email_requests')) { if (method === 'GET') return json([]); if (method === 'POST') { requests.push(JSON.parse(init.body)); return json(null, 201) } } // one-purpose requests (the free ebook): see test/ebook-request.test.js
+     throw new Error(`unexpected request: ${method} ${u}`)
+   })
+   vi.stubGlobal('fetch', fn)
+-  return { db, sent, calls, fn }
++  return { db, sent, calls, fn, requests }
+ }
+ const call = async (req) => {
+   const out = { headers: {}, status: null, body: null }
+@@ -86,9 +87,9 @@ describe('signing up', () => {
+     const w = world({ rows: [row({ status: 'unsubscribed', unsubscribed_at: '2026-09-01T00:00:00Z' })] }); await sub(yes)
+     expect(w.db[0]).toMatchObject({ status: 'pending', unsubscribed_at: null, token: T1 }); expect(w.sent).toHaveLength(1)
+   })
+-  it('remembers a sign-up that came from the ebook page, and calls anything else the site', async () => {
+-    let w = world(); await sub({ ...yes, source: 'ebook' }); expect(w.db[0].source).toBe('ebook')
+-    w = world(); await sub({ ...yes, source: 'carrier-pigeon' }); expect(w.db[0].source).toBe('site')
++  it('keeps a request from the ebook page apart from the newsletter list (see test/ebook-request.test.js), and calls anything else the site', async () => {
++    let w = world(); await sub({ ...yes, source: 'ebook' }); expect(w.db).toHaveLength(0); expect(w.requests).toHaveLength(1)
++    w = world(); await sub({ ...yes, source: 'carrier-pigeon' }); expect(w.db[0].source).toBe('site'); expect(w.requests).toHaveLength(0)
+   })
+   it('turns away a bad address or an unticked box, saying which, and stores and sends nothing', async () => {
+     const w = world()
+diff --git a/test/newsletter-tidy.test.js b/test/newsletter-tidy.test.js
+index 89dd464..bdd99ed 100644
+--- a/test/newsletter-tidy.test.js
++++ b/test/newsletter-tidy.test.js
+@@ -12,25 +12,26 @@ const DAY = 86400000
+ const ago = (days) => new Date(Date.now() - days * DAY).toISOString()
+ const person = (id, status, sentDaysAgo, over = {}) => ({ id, email: `${id}@example.com`, status, token: id.padEnd(48, 'a'), created_at: ago(sentDaysAgo), confirmation_sent_at: sentDaysAgo === null ? null : ago(sentDaysAgo), ...over })
+ 
+-function world(rows, { dbFails = false } = {}) {
+-  const db = rows.map((r) => ({ ...r })); const calls = []
++function world(rows, { dbFails = false, requests = [] } = {}) {
++  const db = rows.map((r) => ({ ...r })); const reqs = requests.map((r) => ({ ...r })); const calls = []
+   const fn = vi.fn(async (url, init = {}) => {
+     const u = String(url); const method = init.method || 'GET'; calls.push({ u, method })
+-    if (u.startsWith('https://db.test/rest/v1/newsletter_subscribers') && method === 'DELETE') {
++    const table = u.startsWith('https://db.test/rest/v1/email_requests') ? reqs : u.startsWith('https://db.test/rest/v1/newsletter_subscribers') ? db : null
++    if (table && method === 'DELETE') {
+       if (dbFails) return json({ message: 'boom srv-key-secret-value-0000' }, 500)
+       const q = new URL(u).searchParams; const gone = []
+-      for (const r of [...db]) {
++      for (const r of [...table]) {
+         if (r.status !== (q.get('status') || '').replace('eq.', '')) continue
+         const sent = q.get('confirmation_sent_at'); const made = q.get('created_at')
+         const ok = sent && sent.startsWith('lt.') ? (r.confirmation_sent_at && r.confirmation_sent_at < sent.slice(3)) : sent === 'is.null' ? (r.confirmation_sent_at === null && made && r.created_at < made.slice(3)) : false
+-        if (ok) { db.splice(db.indexOf(r), 1); gone.push({ ...r }) }
++        if (ok) { table.splice(table.indexOf(r), 1); gone.push({ ...r }) }
+       }
+       return json(gone)
+     }
+     throw new Error(`unexpected request: ${method} ${u}`)
+   })
+   vi.stubGlobal('fetch', fn)
+-  return { db, calls }
++  return { db, reqs, calls }
+ }
+ const call = async (req) => {
+   const out = { headers: {}, status: null, body: null }
+@@ -58,6 +59,14 @@ describe('who may run it', () => {
+   it('never lets an answer be kept', async () => { world([]); expect((await call()).headers['Cache-Control']).toBe('no-store') })
+ })
+ 
++describe('one-purpose requests (the free ebook)', () => {
++  it('tidies a request nobody confirmed, after the same 30 days, and never one that was confirmed', async () => {
++    const w = world([], { requests: [person('oldreq', 'pending', 90), person('newreq', 'pending', 2), person('doneq', 'confirmed', 90)] })
++    const out = await call(); expect(out.body).toEqual({ ok: true, removed: 1 })
++    expect(w.reqs.map((r) => r.id).sort()).toEqual(['doneq', 'newreq'])
++  })
++})
++
+ describe('who it deletes', () => {
+   it('deletes only people who are still pending and whose last sign-up email was over 30 days ago, and says how many', async () => {
+     const w = world([person('old', 'pending', 31), person('older', 'pending', 200), person('young', 'pending', 29), person('today', 'pending', 0)])

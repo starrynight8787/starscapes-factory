@@ -336,6 +336,12 @@ html body h3 {
   background: #fff;
   border-radius: 12px;
 }
+/* the room pictures in the menu are navy line art on a see-through background, which cannot be seen on the dark menu (a tester reported it, 22 October 2026): draw them in the menu's own white
+   (#fff, the same as the room names beside them). The shape and the see-through background are kept, only the colour changes. ONLY inside the dark menu: the rooms dropdown on a computer and the
+   other pages are light, and keep the navy. */
+.sf-menu .sf-room-icon {
+  filter: brightness(0) invert(1);
+}
 .sf-menu__actions {
   display: flex;
   gap: 12px;
