@@ -58,11 +58,11 @@ describe('the message in a bottle (the Road journal door)', () => {
     expect(bay.items.find((i) => i.id === 'road-journal').kind).toBe('locked')
   })
   it('is a simple glass bottle with a cork, in both pictures, and the closed one has tape across the glass', () => {
-    for (const svg of [open, taped]) { expect(svg).toContain('fill="#DCE6FF"'); expect(svg).toContain('fill="#C9A070"'); expect(svg).not.toContain('stroke-dasharray'); expect(svg).not.toContain('data-lock') }
+    for (const svg of [open, taped]) { expect(svg).toContain('fill="#A6E3DC"'); expect(svg).toContain('fill="#E8B86D"'); expect(svg).not.toContain('stroke-dasharray'); expect(svg).not.toContain('data-lock') }
     expect(taped).toContain('data-tape-group'); expect(open).not.toMatch(/data-tape|#FFD60A/)
   })
-  it('keeps the closed and open pictures the same size and place, where the old bottle was', () => {
-    expect(box(open)).toEqual(box(taped)); expect(box(open)).toEqual([1001, 652, 128, 165])
+  it('keeps the closed and open pictures the same size and place, as the Figma drawing has them', () => {
+    expect(box(open)).toEqual(box(taped)); expect(box(open)).toEqual([912, 595.5, 166, 162])
   })
   it('is only a drawing, with nothing that runs, loads or links', () => {
     for (const svg of [open, taped]) { expect(svg).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i); expect(svg).toContain('aria-hidden="true"') }

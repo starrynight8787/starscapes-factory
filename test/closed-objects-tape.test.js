@@ -10,7 +10,6 @@ const num = (v) => Number(v)
 const ROOMS = [
   { room: 'Idea Hatchery: Come Study With Me', item: 'idea-hatchery/item-come-study-with-me.svg', base: 'idea-hatchery/base.svg', tape: { cx: 718.5, cy: 558.3, length: 150, angle: -20 }, shift: -136, cone: { x: 665, y: 669.3, width: 44.2 } },
   { room: 'Leadership Lounge: Free Ebook', item: 'leadership-lounge/item-free-ebook.svg', base: 'leadership-lounge/base.svg', tape: { cx: 696, cy: 620, length: 165, angle: -14 }, shift: 0, cone: { x: 791.6, y: 692.2, width: 46.8 } },
-  { room: 'Explorer\u2019s Bay: Something New', item: 'explorers-bay/item-coming-soon.svg', base: 'explorers-bay/base.svg', tape: { cx: 1061.7, cy: 718.4, length: 120, angle: -34 }, shift: 0, cone: { x: 1001.2, y: 758.4, width: 41.6 } },
 ]
 
 describe.each(ROOMS)('$room: hazard tape across it', (r) => {

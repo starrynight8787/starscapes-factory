@@ -42,65 +42,23 @@ describe('Explorer\u2019s Bay: the four photographs', () => {
   })
 })
 
-describe('Explorer\u2019s Bay: the suitcase', () => {
-  const doc = parse(read('item-writing-in-transit.svg'))
-  it('has a light tan body, darker tan clasps and a luggage tag in between', () => {
-    expect(doc.querySelector('[data-case="body"]').getAttribute('fill')).toBe(CASE)
-    const clasps = [...doc.querySelectorAll('[data-case="clasp"]')]
-    expect(clasps).toHaveLength(2)
-    for (const c of clasps) expect(c.getAttribute('fill')).toBe(CLASP)
-    expect(doc.querySelector('[data-case="tag"]').getAttribute('fill')).toBe(TAG)
+describe('Explorer\u2019s Bay: the scene art follows the Figma drawing', () => {
+  const colours = (f) => new Set((read(f).match(/#[0-9A-Fa-f]{6}/g) || []).map((c) => c.toUpperCase()))
+  it('has a tan suitcase for Writing in Transit', () => {
+    expect(colours('item-writing-in-transit.svg').has('#E8B977')).toBe(true)
   })
-  it('are the right shapes: the body is the 140 by 92 case, the tag is the pointed tag', () => {
-    const body = doc.querySelector('[data-case="body"]')
-    expect([body.getAttribute('width'), body.getAttribute('height')]).toEqual(['140', '92'])
-    expect(doc.querySelector('[data-case="tag"]').getAttribute('d')).toBe('M104 24 H128 L134 40 L128 56 H104 Z')
+  it('has a glass bottle for the Road journal, with tape only on the closed picture', () => {
+    expect(colours('item-road-journal-open.svg').has('#A6E3DC')).toBe(true)
+    expect(read('item-road-journal.svg')).toContain('data-tape-group')
+    expect(read('item-road-journal-open.svg')).not.toContain('data-tape')
   })
-  it('leaves the notebook beside it white, with its navy star and marks on the case', () => {
-    const notebook = doc.querySelector('rect[width="76"][height="86"]')
-    expect(notebook.getAttribute('fill')).toBe('#fff')
-    expect(read('item-writing-in-transit.svg')).toContain('fill="#14306A"') // the star on the case
+  it('has the moon marked so the health check can find it', () => {
+    expect(read('base.svg')).toContain('data-moon')
   })
-  it('stays exactly where it was measured', () => {
-    expect(read('item-writing-in-transit.svg')).toContain('viewBox="132 444 296 207"')
-  })
-})
-
-describe('Explorer\u2019s Bay: nothing else changed', () => {
-  it('the boat, the pier and the little Something New sign are as they were', () => {
-    expect(read('item-coming-soon.svg')).toMatch(/fill="#fff"/)
-    const base = read('base.svg')
-    expect(base).toMatch(/<g id="boat"/)
-    expect(base).toMatch(/<g id="pier"/)
-    for (const c of [...PHOTOS, CASE, CLASP, TAG]) expect(base.toLowerCase()).not.toContain(c.toLowerCase())
-  })
-  it('uses only the colours it is meant to', () => {
-    const allowed = new Set(['#fff', '#14306A', 'none', ...PHOTOS, CASE, CLASP, TAG, '#FFD60A', '#E5484D']) // plus the yellow of the hazard tape and the red of the cone
-    for (const f of ['base.svg', 'item-photography.svg', 'item-writing-in-transit.svg', 'item-coming-soon.svg']) {
-      for (const m of read(f).matchAll(/fill="([^"]+)"/g)) expect(allowed.has(m[1]), `${f}: ${m[1]}`).toBe(true)
+  it('draws every item as pictures only, in the 1200 by 840 scene', () => {
+    expect(read('base.svg')).toContain('viewBox="0 0 1200 840"')
+    for (const f of ['base.svg', 'item-writing-in-transit.svg', 'item-lessons-from-the-road.svg', 'item-travel-map.svg', 'item-road-journal.svg']) {
+      expect(read(f), f).not.toMatch(/<text|<script|<image|<foreignObject|<a[\s>]|\shref=|xlink:|<style|font-family/i)
     }
-  })
-})
-
-describe('Explorer\u2019s Bay: the moon has moved to make room for the heading', () => {
-  const doc = parse(read('base.svg'))
-  const moon = doc.querySelector('path[data-moon]')
-  it('is the same crescent, moved across the sky by a fixed amount', () => {
-    expect(moon.getAttribute('d')).toBe('M140 98 A52 52 0 1 0 140 202 A41 41 0 1 1 140 98 Z')
-    expect(moon.getAttribute('transform')).toBe('translate(640 -10)')
-    expect(moon.getAttribute('fill')).toBe('#fff')
-  })
-  it('now sits well clear of the heading corner (the heading takes the left 560 units and the top 200)', () => {
-    const [dx, dy] = moon.getAttribute('transform').match(/-?\d+/g).map(Number)
-    const box = { left: 88 + dx, right: 142 + dx, top: 94 + dy, bottom: 206 + dy } // the crescent and its outline
-    expect(box.left).toBeGreaterThanOrEqual(560)
-    expect(box.top).toBeGreaterThanOrEqual(40)
-    expect(box.bottom).toBeLessThanOrEqual(260)
-  })
-  it('does not sit on any of the stars or the flag', () => {
-    const [dx, dy] = moon.getAttribute('transform').match(/-?\d+/g).map(Number)
-    const box = [88 + dx, 94 + dy, 142 + dx, 206 + dy]
-    const others = [[1008, 158], [941, 219], [403, 200], [213, 247], [866, 234]] // the stars, and the top of the sail's flag
-    for (const [x, y] of others) expect(x < box[0] - 30 || x > box[2] + 30 || y < box[1] - 30 || y > box[3] + 30, `${x},${y}`).toBe(true)
   })
 })

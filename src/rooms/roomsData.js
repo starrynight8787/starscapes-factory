@@ -57,11 +57,11 @@ export const ROOMS = {
     blurb: 'Pick something up from the pier.',
     channel: 'explorers-bay',
     items: [
-      { ...piece('explorers-bay', 'writing-in-transit'), id: 'writing-in-transit', name: 'Writing in Transit', blurb: 'Words written on the move.', kind: 'page', to: '/explorers-bay/writing-in-transit', labelAt: [280, 700] },
+      { ...piece('explorers-bay', 'writing-in-transit'), id: 'writing-in-transit', name: 'Writing in Transit', blurb: 'Words written on the move.', kind: 'page', to: '/explorers-bay/writing-in-transit', labelAt: [148, 702] },
       // The three taped doors: each links to a taped page with a "tell me when it opens" sign-up (notify: true), and the owner opens each door in Admin. The pictures are in public/scenes/explorers-bay.
-      { ...piece('explorers-bay', 'lessons-from-the-road'), id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/lessons-from-the-road', notify: true, labelAt: [466, 750] },
-      { ...piece('explorers-bay', 'travel-map'), id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/travel-map', notify: true, labelAt: [710, 520] },
-      { ...piece('explorers-bay', 'road-journal'), id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/road-journal', notify: true, labelAt: [915, 722] },
+      { ...piece('explorers-bay', 'lessons-from-the-road'), id: 'lessons-from-the-road', name: 'Lessons from the road', blurb: 'What each place taught me.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/lessons-from-the-road', notify: true, labelAt: [452, 700] },
+      { ...piece('explorers-bay', 'travel-map'), id: 'travel-map', name: 'Travel map', blurb: 'Where I have been.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/travel-map', notify: true, labelAt: [700, 650] },
+      { ...piece('explorers-bay', 'road-journal'), id: 'road-journal', name: 'Road journal', blurb: 'A free journal for the road.', kind: 'locked', lock: 'opening soon', to: '/explorers-bay/road-journal', notify: true, labelAt: [988, 753] },
     ],
     areas: {
       'writing-in-transit': { name: 'Writing in Transit', blurb: 'Words written on the move.', layout: 'list', tags: ['writing-in-transit'] },

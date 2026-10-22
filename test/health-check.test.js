@@ -80,7 +80,7 @@ describe('the health check', () => {
   it('names a picture that is an older or changed copy, even if it still looks nearly right', () => {
     const dir = copy()
     const file = path.join(dir, 'public/scenes/explorers-bay/base.svg')
-    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('translate(640 -10)', 'translate(0 0)'))
+    fs.writeFileSync(file, fs.readFileSync(file, 'utf8').replace('scale(1.07)', 'scale(1.06)'))
     const r = run(dir)
     expect(r.code).toBe(1)
     expect(r.out).toMatch(/Picture: public\/scenes\/explorers-bay\/base\.svg: is not the current version\. It comes from the pictures zip/)
