@@ -9,6 +9,11 @@
   padding: 24px 20px 80px;
   margin: 0 auto;
 }
+.container:has(> .mb--account) {
+  max-width: 1068px; /* My account: the same banner card and side margins as the other pages, wide enough for the profile and passes side by side */
+  padding: 24px 20px 80px;
+  margin: 0 auto;
+}
 .mb {
   color: var(--sf-ink, #0e1530);
   font-family: var(--sf-body, 'Inter', system-ui, sans-serif);

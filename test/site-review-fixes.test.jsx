@@ -29,6 +29,7 @@ describe('the CSS fixes', () => {
   })
   it('the closed membership page has side margins like the other pages', () => {
     expect(read('src/membership/membership.css')).toMatch(/\.container:has\(> \.mb--closed\) \{[^}]*padding: 24px 20px 80px/)
+    expect(read('src/membership/membership.css')).toMatch(/\.container:has\(> \.mb--account\) \{[^}]*padding: 24px 20px 80px/)
   })
   it('footer links are at least 24 pixels tall', () => {
     expect(read('src/components/footer.css')).toMatch(/\.ft__col a \{[^}]*min-height: 24px/)
