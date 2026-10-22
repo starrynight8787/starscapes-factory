@@ -4,6 +4,7 @@ import { supabase } from './supabaseClient'
 import Navbar from './components/Navbar'
 import SkipLink from './components/SkipLink'
 import RouteTitle from './components/RouteTitle'
+import ScrollToTop from './components/ScrollToTop'
 import ProtectedRoute from './components/ProtectedRoute'
 import Home from './pages/Home'
 import PostPage from './pages/PostPage'
@@ -74,6 +75,7 @@ export default function App() {
     <>
       <SkipLink />
       <RouteTitle />
+      <ScrollToTop />
       <Navbar session={session} />
       <div className="container" id="main-content" tabIndex={-1}>
         <ErrorBoundary>

@@ -1,0 +1,50 @@
+PAGES OPEN AT THE TOP: FIX FOR "THE NEXT PAGE OPENS SCROLLED DOWN"   starscapes-scroll-to-top-22oct.zip
+(Code and tests only. No Supabase step. Released through a preview first.)
+
+THE PROBLEM (found by your tester, 22 October 2026): scroll down a page, click a link in the footer, and the next page opens already scrolled down.
+THE CAUSE: the site is a single-page app (React Router's BrowserRouter), so clicking a link swaps the page's content without the browser ever loading a new page, and the browser keeps your scroll position. Nothing in the site reset it (only a few buttons in the admin pages did their own scrolling). This affects EVERY link on the site, not just the footer.
+
+THE FIX: a small helper, src/components/ScrollToTop.jsx, mounted in src/App.jsx right beside RouteTitle (the helper that already runs on every page change). It puts you at the top of every page you reach by clicking a link.
+IT DELIBERATELY LEAVES ALONE:
+ - the first time the site opens (a reload keeps the browser's own place);
+ - Back and Forward (the browser puts you back where you were);
+ - a change that only alters the ?query (your shelf genre filters and searches, which would otherwise jump to the top each time you type);
+ - a link to a #section, which now scrolls to that section instead (the skip link and "Join the conversation" keep working as they did);
+ - the shelf page's own smooth scroll to a genre (it runs after the books load, as it did).
+
+TESTS: 12 new in test/scroll-to-top.test.jsx (nothing happens when the site first opens; a link opens the next page at the top; it does so for every page; Back and Forward do not move you; a ?query-only change does not jump, including straight after pressing Back; a #section link brings that section into view; a link to a section that is not there goes to the top; a badly written link cannot break the page; App mounts it exactly once, before the pages; the site is still wrapped in a router). 9 deliberate breakages: 8 caught, and the 9th changes nothing you could see (the first page is protected twice over), so it cannot be caught.
+WHOLE SUITE on a copy of your newest commit (50e8713) with this installed: 3,765 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+NOT CHANGED, FOR YOU TO KNOW:
+ - Back and Forward rely on the browser to put you back where you were. On a page that loads its content late, it can land slightly off. That is how it behaved before, and fixing it properly is a larger job.
+ - For keyboard and screen-reader users, the keyboard focus stays where it was after a link opens a new page. Moving it to the top of the new page (the main content) is a worthwhile follow-up for the accessibility statement. Say if you would like it.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-scroll-to-top-22oct.zip
+ 5. python3 tools/add-scroll-to-top.py      IT MUST PRINT "changed       src/App.jsx" AND TWO LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "ScrollToTop" src/App.jsx        (it must print 2)
+    ls src/components/ScrollToTop.jsx        (it must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-scroll-to-top" -not -path "./node_modules/*" -delete
+11. git checkout -b scroll-to-top
+    git add .
+    git status                                   (1 changed file: src/App.jsx; new: src/components/ScrollToTop.jsx, test/scroll-to-top.test.jsx, the notes, the installer, its test and fixtures, tools/scroll-to-top-files/; nothing ending .before-)
+    git commit -m "Open each page at the top: a link no longer keeps the scroll position of the page before"
+    git push -u origin scroll-to-top
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "scroll-to-top" and says Preview. WAIT for Ready, then press Visit and try it:
+      a. On the home page, scroll right down, then click a link in the footer: the new page must open at the TOP.
+      b. Click Back: you should land back near where you were.
+      c. On the shelf page (Book Club), pick a genre or type in the search box: it must NOT jump to the top while you type.
+      d. Press Tab on a fresh page and use "Skip to main content": it still works.
+    If the build fails (Error), or any of a to d is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge scroll-to-top
+    git push
+    git branch -d scroll-to-top
