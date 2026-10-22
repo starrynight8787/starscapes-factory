@@ -4,6 +4,11 @@
   padding: 0;
   margin: 0;
 }
+.container:has(> .mb--closed) {
+  max-width: 840px; /* the closed page uses the same banner card as every other page, so it keeps the same side margins */
+  padding: 24px 20px 80px;
+  margin: 0 auto;
+}
 .mb {
   color: var(--sf-ink, #0e1530);
   font-family: var(--sf-body, 'Inter', system-ui, sans-serif);

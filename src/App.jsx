@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { supabase } from './supabaseClient'
 import Navbar from './components/Navbar'
 import SkipLink from './components/SkipLink'
@@ -126,7 +126,7 @@ export default function App() {
             }
           />
           <Route path="/art-loft/*" element={<ArtLoftRoutes />} />
-          <Route path="/login" element={<Login />} />
+          <Route path="/login" element={session ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/signup" element={<Signup />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/reset-password" element={<ResetPassword />} />
