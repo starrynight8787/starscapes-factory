@@ -32,7 +32,9 @@
 .xb-photo figcaption { margin-top: 6px; font-size: 0.9rem; }
 .xb-para { margin: 0 0 1em; white-space: pre-wrap; }
 
-.xb-filter { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 16px; }
+.xb-filter { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 12px; margin: 0 0 16px; }
+.xb-filter__label { font-weight: 700; }
+.xb-select { min-width: 220px; background: #fff; }
 .xb-filter .pg-chip { cursor: pointer; }
 .xb-filter .pg-chip[aria-pressed='true'] { background: var(--sf-navy-700, #14306a); color: #fff; }
 .xb-input { font: inherit; padding: 8px 10px; border: 1px solid var(--sf-border, #b9c4dd); border-radius: 8px; max-width: 100%; }

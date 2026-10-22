@@ -4,9 +4,9 @@ import PassChip from '../membership/PassChip'
 
 // One post on an area page. In a gallery it shows its picture across the top; in a list it is a compact rectangle with no picture.
 // "from" is the page the reader came from, remembered so the post's Back link can return to it.
-export default function RoomEntry({ post, from, picture }) {
+export default function RoomEntry({ post, from, picture, meta = '' }) {
   const image = picture ? safeImage(post.image_url) : ''
-  const date = formatDate(post.created_at)
+  const date = [meta, formatDate(post.created_at)].filter(Boolean).join(' · ')
   return (
     <Link className={`rp-entry${image ? ' has-image' : ''}`} to={`/post/${post.id}`} state={{ from }}>
       {image && (

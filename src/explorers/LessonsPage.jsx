@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Link, useLocation, useSearchParams } from 'react-router-dom'
 import useTitle from '../rooms/useTitle'
 import PageBanner from '../components/PageBanner'
-import { formatDate } from '../rooms/postRules'
+import RoomEntry from '../rooms/RoomEntry'
 import { fetchTravelPosts } from './travelApi'
 import { byCountry, countryName, isLesson, travelOf, cleanCountry } from './travelRules'
 import '../rooms/roompages.css'
@@ -36,23 +36,25 @@ export default function LessonsPage() {
       {status === 'error' && <p className="rp-note" role="alert">The lessons could not load just now. Please try again in a moment.</p>}
       {status === 'loading' && <p className="rp-note">Loading…</p>}
       {status === 'ready' && posts.length === 0 && <p className="rp-note">Nothing here yet. Check back soon.</p>}
-      {countries.length > 1 && (
-        <nav className="xb-filter" aria-label="Choose a country">
-          <button type="button" className="pg-chip" aria-pressed={!chosen} onClick={() => setParams({})}>All countries</button>
-          {countries.map((c) => (
-            <button key={c.code} type="button" className="pg-chip" aria-pressed={chosen === c.code} onClick={() => setParams({ country: c.code })}>{c.name}</button>
-          ))}
-        </nav>
+      {countries.length > 0 && (
+        <div className="xb-filter">
+          <label htmlFor="xb-country" className="xb-filter__label">Find lessons by country</label>
+          <select id="xb-country" className="xb-input xb-select" value={chosen} onChange={(e) => (e.target.value ? setParams({ country: e.target.value }) : setParams({}))}>
+            <option value="">All countries ({posts.length})</option>
+            {countries.map((c) => (
+              <option key={c.code} value={c.code}>{c.name} ({c.lessons.length})</option>
+            ))}
+          </select>
+          {chosen && <button type="button" className="pg-chip" onClick={() => setParams({})}>Show all countries</button>}
+        </div>
       )}
-      <ul className="rp-list" style={{ listStyle: 'none', padding: 0 }}>
+      {status === 'ready' && chosen && shown.length === 0 && <p className="rp-note">No lessons for that country yet.</p>}
+      <ul className="rp-entries">
         {shown.map((p) => {
           const t = travelOf(p)
           return (
             <li key={p.id}>
-              <Link className="rp-entry" to={`/post/${p.id}`} state={{ from: here.pathname + here.search }}>
-                <span className="rp-entry__title">{p.title}</span>
-                <span className="rp-entry__date">{[t.country && countryName(t.country), t.year, formatDate(p.created_at)].filter(Boolean).join(' · ')}</span>
-              </Link>
+              <RoomEntry post={p} from={here.pathname + here.search} meta={[t.country && countryName(t.country), t.year].filter(Boolean).join(' · ')} />
             </li>
           )
         })}
