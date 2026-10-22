@@ -1,0 +1,86 @@
+BOT PROTECTION: A SECURITY CHECK (CLOUDFLARE TURNSTILE) ON SIGN UP, LOG IN AND FORGOT PASSWORD   starscapes-captcha-22oct.zip
+(Code, tests and a rollout guide. No Supabase SQL. Released through a preview first. Read the ORDER below before you start: it matters.)
+
+WHY (SFW-257): in 24 hours Supabase's log showed 19 sign-ups, 14 password-reset requests and 25 failed log-ins, almost all arriving from the Tor network. They call Supabase's sign-in address
+directly (the key is in the site's own code, by design), so the site's forms never see them. Each accepted sign-up or reset emails a stranger in the shop's name; the email limit is being used up;
+and someone is guessing passwords (none of the guesses succeeded).
+
+THE FIX: a CAPTCHA that SUPABASE ITSELF enforces, so a request without a valid token is refused whoever sends it. The site shows Cloudflare Turnstile on the three forms: it runs quietly (a box appears only
+if Cloudflare wants the visitor to do something), and the one-use token it produces goes to Supabase with the request. The check resets after EVERY attempt (a token works once and lasts five minutes).
+If the check has not finished, did not load (an ad blocker can do that), or is refused, the person gets a plain message.
+
+SAFE TO RELEASE FIRST: with no site key set, the check is simply not there, and the three forms send exactly what they sent before. So this package changes nothing for anyone until you do Part 2 below.
+
+WHAT YOU DO, IN THIS ORDER
+ PART 1. CLOUDFLARE: make the widget (about 3 minutes)
+   1. Log in to the Cloudflare dashboard, choose your account, and open "Turnstile" in the menu.
+   2. Select "Add widget".
+   3. Widget name: Starscapes Factory.
+   4. Hostname management: add  starscapesfactory.com  (and  www.starscapesfactory.com  ONLY if the www address also opens your site).
+   5. Widget mode: Managed.
+   6. Pre-clearance support: leave it OFF (turning it on makes Cloudflare set a cookie in the visitor's browser; the default is a single-use token and no cookie).
+   7. Select Create. Cloudflare shows TWO keys: the SITE KEY (public: it is safe to be seen) and the SECRET KEY (private).
+      Keep both somewhere safe, such as a password manager. NEVER paste the secret key into a chat, an email, the website's code, or Vercel.
+ PART 2. VERCEL: add the PUBLIC site key (do this BEFORE the release in Part 3, because a setting only reaches the site when the site is built)
+   Vercel, the starscapes-factory project, Settings, Environment Variables, Add:  Key  VITE_TURNSTILE_SITE_KEY   Value  the SITE key (the public one).
+   Tick Production ONLY (untick Preview and Development). Save. (If you forget and add it after the release, press Redeploy on the newest production deployment.)
+ PART 3. INSTALL AND RELEASE THIS PACKAGE (the steps further down). The preview has no key, so it works as before: check Sign up, Log in and Forgot password still work, with no security check showing.
+   Merging builds the production site WITH the key, so the check goes live on starscapesfactory.com. Supabase is NOT enforcing it yet, so nothing can be locked out by this step.
+ PART 4. CHECK THE LIVE SITE BEFORE YOU SWITCH ANYTHING ELSE ON (on your phone, at starscapesfactory.com)
+   Each of Sign up, Log in and Forgot password should show one small line, "This form is protected by Cloudflare Turnstile...", and should work as normal (the check passes by itself in a second or two).
+   IF A FORM SAYS "The security check did not load": do not go on. In Vercel delete the VITE_TURNSTILE_SITE_KEY setting, press Redeploy, and tell me. (The usual cause is a hostname missing in Part 1 step 4.)
+ PART 5. TURN ON THE ENFORCEMENT IN SUPABASE (only when Part 4 is working)
+   Supabase dashboard, your project, Authentication, "Attack Protection" (the Supabase guide calls it Settings, Authentication, Bot and Abuse Protection): switch on "Enable CAPTCHA protection",
+   choose Cloudflare Turnstile as the provider, paste the SECRET key, and Save.
+ PART 6. TEST AT ONCE: sign up with a NEW "+test" address, press Forgot password, and log in. If ANYTHING fails, switch the CAPTCHA protection off again in the same place (it takes effect straight away),
+   and tell me. People who are already logged in stay logged in when you switch this on.
+ PART 7. TELL ME. The next day I will read Supabase's log and confirm the Tor attempts are now being refused. After that (with your OK) I can clear the junk accounts.
+ NEVER DO PART 5 BEFORE PART 4. Enforcing a check that the site is not yet showing would refuse EVERYONE, including you.
+
+WHAT THIS DOES NOT DO (FOR YOU TO KNOW)
+ - The Privacy policy and the Cookies page do not yet mention Turnstile. Both pages are still drafts, so nothing is wrong today, but they must say it before they go live. Cloudflare's own page says Turnstile
+   looks at "signals" from the visitor's browser to tell people from bots and calls them strictly necessary for that; by default it hands out a one-use token and sets a cookie only if pre-clearance is on (it is not).
+   Cloudflare does not list the signals, and I could not reach Cloudflare from here, so please look at what your browser keeps when the check is showing (DevTools, Application) before the wording is settled.
+   I will draft the lines once the check is live, for your approval.
+ - It does not stop someone who can solve the check. It stops the automatic, direct-to-Supabase abuse, which is what the log shows.
+ - Cloudflare's own accessibility claims are not something I have verified: try the three forms with the keyboard only. The box appears only if Cloudflare wants it.
+
+TESTS: 41 new in test/captcha-check.test.jsx (10: nothing when there is no key; the widget drawn once with the site key and hidden unless needed; the token handed over and taken back; errors; reset;
+removed when the form goes; one live widget even when React draws twice; Cloudflare's own script loaded once and retried after a failure) and test/captcha-forms.test.jsx (31: for each of the three forms,
+what it sends with the check off, that nothing is sent before the check has finished, that the token is sent where Supabase expects it, that a spent token is never sent twice, plain wording for a refused
+or an unloaded check, and that the token is never shown on the page or kept in storage). The 34 existing log in, sign up and forgot-password tests pass unchanged. 22 deliberate breakages, ALL caught.
+PROOF IN A REAL BROWSER (Cloudflare itself stood in for by a pretend one, since it cannot be reached from here): the built site asked for Cloudflare's script from Cloudflare's own address; all three forms
+sent Supabase the token in the field it checks; two attempts on one page used two different tokens; and with no key, the page had no check, contacted nobody and sent no token.
+WHOLE SUITE on a copy of your newest commit (207fab7) with this installed: 3,872 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-captcha-22oct.zip
+ 5. python3 tools/add-captcha.py          IT MUST PRINT "changed" LINES FOR 5 FILES AND THREE LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "CaptchaCheck" src/pages/Signup.jsx            (it must print 2)
+    grep -c "CaptchaCheck" src/pages/Login.jsx             (it must print 2)
+    grep -c "CaptchaCheck" src/pages/ForgotPassword.jsx    (it must print 2)
+    grep -c "TURNSTILE" .env.example                       (it must print 1)
+    ls src/components/CaptchaCheck.jsx                     (it must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-captcha" -not -path "./node_modules/*" -delete
+11. git checkout -b captcha
+    git add .
+    git status                                   (5 changed files: .env.example, src/pages/ForgotPassword.jsx, src/pages/Login.jsx, src/pages/Signup.jsx, src/pages/formRules.js; new: src/components/CaptchaCheck.jsx, the two test files, the notes, the installer, its test and fixtures, tools/captcha-files/; nothing ending .before-)
+    git commit -m "Bot protection: a Cloudflare Turnstile security check on Sign up, Log in and Forgot password (off until a site key is set)"
+    git push -u origin captcha
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "captcha" and says Preview. WAIT for Ready, then open it and check:
+      a. Sign up, Log in and Forgot password all still work exactly as before, and show NO security check (the preview has no key).
+    If the build fails (Error), or a is wrong, do NOT merge: tell me.
+    (Part 2 above must already be done, so that the production build picks the key up.)
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge captcha
+    git push
+    git branch -d captcha
+    Then do PART 4 above, on your phone, on the live site.

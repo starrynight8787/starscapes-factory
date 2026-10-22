@@ -16,8 +16,17 @@ export function emailProblem(value) {
 export const isRateLimit = (error) => Boolean(error) && (error.status === 429 || /rate limit|too many|only request this after/i.test(error.message || ''))
 
 // Supabase said no to a log in. Returns { fix } for something to correct, or { failure } for something on our side.
+// The security check (Cloudflare Turnstile, see src/components/CaptchaCheck.jsx): what to say when it has not finished, did not load, or was refused
+export const CAPTCHA_WAIT = 'Please wait a moment while the security check finishes, then press the button again.'
+export const CAPTCHA_BROKEN = 'The security check did not load. Please reload the page and try again, or try another browser.'
+export const CAPTCHA_FAILED = "We couldn't check that you are a person. Please try again."
+export const isCaptchaFailure = (error) => Boolean(error) && (error.code === 'captcha_failed' || /captcha/i.test(error.message || ''))
+// null when the form may be sent: the check is switched off, or it has given a token. Otherwise what to tell the person.
+export const captchaIssue = (isOn, token, brokenCheck) => (!isOn || token ? null : brokenCheck ? CAPTCHA_BROKEN : CAPTCHA_WAIT)
+
 export function loginMessage(error) {
   const text = (error && error.message) || ''
+  if (isCaptchaFailure(error)) return { failure: CAPTCHA_FAILED }
   if (/invalid login credentials/i.test(text)) return { fix: 'Your email or password is not right. Check them and try again.' }
   if (/email not confirmed/i.test(text)) return { fix: 'Please confirm your email first. Check your inbox for the link we sent you.' }
   if (isRateLimit(error)) return { failure: 'Too many tries just now. Please wait a few minutes and try again.' }
@@ -27,6 +36,7 @@ export function loginMessage(error) {
 // Supabase said no to a sign up. Returns { email }, { password } (which keeps Supabase's own words, since they name the rule missed) or { failure }.
 export function signupMessage(error) {
   const text = (error && error.message) || ''
+  if (isCaptchaFailure(error)) return { failure: CAPTCHA_FAILED }
   if (/already registered|already been registered|already exists/i.test(text)) return { email: 'There is already an account with that email address. Try logging in instead.' }
   if (isRateLimit(error)) return { failure: 'Too many tries just now. Please wait a few minutes and try again.' }
   if (/password/i.test(text)) return { password: text }

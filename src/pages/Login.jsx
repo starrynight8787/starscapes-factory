@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { supabase } from '../supabaseClient'
 import { Field, ErrorSummary, FailureMessage } from '../components/FormMessages'
-import { emailProblem, loginMessage } from './formRules'
+import { emailProblem, loginMessage, captchaIssue } from './formRules'
+import CaptchaCheck, { captchaOn } from '../components/CaptchaCheck'
 import '../styles/pages.css'
 import '../styles/forms.css'
 import PageBanner from '../components/PageBanner'
@@ -14,12 +15,15 @@ export default function Login() {
   const [summary, setSummary] = useState([]) // the box at the top of the form, listing each problem as a link to its field
   const [failure, setFailure] = useState(null) // a problem on our side, with nothing for the person to fix
   const [busy, setBusy] = useState(false)
+  const [captchaToken, setCaptchaToken] = useState('') // from the security check; empty until it has finished
+  const [captchaBroken, setCaptchaBroken] = useState(false)
+  const captcha = useRef(null)
   const navigate = useNavigate()
 
   function showProblems(found) {
     setFailure(null)
     setFieldErrors(found)
-    setSummary([['email', 'login-email'], ['password', 'login-password']].filter(([key]) => found[key]).map(([key, id]) => ({ id, message: found[key] })))
+    setSummary([['email', 'login-email'], ['password', 'login-password'], ['captcha', 'login-captcha']].filter(([key]) => found[key]).map(([key, id]) => ({ id, message: found[key] })))
   }
 
   async function handleSubmit(e) {
@@ -28,14 +32,17 @@ export default function Login() {
     const emailIssue = emailProblem(email)
     if (emailIssue) found.email = emailIssue
     if (!password) found.password = 'Enter your password'
+    const waitForCheck = captchaIssue(captchaOn(), captchaToken, captchaBroken)
+    if (waitForCheck) found.captcha = waitForCheck
     if (Object.keys(found).length > 0) return showProblems(found)
 
     setFieldErrors({})
     setSummary([])
     setFailure(null)
     setBusy(true)
-    const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password })
+    const { error } = await supabase.auth.signInWithPassword(captchaToken ? { email: email.trim(), password, options: { captchaToken } } : { email: email.trim(), password })
     setBusy(false)
+    if (captcha.current) captcha.current.reset() // the token has been used, whatever happened
 
     if (error) {
       const say = loginMessage(error)
@@ -64,6 +71,7 @@ export default function Login() {
         <Field id="login-password" label="Password" error={fieldErrors.password}>
           {(p) => <input {...p} type="password" placeholder="Password" autoComplete="current-password" value={password} onChange={(e) => setPassword(e.target.value)} required />}
         </Field>
+        <CaptchaCheck id="login-captcha" ref={captcha} onToken={setCaptchaToken} onProblem={() => setCaptchaBroken(true)} />
         <button type="submit" className="pg-btn fm-btn--primary fm__submit" disabled={busy}>
           Log in
         </button>
