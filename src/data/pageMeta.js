@@ -93,6 +93,7 @@ export const PAGES = {
   '/admin/suggestions': { title: 'Suggestions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/members': { title: 'Passes and members', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/promotions': { title: 'Promotions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/admin/backup': { title: 'Download a backup', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin': { title: 'Manage prints', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/art-loft/admin/originals': { title: 'Manage originals', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/membership/atlas': { title: 'Star Atlas', description: 'The stamps you have earned across the rooms.', image: 'site', index: false, client: true },

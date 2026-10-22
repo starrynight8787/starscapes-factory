@@ -6,6 +6,7 @@
 //   send     send an order to Creative Hub: a HELD order for the first time (automatic sending is off), or one that needs another go
 //   mark_refunded  record that an order Creative Hub does not have has been cancelled and refunded IN STRIPE (the site never moves money), and tell the customer
 //   sending_state  whether real payments go to Creative Hub by themselves, and whether the customer emails are ready
+//   backup_plan, backup_page, backup_users   the owner's "Download a backup" (Admin): the list of tables, then one page of a table or of the accounts at a time (lib/backupData.js)
 //   send_sample    for a TEST order only: send the owner a sample of a short customer email (with its TEST banner), so she can read the wording before approving it
 //   (mark_refunded can also be PRACTISED on a TEST order, so a tester can rehearse the refund journey: no money was taken and nothing goes near Creative Hub)
 //   resend_confirmation  send the customer's confirmation email again (only if it has not gone)
@@ -21,6 +22,7 @@
 
 import { requireOwner, sendDenied } from '../lib/ownerGuard.js'
 import { databaseUrl, serviceKeys, serviceFetch, saidWhat } from '../lib/serviceKey.js'
+import { backupPlan, readTablePage, readUsersPage } from '../lib/backupData.js'
 import { creativehubSettings, settingsUsable, SETTINGS_PROBLEM, getOrder, listOrders, summariseOrder, candidatesFor, isSafeOrderId, buildPayload } from '../lib/creativehubOrders.js'
 import { patchOrder, claimOrder, placeAndNotify } from '../lib/orderFlow.js'
 import { confirmOrder, sendNotice, confirmationProblems } from '../lib/orderConfirmation.js'
@@ -295,7 +297,22 @@ async function sendDispatch(res, body) {
   return res.status(200).json({ ok: true, outcome: result.status, message: result.note || 'The email was not sent.' })
 }
 
-const ACTIONS = { refresh, check, link, send, mark_refunded: markRefunded, send_sample: sendSample, sending_state: sendingState, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
+// ---------- the owner's backup (Admin, "Download a backup") ----------
+// Read-only. Only for the owner (the same guard as everything here), and only tables on the approved list in lib/backupTables.js. The answers are never kept: the browser puts them in a file on her computer.
+const reading = async (res, work, what) => {
+  try {
+    const r = await work()
+    if (!r.ok) return bad(res, r.status || 502, r.message)
+    return res.status(200).json(r)
+  } catch (e) {
+    return bad(res, 502, `The backup could not read ${what} just now. Nothing was changed. Please try again in a moment.`)
+  }
+}
+async function backupPlanAction(res) { return res.status(200).json({ ok: true, ...backupPlan() }) }
+async function backupPageAction(res, body) { return reading(res, () => readTablePage(body.table, body.offset), 'the data') }
+async function backupUsersAction(res, body) { return reading(res, () => readUsersPage(body.page), 'the list of accounts') }
+
+const ACTIONS = { backup_plan: backupPlanAction, backup_page: backupPageAction, backup_users: backupUsersAction, refresh, check, link, send, mark_refunded: markRefunded, send_sample: sendSample, sending_state: sendingState, resend_confirmation: resendConfirmation, send_dispatch: sendDispatch }
 
 export default async function handler(req, res) {
   res.setHeader('Cache-Control', 'no-store')

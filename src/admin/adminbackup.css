@@ -1,0 +1,19 @@
+/* The owner's backup page (/admin/backup). Stands on its own. */
+.bk__section { margin: 0 0 20px; }
+.bk__section > h2 { margin-top: 0; }
+.bk__warn { margin: 0 0 20px; padding: 12px 16px; border-radius: 10px; border: 2px solid #0e1530; background: #ffe27a; color: #0e1530; line-height: 1.5; }
+.bk__last { margin: 0 0 14px; color: var(--sf-ink, #0e1530); }
+.bk__buttons { display: flex; flex-wrap: wrap; gap: 8px; }
+.bk__live { margin-top: 14px; }
+.bk__steps { margin: 0 0 14px; padding: 0; list-style: none; display: grid; gap: 4px; }
+.bk__step { padding-left: 22px; position: relative; color: var(--sf-muted, #5b6585); }
+.bk__step--done { color: var(--sf-ink, #0e1530); }
+.bk__step--done::before { content: "\2713"; position: absolute; left: 0; font-weight: 700; color: #1d6b3a; }
+.bk__step--working::before { content: "\2026"; position: absolute; left: 0; }
+.bk__done { margin: 0; padding: 12px 16px; border-radius: 10px; border: 2px solid #1d6b3a; background: #eaf6ee; color: #0e1530; line-height: 1.5; }
+.bk__done p { margin: 0 0 8px; }
+.bk__done p:last-child { margin-bottom: 0; }
+.bk__warnings { margin: 8px 0 0; padding-left: 20px; }
+.bk__error { margin: 14px 0 0; padding: 10px 14px; border-radius: 10px; border: 2px solid #8f1d1d; background: #fff1f1; color: #5c0f0f; font-weight: 700; }
+.bk__error::before { content: "! "; }
+.bk__list { margin: 0; padding-left: 20px; line-height: 1.6; }

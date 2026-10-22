@@ -1,0 +1,66 @@
+"DOWNLOAD A BACKUP" IN ADMIN   starscapes-backup-22oct.zip   (SFW-188)
+(Code, tests and notes. No Supabase SQL. Released through a preview first. It adds no new server function: the site stays at 12 of 12.)
+
+WHY: your database is on Supabase's free plan, which I believe keeps no backups of its own. Before real orders and members exist, you want a copy of everything somewhere you control.
+WHAT YOU GET: Admin, then the Shop group, has a new tile, "Download a backup". One button gathers the whole database into ONE file and saves it to your computer's Downloads folder, named with the date and time
+(for example starscapes-factory-backup-2026-10-22-1922.json), so one backup never overwrites another. The page ticks off each table as it is saved and tells you how many rows each had.
+WHAT IS IN THE FILE: your orders; your members, their memberships and reminder emails; the newsletter and ebook sign-ups and newsletters; every post (including the text of paid posts); products and prices; books, stories,
+comments, suggestions and every vote; the Star Atlas; which doors are open; and the list of accounts (which email address goes with each member).
+WHAT IS NOT IN IT, ON PURPOSE: passwords (the sign-in system never gives them to anyone, not even you: if everything had to be rebuilt, members would choose new passwords); pictures and other files you have uploaded
+(keep your own originals); secret keys and the Instagram connection (a backup file must not contain secrets, and Instagram can be connected again); the website's code (safe in GitHub); and card details (Stripe keeps those).
+
+!! THE FILE HOLDS PERSONAL DETAILS (names, email addresses, delivery addresses). Keep it somewhere private: please don't email it, and don't put it in a shared or open folder. A good home is a private folder on a drive that is
+   protected by a password or encrypted (FileVault on a Mac, BitLocker on Windows), plus a second copy on something that is not your computer (an encrypted USB stick, say). Delete old backups you no longer need.
+!! A BACKUP IS ONLY HALF OF THE SAFETY. I have NOT built the "put it back" step, because it is best written when it is needed. The file holds every row with its original number, so it can be loaded back in. When that day
+   comes, ask Claude to write a restore for you to run on YOUR OWN computer, so the file never has to be shared with anyone (your AI policy says customers' details never go into AI tools, and this keeps that true).
+
+HOW IT STAYS SAFE
+ - ONLY YOU: it runs through the same owner-only server function as the Orders panel (order-actions.js). Anyone else is refused, and the page itself says "This area is for the site owner."
+ - ONLY AN APPROVED LIST OF TABLES can be read (lib/backupTables.js). The Instagram token table and the email-request log are left out, with the reason written down.
+ - A TEST FAILS IF THE DATABASE GAINS A TABLE that nobody has decided about, so the backup cannot quietly fall behind the site. (When you add a table, the test tells you to put it in the saved list or the left-out list.)
+ - NO HALF-FINISHED BACKUPS: if ANY table cannot be read, no file is made at all, and the page says which one and that nothing was saved. A half backup that looks complete is worse than none.
+ - THE DATA NEVER APPEARS ON THE SCREEN and is never kept anywhere else: it goes from your database to a file on your computer. The page uses no browser storage and sets no cookie, so your Cookies page stays accurate.
+ - Answers are marked "do not cache", and are read a page at a time so none is too big for the server to send.
+ - If only the list of accounts cannot be read, the rest is still saved, the page says so plainly, and the file records it.
+
+TESTS: 108 new across five files: the table list (every table is saved or left out with a reason; nothing secret; every table created in sql/ is accounted for, including one retired table); the reading code (only approved tables;
+a fixed order for every table; pages cut to a safe size; account records stripped of hashes and tokens); the server actions (owner only, plain errors, no-store, still 12 functions); the assembly in your browser (every page
+joined in order; refuses to save if anything fails; cannot loop for ever; warns if a table changed while it was read); and the page (who may see it, the warning, the button, progress, failure, no browser storage).
+32 deliberate breakages plus 8 more against the final page: ALL caught, and the total of 40 includes the Instagram token being added to the list, any table name being accepted, the owner check being removed,
+the backup carrying on after a failure, rows being shown on screen, and the page quietly using browser storage or a cookie.
+PROOF IN A REAL BROWSER (your server's answers stood in for by pretend ones, so no real data was read): the built site showed the new tile in the Admin console; the page opened; one click downloaded a real file with the
+right name; it held all 29 tables and the accounts, with the Instagram token left out; the server was asked 29 table pages, 1 plan and 1 accounts page; the page showed none of the data; and it left no browser storage or cookie.
+WHOLE SUITE: see the figure in the chat.
+
+INSTALL (through a preview first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-backup-22oct.zip
+ 5. python3 tools/add-backup.py          IT MUST PRINT "changed" LINES FOR 5 FILES AND ELEVEN LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "backup_" api/order-actions.js          (it must print 2)
+    grep -c "admin/backup" src/App.jsx              (it must print 1)
+    ls lib/backupTables.js lib/backupData.js src/admin/AdminBackup.jsx src/admin/makeBackup.js    (all four must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-backup" -not -path "./node_modules/*" -delete
+11. git checkout -b backup
+    git add .
+    git status                                   (5 changed files: api/order-actions.js, src/App.jsx, src/admin/AdminConsole.jsx, src/admin/adminTools.js, src/data/pageMeta.js; new: the six backup source files, the five test files, the notes, the installer, its test and fixtures, tools/backup-files/; nothing ending .before-)
+    git commit -m "Admin: Download a backup (one file with the whole database, saved to the owner's computer)"
+    git push -u origin backup
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "backup" and says Preview. WAIT for Ready, then open it, sign in as the owner, and check:
+      a. Admin (the button in the menu) shows a new tile, "Download a backup", in the Shop group.
+      b. The page opens, with the yellow warning about personal details at the top.
+      c. Press "Download a backup": it ticks through about 30 items, says "Done. Saved 29 tables and N rows to starscapes-factory-backup-....json", and a file lands in your Downloads folder.
+      d. The numbers should make sense: Orders 4 (your test orders), the list of accounts 2 (you), and roughly 107 posts, 82 products and 344 product sizes and prices.
+      e. If you like, open the file in a plain text editor (it is readable text) to see what a backup looks like. Then move it to its private home.
+    The preview talks to your REAL database, so this reads your real data and saves a real file: that is fine, it is the point. If the build fails (Error), or any of a to d is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and right:
+    git checkout main
+    git merge backup
+    git push
+    git branch -d backup
+    Then take your first real backup on the live site, at starscapesfactory.com/admin, and put the file somewhere private. After that: once a week, and always before a big change.
