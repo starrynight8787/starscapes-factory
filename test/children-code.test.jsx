@@ -12,7 +12,7 @@ import NewsletterSignup from '../src/newsletter/NewsletterSignup'
 import ClubhouseNote from '../src/components/ClubhouseNote'
 import Signup from '../src/pages/Signup'
 import { onClubhouse, CLUBHOUSE_PATH, CLUBHOUSE_ROOM, GROWN_UPS_NOTE, ACCOUNT_AGE_NOTE, CLUBHOUSE_PROMISE } from '../src/data/children'
-import { LEGAL_PAGES } from '../src/data/legalPages'
+import { LEGAL_PAGES, STAR_ATLAS_LIVE } from '../src/data/legalPages'
 
 const read = (p) => fs.readFileSync(p, 'utf8')
 const footerAt = (where) => render(<MemoryRouter initialEntries={[where]}><Footer /></MemoryRouter>)
@@ -104,6 +104,6 @@ describe('Privacy policy, section 12 (Children)', () => {
     expect(page('cookies').sections.map((s) => s.paragraphs.join(' ')).join(' ')).toMatch(/advertising cookies, analytics or visitor tracking/)
   })
   it('keeps its title and its place (the policy still has the same sections)', () => {
-    expect(page('privacy').sections.map((s) => s.title)).toContain('Children'); expect(page('privacy').sections).toHaveLength(15)
+    expect(page('privacy').sections.map((s) => s.title)).toContain('Children'); expect(page('privacy').sections).toHaveLength(STAR_ATLAS_LIVE ? 15 : 14) // the Star Atlas section is only shown once the atlas is live
   })
 })

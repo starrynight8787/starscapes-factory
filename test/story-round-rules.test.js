@@ -107,10 +107,10 @@ describe('cleaning what Gill types, and the round builder', () => {
   })
   it('lets Gill add as many of her own questions as she likes', () => {
     const f = blankForm(); f.extra = Array.from({ length: 12 }, (_, i) => ({ label: `Mine ${i}`, help: '', type: 'free_text', optionsText: '', nameBox: false }))
-    const b = buildPayload({ ...f, title: 'Round 2' }); expect(b.ok).toBe(true); expect(b.payload.questions).toHaveLength(22)
+    const b = buildPayload({ ...f, title: 'Chapter 2' }); expect(b.ok).toBe(true); expect(b.payload.questions).toHaveLength(22)
   })
   it('puts the side kicks question under the count question, and drops the dependency if the count question is off', () => {
-    const f = { ...blankForm(), title: 'Round 2' }; const a = buildPayload(f).payload.questions
+    const f = { ...blankForm(), title: 'Chapter 2' }; const a = buildPayload(f).payload.questions
     expect(a.find((x) => x.label === 'Side kicks')).toMatchObject({ show_if_index: a.findIndex((x) => x.label === 'Should the hero have side kicks?') })
     f.built.count.on = false; expect(buildPayload(f).payload.questions.find((x) => x.label === 'Side kicks').show_if_index).toBeUndefined()
   })

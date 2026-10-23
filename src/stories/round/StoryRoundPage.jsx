@@ -10,7 +10,7 @@ import './storyround.css'
 
 // The hidden "Let's write a story" page (Figma: "Story form designs", SFW-269). It lives at /story-round/<a long random code>, is not linked from anywhere, tells search engines
 // to ignore it, and is not in the sitemap. The server decides everything that matters (who may answer, when, how many names): this page only shows it kindly.
-const CHIP = { 'full_form': 'Round one', 'names_only': 'Names round', 'small_vote': 'Small vote' }
+const CHIP = { 'full_form': 'Chapter: full form', 'names_only': 'Chapter: names only', 'small_vote': 'Chapter: small vote' }
 const when = (iso) => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric', timeZone: 'Europe/London' }) : '')
 
 function Status({ title, children, chip = '', tone = '' }) {
@@ -163,22 +163,22 @@ export default function StoryRoundPage({ session }) {
   }
 
   const round = state.round || {}
-  const title = isVote ? 'A small vote' : namesOnly ? 'Names round' : 'Let’s write a story'
+  const title = isVote ? 'A small vote' : namesOnly ? 'Names chapter' : 'Let’s write a story'
   const subtitle = isVote ? 'One question. Pick one.' : namesOnly ? 'Suggest names for the story.' : 'Pick the ingredients for our next story'
   const s = state.status
   let body = null
   if (s === 'loading') body = <PageLoading label="Opening the page…" />
   else if (s === 'signed_out') body = <Status title="Please log in"><p>This page is for members. Log in, then come back to this link.</p><p><Link className="sr-btn" to="/login">Log in</Link></p></Status>
   else if (s === 'not_member') body = <Status title="This is for members" chip="Not available"><p>Taking part is for members who hold the Come Write With Me pass. You can see the passes on the membership page.</p><p><Link className="sr-btn" to="/membership">See the passes</Link></p></Status>
-  else if (s === 'not_found') body = <Status title="This page is not available"><p>The link may be wrong, or the round may be finished.</p><p><Link className="sr-btn" to="/idea-hatchery/lets-write-a-story">Back to the stories</Link></p></Status>
+  else if (s === 'not_found') body = <Status title="This page is not available"><p>The link may be wrong, or the chapter may be finished.</p><p><Link className="sr-btn" to="/idea-hatchery/lets-write-a-story">Back to the stories</Link></p></Status>
   else if (s === 'error') body = <Status title="That did not load" tone="warn"><p role="alert">{state.message || 'Please try again in a moment.'}</p></Status>
-  else if (s === 'closed') body = <Status title="This round has closed" chip="Closed"><p>Thank you for looking. This round is not taking answers any more. I will share what the story needs soon.</p></Status>
-  else if (s === 'not_yet') body = <Status title="This round has not opened yet" chip="Opens soon"><p>{round.opens_at ? `It opens on ${when(round.opens_at)}. Please come back then.` : 'Please come back soon.'}</p></Status>
+  else if (s === 'closed') body = <Status title="This chapter has closed" chip="Closed"><p>Thank you for looking. This chapter is not taking answers any more. I will share what the story needs soon.</p></Status>
+  else if (s === 'not_yet') body = <Status title="This chapter has not opened yet" chip="Opens soon"><p>{round.opens_at ? `It opens on ${when(round.opens_at)}. Please come back then.` : 'Please come back soon.'}</p></Status>
   else if (s === 'sent') {
     const sent = state.sent || {}
     body = (
       <Status title="Thank you. Your answer is final." chip="Sent" tone="good">
-        <p>I have saved what you sent. You cannot change it or send it again. I will share what the story needs when the round closes.</p>
+        <p>I have saved what you sent. You cannot change it or send it again. I will share what the story needs when the chapter closes.</p>
         <dl className="sr-summary">
           {!namesOnly && <div><dt>Answers saved</dt><dd>{sent.answered} of {sent.total}</dd></div>}
           <div><dt>Name suggestions sent</dt><dd>{sent.names}</dd></div>
@@ -199,7 +199,7 @@ export default function StoryRoundPage({ session }) {
             <ul className="sr-list">
               <li>You answer each question once. Your answers are final when you press Send.</li>
               <li>Name suggestions are private. Only I see them.</li>
-              <li>You can suggest up to {MONTHLY_NAMES} names a month, across every round.</li>
+              <li>You can suggest up to {MONTHLY_NAMES} names a month, across every chapter.</li>
             </ul>
           </>}
         </section>

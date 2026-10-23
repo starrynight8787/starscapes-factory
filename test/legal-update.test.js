@@ -8,6 +8,7 @@ import { LARGE_FRAMED_SIZES, LARGE_FRAMED_RETURN } from '../src/data/returns'
 import { ACRYLIC_SIZES_CM } from '../src/artloft/printDetails'
 import { buildConfirmation, buildSections, RETURN, COMPANY } from '../lib/orderEmailText'
 import { CONTACT_EMAIL } from '../src/data/contact'
+import { DRAFT } from './legalState'
 
 const read = (p) => fs.readFileSync(p, 'utf8')
 const page = (slug) => LEGAL_PAGES.find((p) => p.slug === slug)
@@ -97,9 +98,12 @@ describe('GUARDS: the conditions for needing no consent banner for the bot check
   })
 })
 
-describe('nothing is published by this change', () => {
-  it('all five pages are still drafts with the date still to fill in, and no stray placeholder has crept in', () => {
+describe('the state of the five pages (SFW-186)', () => {
+  it('no stray placeholder in any page, in either state: the only square-bracket gap is [date], and only while a page is a draft', () => {
+    const strays = [...everything().matchAll(/\[([^\]]*)\](?!\()/g)].map((m) => m[1]); expect(strays).toEqual([])
+    for (const p of LEGAL_PAGES) expect(p.updated === '[date]', p.slug).toBe(p.ready !== true)
+  })
+  it.runIf(DRAFT)('while they are drafts: all five are not ready, each still waits for its date', () => {
     for (const p of LEGAL_PAGES) { expect(p.ready, p.slug).toBe(false); expect(p.updated, p.slug).toBe('[date]') }
-    const strays = [...everything().matchAll(/\[([^\]]*)\](?!\()/g)].map((m) => m[1]).filter((x) => x !== 'date'); expect(strays).toEqual([])
   })
 })

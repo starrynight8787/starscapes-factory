@@ -2,10 +2,10 @@
 import { BUILT_IN, NAME_BOXES, KINDS, tidyText } from '../stories/round/storyRoundRules'
 import { londonToIso } from '../home/homeRules'
 
-export const KIND_NAMES = { full_form: 'Full form', names_only: 'Names only', small_vote: 'One-question vote' }
+export const KIND_NAMES = { full_form: 'Chapter: full form', names_only: 'Chapter: names only', small_vote: 'Chapter: small vote' }
 export const STATE_NAMES = { hidden: 'Hidden', open: 'Open', not_yet: 'Opens later', closed: 'Closed' }
 
-// The label the console shows for a round: draft, open, closed or archived (a round that has passed its closing date shows as closed even if nobody pressed the button)
+// The label the console shows for a chapter: draft, open, closed or archived (a round that has passed its closing date shows as closed even if nobody pressed the button)
 export const roundLabel = (round) => (round.status === 'draft' ? 'Draft' : round.status === 'archived' ? 'Archived' : round.state === 'closed' ? 'Closed' : round.state === 'not_yet' ? 'Opens later' : 'Open')
 
 export const blankForm = () => ({
@@ -24,13 +24,13 @@ const optionsFrom = (text) => String(text || '').split(/\n|,/).map(tidyText).fil
 // What the form becomes when the owner presses Save as draft. Returns { ok: true, payload } or { ok: false, message }.
 export function buildPayload(form) {
   const title = tidyText(form.title)
-  if (!title) return { ok: false, message: 'Please give the round a title.' }
-  if (!KINDS.includes(form.kind)) return { ok: false, message: 'Please choose what kind of round this is.' }
+  if (!title) return { ok: false, message: 'Please give the chapter a title.' }
+  if (!KINDS.includes(form.kind)) return { ok: false, message: 'Please choose what kind of chapter this is.' }
   let opens_at = null
   let closes_at = null
   if (form.opensDate) opens_at = londonToIso(form.opensDate, form.opensTime || '09:00')
   if (form.closesDate) closes_at = londonToIso(form.closesDate, form.closesTime || '18:00')
-  if (opens_at && closes_at && new Date(closes_at) <= new Date(opens_at)) return { ok: false, message: 'The round must close after it opens.' }
+  if (opens_at && closes_at && new Date(closes_at) <= new Date(opens_at)) return { ok: false, message: 'The chapter must close after it opens.' }
   let questions = []
   if (form.kind === 'full_form') {
     for (const q of BUILT_IN) {

@@ -1,5 +1,6 @@
 // The footer from the design (four columns and the company details), the owner's view of pages that are not ready, and the new pages' facts.
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
@@ -31,7 +32,7 @@ describe('the company details', () => {
 })
 
 describe('the footer', () => {
-  it('has the logo, the line under it, and four columns in the design\u2019s order', () => {
+  it.runIf(DRAFT)('has the logo, the line under it, and four columns in the design\u2019s order', () => {
     const { container } = foot()
     expect(screen.getByText("You're only limited by your own imagination.")).toBeInTheDocument()
     expect([...container.querySelectorAll('.ft__head')].map((h) => h.textContent)).toEqual(['Rooms', 'Shop and help', 'Follow']) // Legal appears once a legal page is ready
@@ -42,7 +43,7 @@ describe('the footer', () => {
     expect(links).toHaveLength(8)
     expect(links.map((a) => a.getAttribute('href'))).toEqual(['/drafting-desk', '/sarah-jrs-den', '/art-loft', '/explorers-bay', '/factory-floor', '/leadership-lounge', '/idea-hatchery', '/knowledge-nook'])
   })
-  it('shows a visitor only the pages that are ready, and no "draft" marks', () => {
+  it.runIf(DRAFT)('shows a visitor only the pages that are ready, and no "draft" marks', () => {
     const { container } = foot()
     expect(container.querySelector('.ft__draft')).toBeNull()
     const pageLinks = [...container.querySelectorAll('a[href^="/page/"]')].map((a) => a.getAttribute('href'))
@@ -85,7 +86,7 @@ describe('the pages the footer links to', () => {
     expect(c).toMatch(/Not every order is tracked/); expect(c).toMatch(/estimates, not promises/); expect(c).toContain('(/page/returns)')
     expect(c).not.toMatch(/(?<!not )every order (has|is) tracked|guarantee/i)
   })
-  it('the Terms are a legal page, in your draft\u2019s words, with the real company details, and stay hidden until you switch them on', () => {
+  it.runIf(DRAFT)('the Terms are a legal page, in your draft\u2019s words, with the real company details, and stay hidden until you switch them on', () => {
     const terms = LEGAL_PAGES.find((p) => p.slug === 'terms')
     expect(resolvePage('terms')).toMatchObject({ kind: 'legal' }); expect(terms.sections).toHaveLength(19)
     expect(terms.sections.map((x) => x.title)).toEqual(['About us', 'What we sell and how your order is made', 'Placing an order', 'Prices and VAT', 'Delivery', 'Orders from outside the UK', 'Payment', 'Cancelling and returns', 'Your account', 'Copyright and what you can do with a print', 'Using this website', 'Our responsibility to you', 'Events outside our control', 'Passes', 'Paying for passes', 'Changing your passes', 'Cancelling passes and your right to change your mind', 'Changes to these terms', 'Complaints and the law'])

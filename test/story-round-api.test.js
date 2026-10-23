@@ -96,7 +96,7 @@ const admin = (body) => call('admin', { method: 'POST', body })
 // A round made the way the console makes it: the ten default questions
 async function makeFullRound() {
   const questions = BUILT_IN.map((q) => ({ label: q.label, help: q.help, type: q.type, options: q.options, name_box: q.nameBox, ...(q.showIf ? { show_if_index: 3, show_if_answers: q.showIf.answers } : {}) }))
-  const made = await admin({ op: 'create', title: 'Round one', kind: 'full_form', questions })
+  const made = await admin({ op: 'create', title: 'Chapter one', kind: 'full_form', questions })
   expect(made.status).toBe(200); expect(made.body.link_token).toBe(TOKEN)
   const qs = [...h.db.t.story_questions].sort((a, b) => a.sort_order - b.sort_order)
   return { qs, byLabel: (l) => qs.find((q) => q.label === l) }
@@ -177,7 +177,7 @@ describe('one final answer', () => {
 
 describe('3 name suggestions a month', () => {
   const names = (byLabel, list) => Object.fromEntries(list.map(([label, n]) => [byLabel(label).id, n]))
-  it('lets three names through together, and refuses a fourth in another round with a clear message', async () => {
+  it('lets three names through together, and refuses a fourth in another chapter with a clear message', async () => {
     const { byLabel } = await makeFullRound(); openRound(); member()
     const three = names(byLabel, [['Main character', ['A']], ['Love interest', ['B']], ['Villain', ['C']]])
     const o = await post({ token: TOKEN, answers: { [byLabel('Genre').id]: 'Fantasy' }, names: three })

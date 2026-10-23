@@ -2,6 +2,7 @@
 // The AI policy's first section says what is never made with AI; the second says where Claude does help, including the line-drawn scenes that frame the shop. Both are true, but a visitor
 // could read them as clashing, so section 1 now ends with a short pointer to section 2 (a reader's suggestion, 21 October 2026). These tests keep the two sections in step.
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { LEGAL_PAGES } from '../src/data/legalPages'
 
 const policy = () => LEGAL_PAGES.find((p) => p.slug === 'ai-policy')
@@ -46,7 +47,7 @@ describe('the promise itself is untouched', () => {
     const never = sections().find((s) => s.title === 'What I never use AI for').paragraphs.join('\n')
     expect(never).toMatch(/Making or changing the work I sell or publish as mine/); expect(never).toMatch(/never made, finished or altered by AI/)
   })
-  it('the page is still a draft with the date as its only gap', () => {
+  it.runIf(DRAFT)('the page is still a draft with the date as its only gap', () => {
     expect(policy().ready).toBe(false); expect(policy().updated).toBe('[date]')
     const text = [policy().updated, ...policy().intro, ...sections().flatMap((s) => s.paragraphs)].join('\n').replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '')
     expect([...new Set(text.match(/\[[^\]\n]+\]/g))]).toEqual(['[date]'])

@@ -1,9 +1,10 @@
 // @vitest-environment node
 // The Privacy policy's newsletter wording, tied to what the code and the database really do, so the page can never promise something the site does not do (SFW-233, SFW-250).
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { readFileSync } from 'node:fs'
 import { join } from 'node:path'
-import { LEGAL_PAGES } from '../src/data/legalPages'
+import { LEGAL_PAGES, STAR_ATLAS_LIVE } from '../src/data/legalPages'
 import { CONSENT_TEXT, UNCONFIRMED_DAYS } from '../src/newsletter/newsletterRules'
 
 const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
@@ -19,7 +20,7 @@ describe('what the policy says it keeps', () => {
     expect(r[0]).toMatch(/email address/); expect(r[0]).toMatch(/date and wording you agreed to/); expect(r[0]).toMatch(/whether and when you confirmed it/); expect(r[0]).toMatch(/if you leave, that you left/)
     expect(r[2]).toMatch(/send you the newsletter/); expect(r[2]).toMatch(/the free ebook if you asked for it/); expect(r[2]).toMatch(/proof that you asked and confirmed/); expect(r[2]).toMatch(/nobody who has unsubscribed is emailed again/)
     expect(r[3]).toMatch(/your consent, which you can take back at any time/); expect(r[3]).toMatch(/legitimate interest in making sure we never email someone who has asked us to stop/)
-    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(17) // the heading line, the divider line, and fifteen rows (four of them for the Star Atlas): the newsletter and the free ebook have one row between them, and the member profile is the eleventh
+    expect(rows().filter((x) => /free ebook/.test(x[1]))).toHaveLength(1); expect(rows().filter((x) => /newsletter/.test(x[1]))).toHaveLength(1); expect(rows()).toHaveLength(STAR_ATLAS_LIVE ? 17 : 13) // the heading line, the divider line, and fifteen rows when the Star Atlas is live (four of them for it) or eleven until then (SFW-186): the newsletter and the free ebook have one row between them, and the member profile is the eleventh
   })
   it('keeps exactly what the table in the database keeps: the address, the words agreed to, when, whether confirmed, and whether they left (and no name, no phone, nothing else)', () => {
     const sql = read('sql/newsletter.sql'); const table = between(sql, 'create table if not exists public.newsletter_subscribers', 'create table if not exists public.newsletter_issues')
@@ -73,7 +74,7 @@ describe('what the policy says about leaving, confirming and how long it keeps t
 })
 
 describe('the policy is still an honest draft', () => {
-  it('has no new gap to fill: the only one is still the date it is published, and it is not live until the owner decides', () => {
+  it.runIf(DRAFT)('has no new gap to fill: the only one is still the date it is published, and it is not live until the owner decides', () => {
     const text = [privacy.updated, ...privacy.intro, ...privacy.sections.flatMap((s) => s.paragraphs)].join('\n').replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '')
     expect([...text.matchAll(/\[[^\]\n]+\]/g)].map((m) => m[0])).toEqual(['[date]']); expect(privacy.updated).toBe('[date]'); expect(privacy.ready).toBe(false)
   })

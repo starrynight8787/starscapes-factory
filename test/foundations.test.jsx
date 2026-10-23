@@ -1,4 +1,5 @@
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter } from 'react-router-dom'
 import { readFileSync } from 'node:fs'
@@ -14,7 +15,7 @@ const app = readFileSync(join(process.cwd(), 'src/App.jsx'), 'utf8')
 const renderFooter = (props) => render(<MemoryRouter><Footer {...props} /></MemoryRouter>)
 
 describe('footer', () => {
-  it('links every room, the shop and help pages, and each legal page only once it is ready', () => {
+  it.runIf(DRAFT)('links every room, the shop and help pages, and each legal page only once it is ready', () => {
     renderFooter({ social: [] })
     const rooms = screen.getByRole('navigation', { name: 'Rooms' })
     expect(within(rooms).getAllByRole('link').map((l) => l.textContent)).toEqual(['The Drafting Desk', "Sarah Junior's Clubhouse", 'The Art Loft', "Explorer's Bay", 'The Factory Floor', 'Leadership Lounge', 'The Idea Hatchery', 'Knowledge Nook'])

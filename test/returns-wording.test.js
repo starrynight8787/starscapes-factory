@@ -3,6 +3,7 @@
 // and the Returns page say the same thing, and no gap is left open about it. UPDATED 22 October 2026 (legal review decision D5): for framed prints in the large sizes Gill arranges and pays for the return;
 // for every other print the customer pays. The sentence is built in src/data/returns.js, from the real acrylic sizes, and used by both.
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { buildConfirmation, RETURN, pendingItems } from '../lib/orderEmailText'
 import { LEGAL_PAGES } from '../src/data/legalPages'
 import { CONTACT_EMAIL } from '../src/data/contact'
@@ -50,7 +51,7 @@ describe('the Returns page', () => {
     expect(all).not.toMatch(/\[RETURN ADDRESS\]|post the print to /i)
     expect(sendItBack()).not.toMatch(/\[/)
   })
-  it('leaves the [date] as the only gap on any of the legal pages', () => {
+  it.runIf(DRAFT)('leaves the [date] as the only gap on any of the legal pages', () => {
     const gaps = new Set(LEGAL_PAGES.flatMap((p) => [p.updated, ...p.intro, ...p.sections.flatMap((s) => s.paragraphs)]).join('\n').replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').match(/\[[^\]\n]+\]/g))
     expect([...gaps]).toEqual(['[date]'])
   })

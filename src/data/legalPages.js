@@ -39,11 +39,13 @@ import { LARGE_FRAMED_RETURN } from './returns'
 const fillContact = (v) => (typeof v === 'string' ? v.split('{{CONTACT_EMAIL}}').join(CONTACT_EMAIL) : Array.isArray(v) ? v.map(fillContact) : v && typeof v === 'object' ? Object.fromEntries(Object.entries(v).map(([k, x]) => [k, fillContact(x)])) : v)
 
 // THE STAR ATLAS (the stamps, the monthly reading check-in, the optional genre and the optional survey) is being built (the foundations are in; the reading check-in is not). The privacy policy
-// describes all of it (Gill, 22 October 2026), so the policy must not be published before the atlas is live. Set this to true on the day the Star Atlas goes live; until then a test refuses
-// to let the privacy policy be switched on. (If the atlas is dropped, take its section, its table rows and its retention line out of the privacy policy instead.)
+// describes all of it (Gill, 22 October 2026), and that wording is written out in full below (ALL_LEGAL_PAGES) and tested. But a policy must not describe data the site does not yet collect, and the
+// privacy policy has to be public at opening (every sign-up form links to it). So the page the site SHOWS (LEGAL_PAGES, at the end of this file) leaves the atlas wording out until this is true:
+// FIVE lines (four rows of the "what we collect" table and one retention bullet) and ONE section. Set this to true on the day the Star Atlas goes live and the wording appears by itself.
+// (If the atlas is dropped, take that wording out of ALL_LEGAL_PAGES instead.)
 export const STAR_ATLAS_LIVE = false
 
-export const LEGAL_PAGES = fillContact([
+export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "terms",
     "title": "Terms and conditions",
@@ -462,3 +464,16 @@ export const LEGAL_PAGES = fillContact([
     ]
   }
 ])
+
+
+// WHAT THE SITE SHOWS (SFW-186). Everything above is the full text. Until the Star Atlas is live, the privacy policy is shown WITHOUT: the section "Your Star Atlas and reading check-ins", the four table rows
+// that start "| Your Star Atlas", "| Your monthly reading check-in", "| The country you choose" (it is for the atlas's first country stamp, and never says "atlas") and "| Your answers to the optional year-one survey",
+// and the retention bullet that starts "* **Your Star Atlas". Nothing else changes, and no other page is touched. test/star-atlas-switch.test.js checks exactly that, and that no atlas wording survives while it is off.
+const ATLAS_SECTION = 'Your Star Atlas and reading check-ins'
+const ATLAS_LINE_STARTS = ['| Your Star Atlas', '| Your monthly reading check-in', '| The country you choose', '| Your answers to the optional year-one survey', '* **Your Star Atlas']
+const dropAtlasLines = (text) => text.split('\n').filter((line) => !ATLAS_LINE_STARTS.some((start) => line.startsWith(start))).join('\n')
+export function withAtlasSwitch(pages, live) {
+  if (live) return pages
+  return pages.map((page) => (page.slug !== 'privacy' ? page : { ...page, sections: page.sections.filter((section) => section.title !== ATLAS_SECTION).map((section) => ({ ...section, paragraphs: section.paragraphs.map(dropAtlasLines) })) }))
+}
+export const LEGAL_PAGES = withAtlasSwitch(ALL_LEGAL_PAGES, STAR_ATLAS_LIVE)

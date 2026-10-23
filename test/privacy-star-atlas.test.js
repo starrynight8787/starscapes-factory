@@ -3,7 +3,8 @@
 // and who may see it: the stamps, the stardust, the taste week, the country, the monthly book count (0 to 3) and the OPTIONAL genre, and the optional survey; reading habits only ever looked at
 // as TOTALS, once at least 5 members have checked in. The atlas is not built yet, so the policy may not be switched on until it is (STAR_ATLAS_LIVE).
 import { describe, it, expect } from 'vitest'
-import { LEGAL_PAGES, STAR_ATLAS_LIVE } from '../src/data/legalPages'
+// the FULL text of the policy (the Star Atlas wording is written and tested in full here), not the page the site shows (which leaves the atlas out until it is live: test/star-atlas-switch.test.js)
+import { ALL_LEGAL_PAGES as LEGAL_PAGES, STAR_ATLAS_LIVE } from '../src/data/legalPages'
 
 const privacy = () => LEGAL_PAGES.find((p) => p.slug === 'privacy')
 const section = (title) => privacy().sections.find((s) => s.title === title)
@@ -93,13 +94,12 @@ describe('how long it is kept', () => {
   })
 })
 
-describe('the policy cannot be published before the Star Atlas exists', () => {
-  it('stays switched off while the atlas is not live (flip STAR_ATLAS_LIVE on the day it goes live, or take the atlas wording out)', () => {
+describe('the policy can be published before the Star Atlas exists, because the site leaves the atlas wording out until it is live', () => {
+  it('has a true-or-false switch (flip STAR_ATLAS_LIVE on the day the atlas goes live and the wording appears; test/star-atlas-switch.test.js checks that nothing of it shows before then)', () => {
     expect(typeof STAR_ATLAS_LIVE).toBe('boolean')
-    if (!STAR_ATLAS_LIVE) expect(privacy().ready).toBe(false)
   })
-  it('is still a draft with the date as its only gap', () => {
+  it('has no gap in the full text except the date, and the date only while the page is a draft', () => {
     const text = whole().replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '')
-    expect([...new Set(text.match(/\[[^\]\n]+\]/g))]).toEqual(['[date]'])
+    expect([...new Set(text.match(/\[[^\]\n]+\]/g))]).toEqual(privacy().ready ? [] : ['[date]'])
   })
 })

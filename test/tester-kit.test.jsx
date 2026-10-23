@@ -1,5 +1,6 @@
 // The tester kit: the private tester page, the real Contact page, and the four text pages that stay hidden until they are ready.
 import { describe, it, expect, vi } from 'vitest'
+import { DRAFT } from './legalState'
 import { render, screen, within } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
@@ -77,7 +78,7 @@ describe('the Contact page', () => {
   })
 })
 
-describe('the four pages that are not ready', () => {
+describe.runIf(DRAFT)('the four pages that are not ready', () => {
   const unready = ['about', 'terms', 'privacy', 'ai-policy']
   it('are marked not ready, and Contact is marked ready', () => {
     for (const slug of unready) expect(pageIsReady(slug), slug).toBe(false)

@@ -27,6 +27,6 @@ describe('the hidden link', () => {
 })
 describe('the owner\'s console', () => {
   it('is a tool in the admin list, behind the owner check on the page and on the server', () => {
-    expect(read('src/admin/adminTools.js')).toMatch(/Story rounds', to: '\/admin\/story-rounds'/); expect(read('src/admin/AdminStoryRounds.jsx')).toMatch(/useOwnerCheck/); expect(read('lib/storyRounds.js')).toMatch(/requireOwner\(req\)/)
+    expect(read('src/admin/adminTools.js')).toMatch(/Story chapters', to: '\/admin\/story-rounds'/); expect(read('src/admin/AdminStoryRounds.jsx')).toMatch(/useOwnerCheck/); expect(read('lib/storyRounds.js')).toMatch(/requireOwner\(req\)/)
   })
 })

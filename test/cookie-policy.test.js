@@ -3,6 +3,7 @@
 // These tests tie that page to the code, so it cannot quietly become untrue: add a new kind of storage, a new outside service, a cookie or an analytics tool,
 // and a test here fails until the page (and the Privacy policy's short cookies section) says so.
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { readFileSync, readdirSync, statSync } from 'node:fs'
 import { join } from 'node:path'
 import { LEGAL_PAGES } from '../src/data/legalPages'
@@ -20,7 +21,7 @@ const policy = cookies.sections.flatMap((s) => s.paragraphs).join('\n')
 const withText = (needle, files) => files.filter((f) => read(f).includes(needle))
 
 describe('the page itself', () => {
-  it('is there, with a title, a date to fill in, and its sections', () => {
+  it.runIf(DRAFT)('is there, with a title, a date to fill in, and its sections', () => {
     expect(cookies.title).toBe('Cookie policy'); expect(cookies.updated).toBe('[date]')
     expect(cookies.sections.map((s) => s.title)).toEqual(['The short version', 'What the site keeps on your device', 'What other companies set or see', "What we don't use", 'Your choices', 'If this changes'])
   })

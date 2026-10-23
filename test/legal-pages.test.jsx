@@ -1,8 +1,9 @@
 // The four legal pages (Terms, Privacy, Returns and refunds, AI policy): that Gill's drafts came across whole and tidy, stay consistent with the site's own facts, and render properly.
 import { describe, it, expect } from 'vitest'
+import { DRAFT } from './legalState'
 import { render, screen, within } from '@testing-library/react'
 import { MemoryRouter, Routes, Route } from 'react-router-dom'
-import { LEGAL_PAGES } from '../src/data/legalPages'
+import { LEGAL_PAGES, STAR_ATLAS_LIVE } from '../src/data/legalPages'
 import { COMPANY } from '../src/data/company'
 import { CONTACT_EMAIL } from '../src/data/contact'
 import { resolvePage } from '../src/data/staticPages'
@@ -23,7 +24,7 @@ describe('the four drafts came across whole, and the cookie policy was added to 
     for (const p of LEGAL_PAGES) expect(resolvePage(p.slug).kind).toBe('legal')
   })
   it('each has the sections of its draft, with their titles', () => {
-    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', 'Your Star Atlas and reading check-ins', 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
+    expect(page('privacy').sections.map((s) => s.title)).toEqual(['Who we are', 'What we collect and why', 'Suggestions and votes', 'Your profile and what other people see', ...(STAR_ATLAS_LIVE ? ['Your Star Atlas and reading check-ins'] : []), 'Cookies and similar technologies', 'Who we share your information with', 'Sending information abroad', 'How long we keep it', 'Your rights', 'Marketing', 'Children', 'Keeping it safe', 'Complaints', 'Changes to this policy'])
     expect(page('returns').sections.map((s) => s.title)).toEqual(['If you change your mind', 'If your print is faulty or damaged', "If your print isn't what you ordered", "If your print doesn't arrive", 'If you ordered from outside the UK', 'How refunds are paid', 'Cancellation form'])
     expect(page('ai-policy').sections.map((s) => s.title)).toEqual(['What is always made by me', 'Where I do use AI', 'What I never use AI for', 'How I check what AI produces', "Why I'm telling you", 'Questions, and changes to this page'])
     expect(page('terms').sections).toHaveLength(19)
@@ -76,7 +77,7 @@ describe('they agree with the rest of the site', () => {
 })
 
 describe('they show properly', () => {
-  it('each opens for the owner in the legal layout with a contents list of its sections', () => {
+  it.runIf(DRAFT)('each opens for the owner in the legal layout with a contents list of its sections', () => {
     for (const p of LEGAL_PAGES) {
       const { unmount } = open(p.slug)
       expect(screen.getByRole('heading', { level: 1, name: p.title })).toBeInTheDocument()
@@ -85,7 +86,7 @@ describe('they show properly', () => {
       unmount()
     }
   })
-  it('show their introduction under the date, with the short version in bold for the AI policy', () => {
+  it.runIf(DRAFT)('show their introduction under the date, with the short version in bold for the AI policy', () => {
     const { container } = open('ai-policy')
     expect(container.querySelector('.lg-intro strong')).toHaveTextContent('The short version.')
     expect(container.querySelector('.lg-updated')).toHaveTextContent('Last updated: [date]')
@@ -97,11 +98,11 @@ describe('they show properly', () => {
       unmount()
     }
   })
-  it('the Privacy policy\u2019s table is a real table: four columns with headings, and fifteen rows (one for each thing it keeps: the newsletter and the free ebook are one list, so one row; four of them are for the Star Atlas)', () => {
+  it('the Privacy policy\u2019s table is a real table: four columns with headings, and one row for each thing it keeps: fifteen when the Star Atlas is live (four of them are for it), eleven until then (the newsletter and the free ebook are one list, so one row)', () => {
     const { container } = open('privacy')
     const table = container.querySelector('table')
     expect([...table.querySelectorAll('th')].map((h) => h.textContent)).toEqual(['What', 'When', 'Why', 'Our legal reason'])
-    expect(table.querySelectorAll('tbody tr')).toHaveLength(15); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
+    expect(table.querySelectorAll('tbody tr')).toHaveLength(STAR_ATLAS_LIVE ? 15 : 11); for (const th of table.querySelectorAll('th')) expect(th).toHaveAttribute('scope', 'col')
     expect(container.querySelector('.md-tablewrap')).toBeTruthy()
   })
   it('a table scrolls inside a box a keyboard can reach and a screen reader can name, with a short hint for people on a phone', () => {
@@ -115,9 +116,9 @@ describe('they show properly', () => {
     expect([...container.querySelectorAll('table th')].map((h) => h.textContent)).toEqual(['Area', 'What the AI does', 'What I do'])
     expect(container.querySelectorAll('table tbody tr')).toHaveLength(6)
   })
-  it('lists are lists: the people Privacy shares with (9, Cloudflare included), how long it keeps things (11: the member profile and the Star Atlas each have their own point, and backups), your rights (7)', () => {
+  it('lists are lists: the people Privacy shares with (9, Cloudflare included), how long it keeps things (11: the member profile and the Star Atlas each have their own point, and backups; 10 until the atlas is live), your rights (7)', () => {
     const { container } = open('privacy')
-    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([9, 11, 7])
+    expect([...container.querySelectorAll('.lg-text ul')].map((u) => u.querySelectorAll('li').length)).toEqual([9, STAR_ATLAS_LIVE ? 11 : 10, 7])
     expect(container.querySelector('ul li strong')).toHaveTextContent('Creative Hub, run by Printspace Studios Limited')
   })
   it('the Returns steps are a numbered list of three, and the cancellation form is a quote', () => {
@@ -134,7 +135,7 @@ describe('they show properly', () => {
 })
 
 describe('the footer', () => {
-  it('shows the owner all six legal links, each marked draft, with the Cookie policy beside the Privacy policy, and Returns is no longer missing', () => {
+  it.runIf(DRAFT)('shows the owner all six legal links, each marked draft, with the Cookie policy beside the Privacy policy, and Returns is no longer missing', () => {
     const { container } = render(<MemoryRouter><Footer social={[]} owner /></MemoryRouter>)
     const legal = screen.getByRole('navigation', { name: 'Legal' })
     expect(within(legal).getAllByRole('link').map((a) => a.textContent)).toEqual(['Terms and conditions', 'Privacy policy', 'Cookie policy', 'Returns and refunds', 'AI policy', 'Accessibility'])
@@ -168,7 +169,7 @@ describe('the Privacy policy says what the site really does (SFW-233)', () => {
   const read = (rel) => readFileSync(join(process.cwd(), rel), 'utf8')
   const privacy = () => textOf(page('privacy'))
   const section = (title) => textOf({ intro: [], sections: page('privacy').sections.filter((x) => x.title === title) })
-  it('has exactly one gap left for the owner to fill: the date it is published (Resend and 2 years were decided on 20 October 2026)', () => {
+  it.runIf(DRAFT)('has exactly one gap left for the owner to fill: the date it is published (Resend and 2 years were decided on 20 October 2026)', () => {
     const gaps = [...privacy().replace(/\[[^\]\n]+\]\([^)\s]*\)/g, '').matchAll(/\[[^\]\n]+\]/g)].map((m) => m[0]).sort()
     expect(page('privacy').updated).toBe('[date]'); expect(gaps).toEqual(['[date]'])
     expect(page('privacy').ready).toBe(false)
