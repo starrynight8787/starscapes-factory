@@ -1,0 +1,76 @@
+THE TERMS TICK BOX AND THE RETURNS SUMMARY AT CHECKOUT   starscapes-checkout-terms-v2-22oct.zip   (SFW-14; finding M1 of the legal review, SFW-181)
+VERSION 2: FIXES A BUILD FAILURE ON A MAC. Version 1 had two files whose names differed only by capitals (beforeYouPay.js and BeforeYouPay.jsx). Your Mac ignores capitals, so one import found the wrong file and
+`npm run build` failed ("default is not exported by beforeYouPay.js"). The box is now BeforeYouPayBox.jsx, and a new test (test/no-case-clashes.test.js) fails if ANY two code files in a folder ever differ only by capitals,
+because a Linux machine cannot see that problem.
+(Code, wording and tests. No Supabase step. ONE SETTING IN STRIPE comes first. Released through a preview first.)
+
+WHY: the law wants the customer to be given the cancellation information, who pays to send a print back, and the model cancellation form BEFORE they pay. If it is missing, the 14-day cancellation period can stretch to up to 12 months.
+
+WHAT IT DOES (what you will SEE)
+ 1. ON THE CART PAGE, above the pay button: a "Before you pay" box with four plain lines (you can cancel any time until 14 days after your print is delivered; the large framed prints sentence: we arrange and pay for those returns, you pay for the rest;
+    a faulty print is put right and you do not pay to send it back; pressing Pay is an offer, and the contract begins when we email to confirm), and links to the Terms and the Returns and refunds page (which has the cancellation form), opening in a new tab.
+ 2. ON STRIPE'S PAGE (where the contract is really made): a REQUIRED tick box ("I have read and agree to the Terms and conditions and the Returns and refunds page, which includes my 14-day right to cancel"), and the same returns summary beside the pay button.
+    The customer cannot pay without ticking. Stripe records each acceptance on the order, which is better proof than anything we could store ourselves.
+ 3. A NEW RAIL: REAL payments stay closed until the legal pages are published (they are drafts until SFW-186), because the tick box points at them. Test payments are NOT held back, so you can try checkout now. When the pages are published (SFW-186), set
+    LEGAL_PAGES_PUBLISHED to true in src/cart/beforeYouPay.js in the SAME change that sets ready: true on the legal pages: a test fails if the two disagree.
+ 4. If Stripe refuses because the Terms address is missing in its settings, the checkout says so plainly ("the address of the Terms page still has to be entered in Stripe") instead of a vague "try again".
+ALL THE WORDING COMES FROM ONE FILE (src/cart/beforeYouPay.js), used by the cart box AND Stripe's page, and the large framed prints sentence is the one used on the Returns page and in the order email (src/data/returns.js), so they cannot disagree.
+
+*** FIRST, ONE SETTING IN STRIPE (before you try checkout, or Stripe will refuse to show the tick box) ***
+  Stripe dashboard > Settings > Business > Public details (the label may be slightly different) > the "Terms of service" address:   https://starscapesfactory.com/page/terms
+  Save it. If Stripe shows this setting separately for test mode and live mode, set it in BOTH. If you cannot find it, press Pay on the preview: the message will tell you if it is missing, and then tell me what you see in Stripe.
+  The page at that address is still a draft until SFW-186, so a visitor could not read it yet: that is why real payments stay closed.
+
+WHAT IT DOES NOT DO (on purpose)
+  * It does not publish the legal pages (SFW-186), and it does not open real payments: the rail above, CHECKOUT_OPEN and ALLOW_LIVE_CHECKOUT all still apply.
+  * It does not put a returns line on the print pages (the cart box and Stripe's page carry it); that can be added later if you want it.
+  * It does not change the order emails.
+
+TESTS: 18 new (15 for the checkout, and 3 in test/no-case-clashes.test.js: the scan catches the pair that broke the build and the plain capitals-only pair, and the real code has none). test/checkout-terms.test.js (what is sent to Stripe: the REQUIRED tick box with our wording and the returns summary, and nothing else changed; a LIVE payment is refused while the pages are drafts and nothing is sent to the database or Stripe;
+once they are published it goes through; TEST payments are never held back; the plain "Terms address missing" message, and any other Stripe problem still gets the gentle message with nothing from Stripe passed on). test/before-you-pay.test.jsx (the four lines; they agree with the
+Returns page and the Terms; Stripe's texts fit its 1200 character limit and carry the links; the two addresses are the real page addresses; the shared file's imports end in .js because the server uses it; LEGAL_PAGES_PUBLISHED is true only when EVERY legal page is ready;
+the cart box shows the lines and two new-tab links, and sits ABOVE the pay button). 17 deliberate breakages, ALL caught (the tick box removed or no longer required; the summary removed; the rail removed, or applied to test payments too, or switched on while the pages are drafts;
+the plain message removed; a typo in the Terms address; the large framed sentence dropped; 14 days turned into 30; Stripe's limit exceeded; the .js ending lost; the box removed, moved below the button, or its links or tick-box line changed).
+WHOLE SUITE on a copy of your newest commit (99ce6eb) with this installed: 4,102 tests, 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; health check 216 of 216.
+
+IF YOU ALREADY TRIED VERSION 1 (the build failed): start again cleanly. In Terminal:
+    cd ~/Website/supabase-blog-starter
+    git stash -u
+    git checkout main
+    git pull
+  (git stash -u puts the half-installed version safely aside and gives you a clean copy. If you had already made a branch called checkout-terms, run: git checkout main  then  git branch -D checkout-terms  before step 11 below.)
+  Then carry on from step 4 below with THIS zip. Afterwards you can throw the put-aside copy away with: git stash drop
+
+INSTALL (after the Stripe setting; through a preview)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-checkout-terms-v2-22oct.zip
+ 5. python3 tools/add-checkout-terms.py       IT MUST PRINT "changed" LINES FOR 3 FILES AND FIVE LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "consent_collection" api/checkout.js              (it must print 1)
+    grep -c "BeforeYouPay" src/cart/CartPage.jsx               (it must print 2)
+    grep -c "LEGAL_PAGES_PUBLISHED" api/checkout.js            (it must print 3)
+    ls src/cart/beforeYouPay.js src/cart/BeforeYouPayBox.jsx test/checkout-terms.test.js test/no-case-clashes.test.js      (all four must exist)
+ 7. npm test                                    (it should end with NOTHING failed)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-checkout-terms" -not -path "./node_modules/*" -delete
+11. git checkout -b checkout-terms
+    git add .
+    git status                                   (3 changed files: api/checkout.js, src/cart/CartPage.jsx, src/cart/cart.css; new: the two cart files, the three tests, the notes, the installer, its test, tools/checkout-terms-files/; nothing ending .before-)
+    git commit -m "Checkout: required Terms tick box and returns summary on Stripe's page, a Before you pay box on the cart, and real payments wait for the legal pages"
+    git push -u origin checkout-terms
+12. THE PREVIEW: in Vercel open the starscapes-factory project, then Deployments. The newest entry is for branch "checkout-terms" and says Preview. WAIT for Ready, THEN OPEN IT AND LOOK before merging. Sign in as the owner, add a print to the cart, open the cart, and check:
+      a. Above the green or blue pay button there is a box headed "Before you pay" with four lines and two links, "Terms and conditions" and "Returns and refunds" (both open in a new tab).
+      b. Press the Pay button. YOU ARE NOT PAYING YET: it only opens Stripe's page. Do NOT enter a card.
+      c. On Stripe's page there is a tick box with "I have read and agree to the Terms and conditions and the Returns and refunds page...", and the Pay button will not work until it is ticked.
+      d. Beside or just above the Pay button there is the returns summary (cancel any time until 14 days after delivery, the large framed prints sentence...).
+      e. Go back without paying (the back arrow, or "cancel" on Stripe's page).
+    If instead of Stripe's page you see "the address of the Terms page still has to be entered in Stripe", the Stripe setting above is missing: set it and try again.
+    If the build fails (Error), or any of a to d is wrong, do NOT merge: tell me.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git merge checkout-terms
+    git push
+    git branch -d checkout-terms

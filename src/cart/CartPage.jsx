@@ -8,6 +8,7 @@ import { LAUNCH_COUNTRIES, IMPORT_TAX_NOTE, countryList } from './launchCountrie
 import { KINDS, setQty, removeItem, clearCart } from './cartStore'
 import { formatMoney } from './money'
 import PageBanner from '../components/PageBanner'
+import BeforeYouPayBox from './BeforeYouPayBox'
 
 export default function CartPage() {
   const { items, count, subtotal } = useCart()
@@ -128,6 +129,7 @@ export default function CartPage() {
         <p className="cart-summary__note">Delivery is free to {countryList(LAUNCH_COUNTRIES)}. You'll choose your address on the next page.</p>
         <p className="cart-summary__note">{IMPORT_TAX_NOTE}</p>
         {!printsOnly && <p className="cart-summary__note" role="status">Checkout only handles prints for now. Please remove anything else to pay.</p>}
+        <BeforeYouPayBox />
         <button type="button" className="cart-checkout" disabled={paying.busy || !printsOnly || !canPay} onClick={handleCheckout}>
           {paying.busy ? 'Taking you to the payment page…' : gate.ready && !canPay ? 'Checkout opens soon' : `Pay ${formatMoney(subtotal)} securely`}
         </button>

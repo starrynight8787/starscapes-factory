@@ -379,3 +379,9 @@
     font-size: 2rem;
   }
 }
+
+/* "Before you pay": the cancellation and returns information above the pay button (SFW-14). Takes the colours of the card it sits in. */
+.cart-before { margin: 14px 0; padding: 12px 14px; border: 1px solid rgba(127, 127, 127, 0.45); border-radius: 10px; }
+.cart-before__title { margin: 0 0 6px; font-size: 1rem; }
+.cart-before__list { margin: 0 0 8px; padding-left: 1.2em; font-size: 0.9375rem; line-height: 1.5; }
+.cart-before__links { margin: 0; font-size: 0.9375rem; line-height: 1.5; }

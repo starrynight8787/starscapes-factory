@@ -6,7 +6,10 @@
 // What it will NOT do:
 //   - trust a price, name or total sent from the browser
 //   - sell a print that is not published, or that has no Creative Hub id
-//   - take a LIVE payment unless ALLOW_LIVE_CHECKOUT is set to yes in Vercel, AND the confirmation email is ready (see lib/orderConfirmation.js).
+//   - take a LIVE payment unless ALLOW_LIVE_CHECKOUT is set to yes in Vercel, AND the confirmation email is ready (see lib/orderConfirmation.js),
+//     AND the legal pages are published (LEGAL_PAGES_PUBLISHED in src/cart/beforeYouPay.js), because the Terms tick box points at them.
+//   - let anyone pay without ticking the box that agrees to the Terms: Stripe's page makes it required, shows the returns summary beside the pay button,
+//     and records each acceptance on the order. (The address of the Terms page must be entered in Stripe's settings first.)
 //     (Do not set ALLOW_LIVE_CHECKOUT until orders reach Creative Hub, or a real payment could be taken without an order being placed.)
 //   - show or log the Stripe key
 //
@@ -16,6 +19,7 @@
 // can start a checkout, and everyone else is told it opens soon. The cart page asks GET /api/checkout whether it is open.
 
 import { LAUNCH_COUNTRIES, IMPORT_TAX_NOTE } from '../src/cart/launchCountries.js'
+import { STRIPE_SUBMIT_MESSAGE, STRIPE_TERMS_MESSAGE, LEGAL_PAGES_PUBLISHED } from '../src/cart/beforeYouPay.js'
 import { requireOwner } from '../lib/ownerGuard.js'
 import { confirmationProblems } from '../lib/orderConfirmation.js'
 
@@ -131,6 +135,8 @@ export default async function handler(req, res) {
   // A real payment must be able to get its confirmation email (the law requires one, and nothing can go in the parcel). So real
   // payments stay closed until the Resend key is set AND the wording of that email has been approved.
   if (mode === 'live' && confirmationProblems().length > 0) return say(res, 503, 'Checkout is not open for real payments yet.')
+  // ...and a real customer must be able to read the Terms and Returns pages the tick box points at, so real payments also wait for them to be published (SFW-186).
+  if (mode === 'live' && !LEGAL_PAGES_PUBLISHED) return say(res, 503, 'Checkout is not open for real payments yet.')
 
   let rows
   try {
@@ -159,6 +165,10 @@ export default async function handler(req, res) {
   form.set('cancel_url', `${returnTo}/cart?checkout=cancelled`)
   form.set('phone_number_collection[enabled]', 'true')
   form.set('custom_text[shipping_address][message]', `Delivery is free. Each print is made to order and posted straight to you from the print studio. ${IMPORT_TAX_NOTE}`)
+  // The Terms tick box is REQUIRED (Stripe records the acceptance on the order), with the returns summary beside the pay button (SFW-14)
+  form.set('consent_collection[terms_of_service]', 'required')
+  form.set('custom_text[terms_of_service_acceptance][message]', STRIPE_TERMS_MESSAGE)
+  form.set('custom_text[submit][message]', STRIPE_SUBMIT_MESSAGE)
   LAUNCH_COUNTRIES.forEach((code, i) => form.set(`shipping_address_collection[allowed_countries][${i}]`, code))
   lines.forEach(({ row, product, qty, pence }, i) => {
     const finish = row.framed ? `${row.frame_colour || 'framed'} frame` : 'unframed'
@@ -182,6 +192,8 @@ export default async function handler(req, res) {
       signal: AbortSignal.timeout(15000),
     })
     const data = await response.json().catch(() => null)
+    // Stripe refuses a required Terms tick box until the address of the Terms page is entered in its settings: say so plainly instead of a vague "try again"
+    if (!response.ok && /terms of service/i.test(String((data && data.error && data.error.message) || ''))) return say(res, 503, "Checkout isn't ready yet: the address of the Terms page still has to be entered in Stripe.", { reason: 'terms_url_missing' })
     if (!response.ok || !data || typeof data.url !== 'string') return say(res, 502, "We couldn't start checkout just now. Please try again in a moment.")
     return res.status(200).json({ ok: true, url: data.url, mode })
   } catch (e) {
