@@ -53,7 +53,7 @@ export default function FreeEbookPage() {
   }
 
   const back = <p className="rp-back"><Link to="/leadership-lounge">← Back to Leadership Lounge</Link></p>
-  const cover = <div className="eb__cover" aria-hidden="true"><span>Leading from the Middle</span></div>
+  const cover = <div className="eb__cover eb__cover--picture"><img src="/ebook/leading-from-the-middle-cover.jpg" width="910" height="1287" alt="Cover of Leading from the Middle by Gill Bennet" /></div>
 
   if (done) {
     return (

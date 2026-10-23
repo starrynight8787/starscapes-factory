@@ -77,7 +77,7 @@ describe('the page', () => {
   it('has the design\u2019s words, a way back, and says plainly what happens next: an email to confirm, then the ebook and the newsletter, never shared, with the privacy policy', () => {
     show()
     expect(screen.getByRole('heading', { level: 1, name: 'Leading from the Middle: the free ebook' })).toBeInTheDocument()
-    expect(screen.getByText('A short guide for people who lead without the big title. Read it in an afternoon.')).toBeInTheDocument()
+    expect(screen.getByText(EBOOK.summary)).toBeInTheDocument() // the exact words are pinned in test/ebook-download.test.jsx
     for (const line of EBOOK.inside) expect(screen.getByText(line)).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /Back to Leadership Lounge/ })).toHaveAttribute('href', '/leadership-lounge')
     expect(screen.getByRole('link', { name: 'Privacy policy' })).toHaveAttribute('href', '/page/privacy')
@@ -119,7 +119,7 @@ describe('the page', () => {
     expect(screen.queryByRole('link', { name: /Download the/ })).toBeNull(); expect(document.body.textContent).not.toMatch(/You are in/)
   })
   it('while there is no PDF, says the ebook is not quite ready and the link will be emailed; once there is one, says the download waits on the page the button opens', async () => {
-    show(); fill(); expect(await screen.findByText(/not quite ready to download. As soon as it is, I will email you the link/)).toBeInTheDocument()
+    EBOOK.file = ''; show(); fill(); expect(await screen.findByText(/not quite ready to download. As soon as it is, I will email you the link/)).toBeInTheDocument()
     EBOOK.file = '/downloads/leading-from-the-middle.pdf'; const again = show(); again.unmount(); show(); fill()
     expect(await screen.findByText(/The download will be waiting for you on the page the button opens/)).toBeInTheDocument(); expect(screen.queryByRole('link', { name: /Download the/ })).toBeNull()
   })
@@ -151,9 +151,9 @@ describe('how it is wired in', () => {
     expect(read('src/rooms/RoomRoutes.jsx')).toMatch(/'leadership-lounge\/free-ebook': FreeEbookPage/)
     expect(read('src/ebook/FreeEbookPage.jsx')).not.toMatch(/style=\{\{/)
   })
-  it('says in its own file how to add the PDF, and starts with no file so nothing is offered that is not there', () => {
+  it('says in its own file where the PDF is, and offers only that file (a test in test/ebook-download.test.jsx checks it is really there)', () => {
     expect(read('src/ebook/ebookConfig.js')).toMatch(/public\/downloads\//)
-    expect(originalFile).toBe('')
+    expect(originalFile).toBe('/downloads/leading-from-the-middle.pdf')
   })
   it('sets no text under 14px', () => {
     for (const m of read('src/ebook/ebook.css').matchAll(/font-size:\s*([\d.]+)(px|rem)/g)) expect(m[2] === 'rem' ? Number(m[1]) * 16 : Number(m[1]), m[0]).toBeGreaterThanOrEqual(14)

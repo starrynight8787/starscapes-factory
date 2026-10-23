@@ -45,3 +45,7 @@
     grid-template-columns: minmax(0, 1fr);
   }
 }
+
+/* The real cover picture (pale lines on white) in place of the plain card: no padding, a white ground, a thin edge so the white does not melt into the page, and the picture keeps its own proportions. */
+.eb--v2 .eb__side .eb__cover.eb__cover--picture { padding: 0; background: #fff; border: 1px solid #c9d3ec; overflow: hidden; aspect-ratio: 910 / 1287; }
+.eb__cover--picture img { display: block; width: 100%; height: auto; }

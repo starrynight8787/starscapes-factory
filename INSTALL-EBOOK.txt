@@ -1,0 +1,48 @@
+THE FREE EBOOK: THE FINAL BOOK, ITS COVER AND THE RIGHT WORDS   starscapes-ebook-final-23oct.zip   (SFW-259)
+(No Supabase step. SIGN-UPS STAY CLOSED: this does NOT touch NEWSLETTER_OPEN.)
+
+WHAT THIS DOES
+  * Puts the FINAL book (your corrected PDF) at public/downloads/leading-from-the-middle.pdf and points the ebook page at it, so after someone confirms their email the page offers one plain download link.
+  * Puts the real COVER on the ebook page in place of the plain navy card: a 910 x 1287 picture (about 125 KB), with the description "Cover of Leading from the Middle by Gill Bennet" for screen readers; 240 pixels wide on the page, and the same on a phone.
+  * Corrects the words, which described a different book. Approved by Gill on 23 October 2026:
+      Summary: "A short book about leading without the big title, and the six building blocks behind it. Read it in one sitting."
+      File note: "PDF, 11 pages, to read on screen or print."   (it said "about 40 pages")
+      What is inside: "My story, and why I believe you are already a leader" / "The six building blocks of Leading from the Middle" / "How they fit together, with a seesaw and the great circle of life"
+  * Until sign-ups open (NEWSLETTER_OPEN is "yes") the ebook form says "The free ebook is not open just yet". Nothing changes for visitors until you open it yourself.
+
+WHAT CHANGES (4 files edited, 1 new test, 2 files added): src/ebook/ebookConfig.js · src/ebook/FreeEbookPage.jsx (the cover) · src/ebook/ebookv2.css (the cover's frame) · test/free-ebook.test.jsx (3 older expectations, see below) · NEW test/ebook-download.test.jsx (7 tests)
+  ADDED BY THE ZIP ITSELF (they arrive when you unzip): public/downloads/leading-from-the-middle.pdf and public/ebook/leading-from-the-middle-cover.jpg
+
+TESTS: 7 new, and 3 older expectations in test/free-ebook.test.jsx brought up to date: they still described the TEMPORARY state ("no PDF yet", the old summary), so they would have failed now that the book is real. They now check the page against the real settings, and a new test pins the exact words. The 7 new ones check: the three descriptions are exactly the approved words, and the old claims ("about 40 pages", "in an afternoon", the three invented contents lines) are gone; the PDF is really in public/downloads/, is a PDF and is under 10 MB;
+THE PAGE COUNT IN THE FILE NOTE MATCHES THE PDF'S REAL PAGE COUNT (so a note and a book can never disagree again); the cover is a real JPEG at the size the page gives it, has its description and is not hidden from screen readers; the newsletter box is still the one optional, unticked box;
+and after confirming, the download is one plain link to the PDF. 12 DELIBERATE BREAKAGES, ALL CAUGHT (the old wording back; a wrong page count; a missing or non-PDF file; a wrong file name; the cover without its description, hidden, the wrong size or missing).
+WHOLE SUITE, on a fresh copy of your newest commit (760db52) with this installed from the zip: 4,305 tests passing, 28 skipped (they wait for the draft state, so that is correct), 0 failing; build fine; 12 functions.
+WHY test/free-ebook.test.jsx IS EDITED: a first rehearsal found 3 older expectations in it that still described the TEMPORARY state ("no PDF yet", the old summary) and failed now that the book is real. This installer brings them up to date.
+
+INSTALL
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-ebook-final-23oct.zip
+    ls -la public/downloads/leading-from-the-middle.pdf public/ebook/leading-from-the-middle-cover.jpg      (both must be listed; the PDF is about 0.9 MB, the cover about 125 KB)
+ 5. python3 tools/add-ebook-final.py       IT MUST PRINT "changed" FOR 4 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "leading-from-the-middle.pdf" src/ebook/ebookConfig.js        (it must print 2: one in a comment, one in the setting)
+ 7. npm test                                    (it should end with NOTHING failed; some tests are marked "skipped": that is correct)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-ebook-final" -not -path "./node_modules/*" -delete
+11. git checkout -b ebook-final
+    git add .
+    git status                                   (4 changed files; new: the test, the notes, the installer and its test and fixtures, tools/ebook-final-files/, and the TWO files in public/; nothing ending .before-)
+    git commit -m "Free ebook: the final book and its cover, with words that match it (SFW-259)"
+    git push -u origin ebook-final
+12. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "ebook-final". WAIT for Ready, THEN OPEN IT AND LOOK (do not merge in the first minute):
+      a. In a private window, open the ebook page (the Leadership Lounge, then the free ebook). If sign-ups are not open it shows "The free ebook is not open just yet", with the real cover on the left and the new "What is inside" lines: that is expected.
+      b. Open  /downloads/leading-from-the-middle.pdf  on the preview address: it must be the right book, 11 pages, with text you can select, and none of the doubled sentences.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git pull
+    git merge ebook-final
+    git push
+    git branch -d ebook-final

@@ -1,0 +1,51 @@
+/* The Free Ebook page in the starry style: the banner on top, then the book and what is inside on the left, the sign-up on the right. Scoped to .eb--v2. */
+.eb--v2 .eb__layout {
+  grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+  gap: 24px;
+  margin-top: 20px;
+}
+.eb--v2 .eb__side,
+.eb--v2 .eb__card {
+  padding: 24px 26px;
+  border: 1.5px solid #dce6ff;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgba(20, 48, 106, 0.08);
+}
+.eb--v2 .eb__side .eb__cover {
+  max-width: 240px;
+  margin: 0 auto 22px;
+  background: linear-gradient(160deg, #0b1648 0%, #14306a 60%, #1f6fa8 100%);
+}
+.eb--v2 .eb__h2 {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 12px;
+  font-family: var(--sf-head, 'Josefin Sans', sans-serif);
+  font-size: 1.25rem;
+  color: #14306a;
+}
+.eb--v2 .eb__h2::before {
+  content: '';
+  flex: 0 0 14px;
+  width: 14px;
+  height: 14px;
+  background: #f5c842;
+  clip-path: polygon(50% 0, 61% 35%, 98% 35%, 68% 57%, 79% 91%, 50% 70%, 21% 91%, 32% 57%, 2% 35%, 39% 35%);
+}
+.eb--v2 .eb__inside {
+  margin: 0;
+}
+.eb--v2 .eb__form {
+  max-width: none;
+}
+@media (max-width: 760px) {
+  .eb--v2 .eb__layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+/* The real cover picture (pale lines on white) in place of the plain card: no padding, a white ground, a thin edge so the white does not melt into the page, and the picture keeps its own proportions. */
+.eb--v2 .eb__side .eb__cover.eb__cover--picture { padding: 0; background: #fff; border: 1px solid #c9d3ec; overflow: hidden; aspect-ratio: 910 / 1287; }
+.eb__cover--picture img { display: block; width: 100%; height: auto; }
