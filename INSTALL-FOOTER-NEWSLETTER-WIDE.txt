@@ -1,0 +1,43 @@
+THE FOOTER NEWSLETTER BOX: WIDE AND SHORTER ON A COMPUTER   starscapes-footer-newsletter-wide-23oct.zip
+(Look only. No Supabase step, and nothing in the box's words, its tick box, or the order it is used in has changed.)
+
+WHAT CHANGES, AND WHAT DOES NOT
+  * On a computer-sized screen (900 pixels wide or more) the sign-up box in the footer now stretches across the whole footer, in two columns: the title and the two short paragraphs on the left, the form on the right.
+    It was a fixed 560 pixels wide and 394 tall; on a wide screen it is now about 1,170 wide and 226 tall (about 43% shorter). On a 1,024 pixel screen it is about 912 wide and 250 tall.
+  * PHONES AND TABLETS ARE EXACTLY AS BEFORE (one column, 350 wide and 466 tall on a phone).
+  * The words are the same. The ORDER is the same: email address, then the tick box, then the Sign up button, so a keyboard user is taken round it in the same order as what they see. Nothing is reordered with CSS, and a test fails if anyone does.
+  * The box still shows only when sign-ups are open (NEWSLETTER_OPEN is "yes"), and it is still hidden on the Sarah Junior's Clubhouse pages.
+
+WHAT CHANGES (1 file edited, 1 new test): src/newsletter/newsletter.css (a block that applies from 900 pixels wide) · NEW test/footer-newsletter-layout.test.js (6 tests)
+TESTS: 6 new, which check: the new layout only applies from 900 pixels wide (phones and tablets keep the old one); the box has no width limit and has two columns on a computer; the words are in the first column and the form in the second; the "thank you" message uses the whole width;
+no CSS order property anywhere (so what you see is the order in the page); and the page order is still email, tick box, button. 7 DELIBERATE BREAKAGES, ALL CAUGHT (the old limit back; one column again; the wide layout applied to phones; the button reordered with CSS; the button moved above the tick box in the page; the form back in the first column; the thank-you message squeezed).
+WHOLE SUITE on a copy of your newest commit (e350aa5, the Road journal links) with this installed: 4,266 tests passing, 28 skipped (they wait for the draft state, so that is correct), 0 failing (that includes this installer's own 8 safety tests); build fine; 12 functions.
+
+INSTALL (this does not need the Road Journal package; either can go first)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-footer-newsletter-wide-23oct.zip
+ 5. python3 tools/add-footer-newsletter-wide.py       IT MUST PRINT "changed src/newsletter/newsletter.css" AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "min-width: 900px" src/newsletter/newsletter.css      (it must print 1)
+    ls test/footer-newsletter-layout.test.js                       (it must exist)
+ 7. npm test                                    (it should end with NOTHING failed; some tests are marked "skipped": that is correct)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-footer-newsletter-wide" -not -path "./node_modules/*" -delete
+11. git checkout -b footer-newsletter-wide
+    git add .
+    git status                                   (1 changed file: src/newsletter/newsletter.css; new: the test, the notes, the installer, its test and fixtures, tools/footer-newsletter-wide-files/; nothing ending .before-)
+    git commit -m "Footer: the newsletter box is wide and shorter on a computer"
+    git push -u origin footer-newsletter-wide
+12. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "footer-newsletter-wide". WAIT for Ready, THEN OPEN IT AND LOOK (do not merge in the first minute). Sign-ups must be open on the preview for the box to show; if the box does not appear, that is expected while NEWSLETTER_OPEN is not "yes" there.
+      a. On a computer: the box runs the full width of the footer, words on the left, form on the right.
+      b. Press Tab: you go email address, then the tick box, then the Sign up button, in the same order as you see them.
+      c. Make the window narrower than about 900 pixels, or open it on a phone or iPad held upright: it goes back to the single column.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git pull
+    git merge footer-newsletter-wide
+    git push
+    git branch -d footer-newsletter-wide

@@ -21,3 +21,13 @@
 .nlp__button { min-height: 44px; }
 .nlp__downloads { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 12px; }
 .nlp__error { max-width: 560px; margin: 0 0 16px; padding: 10px 14px; border: 2px solid #8f1d1d; border-radius: 10px; background: #fff1f1; color: #5c0f0f; font-weight: 700; }
+
+/* On a computer-sized screen the footer's sign-up box stretches across the footer and sits in two columns (the words on the left, the form on the right), so it is wide and short instead of narrow and tall.
+   The order in the page is unchanged (email, then the tick box, then the button), so the keyboard order still matches what you see. Phones and tablets keep the single column. */
+@media (min-width: 900px) {
+  .nl-signup { max-width: none; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); grid-template-rows: auto auto 1fr; column-gap: 48px; align-items: start; padding: 20px 28px; }
+  .nl-signup__title, .nl-signup__text { grid-column: 1; }
+  .nl-signup__text:last-of-type { margin-bottom: 0; }
+  .nl-signup__form { grid-column: 2; grid-row: 1 / span 3; }
+  .nl-signup__done { grid-column: 1 / -1; }
+}
