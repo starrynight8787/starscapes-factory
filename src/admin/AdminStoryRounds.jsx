@@ -166,6 +166,7 @@ function Results({ id, onBack, onChanged, setProblem, setSaved }) {
         <p><span className="asr-tag">{roundLabel({ ...data.round, state: data.round.state })}</span> <span className="asr-tag">{KIND_NAMES[data.round.kind]}</span></p>
         <p>{data.members} {data.members === 1 ? 'member has' : 'members have'} answered. This page shows counts and names only: never who sent them.</p>
       </section>
+      <div className="asr-grid">
       {data.questions.filter((q) => q.type === 'choose_one').map((q) => (
         <section key={q.id} className="asr-card" aria-label={q.label}>
           <h3>{q.label}</h3>
@@ -179,6 +180,7 @@ function Results({ id, onBack, onChanged, setProblem, setSaved }) {
           {q.decides && <p className="asr-note">{q.tally.leader ? (q.tally.leader.startsWith('No') ? 'The story will have no side kicks (a lone wolf).' : `The story will have ${q.tally.leader.replace(/\s.*$/, '')} side ${q.tally.leader.startsWith('1 ') ? 'kick' : 'kicks'}. The most popular answer decides it, so the side kick name boxes in the names-only round will show ${q.tally.leader.replace(/\s.*$/, '')}.`) : 'No answer is clearly ahead yet.'}</p>}
         </section>
       ))}
+      </div>
       {data.questions.filter((q) => q.type === 'free_text').map((q) => (
         <section key={q.id} className="asr-card"><h3>{q.label}</h3>{q.texts.length === 0 ? <p>No answers yet.</p> : <ul>{q.texts.map((t, i) => <li key={i}>{t}</li>)}</ul>}</section>
       ))}
@@ -238,7 +240,7 @@ export default function AdminStoryRounds({ session }) {
     try { await navigator.clipboard.writeText(link); setCopied(r.id) } catch (e) { setProblem(`Copy this link: ${link}`) }
   }
   return (
-    <main className="ad asr">
+    <main className="ad ad--wide asr">
       <AdminBanner chip="Admin · only Gill" title="Story rounds" subtitle="Make a round, share its private link, and see the counts." icon="stories" />
       <div aria-live="polite">
         {problem && <p className="asr-problem" role="alert">{problem}</p>}
@@ -251,6 +253,7 @@ export default function AdminStoryRounds({ session }) {
           <div className="asr-row"><button type="button" className="asr-btn" onClick={() => { setProblem(''); setSaved(''); setView('create') }}>Create a round</button></div>
           {state.status === 'loading' && <PageLoading label="Loading rounds…" />}
           {state.status === 'ready' && state.rounds.length === 0 && <p className="asr-card">No rounds yet. Make your first one.</p>}
+          <div className="asr-grid">
           {state.rounds.map((r) => (
             <article key={r.id} className="asr-card" aria-label={r.title}>
               <p><span className={`asr-tag asr-tag--${roundLabel(r).toLowerCase().replace(' ', '')}`}>{roundLabel(r)}</span> <span className="asr-tag">{KIND_NAMES[r.kind]}</span></p>
@@ -268,6 +271,7 @@ export default function AdminStoryRounds({ session }) {
               {confirm && confirm.r.id === r.id && <Confirm round={r} kind={confirm.kind} onDone={done} onCancel={() => setConfirm(null)} setProblem={setProblem} />}
             </article>
           ))}
+          </div>
         </section>
       )}
     </main>

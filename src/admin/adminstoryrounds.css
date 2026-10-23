@@ -1,5 +1,5 @@
 /* The owner's story-round console (Figma: "Story form designs", SFW-269). Same look as the other admin pages: white cards, navy outline, offset shadow. */
-.asr { max-width: 860px; margin: 0 auto; padding: 0 16px 48px; --asr-navy: #14306a; --asr-ink: #0e1530; --asr-muted: #5b6585; --asr-border: #dde3f0; }
+.asr { --asr-navy: #14306a; --asr-ink: #0e1530; --asr-muted: #5b6585; --asr-border: #dde3f0; }
 .asr-stack { display: grid; gap: 18px; margin-top: 18px; }
 .asr-card { background: #fff; border: 2px solid var(--asr-navy); border-radius: 10px; box-shadow: 6px 8px 0 rgba(184, 204, 245, .6); padding: 18px; margin-top: 18px; min-width: 0; }
 .asr-card h2, .asr-card h3 { font-family: 'Josefin Sans', system-ui, sans-serif; color: var(--asr-navy); margin: 6px 0; }
@@ -35,3 +35,6 @@
 .asr-confirm { border: 2px solid #8c1d2f; background: #fff7f8; border-radius: 8px; padding: 12px; margin-top: 12px; }
 .asr-problem { background: #fde8ec; color: #8c1d2f; padding: 10px 12px; border-radius: 8px; font-weight: 600; } .asr-good { background: #d7f2ea; color: #1f5f50; padding: 10px 12px; border-radius: 8px; font-weight: 600; }
 @media (max-width: 560px) { .asr-dates { grid-template-columns: 1fr; } .asr-card { padding: 14px; } }
+
+.asr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 440px), 1fr)); gap: 0 24px; align-items: start; }
+.asr-grid > .asr-card { margin-top: 18px; }
