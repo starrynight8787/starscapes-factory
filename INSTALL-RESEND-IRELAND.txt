@@ -1,0 +1,47 @@
+THE RESEND IRELAND WORDING IN THE PRIVACY POLICY   starscapes-resend-ireland-23oct.zip   (SFW-262, SFW-265; on top of the merged legal publish prep)
+(Two sentences and a test. No Supabase step. THIS PUBLISHES NOTHING: the five legal pages are still drafts that only you, signed in as the owner, can see.)
+
+WHY: Gill confirmed on 23 October 2026 that the Resend account sends from IRELAND (eu-west-1), the same place as the database. The Privacy policy has to say where the emails are sent from.
+
+WHAT CHANGES (in the Privacy policy, which only you can see while it is a draft)
+  * "Who we share your information with": the Resend entry now ends "It receives your email address, and sends from its Ireland region."
+  * "Sending information abroad": "...and in Ireland, where our database is stored and where our emails are sent from."
+  * A note in the code ("check which region the Resend account sends from") is closed, and says the plan limits are still to confirm (SFW-265: the plan is Free for now).
+  THE WORDING IS DELIBERATELY MODEST: Resend is itself a US company, so the policy says where emails are SENT FROM. It does not say that nothing ever leaves Europe, and a test fails if anyone adds a claim like that.
+
+WHAT DOES NOT CHANGE: no page is published; the Star Atlas switch is untouched; no other wording changes; nothing a visitor can see.
+
+TESTS: 8 new in test/resend-region.test.js, each run twice (on the full policy and on the page the site shows, so it works whether or not the Star Atlas is switched on): the Resend entry says "sends from its Ireland region"; the abroad section says the emails are sent from Ireland;
+the policy never claims that nothing leaves the UK or Europe, and still names Google and Cloudflare in the United States; the print studios (Brooklyn, Düsseldorf) and the courier are still named. 5 deliberate breakages, ALL caught (the Ireland sentence removed from either place; a wrong region ("US"); an overclaim ("Nothing ever leaves Europe"); the United States companies removed).
+WHOLE SUITE on a copy of your newest commit (a7c0206, which has the legal publish prep merged) with this installed: 4,247 tests passing, 7 skipped (they wait for the published state, so that is correct), 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions; the publisher still says NOT PUBLISHED.
+
+INSTALL
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-resend-ireland-23oct.zip
+ 5. python3 tools/add-resend-ireland.py       IT MUST PRINT "changed src/data/legalPages.js" AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "Ireland region" src/data/legalPages.js             (it must print 1)
+    grep -c "emails are sent from" src/data/legalPages.js        (it must print 1)
+    ls test/resend-region.test.js                                (it must exist)
+    python3 tools/publish-legal-pages.py --check                 (it must still say  STATE: NOT PUBLISHED (all five are drafts)  and it changes nothing)
+ 7. npm test                                    (it should end with NOTHING failed; some tests are marked "skipped": that is correct)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                         (it must still print 12)
+10. find . -name "*.before-resend-ireland" -not -path "./node_modules/*" -delete
+11. git checkout -b resend-ireland
+    git add .
+    git status                                   (1 changed file: src/data/legalPages.js; new: test/resend-region.test.js, the notes, the installer, its test and fixtures, tools/resend-ireland-files/; nothing ending .before-)
+    git commit -m "Privacy policy: say the emails are sent from Ireland (Resend, eu-west-1)"
+    git push -u origin resend-ireland
+12. THE PREVIEW: in Vercel open Deployments; the newest entry is for branch "resend-ireland". WAIT for Ready, THEN OPEN IT AND LOOK. Sign in as the owner and open the Privacy policy (/page/privacy):
+      a. "Who we share your information with": the Resend point ends "...and sends from its Ireland region."
+      b. "Sending information abroad": it says "...in Ireland, where our database is stored and where our emails are sent from."
+      c. Nothing else looks different, and a visitor (a private window) still sees none of the legal pages.
+13. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git pull
+    git merge resend-ireland
+    git push
+    git branch -d resend-ireland
