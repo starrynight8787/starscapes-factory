@@ -49,11 +49,11 @@ export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "terms",
     "title": "Terms and conditions",
-    "updated": "[date]",
+    "updated": "23 October 2026",
     "intro": [
       "These terms apply to everything you buy on this website and to using the website itself. Please read them before you order."
     ],
-    "ready": false,
+    "ready": true,
     "sections": [
       {
         "title": "About us",
@@ -185,11 +185,11 @@ export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "privacy",
     "title": "Privacy policy",
-    "updated": "[date]",
+    "updated": "23 October 2026",
     "intro": [
       "This policy explains what personal information Starscapes Factory Ltd collects when you visit this website or buy from it, why we collect it, who sees it, and what rights you have."
     ],
-    "ready": false,
+    "ready": true,
     "sections": [
       {
         "title": "Who we are",
@@ -306,11 +306,11 @@ export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "returns",
     "title": "Returns and refunds",
-    "updated": "[date]",
+    "updated": "23 October 2026",
     "intro": [
       "This page explains your rights to cancel an order, send a print back, and be refunded. It is part of our Terms and conditions."
     ],
-    "ready": false,
+    "ready": true,
     "sections": [
       {
         "title": "If you change your mind",
@@ -366,11 +366,11 @@ export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "ai-policy",
     "title": "AI policy",
-    "updated": "[date]",
+    "updated": "23 October 2026",
     "intro": [
       "**The short version.** The artwork, prints, photographs, stories and books I make and sell are made entirely by me. I don't use AI to make any of them. I do use AI as a helper to build and run this website, and this page tells you exactly where."
     ],
-    "ready": false,
+    "ready": true,
     "sections": [
       {
         "title": "What is always made by me",
@@ -416,8 +416,8 @@ export const ALL_LEGAL_PAGES = fillContact([
   {
     "slug": "cookies",
     "title": "Cookie policy",
-    "updated": "[date]",
-    "ready": false,
+    "updated": "23 October 2026",
+    "ready": true,
     "intro": [
       "This page lists everything this website keeps on your device, and everything it loads from other companies, and why. It goes with our [Privacy policy](/page/privacy), which explains what we do with your information."
     ],

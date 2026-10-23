@@ -11,7 +11,7 @@ export const RETURNS_URL = 'https://starscapesfactory.com/page/returns'
 
 // THE RAIL: real payments stay closed until the legal pages are published (they are drafts until SFW-186), because the tick box and the summary point at them. Set this to true IN THE SAME CHANGE that sets
 // ready: true on the legal pages: test/before-you-pay.test.jsx fails if the two disagree. Test payments are not held back by it.
-export const LEGAL_PAGES_PUBLISHED = false
+export const LEGAL_PAGES_PUBLISHED = true
 
 // Said in plain words, the same wording on the cart and on Stripe. Every line must stay true of the Returns page and the Terms (the test checks the ones it can).
 export const BEFORE_YOU_PAY = [
