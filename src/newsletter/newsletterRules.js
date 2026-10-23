@@ -2,7 +2,7 @@
 // (as you type, and for the preview) and by the server (again, before anything is stored or sent), so they can never disagree. Nothing here touches the screen or the network, so all
 // of it is tested directly. The list lives in the shop's own database; Resend only delivers the emails (lib/newsletter.js, lib/newsletterAdmin.js).
 import { emailFrame } from '../email/emailLayout.js'
-import { COMPANY, companyLine } from '../data/company'
+import { COMPANY, companyLine } from '../data/company.js'
 import { EBOOK } from '../ebook/ebookConfig.js'
 import { JOURNAL, OPENING_DOORS, OPENS_REQUEST, journalFiles } from '../explorers/explorersConfig.js'
 

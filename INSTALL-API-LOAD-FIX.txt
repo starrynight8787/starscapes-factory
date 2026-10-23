@@ -1,0 +1,49 @@
+URGENT FIX: /api/ebook-signup AND /api/membership-checkout CRASH ON LOADING ON VERCEL   starscapes-api-load-fix-23oct.zip   (SFW-261)
+(No Supabase step. It does NOT touch NEWSLETTER_OPEN and does NOT open sign-ups.)
+
+WHAT WAS WRONG
+  Vercel runs the API functions in plain Node, which needs a file extension on every relative import. Four imports had none, so two functions crashed the moment they loaded (500 on every request):
+    src/newsletter/newsletterRules.js    from '../data/company'            -> breaks /api/ebook-signup (and the Admin newsletter tools) since the newsletter was released
+    src/membership/account.js            from './passes' and './pricing'   -> breaks /api/membership-checkout (passes, members, promotions, newsletter admin, story rounds, the daily renewal reminders)
+    src/admin/promotionsRules.js         from '../membership/pricing'       -> the same function
+  The tests never saw it because they run through Vite, which accepts imports without an extension. THE FIX adds ".js" to those four imports (3 files).
+
+WHEN IT STARTED (checked commit by commit, with plain Node, and matched to Vercel's production deployments)
+  * /api/membership-checkout: from the production deployment of commit 5f28a32 "Admin: build the Passes and members page", dpl_J65Z5JzzPhSfe5VpfYn342G4wQ7a, Tuesday 20 October 2026, 21:53 UTC (22:53 UK time). The deployment before it was fine.
+  * /api/ebook-signup: from the production deployment of commit c05b8aa "Admin: build the newsletter", dpl_8CSJ7ubQLFdBrU9ewN3Gw4oXaW7N, Tuesday 20 October 2026, 22:45 UTC (23:45 UK time). The deployment before it (1fecdd5) loaded fine.
+  Every production deployment since has had both problems. The other 10 functions load fine and were never affected.
+  What failing meant: the sign-up forms ask "is it open?" and treat a failed answer as "no", so they showed "Sign-ups are not open just yet" and the footer box stayed hidden. It looked like "closed", not like an error. The two daily jobs
+  (renewal reminders at 08:00 and the clean-up of unconfirmed sign-ups at 08:30) have been failing since the same times; neither had anything to do yet.
+
+THE TEST (so this can never pass the suite again): test/api-loads-like-vercel.test.js, 16 tests. It loads EVERY file in api/ in a fresh plain Node process (no Vite), exactly as Vercel does, and fails if any cannot be loaded or exports nothing that can answer a request;
+  it scans every file the API functions can reach for an import without an extension and names it; it calls the "is it open?" answer the way Vercel does and checks it follows NEWSLETTER_OPEN being exactly "yes" (not "Yes", not "true"); and it checks each scheduled job points at a real function.
+  10 DELIBERATE BREAKAGES, ALL CAUGHT, including the original bug put back.
+WHOLE SUITE: see the figure at the end of these notes.
+
+INSTALL
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-api-load-fix-23oct.zip
+ 5. python3 tools/add-api-load-fix.py       IT MUST PRINT "changed" FOR 3 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. npm test                                    (it should end with NOTHING failed; some tests are marked "skipped": that is correct)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-api-load-fix" -not -path "./node_modules/*" -delete
+10. git checkout -b api-load-fix
+    git add .
+    git status                                   (3 changed files; new: the test, the notes, the installer and its test, the fixtures, tools/api-load-fix-files/; nothing ending .before-)
+    git commit -m "Fix: four imports had no .js, so /api/ebook-signup and /api/membership-checkout crashed on Vercel; test that loads every API function in plain Node"
+    git push -u origin api-load-fix
+11. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "api-load-fix". WAIT for Ready. Then, in the browser where you are signed in to Vercel, open this on the PREVIEW address (the preview address is shown on that deployment):
+      https://THE-PREVIEW-ADDRESS/api/ebook-signup?newsletter=status
+    It must show   {"ok":true,"open":false}   or   {"ok":true,"open":true}   and NOT an error page. (open:false is expected if NEWSLETTER_OPEN is not "yes"; the point is that it ANSWERS.) Paste me exactly what it shows.
+12. THE RELEASE: only once the preview answers:
+    git checkout main
+    git pull
+    git merge api-load-fix
+    git push
+    git branch -d api-load-fix
+13. AFTER THE RELEASE, open the same on the real site and paste me what it shows:
+      https://starscapesfactory.com/api/ebook-signup?newsletter=status

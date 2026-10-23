@@ -1,6 +1,6 @@
 // Small, plain helpers for the account pages (My passes, Change my passes). Nothing here touches the screen or the network, so all of it is tested directly.
-import { PASSES, cleanPassIds } from './passes'
-import { LAUNCH_OFFER, monthlyPence, yearlyPence, offerPence } from './pricing'
+import { PASSES, cleanPassIds } from './passes.js'
+import { LAUNCH_OFFER, monthlyPence, yearlyPence, offerPence } from './pricing.js'
 
 // Which page a person should see, from their membership row (or none).
 //   free        no membership, or a payment that never finished

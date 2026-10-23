@@ -1,7 +1,7 @@
 // The rules behind discount codes (the "Promotions" page, /admin/promotions). ONE set of rules, used by the page (to check the form as you type) and by the server (to check it
 // again before anything reaches Stripe), so the two can never disagree. Nothing here touches the screen or the network, so all of it is tested directly.
 // Checkout looks a code up by its text (lib/membershipStripe.js findPromotionCode) and tells the member what it gives, in the words couponWords() writes here.
-import { formatPounds } from '../membership/pricing'
+import { formatPounds } from '../membership/pricing.js'
 
 export const CODE_PATTERN = /^[A-Z0-9][A-Z0-9_-]{1,39}$/
 export const MAX_PERCENT = 100
