@@ -19,4 +19,5 @@
 .nl-signup__trap { position: absolute; left: -10000px; width: 1px; height: 1px; overflow: hidden; }
 .nlp__text { max-width: 560px; line-height: 1.6; }
 .nlp__button { min-height: 44px; }
+.nlp__downloads { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 12px; }
 .nlp__error { max-width: 560px; margin: 0 0 16px; padding: 10px 14px; border: 2px solid #8f1d1d; border-radius: 10px; background: #fff1f1; color: #5c0f0f; font-weight: 700; }

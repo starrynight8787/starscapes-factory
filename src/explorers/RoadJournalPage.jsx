@@ -3,7 +3,7 @@ import useTitle from '../rooms/useTitle'
 import PageBanner from '../components/PageBanner'
 import RequestForm from './RequestForm'
 import TapedDoorPage from './TapedDoorPage'
-import { JOURNAL } from './explorersConfig'
+import { JOURNAL, journalFiles } from './explorersConfig'
 import '../rooms/roompages.css'
 import '../styles/pages.css'
 import '../ebook/ebook.css'
@@ -11,10 +11,10 @@ import '../ebook/ebookv2.css'
 import './explorers.css'
 
 // The Road journal (Figma E9): what it is, a preview, and an email box that gives the free download. Getting it needs only an email address (no tick); the newsletter is a separate optional box;
-// the download link comes by email once they have pressed the confirm link, and the thank-you page opens from that link, never straight after typing an address.
-// Until the file exists (src/explorers/explorersConfig.js) this shows the taped page instead, even if the door has been opened in Admin.
+// the download links (A4 first, then US Letter, plain links through the same step; nothing counts the clicks) are shown on the thank-you page that the confirm link opens, never straight after typing an address.
+// Until the files exist (src/explorers/explorersConfig.js) this shows the taped page instead, even if the door has been opened in Admin.
 export default function RoadJournalPage() {
-  if (!JOURNAL.file) return <TapedDoorPage door="road-journal" />
+  if (journalFiles().length === 0) return <TapedDoorPage door="road-journal" />
   return <OpenJournal />
 }
 

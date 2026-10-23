@@ -3,7 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom'
 import useTitle from '../pages/useTitle'
 import { isToken } from './newsletterRules'
 import { EBOOK } from '../ebook/ebookConfig'
-import { JOURNAL, OPENING_DOORS } from '../explorers/explorersConfig'
+import { JOURNAL, OPENING_DOORS, journalFiles } from '../explorers/explorersConfig'
 import { confirmSubscription, unsubscribe } from './newsletterApi'
 import '../styles/pages.css'
 import './newsletter.css'
@@ -47,14 +47,23 @@ function Confirmed({ already, ebook, request, newsletter, source, door }) {
     const name = door && OPENING_DOORS[door] ? OPENING_DOORS[door].name : 'This door'
     return <><p>{thanks}</p><p>{name} is not open yet. I will send you one email when it opens.</p>{extra}</>
   }
-  const thing = source === 'road-journal' ? { file: JOURNAL.file, note: JOURNAL.fileNote, name: 'Road journal' } : { file: EBOOK.file, note: EBOOK.fileNote, name: 'ebook' }
+  const files = source === 'road-journal' ? journalFiles() : (EBOOK.file ? [{ id: 'ebook', label: '', file: EBOOK.file }] : [])
+  const thing = source === 'road-journal' ? { note: JOURNAL.fileNote, name: 'Road journal' } : { note: EBOOK.fileNote, name: 'ebook' }
   if (!ebook && !(request && source === 'road-journal')) return thanks
   return (
     <>
       <p>{thanks}</p>
       {extra}
-      {thing.file ? (
-        <p><a className="pg-btn nlp__button" href={thing.file} download>Download the free {thing.name} (PDF)</a> <small>{thing.note}</small></p>
+      {files.length > 1 ? (
+        <>
+          <p>Download the free {thing.name} (PDF):</p>
+          <div className="nlp__downloads">
+            {files.map((f) => <a key={f.id} className="pg-btn nlp__button" href={f.file} download aria-label={`Download the free ${thing.name} (PDF), ${f.label}`}>{f.label}</a>)}
+          </div>
+          <p><small>{thing.note}</small></p>
+        </>
+      ) : files.length === 1 ? (
+        <p><a className="pg-btn nlp__button" href={files[0].file} download>Download the free {thing.name} (PDF)</a> <small>{thing.note}</small></p>
       ) : (
         <p>Your free {thing.name} is still being finished. I will email you the link as soon as it is ready.</p>
       )}

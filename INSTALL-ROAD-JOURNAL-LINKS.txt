@@ -1,0 +1,59 @@
+THE ROAD JOURNAL: TWO DOWNLOAD LINKS, A4 FIRST AND US LETTER SECOND   starscapes-road-journal-links-23oct.zip   (SFW-261)
+(No Supabase step. Nothing is counted: no analytics and no extra data, as you decided.)
+
+WHAT YOU DECIDED, AND WHAT THIS DOES
+  * The Road journal has TWO final PDFs, shown as two plain links on the page the confirm button opens: "A4 (UK and Europe)" first, then "US Letter". Both go through the SAME step: choosing a size adds no form and no email.
+  * The same two links are in the email sent to someone who already confirmed and asks again.
+  * Getting the journal needs NO TICK. The newsletter is a separate, OPTIONAL box, never ticked to start with, worded the same on every form. THE BOX STAYS (it is on the ebook form and the Road journal form).
+  * Someone joins the newsletter list ONLY if they ticked that box AND pressed the confirm button. The journal and ebook requests are kept in their own table (email_requests), apart from the newsletter list (newsletter_subscribers).
+  * NO DOWNLOAD COUNTING. A test fails if anyone adds analytics or click tracking to the download links.
+
+!! THIS PACKAGE DOES NOT CONTAIN THE PDFs. YOU COPY THEM IN FIRST (step 0). The tests CHECK that both files are there, so a broken link cannot go out.
+!! THE MOMENT THIS GOES LIVE, the Road journal page stops being taped (if its door is open in Admin) and shows the real page. The form still says "Sign-ups are not open just yet" until NEWSLETTER_OPEN is "yes" in Vercel: that switch opens EVERY email sign-up (the footer box, the ebook, the Road journal, the "tell me when it opens" lists).
+
+WHAT CHANGES (7 files edited, 1 new test)
+  src/explorers/explorersConfig.js (two files, A4 first; a small helper) · src/newsletter/NewsletterLinkPage.jsx (the two links) · src/newsletter/newsletter.css (side by side, wrapping on a phone) · src/newsletter/newsletterRules.js (the repeat email has both links)
+  src/explorers/RoadJournalPage.jsx · lib/newsletterAdmin.js (both use the new list) · test/explorers-bay-requests.test.js (updated, plus 2 new tests) · NEW test/road-journal-downloads.test.jsx (15 tests)
+
+TESTS: 15 new in test/road-journal-downloads.test.jsx and 2 new in test/explorers-bay-requests.test.js. They check: the two files in the order and with the names you chose; both PDFs exist in public/downloads, are real PDFs and are under 10 MB;
+the confirm page shows two links, A4 first, each marked as a download and with a clear name; no extra form or button; the page stays taped while there are no files; the repeat email has both links; the ebook email is unchanged; the newsletter box is optional, unticked and worded the same on both forms;
+nothing counts the downloads; someone who does NOT tick the box is never put on the newsletter list, even after pressing confirm; the journal and ebook requests stay apart. 17 DELIBERATE BREAKAGES, ALL CAUGHT (including: US Letter first, a different file name, no download attribute, click tracking, a counter, the box ticked to start with, the box removed, a downloader added to the list without a tick, and the journal confirming the ebook).
+WHOLE SUITE on a copy of your newest commit (9299898, the published legal pages) with this installed and two stand-in PDFs: 4,252 tests passing, 28 skipped (they wait for the draft state, so that is correct), 0 failing (that includes this installer's own 9 safety tests); build fine; 12 functions.
+WITHOUT the PDFs the check "both files are in public/downloads" fails on purpose, with the message "Copy starscapes-road-journal-a4.pdf into public/downloads/ before you test or release."
+
+INSTALL
+ 0. COPY THE TWO PDFs IN, with exactly these names (your final, approved files). The folder public/downloads does NOT exist in the project yet, so the first command makes it:
+      cd ~/Website/supabase-blog-starter
+      mkdir -p public/downloads
+      mdfind -name "starscapes-road-journal" | grep -i "\.pdf$"      (this prints where the two PDFs are on your Mac; ignore any that are inside ~/Website/supabase-blog-starter)
+      cp ~/Downloads/starscapes-road-journal-a4.pdf ~/Downloads/starscapes-road-journal-us-letter.pdf public/downloads/      (if they are somewhere other than Downloads, put the real folder from the line above in place of ~/Downloads)
+      ls -la public/downloads        (both must be listed, each about 290 KB)
+ 1. git status        (it must show ONLY public/downloads/ as new, and nothing else. If anything else is listed, git stash -u first and tell me)
+ 2. git checkout main
+    git pull
+ 3. unzip -o ~/Downloads/starscapes-road-journal-links-23oct.zip
+ 4. python3 tools/add-road-journal-links.py       IT MUST PRINT "changed" FOR 7 FILES AND ONE LINE STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 5. grep -c "starscapes-road-journal-a4.pdf" src/explorers/explorersConfig.js          (it must print 1)
+    grep -c "starscapes-road-journal-us-letter.pdf" src/explorers/explorersConfig.js    (it must print 1)
+    ls public/downloads/starscapes-road-journal-*.pdf | wc -l                            (it must print 2)
+ 6. npm test                                    (it should end with NOTHING failed; some tests are marked "skipped": that is correct. If the "both files are in public/downloads" test fails, step 0 was not done)
+ 7. npm run build
+ 8. ls api/*.js | wc -l                         (it must still print 12)
+ 9. find . -name "*.before-road-journal-links" -not -path "./node_modules/*" -delete
+10. git checkout -b road-journal-links
+    git add .
+    git status                                   (7 changed files, the new test, the notes, the installer and its test, the staged files, and the TWO PDFs; nothing ending .before-)
+    git commit -m "Road journal: two plain download links, A4 first and US Letter second (SFW-261)"
+    git push -u origin road-journal-links
+11. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "road-journal-links". WAIT for Ready, THEN OPEN IT AND LOOK (do not merge in the first minute):
+      a. /explorers-bay/road-journal: if the door is open you see the real page ("Where shall I send it?", the email box, and ONE optional newsletter box, not ticked). If sign-ups are not open yet, the box says so: that is expected. If the door is closed, you see the taped page: also expected.
+      b. In a private window, /downloads/starscapes-road-journal-a4.pdf and /downloads/starscapes-road-journal-us-letter.pdf both open the right PDF (12 pages, text you can select, under 10 MB).
+12. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git pull
+    git merge road-journal-links
+    git push
+    git branch -d road-journal-links
+    (Vercel builds it itself when you merge; there is no separate "Create Deployment" step.)
+13. AFTER THE RELEASE, THE PHONE TEST (the one left on SFW-261). Only once NEWSLETTER_OPEN is "yes" in Vercel Production and the Road journal door is open in Admin, Open doors: on your phone, on the live page, sign up with a test address of your own and DO NOT TICK the newsletter box; open the email; press the confirm button;
+    you should see TWO buttons, "A4 (UK and Europe)" and "US Letter"; tap each: the PDF opens or downloads. Then delete your test row: Supabase, Table Editor, email_requests, delete the row with your address.

@@ -10,7 +10,7 @@ import { OPTIONAL_NEWSLETTER_TEXT, SITE, confirmationEmail, doorOpenedEmail, ebo
 import { JOURNAL, OPENING_DOORS } from '../src/explorers/explorersConfig.js'
 
 const json = (body, status = 200) => ({ ok: status >= 200 && status < 300, status, json: async () => body })
-const originalFile = JOURNAL.file
+const originalFiles = JOURNAL.files
 const T = (n) => String(n).repeat(2).padStart(2, '0').repeat(24).slice(0, 48)
 
 function world({ requests = [], subs = [], doors = [{ room: 'explorers-bay', door: 'lessons-from-the-road', open: true }], resendFails = false } = {}) {
@@ -48,7 +48,7 @@ const tell = (door) => run(adminHandler, { query: { admin: 'newsletter' }, heade
 const waiting = (n, over = {}) => ({ id: `w-${n}`, email: `p${n}@example.com`, purpose: 'opens:lessons-from-the-road', status: 'confirmed', token: T(n + 10), consent_text: 'x', wants_newsletter: false, newsletter_text: null, confirmation_sent_at: '2026-10-01T00:00:00Z', created_at: `2026-10-0${n}T00:00:00Z`, notified_at: null, ...over })
 
 beforeEach(() => { Object.assign(process.env, { SUPABASE_URL: 'https://db.test', SUPABASE_ANON_KEY: 'anon', SUPABASE_SERVICE_ROLE_KEY: 'srv-key-secret-value-0000', RESEND_API_KEY: 're_secret_key_zzzz', OWNER_EMAIL: 'gill@example.com', NEWSLETTER_OPEN: 'yes' }); delete process.env.VITE_SUPABASE_URL; delete process.env.SUPABASE_SECRET_KEY; JOURNAL.file = '' })
-afterEach(() => { JOURNAL.file = originalFile; vi.unstubAllGlobals(); vi.restoreAllMocks() })
+afterEach(() => { JOURNAL.files = originalFiles; vi.unstubAllGlobals(); vi.restoreAllMocks() })
 
 describe('what a request is', () => {
   it('knows three kinds, from a short list: the ebook, the Road journal, and a taped door’s list; anything else is the footer’s newsletter', () => {
@@ -73,9 +73,22 @@ describe('the Road journal sign-up', () => {
     const out = await confirm(w.reqs[0].token); expect(out.body).toMatchObject({ ok: true, state: 'confirmed', source: 'road-journal', kind: 'request', newsletter: true })
     expect(w.people).toHaveLength(1); expect(w.people[0]).toMatchObject({ status: 'confirmed', source: 'road-journal', consent_text: OPTIONAL_NEWSLETTER_TEXT })
   })
+  it('does NOT put someone on the newsletter list when the box was not ticked, even after they press the confirm link (Gill, 23 October 2026)', async () => {
+    const w = world(); await sub({ email: 'ann@example.com', source: 'road-journal' }); expect(w.reqs[0].wants_newsletter).toBe(false)
+    const out = await confirm(w.reqs[0].token); expect(out.body).toMatchObject({ ok: true, state: 'confirmed', source: 'road-journal', kind: 'request', newsletter: false })
+    expect(w.reqs[0].status).toBe('confirmed'); expect(w.people).toHaveLength(0)
+  })
+  it('keeps the Road journal list apart from the ebook list: one request each, confirming one does not confirm the other, and neither joins the newsletter', async () => {
+    const w = world(); await sub({ email: 'ann@example.com', source: 'ebook' }); await sub({ email: 'ann@example.com', source: 'road-journal' })
+    expect(w.reqs.map((r) => r.purpose).sort()).toEqual(['ebook', 'road-journal']); expect(w.reqs.every((r) => r.status === 'pending')).toBe(true)
+    await confirm(w.reqs.find((r) => r.purpose === 'road-journal').token)
+    expect(w.reqs.find((r) => r.purpose === 'road-journal').status).toBe('confirmed'); expect(w.reqs.find((r) => r.purpose === 'ebook').status).toBe('pending'); expect(w.people).toHaveLength(0)
+  })
   it('sends the link again to someone who confirmed, once the file exists, and says nothing about a list', async () => {
-    JOURNAL.file = '/downloads/road-journal.pdf'; const w = world({ requests: [{ ...waiting(1), purpose: 'road-journal' }] }); await sub({ email: 'p1@example.com', source: 'road-journal' })
-    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toBe('Your free Road journal: The Road Journal'); expect(w.sent[0].text).toContain(`${SITE}/downloads/road-journal.pdf`); expect(w.sent[0].text).not.toMatch(/already on/i)
+    const w = world({ requests: [{ ...waiting(1), purpose: 'road-journal' }] }); await sub({ email: 'p1@example.com', source: 'road-journal' })
+    expect(w.sent).toHaveLength(1); expect(w.sent[0].subject).toBe('Your free Road journal: The Road Journal'); expect(w.sent[0].text).not.toMatch(/already on/i)
+    const a4 = w.sent[0].text.indexOf(`${SITE}/downloads/starscapes-road-journal-a4.pdf`); const us = w.sent[0].text.indexOf(`${SITE}/downloads/starscapes-road-journal-us-letter.pdf`)
+    expect(a4).toBeGreaterThan(-1); expect(us).toBeGreaterThan(a4) // both links, A4 first
   })
 })
 
@@ -120,8 +133,8 @@ describe('telling the people waiting, when the owner opens a door', () => {
     expect(out.status).toBe(409); expect(w.sent).toHaveLength(0); expect(w.reqs[0].notified_at).toBeNull()
   })
   it('does not tell the Road journal’s list until the file exists', async () => {
-    const w = world({ requests: [waiting(1, { purpose: 'opens:road-journal' })], doors: [{ room: 'explorers-bay', door: 'road-journal', open: true }] }); const out = await tell('road-journal'); expect(out.status).toBe(409); expect(w.sent).toHaveLength(0)
-    JOURNAL.file = '/downloads/road-journal.pdf'; expect((await tell('road-journal')).body.sent).toBe(1)
+    JOURNAL.files = []; const w = world({ requests: [waiting(1, { purpose: 'opens:road-journal' })], doors: [{ room: 'explorers-bay', door: 'road-journal', open: true }] }); const out = await tell('road-journal'); expect(out.status).toBe(409); expect(w.sent).toHaveLength(0)
+    JOURNAL.files = originalFiles; expect((await tell('road-journal')).body.sent).toBe(1)
   })
   it('keeps someone in the queue when their email fails, and never passes on the mailing tool’s words', async () => {
     const w = world({ requests: [waiting(1)], resendFails: true }); const out = await tell('lessons-from-the-road'); expect(out.body).toMatchObject({ sent: 0, failed: 1 }); expect(w.reqs[0].notified_at).toBeNull(); expect(JSON.stringify(out.body)).not.toMatch(/re_secret/)

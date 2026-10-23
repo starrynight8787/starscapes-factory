@@ -4,7 +4,7 @@
 import { emailFrame } from '../email/emailLayout.js'
 import { COMPANY, companyLine } from '../data/company'
 import { EBOOK } from '../ebook/ebookConfig.js'
-import { JOURNAL, OPENING_DOORS, OPENS_REQUEST } from '../explorers/explorersConfig.js'
+import { JOURNAL, OPENING_DOORS, OPENS_REQUEST, journalFiles } from '../explorers/explorersConfig.js'
 
 export const SUBJECT_MAX = 150
 export const BODY_MAX = 20000
@@ -26,7 +26,7 @@ export const sourceOf = (input) => (input && input.source === 'ebook' ? 'ebook' 
 export function requestOf(input) {
   const source = input && typeof input.source === 'string' ? input.source : ''
   if (source === 'ebook') return { source, purpose: 'ebook', join: 'ebook', words: EBOOK.request, what: 'the free ebook', title: 'your free ebook', subject: 'Please confirm your email to get your free ebook', button: 'Yes, send me the free ebook', gets: ' and get the ebook', file: EBOOK.file, fileNote: EBOOK.fileNote, linkTitle: EBOOK.title.replace(/:.*$/, ''), banner: 'leadership-lounge' }
-  if (source === 'road-journal') return { source, purpose: 'road-journal', join: 'road-journal', words: JOURNAL.request, what: 'the free Road journal', title: 'your free Road journal', subject: 'Please confirm your email to get your free Road journal', button: 'Yes, send me the Road journal', gets: ' and get the Road journal', file: JOURNAL.file, fileNote: JOURNAL.fileNote, linkTitle: JOURNAL.title, banner: 'explorers-bay' }
+  if (source === 'road-journal') return { source, purpose: 'road-journal', join: 'road-journal', words: JOURNAL.request, what: 'the free Road journal', title: 'your free Road journal', subject: 'Please confirm your email to get your free Road journal', button: 'Yes, send me the Road journal', gets: ' and get the Road journal', file: (journalFiles()[0] || { file: '' }).file, files: journalFiles(), fileNote: JOURNAL.fileNote, linkTitle: JOURNAL.title, banner: 'explorers-bay' }
   const door = input && typeof input.door === 'string' && Object.prototype.hasOwnProperty.call(OPENING_DOORS, input.door) ? input.door : ''
   if (source === 'opens' && door) { const name = OPENING_DOORS[door].name; return { source, purpose: `opens:${door}`, join: 'door', words: `${OPENS_REQUEST} (${name})`, what: `a message when ${name} opens`, title: `a message when ${name} opens`, subject: `Please confirm your email to hear when ${name} opens`, button: 'Yes, tell me when it opens', gets: '', file: '', fileNote: '', linkTitle: name, banner: 'explorers-bay' } }
   return null
@@ -148,11 +148,14 @@ export function confirmationEmail({ confirmUrl, company = COMPANY, source = 'sit
 // For someone who has ALREADY confirmed the ebook and asks again (nothing to confirm, so it just gives the link). It says nothing about the newsletter. The page never says whether an address was already known: they find out in their inbox.
 export function ebookLinkEmail({ file, company = COMPANY, site = SITE, request = requestOf({ source: 'ebook' }) }) {
   const line = companyLine(company)
-  const link = `${site}${file}`
+  const files = Array.isArray(request.files) && request.files.length > 0 ? request.files : [{ label: '', file }] // the Road journal has two sizes (A4 first, then US Letter); everything else has one
+  const many = files.length > 1
   const subject = `Your ${request.source === 'ebook' ? 'free ebook' : 'free Road journal'}: ${request.linkTitle}`
   const noun = request.source === 'ebook' ? 'ebook' : 'Road journal'
-  const text = `Hello,\n\nHere is the free ${noun} you asked for:\n${link}\n\n${request.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
-  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ${noun} you asked for:</p>\n<p style="margin:0 0 16px"><a href="${esc(link)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ${noun} (PDF)</a></p>\n<p style="${P}">${esc(request.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
+  const textLinks = many ? files.map((f) => `${f.label}: ${site}${f.file}`).join('\n') : `${site}${files[0].file}`
+  const text = `Hello,\n\nHere is the free ${noun} you asked for:\n${textLinks}\n\n${request.fileNote}\n\nThis email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.\n\n--\n${line}\n`
+  const button = (f) => `<p style="margin:0 0 16px"><a href="${esc(`${site}${f.file}`)}" style="display:inline-block;padding:12px 22px;background:#14306a;color:#ffffff;text-decoration:none;border-radius:999px;font-weight:bold">Download the ${noun} (PDF)${many ? `, ${esc(f.label)}` : ''}</a></p>`
+  const inner = `<p style="${P}">Hello,</p>\n<p style="${P}">Here is the free ${noun} you asked for:</p>\n${files.map(button).join('\n')}\n<p style="${P}">${esc(request.fileNote)}</p>\n<p style="${P}">This email is only the link you asked for. We will not use your address for anything else unless you ticked the newsletter box.</p>`
   const footerHtml = `<p style="margin:0;font-size:14px;line-height:1.5;color:#4a5170">${esc(line)}</p>`
   return { subject, html: FRAME(subject, inner, footerHtml, { banner: request.banner === 'explorers-bay' ? 'general' : 'leadership-lounge', title: `Your free ${noun}`, subtitle: request.linkTitle }), text }
 }
