@@ -17,6 +17,7 @@ import { requireOwner } from '../lib/ownerGuard.js'
 import { requireUser } from '../lib/userGuard.js'
 import { handleReminders, isReminderRequest } from '../lib/membershipReminders.js'
 import { handleAdmin, isAdminRequest } from '../lib/membershipAdmin.js'
+import { handleStory, isStoryRequest } from '../lib/storyRounds.js'
 import { serviceFetch } from '../lib/serviceKey.js'
 import { cleanPassIds } from '../src/membership/passes.js'
 import { LAUNCH_OFFER } from '../src/membership/pricing.js'
@@ -86,6 +87,8 @@ function stripeKey() {
 
 export default async function handler(req, res) {
   // A member's own passes (card, billing page, resume, change) are handled in lib/membershipAccount.js: this is the only membership function, because the free Vercel plan allows 12.
+  // The hidden "Let's write a story" rounds (members, and the owner's console) are handled in lib/storyRounds.js, for the same reason
+  if (isStoryRequest(req)) return handleStory(req, res)
   if (isAccountRequest(req)) return handleAccount(req, res)
   // The daily reminder job (asked for by Vercel's scheduler, see vercel.json) is handled in lib/membershipReminders.js, for the same reason
   if (isReminderRequest(req)) return handleReminders(req, res)

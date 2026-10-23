@@ -91,6 +91,7 @@ export const PAGES = {
   '/admin/stories': { title: 'Stories', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/books': { title: 'Books', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/suggestions': { title: 'Suggestions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
+  '/admin/story-rounds': { title: 'Story rounds', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/members': { title: 'Passes and members', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/promotions': { title: 'Promotions', description: 'The shop owner\u2019s page.', image: 'site', index: false },
   '/admin/backup': { title: 'Download a backup', description: 'The shop owner\u2019s page.', image: 'site', index: false },

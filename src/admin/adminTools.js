@@ -16,6 +16,7 @@ export const ADMIN_TOOLS = [
   { group: 'Rooms', name: 'Home page', to: '/admin/home', blurb: 'Choose the featured room, and add the next event, for the boxes under the floor plan on the home page.', icon: 'home' },
   { group: 'Rooms', name: 'Books', to: '/admin/books', blurb: 'Add the books you are reading, have read, or will read next, and set the year\'s reading goal and theme.', icon: 'books' },
   { group: 'Rooms', name: 'Stories', to: '/admin/stories', blurb: 'Add a story, say which posts are its chapters, and mark a story finished.', icon: 'stories' },
+  { group: 'Rooms', name: 'Story rounds', to: '/admin/story-rounds', blurb: 'Make the hidden "Let\'s write a story" rounds, see the results, shortlist names and open or close a round.', icon: 'stories' },
   { group: 'Rooms', name: 'Suggestions', to: '/admin/suggestions', blurb: 'Switch the suggest and vote boxes on or off, and approve what visitors suggest.', icon: 'ideas' },
   { group: 'Rooms', name: 'Manage comments', to: '/admin/comments', blurb: 'Read every comment on the Book Club books, filter by book, and delete one that should not be there.', icon: 'comments' },
 ]

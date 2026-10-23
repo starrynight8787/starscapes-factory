@@ -39,6 +39,8 @@ import AdminHome from './admin/AdminHome'
 import AdminMembers from './admin/AdminMembers'
 import AdminPromotions from './admin/AdminPromotions'
 import AdminBackup from './admin/AdminBackup'
+import StoryRoundPage from './stories/round/StoryRoundPage'
+import AdminStoryRounds from './admin/AdminStoryRounds'
 import ArtLoftRoutes from './artloft/ArtLoftRoutes'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
@@ -104,6 +106,8 @@ export default function App() {
 <Route path="/admin/books" element={ <ProtectedRoute session={session}> <AdminBooks session={session} /> </ProtectedRoute> } />
 <Route path="/admin/newsletter" element={ <ProtectedRoute session={session}> <AdminNewsletter session={session} /> </ProtectedRoute> } />
 <Route path="/admin/stories" element={ <ProtectedRoute session={session}> <AdminStories session={session} /> </ProtectedRoute> } />
+<Route path="/admin/story-rounds" element={ <ProtectedRoute session={session}> <AdminStoryRounds session={session} /> </ProtectedRoute> } />
+<Route path="/story-round/:token" element={<StoryRoundPage session={session} />} />
 <Route path="/admin/posts" element={ <ProtectedRoute session={session}> <AdminPosts session={session} /> </ProtectedRoute> } />
 <Route path="/admin/home" element={ <ProtectedRoute session={session}> <AdminHome session={session} /> </ProtectedRoute> } />
 <Route path="/admin/members" element={ <ProtectedRoute session={session}> <AdminMembers session={session} /> </ProtectedRoute> } />
