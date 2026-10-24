@@ -2,6 +2,11 @@
 import { supabase } from '../supabaseClient'
 
 const COLUMNS = 'id, title, description, price, collection, images, published, author_id'
+// A print's readable address ("behind-the-curtain"), set once by sql/print-slugs.sql. Every call below also works when that column is not in the database yet.
+const WITH_SLUG = `${COLUMNS}, slug`
+const NEW_COLUMN_MISSING = /slug|image_url/i
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
+export const isUuid = (value) => UUID.test(String(value === null || value === undefined ? '' : value))
 
 // Every print the signed-in person is allowed to see.
 // Visitors get only published prints. You, signed in, also get your own drafts.
@@ -9,30 +14,42 @@ const COLUMNS = 'id, title, description, price, collection, images, published, a
 export async function fetchPrints({ withPictures = false } = {}) {
   const run = (columns) =>
     supabase.from('products').select(columns).eq('fulfilment', 'creativehub').order('title', { ascending: true })
-  let { data, error } = await run(withPictures ? `${COLUMNS}, product_variants(framed, image_url, position)` : COLUMNS)
-  // If the picture column has not been added to the database yet, still show the grid, with the plain artwork
-  if (error && withPictures && /image_url/i.test(error.message || '')) ({ data, error } = await run(COLUMNS))
-  if (error) throw error
-  return data || []
+  const pictures = withPictures ? ', product_variants(framed, image_url, position)' : ''
+  // If the address column or the picture column has not been added to the database yet, still show the grid, with what is there
+  const attempts = [`${WITH_SLUG}${pictures}`, `${COLUMNS}${pictures}`, ...(withPictures ? [WITH_SLUG, COLUMNS] : [])]
+  let last = null
+  for (const columns of attempts) {
+    const { data, error } = await run(columns)
+    if (!error) return data || []
+    last = error
+    if (!NEW_COLUMN_MISSING.test(error.message || '')) break
+  }
+  throw last
 }
 
 const VARIANT_COLUMNS = 'id, label, size_label, width_mm, height_mm, framed, frame_colour, price, position'
 
-function selectPrint(id, withPictures) {
+function selectPrint(key, withPictures, withSlug) {
   const variantColumns = withPictures ? `${VARIANT_COLUMNS}, image_url` : VARIANT_COLUMNS
   return supabase
     .from('products')
-    .select(`${COLUMNS}, product_variants(${variantColumns})`)
-    .eq('id', id)
+    .select(`${withSlug ? WITH_SLUG : COLUMNS}, product_variants(${variantColumns})`)
+    .eq(isUuid(key) ? 'id' : 'slug', key)
     .eq('fulfilment', 'creativehub')
     .maybeSingle()
 }
 
-// One print with all of its sizes and frames, and Creative Hub's picture of each one
-export async function fetchPrint(id) {
-  let { data, error } = await selectPrint(id, true)
-  // If the picture column has not been added to the database yet, show the print without those pictures rather than failing
-  if (error && /image_url/i.test(error.message || '')) ({ data, error } = await selectPrint(id, false))
+// One print with all of its sizes and frames, and Creative Hub's picture of each one. The key is the print's readable address (its slug) or its long id.
+export async function fetchPrint(key) {
+  let data = null
+  let error = null
+  // If the picture column or the address column has not been added to the database yet, show the print without them rather than failing
+  for (const [withPictures, withSlug] of [[true, true], [true, false], [false, true], [false, false]]) {
+    if (!isUuid(key) && !withSlug) return null // a readable address cannot be looked up without its column: there is nothing to find yet
+    ;({ data, error } = await selectPrint(key, withPictures, withSlug))
+    if (!error) break
+    if (!NEW_COLUMN_MISSING.test(error.message || '')) break
+  }
   if (error) throw error
   if (!data) return null
   const variants = (data.product_variants || []).slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0))

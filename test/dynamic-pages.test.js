@@ -50,14 +50,15 @@ describe('a print', () => {
   it('is shared as an art print, with its collection, and its own picture', () => {
     const { urlPath, meta } = printPage(print, ctx)
     expect(urlPath).toBe('/art-loft/prints/p-1')
-    expect(meta.title).toBe('Forests | Starscapes Factory')
-    expect(meta.description).toBe('Forests: an art print from the Calm Series collection, made to order in a choice of sizes and frames.')
+    expect(meta.title).toBe('Forests: abstract acrylic art print | Starscapes Factory')
+    expect(meta.description).toBe('Forests: an abstract acrylic art print from the Calm Series collection, digitised from my original painting. Made to order.') // this row has no sizes or prices, so none are claimed
+    expect(meta.product).toBeUndefined() // and with no price there is no product markup: a wrong price in a pin is worse than none
     expect(meta.imageUrl).toBe('https://files.creativehub.io/a/forests.jpg')
     expect(meta.url).toBe('https://starscapesfactory.com/art-loft/prints/p-1')
   })
   it('works with no collection and no picture, falling back to the Art Loft\u2019s share picture', () => {
     const { meta } = printPage({ id: 'p-2', title: 'Tango', collection: null, images: [] }, ctx)
-    expect(meta.description).toBe('Tango: an art print, made to order in a choice of sizes and frames.')
+    expect(meta.description).toBe('Tango: an abstract acrylic art print, digitised from my original painting. Made to order.')
     expect(meta.imageUrl).toBe('https://starscapesfactory.com/share/art-loft.png')
     expect(printPage({ id: 'p-3', title: 'X', images: null }, ctx).meta.imageUrl).toContain('art-loft.png')
   })
@@ -110,7 +111,7 @@ describe('asking the database', () => {
   it('turns posts and prints into pages and counts them, skipping anything unusable', async () => {
     const fetchImpl = vi.fn(async (url) => ({ ok: true, status: 200, json: async () => (url.includes('/posts?') ? [{ id: 'a1', title: 'One' }, { id: '../bad', title: 'Two' }] : [{ id: 'p1', title: 'Forests' }]) }))
     const out = await databasePages(env, ctx, { fetchImpl })
-    expect(out.counts).toEqual({ posts: 1, prints: 1 }) // the count is the pages written: the post with the unsafe id is skipped
+    expect(out.counts).toEqual({ posts: 1, prints: 1, printsWithSlug: 0, products: 0 }) // the count is the pages written: the post with the unsafe id is skipped
     expect(out.pages.map((p) => p.urlPath).sort()).toEqual(['/art-loft/prints/p1', '/post/a1'])
     expect(out.notes).toEqual([])
   })

@@ -56,3 +56,8 @@
     padding: 20px 20px 36px;
   }
 }
+
+/* The Art Loft's heading keeps its own dark ink at EVERY width. On a phone or a small tablet (820px and narrower) the Post-it and the night sky are switched off, but the general
+   rule that turns a hero heading white (.sf-hero h1) was still reaching "The Art Loft", leaving white writing on a near-white page: a contrast of 1.06 to 1 (AA needs 3 to 1).
+   The colour is the same one the wide-screen rule above already uses, so nothing changes on a computer, and nothing about the layout changes anywhere. */
+.rs-sky .al h1 { color: #0e1530; }

@@ -1,0 +1,76 @@
+ART LOFT: READY FOR PINTEREST   starscapes-pinterest-ready-24oct.zip   (the brief of 24 October 2026; shop opens 15 November)
+
+WHAT THIS DOES (each item below is checked by tests, and each test was proved by deliberately breaking the thing it protects: 32 breakages, all caught)
+ 1. PRODUCT MARKUP on every print page, in the page's own HTML (Pinterest's crawler does not run the site's code): og:type "product", product:price:amount, product:price:currency (GBP),
+    og:availability (instock) AND Schema.org Product JSON-LD (name, url, image, description, sku, brand, offers with price, priceCurrency, availability). The price is the print's LOWEST price
+    ("from"), read from its own sizes and frames. A print with no readable price or no real picture gets NO product markup (a wrong price in a pin is worse than none).
+ 2. LINK-PREVIEW PICTURE SIZE: the real size of each print photo is read when the site is built, and that size is stated. If a photo cannot be measured, NO size is stated (it never says 1200 x 630 by
+    default again). The ten shared room pictures really are 1200 x 630, and a test checks each real file.
+ 3. SITEMAP: the code was already right (see "WHAT YOU MUST DECIDE" below). It lists the home page, the Art Loft pages, every collection and every PUBLISHED print (by its readable address), and leaves out drafts,
+    admin pages and anything marked noindex. Tests prove this by running the real build. It is EMPTY today only because the whole site is deliberately closed to search engines.
+ 4. READABLE ADDRESSES: /art-loft/prints/behind-the-curtain. Set once (sql/print-slugs.sql), LOCKED once set (the database refuses a change), given automatically to every print added later. The old long
+    addresses go to the readable ones with a PERMANENT redirect (tools/make-print-redirects.mjs writes them into vercel.json). Originals are skipped for now, as the brief allows.
+ 5. TITLES AND DESCRIPTIONS, specific to each print, e.g.
+      Behind the Curtain: abstract acrylic art print | Starscapes Factory
+      Behind the Curtain: an abstract acrylic art print from the Out of this World collection, digitised from my original painting. Framed in black or unframed, in 4 sizes (21 x 30 cm, 28 x 35 cm, 40 x 50 cm and 60 x 80 cm), made to order.
+    Built from each print's own name, collection, frame colour and sizes.
+ 6. THE MEDIUM LINE on every print page: "Digitised from my original acrylic painting, printed to order." (after the collection, before the description). The originals' pages and cards are not touched.
+ 7. ALT TEXT on the print cards ("Behind the Curtain, abstract art print, Out of this World collection") and on the collection pictures; and THE HEADING on /art-loft: white on near-white on a phone or small tablet
+    (1.06 to 1) now dark ink (16.9 to 1), with no change to the layout or to the desktop.
+ 8. PINTEREST CLAIM TAG: ready and waiting. Nothing is added until you paste Pinterest's code into PINTEREST_VERIFY in src/data/siteSettings.js (see "LATER").
+ 9. CHECKS (reported to you in the chat): robots.txt (only admin and API paths blocked), no custom firewall rules or bot protection, no attack mode, your public domain is not password-protected.
+
+WHAT YOU MUST DECIDE (nothing here changes until you say so)
+ * SEARCH ENGINES: src/data/siteSettings.js has SEARCH_ENGINES_ALLOWED = false, which makes EVERY page say noindex and the sitemap empty (that is why it is empty). Leave it until you are ready, then change it to true.
+   Pinterest's own documents do not say noindex stops product pins, but I could not confirm it: once this is live, validate one print in Pinterest's Rich Pins validator. If it objects, open the site sooner.
+ * PRICES AND NEW PRINTS only reach the page markup when the site is next built (any push or redeploy). After you change a price or publish a print, redeploy in Vercel.
+
+THE ORDER (it is safe at any point: the code works whether or not the SQL has been run)
+ 0. Correct any spelling mistake in a print's title FIRST ("Contempory" becomes "Contemporary"), because its address is made from the title and is then permanent.
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. unzip -o ~/Downloads/starscapes-pinterest-ready-24oct.zip
+ 5. python3 tools/add-pinterest-ready.py      IT MUST PRINT "changed" FOR 14 FILES AND SIX LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. npm test                                  (it should end with NOTHING failed; some tests are marked "skipped": that is correct)
+ 7. npm run build                             (near the end it prints "Prints: ..." lines: with no database settings on your computer they say 0 of 0, which is fine here; the real figures appear on Vercel)
+ 8. ls api/*.js | wc -l                       (it must still print 12)
+ 9. THE SUPABASE STEP (the addresses). In the Supabase dashboard: open your project, click "SQL Editor" in the left menu, click "New query", open sql/print-slugs.sql in your editor, copy ALL of it, paste it in, click "Run".
+    It should say "Success. No rows returned". Then click "New query" again, paste this, click "Run":
+        select title, slug from public.products where fulfilment = 'creativehub' order by title;
+    Every print must have a slug (for example "Ocean's Breeze" gives oceans-breeze, "Contemporary" gives contemporary). It only ever touches the products table (no customer, order or member data).
+10. node tools/make-print-redirects.mjs        IT MUST PRINT "Wrote N permanent redirects into vercel.json". If it prints STOPPED, read why (it changes nothing when it stops) and paste it to me.
+11. git diff vercel.json                       (it must show ONLY added redirects, one for each print, each going from /art-loft/prints/<long id> to /art-loft/prints/<readable address>)
+12. find . -name "*.before-pinterest-ready" -not -path "./node_modules/*" -delete
+13. git checkout -b pinterest-ready
+    git add .
+    git status                                  (14 changed files plus vercel.json; new: 3 code files, 6 tests, the notes, the installer with its test and fixtures; nothing ending .before-)
+    git commit -m "Art Loft: product markup, readable print addresses, specific titles, alt text and heading contrast, ready for Pinterest"
+    git push -u origin pinterest-ready
+14. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "pinterest-ready". WAIT for Ready, then LOOK (do not merge in the first minute). Open its Build Logs and find the line starting "Prints:" : it must say
+    that every print has a readable address and carries product markup. Then, on the preview address:
+      a. /art-loft/prints/behind-the-curtain opens the print page, and shows "Digitised from my original acrylic painting, printed to order."
+      b. the old long address /art-loft/prints/eb8bc42c-ad85-463e-a61c-3673b033e7c0 goes to /art-loft/prints/behind-the-curtain (look at the address bar)
+      c. on a phone (or a narrow window) /art-loft shows the heading "The Art Loft" clearly, in dark writing
+      d. view the page source of the print page (right-click, View page source) and look for: og:type product, product:price:amount 89.00, and a script of type application/ld+json
+15. THE RELEASE: only once the preview is Ready and you have LOOKED at it:
+    git checkout main
+    git pull
+    git merge pinterest-ready
+    git push
+    git branch -d pinterest-ready
+
+AFTER IT IS LIVE
+ * Open https://starscapesfactory.com/art-loft/prints/behind-the-curtain and the old long address: it must redirect.
+ * Test in Pinterest's Rich Pins validator (developers.pinterest.com/tools/url-debugger) with ONE print page. It validates the whole domain once one page passes.
+ * Page speed: run PageSpeed Insights (pagespeed.web.dev) on one print page and one collection page, on "Mobile". Tell me the "Largest Contentful Paint" figures: under 4 seconds is the aim.
+
+LATER (when Gill sends Pinterest's code)
+ * Pinterest gives an HTML tag like  <meta name="p:domain_verify" content="0123456789abcdef0123456789abcdef"/>. Send me the code (the part between the quotes), or put it yourself between the quotes in
+   src/data/siteSettings.js:   export const PINTEREST_VERIFY = 'the-code-here'     then push through a preview as usual. (One test, in test/print-pages-pinterest.test.js, says the setting is empty: it is
+   updated at the same time.) A website can be claimed by one Pinterest account only.
+
+WHOLE SUITE, on a fresh copy of your newest commit (939cb3b) with this installed from the zip: 4,375 tests passing, 28 skipped (they wait for the draft state, so that is correct), 0 failing; build fine; 12 functions; the installer runs twice harmlessly.
+HOW IT WAS CHECKED: the rehearsal caught one real flaw in an earlier version (the count of prints with a readable address was wrong for any id that was not a long id). It is fixed, the breakage runner now refuses to run unless the unbroken code passes every test file it uses (106 of 106), and all 32 deliberate breakages were run again and caught.
+NOT TESTED FROM HERE (it needs the real database and Pinterest): the figures in the Vercel build log, the redirects on a real preview, Pinterest's validator and PageSpeed. The steps above check each one.

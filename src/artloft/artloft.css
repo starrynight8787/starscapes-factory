@@ -505,6 +505,12 @@ a.al-object:focus-visible {
 .al-print__collection {
   margin: 0 0 14px;
 }
+/* "Digitised from my original acrylic painting, printed to order." on every print page */
+.al-print__medium {
+  margin: 0 0 14px;
+  color: var(--sf-muted, #5b6585);
+  line-height: 1.55;
+}
 .al-print__desc {
   color: var(--sf-muted, #5b6585);
   line-height: 1.55;

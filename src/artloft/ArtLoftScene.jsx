@@ -132,7 +132,7 @@ export default function ArtLoftScene() {
                     <img
                       key={c.cover}
                       src={c.cover}
-                      alt=""
+                      alt={`${c.name} collection, abstract art prints`}
                       onLoad={(e) => measure(c.slug, e.currentTarget)}
                       ref={(el) => el && el.complete && measure(c.slug, el)}
                     />
@@ -199,7 +199,7 @@ export default function ArtLoftScene() {
             <li key={c.slug}>
               {c.count + c.originals > 0 ? (
                 <Link to={`/art-loft/collections/${c.slug}`}>
-                  <span className="al-list__thumb">{c.cover && <img src={c.cover} alt="" loading="lazy" />}</span>
+                  <span className="al-list__thumb">{c.cover && <img src={c.cover} alt={`${c.name} collection, abstract art prints`} loading="lazy" />}</span>
                   <span>
                     <strong>{c.name}</strong>
                     <small>{countLabel(c.count, c.originals)}</small>

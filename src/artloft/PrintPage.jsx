@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Link, useParams } from 'react-router-dom'
+import { Link, Navigate, useParams } from 'react-router-dom'
 import './artloft.css'
 import './printdetails.css'
 import useTitle from './useTitle'
@@ -79,7 +79,7 @@ export default function PrintPage() {
       detail: `${formatSize(selected.size_label)}, ${finishText}`,
       price: Number(selected.price),
       image: selected.image_url || firstImage(print) || '',
-      href: `/art-loft/prints/${print.id}`,
+      href: `/art-loft/prints/${print.slug || print.id}`,
     })
     if (!result.ok) setNote({ kind: 'full' })
     else setNote({ kind: result.capped ? 'max' : 'added' })
@@ -95,6 +95,8 @@ export default function PrintPage() {
   }
 
   if (status === 'loading') return <main className="al"><p className="al-note">Loading…</p></main>
+  // A visit by the old long address goes to the readable one (the website also redirects those addresses before the page loads)
+  if (print && print.slug && id !== print.slug) return <Navigate to={`/art-loft/prints/${print.slug}`} replace />
   if (status === 'error') return <main className="al"><p className="al-note" role="alert">This print could not load just now. Please try again in a moment.</p></main>
   if (status === 'missing') {
     return (
@@ -138,6 +140,7 @@ export default function PrintPage() {
         <div className="al-print__info">
           <h1>{print.title}</h1>
           {collection && <p className="al-print__collection"><Link to={`/art-loft/collections/${collection.slug}`}>{collection.name}</Link></p>}
+          <p className="al-print__medium">Digitised from my original acrylic painting, printed to order.</p>
           {print.description && (
             <div className="al-print__desc">
               {descriptionParagraphs(print.description).map((para, n) => (

@@ -267,7 +267,7 @@ export default function AdminPrints() {
             <ul className="al-admin__list">
               {g.items.map((p) => (
                 <li key={p.id}>
-                  <Link to={`/art-loft/prints/${p.id}`}>{p.title}</Link>
+                  <Link to={`/art-loft/prints/${p.slug || p.id}`}>{p.title}</Link>
                   <span className="al-admin__price">{formatPrice(p.price)}</span>
                   <select className="al-admin__select" value={p.collection || ''} disabled={busy} onChange={(e) => move(p, e.target.value)} aria-label={`${p.title}: collection`}>
                     {COLLECTIONS.map((c) => (

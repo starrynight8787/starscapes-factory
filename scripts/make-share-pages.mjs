@@ -18,7 +18,7 @@
 import fs from 'node:fs'
 import path from 'node:path'
 import { createServer, loadEnv } from 'vite'
-import { renderHead, fileFor, sitemapXml } from './shareHead.mjs'
+import { renderHead, fileFor, sitemapXml, SHARE_PICTURE_SIZE, PINTEREST_CODE } from './shareHead.mjs'
 import { collectionPage, databasePages } from './dynamicPages.mjs'
 
 const dist = path.resolve(process.argv[2] || 'dist')
@@ -41,6 +41,11 @@ const { PAGES, IMAGES, SITE_NAME, urlFor, fullTitleFor, imageUrlFor } = meta
 const allowed = process.env.SEARCH_ENGINES_OVERRIDE === 'open' ? true : process.env.SEARCH_ENGINES_OVERRIDE === 'closed' ? false : settings.SEARCH_ENGINES_ALLOWED === true
 const closed = !allowed
 
+// Pinterest's code for claiming the site (src/data/siteSettings.js). Empty means nothing is added; anything that is not a code is ignored, and says so.
+const pinterest = String(settings.PINTEREST_VERIFY || '').trim()
+const pinterestVerify = PINTEREST_CODE.test(pinterest) ? pinterest : ''
+const headOptions = { closed, pinterestVerify }
+
 const forPage = (page, urlPath) => ({
   title: fullTitleFor(page),
   description: page.description,
@@ -48,6 +53,8 @@ const forPage = (page, urlPath) => ({
   url: urlFor(urlPath),
   imageUrl: imageUrlFor(page),
   imageAlt: IMAGES[page.image].alt,
+  imageWidth: SHARE_PICTURE_SIZE.width, // every picture in public/share is this size (test/share-head.test.js checks each real file)
+  imageHeight: SHARE_PICTURE_SIZE.height,
   index: page.index !== false,
 })
 
@@ -58,7 +65,7 @@ for (const [urlPath, page] of Object.entries(PAGES)) {
   fs.mkdirSync(path.dirname(target), { recursive: true })
   const info = forPage(page, urlPath)
   if (urlPath === '/') delete info.url // the home page file is also the fallback for unlisted addresses, so it carries no address of its own
-  fs.writeFileSync(target, renderHead(template, info, { closed }))
+  fs.writeFileSync(target, renderHead(template, info, headOptions))
   if (page.index !== false) indexable.push(urlFor(urlPath))
 }
 
@@ -69,7 +76,7 @@ const extra = [...collections.map((c) => collectionPage(c, ctx)), ...database.pa
 for (const { urlPath, meta: info } of extra) {
   const target = path.join(dist, fileFor(urlPath))
   fs.mkdirSync(path.dirname(target), { recursive: true })
-  fs.writeFileSync(target, renderHead(template, info, { closed }))
+  fs.writeFileSync(target, renderHead(template, info, headOptions))
   indexable.push(info.url)
 }
 
@@ -77,4 +84,6 @@ for (const { urlPath, meta: info } of extra) {
 fs.writeFileSync(path.join(dist, 'sitemap.xml'), sitemapXml(closed ? [] : indexable))
 console.log(closed ? 'The whole site is CLOSED to search engines (every page says noindex, and the sitemap is empty). To open it, set SEARCH_ENGINES_ALLOWED to true in src/data/siteSettings.js.' : 'The site is OPEN to search engines.')
 console.log(`Share pages: ${Object.keys(PAGES).length} written, plus ${collections.length} collections, ${database.counts.posts} post${database.counts.posts === 1 ? '' : 's'} and ${database.counts.prints} print${database.counts.prints === 1 ? '' : 's'} (${indexable.length} in the sitemap).`)
+console.log(`Prints: ${database.counts.printsWithSlug} of ${database.counts.prints} have a readable address, and ${database.counts.products} carry product markup (price, currency, availability).`)
+console.log(pinterestVerify ? 'Pinterest verification tag: added to every page.' : pinterest ? 'Pinterest verification tag: IGNORED, because PINTEREST_VERIFY in src/data/siteSettings.js is not a Pinterest code (letters and numbers only, 8 to 64 of them).' : 'Pinterest verification tag: none yet (PINTEREST_VERIFY in src/data/siteSettings.js is empty).')
 for (const note of database.notes) console.log(`  note: ${note}`)

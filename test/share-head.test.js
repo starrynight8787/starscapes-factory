@@ -20,7 +20,7 @@ const count = (html, needle) => html.split(needle).length - 1
 
 describe('renderHead', () => {
   it('writes the title, description, address and share picture for sharing sites and search engines', () => {
-    const html = renderHead(SHELL, meta)
+    const html = renderHead(SHELL, { ...meta, imageWidth: 1200, imageHeight: 630 }) // sizes are only written when they are given (see test/print-pages-pinterest.test.js)
     expect(html).toContain('<title>The Idea Hatchery | Starscapes Factory</title>')
     expect(html).toContain('<meta name="description" content="Where ideas get tested." />')
     expect(html).toContain('<link rel="canonical" href="https://starscapesfactory.com/idea-hatchery" />')
