@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { Link, Navigate, useParams } from 'react-router-dom'
 import './artloft.css'
 import './printdetails.css'
@@ -50,19 +50,26 @@ export default function PrintPage() {
 
   const [look, setLook] = useState('variant') // which picture is showing: this size and frame, or the plain artwork
 
-  // Once the page has settled, fetch the other sizes' pictures quietly so that changing size or frame feels instant
+  // Changing size or frame should feel instant, but the page used to fetch EVERY size's picture 0.8 seconds after it opened, which on a phone competed with the main photo
+  // for the connection (about 15 MB in a speed test). Now a picture is fetched only (1) when the shopper reaches for the button that would show it (hover, focus or touch),
+  // and (2) the one they are most likely to want next, once the main photo has finished loading and the browser is idle. Each picture is fetched at most once.
+  const warmed = useRef(new Set())
+  const warm = useCallback((variant) => {
+    if (!variant || !variant.image_url || warmed.current.has(variant.image_url)) return
+    warmed.current.add(variant.image_url)
+    const picture = new Image()
+    picture.src = variant.image_url
+  }, [])
+  const [mainLoaded, setMainLoaded] = useState(false)
   useEffect(() => {
-    if (!variants.length) return undefined
-    const timer = setTimeout(() => {
-      variants.forEach((v) => {
-        if (v.image_url) {
-          const picture = new Image()
-          picture.src = v.image_url
-        }
-      })
-    }, 800)
-    return () => clearTimeout(timer)
-  }, [variants])
+    if (!mainLoaded || !selected) return undefined
+    const other = variants.find((v) => Boolean(v.framed) !== Boolean(selected.framed) && v.size_label === selected.size_label)
+    if (!other) return undefined
+    const idle = typeof window.requestIdleCallback === 'function' ? (fn) => window.requestIdleCallback(fn, { timeout: 4000 }) : (fn) => setTimeout(fn, 1500)
+    const cancel = typeof window.cancelIdleCallback === 'function' ? (h) => window.cancelIdleCallback(h) : (h) => clearTimeout(h)
+    const handle = idle(() => warm(other))
+    return () => cancel(handle)
+  }, [mainLoaded, selected, variants, warm])
 
   const { count: inCart } = useCart()
   const [note, setNote] = useState(null) // what to tell the shopper after pressing Add to cart
@@ -86,11 +93,14 @@ export default function PrintPage() {
   }
 
   // keep the same size when the finish changes, if that size exists in the other finish
-  function chooseFinish(key) {
-    if (!selected) return
+  function finishTarget(key) {
+    if (!selected) return null
     const match = variants.find((v) => (key === 'framed') === Boolean(v.framed) && v.size_label === selected.size_label)
     const fallback = variants.find((v) => (key === 'framed') === Boolean(v.framed))
-    const next = match || fallback
+    return match || fallback || null
+  }
+  function chooseFinish(key) {
+    const next = finishTarget(key)
     if (next) setPick(next.id)
   }
 
@@ -121,7 +131,7 @@ export default function PrintPage() {
       </p>
       <div className="al-print">
         <div className="al-print__image">
-          {mainSrc ? <img src={mainSrc} alt={mainAlt} /> : <div className="al-card__blank" aria-hidden="true" />}
+          {mainSrc ? <img src={mainSrc} alt={mainAlt} decoding="async" onLoad={() => setMainLoaded(true)} /> : <div className="al-card__blank" aria-hidden="true" />}
           {!print.published && <span className="al-badge">Draft: only you can see this</span>}
           {preview && artwork && (
             <div className="al-thumbs" role="group" aria-label="Choose a picture">
@@ -157,7 +167,7 @@ export default function PrintPage() {
                 <span className="al-field__label" id="finish-label">Finish</span>
                 <div className="al-choice" role="radiogroup" aria-labelledby="finish-label">
                   {finishes.map((f) => (
-                    <button key={f.key} type="button" role="radio" aria-checked={finish === f.key} className={finish === f.key ? 'is-on' : ''} onClick={() => { setNote(null); chooseFinish(f.key) }}>
+                    <button key={f.key} type="button" role="radio" aria-checked={finish === f.key} className={finish === f.key ? 'is-on' : ''} onPointerEnter={() => warm(finishTarget(f.key))} onFocus={() => warm(finishTarget(f.key))} onTouchStart={() => warm(finishTarget(f.key))} onClick={() => { setNote(null); chooseFinish(f.key) }}>
                       {f.label}
                     </button>
                   ))}
@@ -168,7 +178,7 @@ export default function PrintPage() {
                 <span className="al-field__label" id="size-label">Size</span>
                 <div className="al-choice" role="radiogroup" aria-labelledby="size-label">
                   {sizes.map((v) => (
-                    <button key={v.id} type="button" role="radio" aria-checked={pick === v.id} className={pick === v.id ? 'is-on' : ''} onClick={() => { setNote(null); setPick(v.id) }}>
+                    <button key={v.id} type="button" role="radio" aria-checked={pick === v.id} className={pick === v.id ? 'is-on' : ''} onPointerEnter={() => warm(v)} onFocus={() => warm(v)} onTouchStart={() => warm(v)} onClick={() => { setNote(null); setPick(v.id) }}>
                       {formatSize(v.size_label)}
                       <small>{formatPrice(v.price)}</small>
                     </button>

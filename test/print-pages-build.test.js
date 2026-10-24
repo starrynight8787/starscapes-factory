@@ -13,8 +13,8 @@ import { COLLECTIONS } from '../src/artloft/artLoftData.js'
 
 const run = promisify(execFile)
 const SHELL = '<!doctype html>\n<html lang="en">\n  <head>\n    <meta charset="UTF-8" />\n    <script type="module" crossorigin src="/assets/index-abc.js"></script>\n    <title>Starscapes Factory</title>\n  </head>\n  <body><div id="root"></div></body>\n</html>\n'
-const v = (size_label, width_mm, height_mm, framed, frame_colour, price, position) => ({ size_label, width_mm, height_mm, framed, frame_colour, price, position })
-const VARIANTS = [v('21x30cm', 210, 300, false, null, 89, 0), v('21x30cm', 210, 300, true, 'Oak', 129, 1), v('40x50cm', 400, 500, false, null, 119, 2)]
+const v = (size_label, width_mm, height_mm, framed, frame_colour, price, position, image_url) => ({ size_label, width_mm, height_mm, framed, frame_colour, price, position, image_url })
+const VARIANTS = [v('21x30cm', 210, 300, false, null, 89, 0, 'https://files.creativehub.io/composited/first.jpg'), v('21x30cm', 210, 300, true, 'Oak', 129, 1, 'https://files.creativehub.io/composited/second.webp'), v('40x50cm', 400, 500, false, null, 119, 2, 'https://files.creativehub.io/composited/third.jpg')]
 const CURTAIN_ID = 'eb8bc42c-ad85-463e-a61c-3673b033e7c0'
 const NOADDR_ID = '7c4129c7-fd68-4597-8123-ff75156bcee8'
 const PRODUCTS = [
@@ -65,6 +65,12 @@ describe('a build with prints that have readable addresses', () => {
   it('states no picture size for a print photo it could not measure, and still states 1200 x 630 for the shared pictures that really are that size', () => {
     expect(read(r.dist, 'art-loft/prints/behind-the-curtain/index.html')).not.toContain('og:image:width')
     const room = read(r.dist, 'art-loft/index.html'); expect(room).toContain('og:image:width" content="1200"'); expect(room).toContain('og:image:height" content="630"')
+  })
+  it('tells the browser, in the page head, to start downloading the picture the page shows first (the first size\u2019s own picture, not the artwork), once', () => {
+    const html = read(r.dist, 'art-loft/prints/behind-the-curtain/index.html')
+    expect(html).toContain('<link rel="preload" as="image" href="https://files.creativehub.io/composited/first.jpg" fetchpriority="high" />'); expect(html.split('rel="preload"').length - 1).toBe(1)
+    expect(html).toContain('og:image" content="https://files.creativehub.io/converted/curtain.jpg"') // the link preview and pins still use the artwork
+    expect(read(r.dist, 'art-loft/index.html')).not.toContain('rel="preload"')
   })
   it('says what it did: how many prints have a readable address and how many carry product markup', () => { expect(r.out).toContain('Prints: 1 of 2 have a readable address, and 2 carry product markup') })
   it('lists in the sitemap the home page, the Art Loft pages, every collection and the published prints (by readable address), and nothing private', () => {

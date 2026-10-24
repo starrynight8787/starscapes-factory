@@ -17,6 +17,7 @@ const OURS = [
   /\s*<meta\s+name="twitter:[^"]*"[^>]*>/gi,
   /\s*<meta\s+property="product:[^"]*"[^>]*>/gi,
   /\s*<meta\s+name="p:domain_verify"[^>]*>/gi,
+  /\s*<link\s+rel="preload"\s+as="image"[^>]*>/gi,
   /\s*<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/gi,
 ]
 
@@ -27,6 +28,10 @@ export const ICONS = { svg: '/icons/star.svg', png: '/icons/star-32.png', apple:
 // The size of the pictures in public/share (every one is checked against its real file by test/share-head.test.js). Pictures from anywhere else (a print's own photo)
 // are NOT assumed to be this size: their size is read when the site is built (scripts/dynamicPages.mjs), and when it cannot be read no size is stated at all.
 export const SHARE_PICTURE_SIZE = { width: 1200, height: 630 }
+
+// A picture the page shows first and that its address is known for when the site is built (a print's main photo): the browser is told about it in the head, so it starts
+// downloading while the page's code is still loading, instead of after the code has run and the database has answered. Only a plain https address is ever used.
+export const preloadTag = (href) => (/^https:\/\/[^\s"'<>]+$/.test(clean(href)) ? `<link rel="preload" as="image" href="${esc(clean(href))}" fetchpriority="high" />` : '')
 
 // Pinterest's code for claiming the website: letters and numbers only. Anything else is ignored (and the build says so) rather than put in a page.
 export const PINTEREST_CODE = /^[A-Za-z0-9]{8,64}$/
@@ -66,7 +71,7 @@ export function productJsonLd(p) {
 }
 
 // meta: { title, description, siteName, url (omit for a page with no address of its own), imageUrl, imageAlt, imageWidth + imageHeight (leave out when not known), index,
-//         product (optional: { name, url, image, description, sku, brand, amount, currency, availability }) }
+//         product (optional: { name, url, image, description, sku, brand, amount, currency, availability }), preloadImage (optional: https address of the picture shown first) }
 // options.closed: the whole site is closed to search engines (src/data/siteSettings.js), so EVERY page says noindex, nofollow, not only the private ones
 // options.pinterestVerify: Pinterest's code for claiming the site (src/data/siteSettings.js); '' (or anything that is not a code) adds nothing
 export function renderHead(template, meta, { closed = false, pinterestVerify = '' } = {}) {
@@ -78,6 +83,7 @@ export function renderHead(template, meta, { closed = false, pinterestVerify = '
     `<title>${esc(meta.title)}</title>`,
     `<meta name="description" content="${esc(meta.description)}" />`,
     ...(pinterestTag(pinterestVerify) ? [pinterestTag(pinterestVerify)] : []),
+    ...(preloadTag(meta.preloadImage) ? [preloadTag(meta.preloadImage)] : []),
     `<meta name="theme-color" content="${THEME_COLOUR}" />`,
     `<link rel="icon" type="image/svg+xml" href="${ICONS.svg}" />`,
     `<link rel="icon" type="image/png" sizes="32x32" href="${ICONS.png}" />`,

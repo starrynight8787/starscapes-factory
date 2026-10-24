@@ -45,9 +45,9 @@ export default function PrintsPage() {
       {status === 'loading' && <p className="al-note">Loading…</p>}
       {status === 'ready' && items.length === 0 && <p className="al-note">Nothing here yet. Check back soon.</p>}
       <ul className="al-grid">
-        {items.map((p) => (
+        {items.map((p, i) => (
           <li key={p.id}>
-            <PrintCard print={p} />
+            <PrintCard print={p} eager={i < 4} />
           </li>
         ))}
       </ul>

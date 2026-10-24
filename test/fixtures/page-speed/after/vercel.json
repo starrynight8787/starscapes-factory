@@ -1,0 +1,255 @@
+{
+  "crons": [
+    {
+      "path": "/api/membership-checkout?reminders=1",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/ebook-signup?newsletter=tidy",
+      "schedule": "30 8 * * *"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/fonts/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/((?!api/.*).*)",
+      "destination": "/index.html"
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/art-loft/prints/7c4129c7-fd68-4597-8123-ff75156bcee8",
+      "destination": "/art-loft/prints/afternoon-sun",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/8ac393f8-f320-41b4-b5f2-de888bd915b2",
+      "destination": "/art-loft/prints/ballet",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/144e05d6-7827-4a31-83be-100a06e3aad0",
+      "destination": "/art-loft/prints/ballroom",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/d1b24dc6-b47f-4d9e-a163-ae32e22648d1",
+      "destination": "/art-loft/prints/beaches",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/40f4bbf7-474b-48d0-950e-dd3b0da9490e",
+      "destination": "/art-loft/prints/before-the-sunset",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/eb8bc42c-ad85-463e-a61c-3673b033e7c0",
+      "destination": "/art-loft/prints/behind-the-curtain",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/9ed6f8c9-9d26-48d9-a09c-22c02efae184",
+      "destination": "/art-loft/prints/contemporary",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/74e52eae-4c19-4bef-8b0a-2f944673a4c0",
+      "destination": "/art-loft/prints/far-far-away",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/40fdbdf8-2081-48b4-abb3-a36334d2dff0",
+      "destination": "/art-loft/prints/festive-season",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/cd6a5aa1-3535-4924-99c8-e8f0fb7c7d77",
+      "destination": "/art-loft/prints/floating",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/5a92f7d7-461c-4faa-81b9-c4779faceef7",
+      "destination": "/art-loft/prints/forests",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/ff75528d-a91b-42ef-acdc-85551ac70e2f",
+      "destination": "/art-loft/prints/freshly-cut-grass",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/179fbd5f-6411-4f12-b968-1a34f90162c7",
+      "destination": "/art-loft/prints/golden-bridges",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/f10269f9-e0a7-4eaf-a1cd-ef0fc7260f62",
+      "destination": "/art-loft/prints/heartless-heart",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/60dc2c60-6445-4bbc-8104-cca1cf4c65eb",
+      "destination": "/art-loft/prints/into-the-nebula",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/c829d5a7-22a5-432e-9ea8-c053766b1a03",
+      "destination": "/art-loft/prints/jazz-dance",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/05fd3cb1-396f-4cb8-b154-1580cff48990",
+      "destination": "/art-loft/prints/lucky",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/1eae31a2-8fa4-4c3d-8b15-4a33e6feaf9a",
+      "destination": "/art-loft/prints/mosaic",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/9d583afd-926d-4310-a946-9dc143b98bfa",
+      "destination": "/art-loft/prints/murder-on-the-dance-floor",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/d10eb9e2-68d6-4826-8222-6bb5cab0ad98",
+      "destination": "/art-loft/prints/neon-lights",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/da799ecf-97ac-449b-8ea0-3b0f6272a0b3",
+      "destination": "/art-loft/prints/oceans-breeze",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/6645d3f8-b98a-4e75-969f-13579a5abae9",
+      "destination": "/art-loft/prints/parkside",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/a5a41175-acbd-4508-8894-bf73cd425b9d",
+      "destination": "/art-loft/prints/party",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/5c4a83ab-a5b6-4537-9936-d82324e195c5",
+      "destination": "/art-loft/prints/patchwork",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/69d9e08a-4a40-44d4-af4a-7550671883a4",
+      "destination": "/art-loft/prints/quilting",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/54ea97b5-1dba-4f64-a2f8-ad19753dbf40",
+      "destination": "/art-loft/prints/rain-forest",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/04a9263d-ecc9-4d49-b046-bea8f133e459",
+      "destination": "/art-loft/prints/rainbows",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/957444f0-ca27-4d98-ac83-6070fdacd28a",
+      "destination": "/art-loft/prints/retro",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/8ca6ec32-a404-4b89-ad07-827b0bf7ef28",
+      "destination": "/art-loft/prints/riverbank",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/ed1870d4-089a-4a2d-9f2b-9c0372662e95",
+      "destination": "/art-loft/prints/salsa",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/e8a29922-3ea5-42a1-ab52-3b35a6d99d20",
+      "destination": "/art-loft/prints/sandy-islands",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/b2720937-3ca2-49ae-a544-d35973aa1a64",
+      "destination": "/art-loft/prints/scrap-materials",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/0c4ee1da-a6ec-4cc6-84ea-2cbff277eae9",
+      "destination": "/art-loft/prints/spinning",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/00afb858-6237-4360-96cb-33ea4a02f3e9",
+      "destination": "/art-loft/prints/stargazing",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/b0cda7a7-736d-4098-bf67-e760bc78e34a",
+      "destination": "/art-loft/prints/sunrise",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/f8df60f6-beb7-4422-a220-90fd9d7fec0b",
+      "destination": "/art-loft/prints/sunset",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/f3287ea5-192d-4973-b4c6-f0177a83a8e3",
+      "destination": "/art-loft/prints/swing-dance",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/51c1ab8f-d91c-48ef-9b1d-07113fa2ddf2",
+      "destination": "/art-loft/prints/tango",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/4de7a5c3-e98b-40e4-aeb9-3c56401e392e",
+      "destination": "/art-loft/prints/tap-dancing",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/88017d51-4f9a-4d48-9c9e-712cba79ea40",
+      "destination": "/art-loft/prints/tartan",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/a1e256d5-860b-48b0-ad14-1683d5be1fdd",
+      "destination": "/art-loft/prints/the-first-snow",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/2af00d9e-9814-48e4-b10c-325b2b96c882",
+      "destination": "/art-loft/prints/tops-of-jupiter",
+      "permanent": true
+    },
+    {
+      "source": "/art-loft/prints/fb0b674a-c446-474f-9ac6-a7eafe8633a4",
+      "destination": "/art-loft/prints/tranquility",
+      "permanent": true
+    }
+  ]
+}

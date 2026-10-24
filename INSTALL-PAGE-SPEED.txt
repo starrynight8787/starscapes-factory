@@ -1,0 +1,69 @@
+PAGE SPEED: THE RESEARCH AGENT'S LIST ON SFW-274   starscapes-page-speed-24oct.zip
+(No Supabase step. No change to the product markup, the redirects, the readable addresses or the noindex setting: tests prove each is unchanged.)
+
+WHERE WE STARTED (measured by the research agent with PageSpeed Insights, Mobile, slow 4G): Behind the Curtain: score 74, LCP 4.6 s. Calm Series: score 70, LCP 6.3 s. Aim: LCP under 4.0 s on both.
+The print page transferred 15,595 KiB.
+
+WHAT THIS DOES (items 2 and 3 of the list, plus the part of item 1 that can be done safely, plus the cause of most of those 15 MB)
+ A. THE PRINT PAGE NO LONGER DOWNLOADS EVERY SIZE'S PICTURE. It used to fetch the pictures for all 8 sizes and frames 0.8 seconds after opening ("so that changing size feels instant"). On a phone that competed with the main photo
+    for the connection, and was most of the 15 MB. Now a picture is fetched only (1) when the shopper reaches for that size or frame (hover, focus or touch), and (2) the one they are most likely to want next (the same size in the
+    other finish) once the main photo has FINISHED loading and the browser is idle. Each picture is fetched at most once, and nothing is fetched if they leave first.
+ B. THE MAIN PHOTO STARTS DOWNLOADING EARLIER (item 3). Each print page's head now has a preload for the picture the page shows first: the first size's own picture (not the artwork; the artwork stays the link-preview and pin picture),
+    marked high priority, no crossorigin (so it is the same download the page then uses). It is worked out when the site is built, from each print's own sizes. A print whose first size has no picture of its own preloads the artwork,
+    exactly as the page itself chooses. Only a plain https address is ever used.
+ C. THE FIRST FOUR CARDS LOAD AT ONCE on a collection page and on the Prints list (item 1, the collection page's biggest problem): they are in view straight away, and a lazily loaded picture that is already on screen arrives late
+    and is what the test counts as the page's biggest paint. The rest still load lazily.
+ D. THE SITE'S HASHED CODE FILES ARE CACHED FOR A YEAR (item 2): /assets/(.*) now has the same immutable header as /fonts. Their file names change whenever their contents do, so this is safe. The pages themselves (index.html, every print and
+    collection page, the sitemap) are NOT given a long life: a test proves no header rule reaches them.
+
+WHAT THIS DOES NOT DO, AND WHY (please read)
+ * IT DOES NOT RESIZE THE PRINT PHOTOS (the other half of item 1). Every print photo is served straight from Creative Hub at its full size. Vercel's built-in image resizing is not switched on by vercel.json for a site like this one:
+   it needs a different deployment mode (the Build Output API), which would mean repackaging all 12 server functions: too risky for a launch. The remaining options, for you to decide after re-measuring:
+     1. Make smaller copies of the photos when the site is built (needs an image tool added to the build, and the build downloads about 340 pictures each time: a bigger job, needs a preview of its own).
+     2. Use a free third-party image service (NOT recommended: visitors' addresses would go to a company your privacy policy does not name).
+     3. Ask Creative Hub whether it offers smaller versions of its pictures at another address (the cheapest answer if it does).
+ * IT DOES NOT ADD width AND height TO THE IMAGES. PageSpeed flagged it, but the page's layout shift is already 0, and the true sizes of Creative Hub's pictures are not known when the site is built; guessing them could make the page jump.
+ * ITEM 4 (render-blocking requests): FINDINGS ONLY, nothing changed. The page's one style file is 39 KB compressed (245 KB raw, 42 KiB of it unused on a given page) and is the only request that blocks painting. The fonts are already set
+   to "swap" (font-display: swap on all 24), so they do not block. BUT the bigger limit on first paint is not the style file: the whole site is one 1,016 KB script (292 KB compressed) and a page shows nothing until it has downloaded and run,
+   which is why First Contentful Paint is about 3.5 s on both pages. LCP cannot be faster than that, so reaching 4.0 s on a page whose photo arrives after first paint will be tight. Splitting the script by page (item 5) is the next lever
+   if this package is not enough. I would not touch the style file: the saving is small and the risk (unstyled flashes) is not worth it.
+
+TESTS: 38 new tests in 2 files, and one existing test file extended (test/print-pages-build.test.js now also proves the real build writes the preload). 19 DELIBERATE BREAKAGES, ALL CAUGHT, run against a baseline of every test file the run uses
+(including: the cache rule removed, or widened to cover the pages; the preload with crossorigin, with an insecure address, for the wrong size, or not taken out when stale; every size fetched again; a picture fetched twice; the warm-up
+not stopped when the shopper leaves; cards always lazy again).
+WHOLE SUITE, on a fresh copy of your newest commit (c6c1d78) with this installed from the zip: 4,407 tests passing, 28 skipped (they wait for the draft state, so that is correct), 0 failing; build fine; 12 functions; the installer runs twice harmlessly; vercel.json still has its 43 redirects.
+
+INSTALL (it is safe at any point)
+ 1. cd ~/Website/supabase-blog-starter
+ 2. git status        (it must say "nothing to commit, working tree clean". If it does not: git stash -u first)
+ 3. git checkout main
+    git pull
+ 4. shasum -a 256 ~/Downloads/starscapes-page-speed-24oct.zip | cut -c1-12      (it must print the fingerprint Claude gave you in the chat; if it does not, you have an older copy: stop)
+ 5. unzip -o ~/Downloads/starscapes-page-speed-24oct.zip
+    python3 tools/add-page-speed.py      IT MUST PRINT "changed" FOR 8 FILES AND TWO LINES STARTING "replaced". If it prints NOTHING WAS CHANGED or anything else, STOP: do not run git add or git commit. Paste it to me.
+ 6. grep -c "setMainLoaded" src/artloft/PrintPage.jsx      (it must print 2)
+ 7. npm test 2>&1 | tail -8                (it should end with NOTHING failed; "skipped" is correct)
+ 8. npm run build
+ 9. ls api/*.js | wc -l                    (it must still print 12)
+10. find . -name "*.before-page-speed" -not -path "./node_modules/*" -delete
+11. git checkout -b page-speed
+    git add .
+    git status                              (8 changed files; new: 2 tests, the notes, the installer with its test and fixtures; nothing ending .before-)
+    git commit -m "Page speed: stop downloading every size's picture, preload the main photo, load the first cards at once, cache hashed files (SFW-274)"
+    git push -u origin page-speed
+12. THE PREVIEW: in Vercel, Deployments, the newest entry is for branch "page-speed". WAIT for Ready, then LOOK:
+      a. open a print page on the preview address: the photo shows, and changing the size and the frame still works (the picture may take a moment the first time you pick a size you have not touched: that is the trade)
+      b. view the page source of the print page: there is ONE line starting <link rel="preload" as="image" and it points at a composited picture
+      c. open the Calm Series page: the first cards show at once
+13. RE-MEASURE ON THE PREVIEW if you can (PageSpeed accepts a preview address if it is not password-protected; yours is, so measure after release instead).
+14. THE RELEASE: only once you have LOOKED at the preview:
+    git checkout main
+    git pull
+    git merge page-speed
+    git push
+    git branch -d page-speed
+    git push origin --delete page-speed
+15. AFTER IT IS LIVE: run PageSpeed Insights (Mobile) on Behind the Curtain, the Calm Series page, ONE MORE PRINT and ONE MORE COLLECTION; run each twice and use the second. Send me: Performance, LCP, FCP, TBT, CLS, and the page's total transfer.
+    ACCEPTANCE (from the research agent): LCP under 4.0 s on both pages, Accessibility and Best Practices not lower than 100, and the product markup, redirects and noindex setting unchanged.
+
+NOT TESTABLE FROM CLAUDE'S SIDE: the real PageSpeed scores (Google's servers must load the live site). The preview check and the re-measure after release are the real test.

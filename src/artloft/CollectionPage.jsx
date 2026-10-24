@@ -52,9 +52,9 @@ export default function CollectionPage() {
       {status === 'ready' && items.length === 0 && originalsHere.length === 0 && <p className="al-note">These prints are on their way. Check back soon.</p>}
       {items.length > 0 && originalsHere.length > 0 && <h2 className="al-section">Prints</h2>}
       <ul className="al-grid">
-        {items.map((p) => (
+        {items.map((p, i) => (
           <li key={p.id}>
-            <PrintCard print={p} />
+            <PrintCard print={p} eager={i < 4} />
           </li>
         ))}
       </ul>

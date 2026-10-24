@@ -91,6 +91,9 @@ export function printPage(print, ctx) {
   const sizes = facts.sizes.length ? `in ${facts.sizes.length === 1 ? 'one size' : `${facts.sizes.length} sizes`} (${listWords(facts.sizes)})` : ''
   const choices = [finish, sizes].filter(Boolean).join(', ')
   const description = cut(`${name}: an abstract acrylic art print${collection ? ` from the ${cut(collection, 40)} collection` : ''}, digitised from my original painting. ${choices ? `${choices}, made` : 'Made'} to order.`, 320)
+  // The picture the page shows FIRST is the first size's own picture (the sizes are in their set order), or the artwork when that size has none: exactly what the page chooses
+  const firstSize = (Array.isArray(print.product_variants) ? print.product_variants : []).filter((v) => v && typeof v === 'object').slice().sort((a, b) => (a.position ?? 0) - (b.position ?? 0))[0]
+  const preloadImage = safePicture(firstSize && firstSize.image_url) || own
   const picture = own ? { imageUrl: own, imageAlt: `${cut(title, 80)}, abstract art print${collection ? `, ${cut(collection, 40)} collection` : ''}` } : roomPicture(ctx, 'art-loft')
   // Product markup only when there is a real picture of the print and a real price: otherwise the page stays an ordinary page
   const product = own && facts.from !== null ? { name, url, image: own, description, sku: slug || id, brand: ctx.siteName, amount: facts.from.toFixed(2), currency: 'GBP', availability: 'InStock' } : undefined
@@ -104,6 +107,7 @@ export function printPage(print, ctx) {
       siteName: ctx.siteName,
       url,
       ...picture,
+      ...(preloadImage ? { preloadImage } : {}),
       ...(product ? { product } : {}),
       index: true,
     },
@@ -147,10 +151,14 @@ export async function readRows(env, table, query, { fetchImpl = fetch, timeoutMs
 }
 
 export const POSTS_QUERY = 'select=id,title,image_url,channel,created_at&published=eq.true&order=created_at.desc&limit=1000'
-const VARIANTS = 'product_variants(size_label,width_mm,height_mm,framed,frame_colour,price,position)'
-export const PRINTS_QUERY = `select=id,slug,title,collection,images,${VARIANTS}&fulfilment=eq.creativehub&published=eq.true&order=title.asc&limit=1000`
+const VARIANT_COLUMNS = 'size_label,width_mm,height_mm,framed,frame_colour,price,position'
+const printsQuery = ({ slug, picture }) => `select=id,${slug ? 'slug,' : ''}title,collection,images,product_variants(${VARIANT_COLUMNS}${picture ? ',image_url' : ''})&fulfilment=eq.creativehub&published=eq.true&order=title.asc&limit=1000`
+export const PRINTS_QUERY = printsQuery({ slug: true, picture: true })
 // The same without the address column, for a database that has not had print-slugs.sql run yet: prints then keep their long addresses
-export const PRINTS_QUERY_NO_SLUG = `select=id,title,collection,images,${VARIANTS}&fulfilment=eq.creativehub&published=eq.true&order=title.asc&limit=1000`
+export const PRINTS_QUERY_NO_SLUG = printsQuery({ slug: false, picture: true })
+// And without the sizes' pictures, for an older database that has no picture column: the page then has no preload, and nothing else is lost
+export const PRINTS_QUERY_NO_PICTURE = printsQuery({ slug: true, picture: false })
+export const PRINTS_QUERY_PLAIN = printsQuery({ slug: false, picture: false })
 
 // ---------- reading a picture's real size ----------
 // From the first bytes of a JPEG, PNG or WebP. Returns { width, height } or null (never throws).
@@ -231,10 +239,17 @@ export async function databasePages(env, ctx, opts = {}) {
   let prints = await readRows(env, 'products', PRINTS_QUERY, opts)
   const notes = [posts.note]
   if (prints.note) {
-    // A database that has no address column yet answers 400: ask again without it, so the prints still get their own pages (under their long addresses)
-    const again = await readRows(env, 'products', PRINTS_QUERY_NO_SLUG, opts)
-    if (!again.note) { prints = { rows: again.rows, note: '' }; notes.push('products: the address (slug) column is not in the database yet, so prints keep their long addresses. Run sql/print-slugs.sql.') }
-    else notes.push(prints.note)
+    // A database that is missing a column answers 400: ask again without it, so the prints still get their own pages
+    const first = prints.note
+    for (const [query, why] of [
+      [PRINTS_QUERY_NO_SLUG, 'products: the address (slug) column is not in the database yet, so prints keep their long addresses. Run sql/print-slugs.sql.'],
+      [PRINTS_QUERY_NO_PICTURE, 'products: the sizes\' picture column is not in the database yet, so print pages have no picture preload.'],
+      [PRINTS_QUERY_PLAIN, 'products: neither the address column nor the sizes\' picture column is in the database yet, so prints keep their long addresses and have no picture preload.'],
+    ]) {
+      const again = await readRows(env, 'products', query, opts)
+      if (!again.note) { prints = { rows: again.rows, note: '' }; notes.push(why); break }
+    }
+    if (prints.note) notes.push(first)
   }
   const pages = [
     ...posts.rows.map((r) => postPage(r, ctx)),
